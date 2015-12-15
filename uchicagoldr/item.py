@@ -2,7 +2,7 @@ from collections import namedtuple
 from hashlib import md5, sha256
 from magic import from_file
 from os import access, stat, R_OK
-from os.path import exists, join, relpath, splitext, basename
+from os.path import exists, join, relpath, splitext, basename, isabs, abspath
 from mimetypes import guess_type
 from re import compile as re_compile
 
@@ -26,8 +26,10 @@ class Item(object):
     has_technical_md = False
 
     def __init__(self, path, root):
-        self.root_path = root
-        self.filepath = join(root, path)
+        assert(isabs(path))
+        assert(isabs(root))
+        self.root_path = abspath(root)
+        self.filepath = join(root, abspath(path))
         self.set_readability(self.test_readability())
 
     def test_readability(self):
@@ -40,7 +42,8 @@ class Item(object):
         return self.root_path
 
     def set_root_path(self, new_root_path):
-        self.root_path = new_root_path
+        assert(isabs(new_root_path))
+        self.root_path = abspath(new_root_path)
 
     def set_readability(self, readable_notice):
         self.can_read = readable_notice
@@ -75,6 +78,7 @@ class Item(object):
         while len(buf) > 0:
             hash.update(buf)
             buf = afile.read(blocksize)
+        afile.close()
         return hash.hexdigest()
 
     def set_md5(self, hash_value):
@@ -93,10 +97,13 @@ class Item(object):
         return self.filepath
 
     def set_file_path(self, new_file_path):
-        self.file_path = new_file_path
+        assert(isabs(new_file_path))
+        self.filepath = abspath(new_file_path)
 
     def find_canonical_filepath(self):
         assert self.accession
+        assert(self.get_root_path() in self.get_file_path()
+               and self.get_accession() in self.get_file_path())
         return relpath(self.filepath, join(self.root_path, self.accession))
 
     def set_canonical_filepath(self, canonical_path):
@@ -153,15 +160,17 @@ class Item(object):
         except Exception as e:
             return (False, e)
 
-    def find_file_mime_type_from_magic_numbers(self):
+    def find_file_mime_type_from_magic_number(self):
         try:
-            return from_file(self.filepath, mime=True)
+            return from_file(self.filepath, mime=True).decode("UTF-8")
         except Exception as e:
             return (False, e)
 
     def find_file_mime_type(self):
         try:
             mimetype = self.find_file_mime_type_from_extension()
+            if mimetype is None:
+                mimetype = self.find_file_mime_type_from_magic_number()
         except Exception:
             try:
                 mimetype = self.find_file_mime_type_from_magic_number()
@@ -180,9 +189,9 @@ class Item(object):
         stif_filepath = self.filepath+'.stif.txt'
         if exists(fits_filepath) or exists(stif_filepath):
             self.has_technical_md = True
+            return True
         else:
-            pass
-        return True
+            return False
 
     def get_destination_path(self, new_root_directory):
         path_sans_root = relpath(self.filepath, self.root_path)
