@@ -2,7 +2,6 @@
 from collections import Iterable
 from os import listdir, rmdir
 from os.path import exists, join, isabs, isfile, isdir, relpath
-from sqlalchemy.orm.query import Query
 from types import GeneratorType
 from urllib.request import urlopen
 
@@ -23,10 +22,7 @@ class Batch(object):
                  directory=None,
                  query=None):
         assert exists(root)
-        if query:
-            assert isinstance(query, Query)
-            self.query = query
-        elif directory:
+        if directory:
             assert exists(directory)
             self.directory_path = directory
         self.root = root
@@ -54,14 +50,11 @@ class Batch(object):
                              "RESTful NOID minter")
         return url_data.split('61001/').rstrip()
 
-    def find_items(self, from_db=False, from_directory=False):
+    def find_items(self, from_directory=False):
         output = None
         if from_directory:
             if exists(self.directory_path):
                 output = self.walk_directory_picking_files(self.directory_path)
-        elif from_db:
-            output = self.walk_database_query_picking_files()
-
         else:
             output = None
         return output
@@ -81,17 +74,6 @@ class Batch(object):
             elif isdir(fullpath):
                 for child in listdir(fullpath):
                     flat_list.append(join(fullpath, child))
-
-    def walk_database_query_picking_files(self):
-        for n in self.query:
-            item = Item(join(self.root, n.accession, n.filepath), self.root)
-            if getattr(n, 'checksum', None):
-                item.remote_hash = n.checksum
-            if getattr(n, 'size', None):
-                item.remote_size = n.size
-            if getattr(n, 'mimetype', None):
-                item.remote_mimetype = n.mimetype
-            yield item
 
     def set_items(self, items):
         assert(isinstance(items, GeneratorType) or isinstance(items, Iterable))
@@ -148,18 +130,6 @@ class Batch(object):
                                                         self.directory_path
         )
         self.items = generator_of_items
-
-    def collect_from_database(self, database_object, queryable, query_object,
-                              root):
-        query = database_object.session.query(queryable).filter(query_object)
-        if query.count() > 0:
-            generator_of_items = self.walk_database_query_picking_files(
-                                                                query,
-                                                                root,
-            )
-            self.items = generator_of_items
-        else:
-            raise ValueError("Your database query did not have any results!")
 
     def set_items_iter(self, some_iterable):
         assert isinstance(some_iterable, Iterable)
