@@ -134,8 +134,26 @@ class TestItem(unittest.TestCase):
 
 
 class testBatch(unittest.TestCase):
-    pass
+    def setUp(self):
+        pass
 
+    def tearDown(self):
+        pass
+
+    def testMint(self):
+        pass
+
+    def testAddItem(self):
+        pass
+
+    def testFindItems(self):
+        pass
+
+    def testSetItemsIter(self):
+        pass
+
+    def testSetItemsGen(self):
+        pass
 
 class testBashCommand(unittest.TestCase):
     pass

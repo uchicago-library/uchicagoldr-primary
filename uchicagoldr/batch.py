@@ -13,20 +13,8 @@ class Batch(object):
     This class holds a list of files as Item instances in a new accession
     """
 
-    items = []
-    directory_path = ""
-    root = ""
-    identifier = ""
-
-    def __init__(self, root,
-                 directory=None,
-                 query=None):
-        assert exists(root)
-        if directory:
-            assert exists(directory)
-            self.directory_path = directory
-        self.root = root
-        self.items = []
+    def __init__(self, items=[]):
+        self.set_items(items)
 
     def __iter__(self):
         for item in self.get_items():
@@ -40,24 +28,35 @@ class Batch(object):
         except Exception as e:
             return (False, e)
 
-    def find_batch_identifier(self):
-        url_data = urlopen("https://y1.lib.uchicago.edu/cgi-bin/minter/" +
-                           "noid?action=minter&n=1")
-        if url_data.status == 200:
-            url_data = url_data.read()
-        else:
-            raise ValueError("Could not fetch batch identifier from " +
-                             "RESTful NOID minter")
-        return url_data.split('61001/').rstrip()
+    def set_items(self, items):
+        assert(isinstance(items, GeneratorType) or isinstance(items, Iterable))
+        if isinstance(items, GeneratorType):
+            self.set_items_gen(items)
+        if isinstance(items, Iterable):
+            self.set_items_iter(items)
 
-    def find_items(self, from_directory=False):
-        output = None
-        if from_directory:
-            if exists(self.directory_path):
-                output = self.walk_directory_picking_files(self.directory_path)
+    def set_items_gen(self, generator_object):
+        assert isinstance(generator_object, GeneratorType)
+        self.items = generator_object
+
+    def set_items_iter(self, some_iterable):
+        assert isinstance(some_iterable, Iterable)
+        self.items = some_iterable
+
+    def get_items(self):
+        return self.items
+
+class Directory(Batch):
+
+    def __init__(self, items=[], directory_path=""):
+        Batch.__init__(self, items=items)
+        self.directory_path = self.define_path(directory_path)
+
+    def define_path(self, a_path):
+        if not isabs(a_path):
+            raise ValueError("path is not absolute!")
         else:
-            output = None
-        return output
+            self.directory_path = a_path
 
     def walk_directory_picking_files(self, directory):
         """
@@ -75,19 +74,41 @@ class Batch(object):
                 for child in listdir(fullpath):
                     flat_list.append(join(fullpath, child))
 
-    def set_items(self, items):
-        assert(isinstance(items, GeneratorType) or isinstance(items, Iterable))
-        if isinstance(items, GeneratorType):
-            set_items_gen(self, items)
-        if isinstance(items, Iterable):
-            set_items_iter(self, items)
+    def collect_from_directory(self, directory_path, root):
+        assert isinstance(directory_path, str)
+        self.define_path(directory_path)
+        self.set_root_path(root)
+        directory_relative_to_root = self. \
+                                     convert_to_relative_path(directory_path)
+        self.get_accession_from_relative_path(directory_relative_to_root)
+        generator_of_items = self.walk_directory_picking_files(
+                                                        self.directory_path
+        )
+        self.items = generator_of_items
 
-    def set_items_gen(self, generator_object):
-        assert isinstance(generator_object, GeneratorType)
-        self.items = generator_object
+    def clean_out_directory(self):
+        """
+        attempts to delete the batch directory; it will fail if
+        the batch directory is not empty
+        """
+        rmdir(self.directory_path)
 
-    def get_items(self):
-        return self.items
+
+class AccessionDirectory(Directory):
+
+    def __init__(self, items=[], directory_path="", root=""):
+        Directory.__init__(self, items=items, directory_path=directory_path)
+        self.root = root
+
+    def find_batch_identifier(self):
+        url_data = urlopen("https://y1.lib.uchicago.edu/cgi-bin/minter/" +
+                           "noid?action=minter&n=1")
+        if url_data.status == 200:
+            url_data = url_data.read()
+        else:
+            raise ValueError("Could not fetch batch identifier from " +
+                             "RESTful NOID minter")
+        return url_data.split('61001/').rstrip()
 
     def convert_to_relative_path(self, a_path):
         if not self.root:
@@ -104,13 +125,6 @@ class Batch(object):
             self.root = a_path
         return True
 
-    def define_path(self, a_path):
-        if not exists(a_path):
-            raise ValueError("path does not exist!")
-        else:
-            self.directory_path = a_path
-        return True
-
     def get_accession_from_relative_path(self, a_path):
         if isabs(a_path):
             raise ValueError("cannot get accession from an absolute path")
@@ -119,25 +133,3 @@ class Batch(object):
             self.accession = accession
         return True
 
-    def collect_from_directory(self, directory_path, root):
-        assert isinstance(directory_path, str)
-        self.define_path(directory_path)
-        self.set_root_path(root)
-        directory_relative_to_root = self. \
-                                     convert_to_relative_path(directory_path)
-        self.get_accession_from_relative_path(directory_relative_to_root)
-        generator_of_items = self.walk_directory_picking_files(
-                                                        self.directory_path
-        )
-        self.items = generator_of_items
-
-    def set_items_iter(self, some_iterable):
-        assert isinstance(some_iterable, Iterable)
-        self.items = some_iterable
-
-    def clean_out_batch(self):
-        """
-        attempts to delete the batch directory; it will fail if
-        the batch directory is not empty
-        """
-        rmdir(self.directory)

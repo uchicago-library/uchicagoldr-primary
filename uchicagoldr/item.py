@@ -12,24 +12,9 @@ class Item(object):
     This class holds the data for each regular file in a new batch
     """
 
-    root_path = ""
-    filepath = ""
-    sha256 = ""
-    md5 = ""
-    accession = ""
-    mimetype = ""
-    index_hash = ""
-    index_mimetype = ""
-    index_size = ""
-    canonical_filepath = ""
-    can_read = False
-    has_technical_md = False
-
-    def __init__(self, path, root):
+    def __init__(self, path):
         assert(isabs(path))
-        assert(isabs(root))
-        self.root_path = abspath(root)
-        self.filepath = join(root, abspath(path))
+        self.filepath = path
         self.set_readability(self.test_readability())
 
     def test_readability(self):
@@ -37,13 +22,6 @@ class Item(object):
             return True
         else:
             return False
-
-    def get_root_path(self):
-        return self.root_path
-
-    def set_root_path(self, new_root_path):
-        assert(isabs(new_root_path))
-        self.root_path = abspath(new_root_path)
 
     def set_readability(self, readable_notice):
         self.can_read = readable_notice
@@ -100,37 +78,11 @@ class Item(object):
         assert(isabs(new_file_path))
         self.filepath = abspath(new_file_path)
 
-    def find_canonical_filepath(self):
-        assert self.accession
-        assert(self.get_root_path() in self.get_file_path()
-               and self.get_accession() in self.get_file_path())
-        return relpath(self.filepath, join(self.root_path, self.accession))
-
-    def set_canonical_filepath(self, canonical_path):
-        self.canonical_filepath = canonical_path
-
-    def get_canonical_filepath(self):
-        return self.canonical_filepath
-
-    def find_file_accession(self):
-        relative_path = relpath(self.filepath, self.root_path)
-        accession, *tail = relative_path.split('/')
-        return accession
-
-    def set_accession(self, identifier):
-        if re_compile('^\w{13}$').match(identifier):
-            self.accession = identifier
-        else:
-            raise ValueError("You did not pass a valid noid")
-
     def find_file_name(self):
         return basename(self.filepath)
 
     def find_file_name_no_extension(self):
         return splitext(basename(self.filepath))[0]
-
-    def get_accession(self):
-        return self.accession
 
     def find_file_extension(self):
         filename = basename(self.filepath)
@@ -193,6 +145,56 @@ class Item(object):
         else:
             return False
 
+    def find_matching_object_pattern(self, regex_pattern):
+        assert isinstance(regex_pattern, type(re_compile("foo")))
+        assert self.canonical_filepath
+        matchable = regex_pattern.search(self.canonical_filepath)
+        if matchable:
+            return namedtuple("object_pattern", "status data")(True, matchable)
+        else:
+            return namedtuple("object_pattern", "status data")(False, None)
+
+
+class AccessionItem(Item):
+
+    def __init__(self, path, root):
+        Item.__init__(self, path)
+        assert(isabs(root))
+        self.root_path = abspath(root)
+
+    def get_root_path(self):
+        return self.root_path
+
+    def set_root_path(self, new_root_path):
+        assert(isabs(new_root_path))
+        self.root_path = abspath(new_root_path)
+
+    def find_canonical_filepath(self):
+        assert self.accession
+        assert(self.get_root_path() in self.get_file_path()
+               and self.get_accession() in self.get_file_path())
+        return relpath(self.filepath, join(self.root_path, self.accession))
+
+    def set_canonical_filepath(self, canonical_path):
+        self.canonical_filepath = canonical_path
+
+    def get_canonical_filepath(self):
+        return self.canonical_filepath
+
+    def find_file_accession(self):
+        relative_path = relpath(self.filepath, self.root_path)
+        accession, *tail = relative_path.split('/')
+        return accession
+
+    def set_accession(self, identifier):
+        if re_compile('^\w{13}$').match(identifier):
+            self.accession = identifier
+        else:
+            raise ValueError("You did not pass a valid noid")
+
+    def get_accession(self):
+        return self.accession
+
     def get_destination_path(self, new_root_directory):
         path_sans_root = relpath(self.filepath, self.root_path)
         destination_full_path = join(new_root_directory, path_sans_root)
@@ -202,11 +204,3 @@ class Item(object):
     def set_destination_path(self, new_path):
         self.destination = new_path
 
-    def find_matching_object_pattern(self, regex_pattern):
-        assert isinstance(regex_pattern, type(re_compile("foo")))
-        assert self.canonical_filepath
-        matchable = regex_pattern.search(self.canonical_filepath)
-        if matchable:
-            return namedtuple("object_pattern", "status data")(True, matchable)
-        else:
-            return namedtuple("object_pattern", "status data")(False, None)
