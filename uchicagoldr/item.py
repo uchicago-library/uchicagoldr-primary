@@ -17,6 +17,9 @@ class Item(object):
         self.filepath = path
         self.set_readability(self.test_readability())
 
+    def __repr__(self):
+        return self.get_file_path()
+
     def test_readability(self):
         if access(self.filepath, R_OK):
             return True
@@ -24,14 +27,17 @@ class Item(object):
             return False
 
     def set_readability(self, readable_notice):
+        assert(isinstance(readable_notice, bool))
         self.can_read = readable_notice
 
     def read_file(self):
+        assert(self.can_read)
         with open(self.filepath, 'r') as f:
             fileData = f.read()
         return fileData
 
     def read_file_binary(self):
+        assert(self.can_read)
         with open(self.filepath, 'rb') as f:
             fileData = f.read()
         return fileData
@@ -43,6 +49,7 @@ class Item(object):
         return self.find_hash_of_file(sha256)
 
     def find_hash_of_file(self, hash_type, blocksize=65536):
+        assert(self.can_read)
         def check():
             if hash_type.__name__ == sha256.__name__ or \
                hash_type.__name__ == md5.__name__:
@@ -82,11 +89,10 @@ class Item(object):
         return basename(self.filepath)
 
     def find_file_name_no_extension(self):
-        return splitext(basename(self.filepath))[0]
+        return splitext(self.find_file_name())[0]
 
     def find_file_extension(self):
-        filename = basename(self.filepath)
-        return splitext(filename)[1]
+        return splitext(self.find_file_name())[1]
 
     def set_file_extension(self, value):
         self.file_extension = value
@@ -137,8 +143,8 @@ class Item(object):
         return self.mimetype
 
     def find_technical_metadata(self):
-        fits_filepath = self.filepath+'.fits.xml'
-        stif_filepath = self.filepath+'.stif.txt'
+        fits_filepath = self.get_file_path()+'.fits.xml'
+        stif_filepath = self.get_file_path()+'.stif.txt'
         if exists(fits_filepath) or exists(stif_filepath):
             self.has_technical_md = True
             return True
@@ -171,8 +177,8 @@ class AccessionItem(Item):
 
     def find_canonical_filepath(self):
         assert self.accession
-        assert(self.get_root_path() in self.get_file_path()
-               and self.get_accession() in self.get_file_path())
+        assert(self.get_root_path() in self.get_file_path() and
+               self.get_accession() in self.get_file_path())
         return relpath(self.filepath, join(self.root_path, self.accession))
 
     def set_canonical_filepath(self, canonical_path):
@@ -203,4 +209,3 @@ class AccessionItem(Item):
 
     def set_destination_path(self, new_path):
         self.destination = new_path
-
