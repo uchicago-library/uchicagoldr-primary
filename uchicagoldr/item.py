@@ -50,6 +50,7 @@ class Item(object):
 
     def find_hash_of_file(self, hash_type, blocksize=65536):
         assert(self.can_read)
+
         def check():
             if hash_type.__name__ == sha256.__name__ or \
                hash_type.__name__ == md5.__name__:

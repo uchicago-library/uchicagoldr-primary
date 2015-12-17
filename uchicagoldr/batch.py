@@ -1,7 +1,7 @@
 
 from collections import Iterable
 from os import listdir, rmdir
-from os.path import exists, join, isabs, isfile, isdir, relpath
+from os.path import join, isabs, isfile, isdir, relpath
 from types import GeneratorType
 from urllib.request import urlopen
 
@@ -84,22 +84,6 @@ class Directory(Batch):
     def get_directory_path(self):
         return self.directory_path
 
-#    def walk_directory_picking_files(self, directory):
-#        """
-#        walks a directory tree and creates a generator full of Item instances
-#        for each regular file
-#        """
-#        flat_list = listdir(self.directory_path)
-#        while flat_list:
-#            node = flat_list.pop()
-#            fullpath = join(directory, node)
-#            if isfile(fullpath):
-#                i = Item(fullpath)
-#                yield i
-#            elif isdir(fullpath):
-#                for child in listdir(fullpath):
-#                    flat_list.append(join(fullpath, child))
-
     def walk_directory_picking_files(self):
         """
         walks a directory tree and creates a generator full of AccessionItem
@@ -110,7 +94,7 @@ class Directory(Batch):
             node = flat_list.pop()
             fullpath = join(self.get_directory_path(), node)
             if isfile(fullpath):
-                i = AccessionItem(fullpath)
+                i = Item(fullpath)
                 yield i
             elif isdir(fullpath):
                 for child in listdir(fullpath):
@@ -162,7 +146,7 @@ class AccessionDirectory(Directory):
     def set_accession(self, new_accession):
         self.accession = new_accession
 
-    def get_root(self):
+    def get_root_path(self):
         return self.root
 
     def mint_accession_identifier(self):
@@ -179,7 +163,8 @@ class AccessionDirectory(Directory):
         if not self.root:
             raise ValueError("There is no directory root on this batch!")
         else:
-            directory_relative_to_root = relpath(self.get_directory_path(), self.get_root())
+            directory_relative_to_root = relpath(self.get_directory_path(),
+                                                 self.get_root_path())
         return directory_relative_to_root
 
     def set_root_path(self, a_path):
@@ -220,7 +205,7 @@ class AccessionDirectory(Directory):
             node = flat_list.pop()
             fullpath = join(self.get_directory_path(), node)
             if isfile(fullpath):
-                i = AccessionItem(fullpath, self.get_root())
+                i = AccessionItem(fullpath, self.get_root_path())
                 yield i
             elif isdir(fullpath):
                 for child in listdir(fullpath):

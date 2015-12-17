@@ -2,15 +2,15 @@ import unittest
 from os import getcwd
 from os.path import isfile
 
-from uchicagoldr.item import Item
-from uchicagoldr.batch import Batch
+from uchicagoldr.item import Item, AccessionItem
+from uchicagoldr.batch import Batch, Directory, AccessionDirectory
 from uchicagoldr.bash_cmd import BashCommand
 
 
 class TestItem(unittest.TestCase):
     def setUp(self):
-        self.i = Item(getcwd()+'/1234567890123/testFiles/0.rand', getcwd())
-        self.j = Item(getcwd()+'/1234567890123/testFiles/1.txt', getcwd()+"/")
+        self.i = Item(getcwd()+'/1234567890123/testFiles/0.rand')
+        self.j = Item(getcwd()+'/1234567890123/testFiles/1.txt')
 
     def tearDown(self):
         del(self.i)
@@ -41,16 +41,6 @@ class TestItem(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.i.set_file_path('this/is/more/convincing')
 
-    def testGetSetRootPath(self):
-        self.assertEqual(self.i.get_root_path(), getcwd())
-        self.assertEqual(self.j.get_root_path(), getcwd())
-        self.assertEqual(self.j.get_root_path(),
-                         self.i.get_root_path())
-        self.i.set_root_path('/new/path')
-        self.assertEqual(self.i.get_root_path(), '/new/path')
-        self.j.set_root_path('/new/path/again/')
-        self.assertEqual(self.j.get_root_path(), '/new/path/again')
-
     def testSetGetFindMD5(self):
         self.i.set_md5(self.i.find_md5_hash())
         self.assertEqual(self.i.get_md5(), 'c00ecc4e3efa25d17842217b57e999dd')
@@ -68,34 +58,6 @@ class TestItem(unittest.TestCase):
             self.j.get_sha256(),
             'a7a3d006d0b37872526f57529014864b1da514e9e00799eb4f8b71d080c5a9a6'
         )
-
-    def testSetGetFindAccession(self):
-        self.i.set_accession(self.i.find_file_accession())
-        self.assertEqual(self.i.get_accession(), '1234567890123')
-        self.j.set_accession(self.j.find_file_accession())
-        self.assertEqual(self.j.get_accession(), '1234567890123')
-
-        self.i.set_accession('0987654321098')
-        self.assertEqual(self.i.get_accession(), '0987654321098')
-
-        with self.assertRaises(ValueError):
-            self.j.set_accession('1')
-
-    def testSetGetFindCannonicalPath(self):
-        with self.assertRaises(AssertionError):
-            self.i.find_canonical_filepath()
-        self.i.set_accession(self.i.find_file_accession())
-        self.j.set_accession(self.j.find_file_accession())
-        self.i.set_canonical_filepath(self.i.find_canonical_filepath())
-        self.assertEqual(self.i.get_canonical_filepath(), 'testFiles/0.rand')
-        self.j.set_canonical_filepath(self.j.find_canonical_filepath())
-        self.assertEqual(self.j.get_canonical_filepath(), 'testFiles/1.txt')
-
-        with self.assertRaises(AssertionError):
-            self.i.set_file_path('/new/path/to/file.txt')
-            self.i.set_root_path('/new/path/too/deep')
-            self.i.find_file_accession()
-            self.i.find_canonical_filepath()
 
     def testSetGetFindMime(self):
         self.i.set_file_mime_type(self.i.find_file_mime_type())
@@ -133,7 +95,147 @@ class TestItem(unittest.TestCase):
         self.assertTrue(self.j.find_technical_metadata())
 
 
-class testBatch(unittest.TestCase):
+class TestAccessionItem(unittest.TestCase):
+    def setUp(self):
+        self.i = AccessionItem(getcwd() +
+                               '/1234567890123/testFiles/0.rand', getcwd())
+        self.j = AccessionItem(getcwd() +
+                               '/1234567890123/testFiles/1.txt', getcwd())
+
+    def tearDown(self):
+        del(self.i)
+        del(self.j)
+
+    def testGetSetRootPath(self):
+        self.assertEqual(self.i.get_root_path(), getcwd())
+        self.assertEqual(self.j.get_root_path(), getcwd())
+        self.assertEqual(self.j.get_root_path(),
+                         self.i.get_root_path())
+        self.i.set_root_path('/new/path')
+        self.assertEqual(self.i.get_root_path(), '/new/path')
+        self.j.set_root_path('/new/path/again/')
+        self.assertEqual(self.j.get_root_path(), '/new/path/again')
+
+    def testSetGetFindAccession(self):
+        self.i.set_accession(self.i.find_file_accession())
+        self.assertEqual(self.i.get_accession(), '1234567890123')
+        self.j.set_accession(self.j.find_file_accession())
+        self.assertEqual(self.j.get_accession(), '1234567890123')
+
+        self.i.set_accession('0987654321098')
+        self.assertEqual(self.i.get_accession(), '0987654321098')
+
+        with self.assertRaises(ValueError):
+            self.j.set_accession('1')
+
+    def testSetGetFindCannonicalPath(self):
+        with self.assertRaises(AttributeError):
+            self.i.find_canonical_filepath()
+        self.i.set_accession(self.i.find_file_accession())
+        self.j.set_accession(self.j.find_file_accession())
+        self.i.set_canonical_filepath(self.i.find_canonical_filepath())
+        self.assertEqual(self.i.get_canonical_filepath(), 'testFiles/0.rand')
+        self.j.set_canonical_filepath(self.j.find_canonical_filepath())
+        self.assertEqual(self.j.get_canonical_filepath(), 'testFiles/1.txt')
+
+        with self.assertRaises(AssertionError):
+            self.i.set_file_path('/new/path/to/file.txt')
+            self.i.set_root_path('/new/path/too/deep')
+            self.i.find_file_accession()
+            self.i.find_canonical_filepath()
+
+
+class TestBatch(unittest.TestCase):
+    def setUp(self):
+        self.testBatch1 = Batch()
+        self.testBatch2 = Batch()
+
+    def tearDown(self):
+        del self.testBatch1
+        del self.testBatch2
+
+    def testMint(self):
+        self.assertTrue(self.testBatch1)
+        self.assertTrue(self.testBatch2)
+
+    def testAddGetItem(self):
+        i = Item('/legitimate/looking/path.txt')
+        j = Item('/another/path')
+        self.testBatch1.add_item(i)
+        self.assertEqual(self.testBatch1.get_items(), [i])
+        self.testBatch1.add_item(j)
+        self.assertEqual(self.testBatch1.get_items(), [i, j])
+
+    def testSetItemsIter(self):
+        i = Item('/legitimate/looking/path.txt')
+        j = Item('/another/path')
+        testIter = [i, j]
+        self.testBatch1.set_items(testIter)
+        self.assertEqual(self.testBatch1.get_items(), [i, j])
+
+    def testSetItemsGen(self):
+        i = Item('/legitimate/looking/path.txt')
+        j = Item('/another/path')
+        testIter = [i, j]
+        self.testBatch2.set_items(x for x in testIter)
+        iteration = -1
+        for item in self.testBatch2.get_items():
+            iteration += 1
+            self.assertEqual(item, testIter[iteration])
+
+
+class TestDirectory(unittest.TestCase):
+    def setUp(self):
+        self.testDirectory1 = Directory(getcwd()+'/1234567890123')
+
+    def tearDown(self):
+        del self.testDirectory1
+
+    def testMint(self):
+        self.assertTrue(self.testDirectory1)
+
+    def testSetGetDirectoryPath(self):
+        self.assertEqual(self.testDirectory1.get_directory_path(),
+                         getcwd()+'/1234567890123')
+        self.testDirectory1.set_directory_path('/new/dir/path')
+        self.assertEqual(self.testDirectory1.get_directory_path(),
+                         '/new/dir/path')
+
+    def testWalkDirectoryPickingFiles(self):
+        i = Item(getcwd()+'/1234567890123/testFiles/0.rand')
+        j = Item(getcwd()+'/1234567890123/testFiles/1.txt')
+        k = Item(getcwd()+'/1234567890123/testFiles/1.txt.fits.xml')
+        l = Item(getcwd()+'/1234567890123/testFiles/testDir/2.csv')
+        matches=0
+        for x in self.testDirectory1.walk_directory_picking_files():
+            self.assertTrue(x.find_md5_hash() in [i.find_md5_hash(),
+                                                  j.find_md5_hash(),
+                                                  k.find_md5_hash(),
+                                                  l.find_md5_hash()]
+                            )
+            matches += 1
+        self.assertEqual(matches, 4)
+
+    def testAddItem(self):
+        i = Item(getcwd()+'/1234567890123/testFiles/0.rand')
+        j = Item(getcwd()+'/1234567890123/testFiles/1.txt')
+        k = Item(getcwd()+'/1234567890123/testFiles/1.txt.fits.xml')
+        l = Item(getcwd()+'/1234567890123/testFiles/testDir/2.csv')
+
+        self.testDirectory1.add_item(i)
+        self.assertEqual(self.testDirectory1.get_items(), [i])
+        self.testDirectory1.add_item(j)
+        self.assertEqual(self.testDirectory1.get_items(), [i, j])
+        self.testDirectory1.add_item(k)
+        self.assertEqual(self.testDirectory1.get_items(), [i, j, k])
+        self.testDirectory1.add_item(l)
+        self.assertEqual(self.testDirectory1.get_items(), [i, j, k, l])
+
+    def testPopulate(self):
+        pass
+
+
+class testAccessionDirectory(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -146,14 +248,18 @@ class testBatch(unittest.TestCase):
     def testAddItem(self):
         pass
 
-    def testFindItems(self):
+    def testSetGetFindAccession(self):
         pass
 
-    def testSetItemsIter(self):
+    def testGetSetRoot(self):
         pass
 
-    def testSetItemsGen(self):
+    def testWalkDirectoryPickingFiles(self):
         pass
+
+    def testPopulate(self):
+        pass
+
 
 class testBashCommand(unittest.TestCase):
     pass
