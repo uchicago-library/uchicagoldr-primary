@@ -20,6 +20,11 @@ class Item(object):
     def __repr__(self):
         return self.get_file_path()
 
+    def __eq__(self, other):
+        eq = type(self) == type(other) and self.get_file_path() == \
+            other.get_file_path()
+        return eq
+
     def test_readability(self):
         if access(self.filepath, R_OK):
             return True
@@ -164,10 +169,17 @@ class Item(object):
 
 class AccessionItem(Item):
 
-    def __init__(self, path, root):
+    def __init__(self, path, root, accession=None):
         Item.__init__(self, path)
         assert(isabs(root))
         self.root_path = abspath(root)
+        if accession is None:
+            self.set_accession(self.find_file_accession())
+
+    def __eq__(self, other):
+        return Item.__eq__(self, other) and self.get_root_path() == \
+            other.get_root_path() and self.get_accession() == \
+            other.get_accession()
 
     def get_root_path(self):
         return self.root_path

@@ -14,8 +14,15 @@ class Batch(object):
     This class holds a list of files as Item instances in a new accession
     """
 
-    def __init__(self, items=[]):
-        self.set_items(items)
+    def __init__(self, items=None):
+        self.items = []
+        if isinstance(items, Iterable) or isinstance(items, GeneratorType) \
+                or items is None:
+            pass
+        else:
+            raise TypeError
+        if items is not None:
+            self.set_items(items)
 
     def __iter__(self):
         for item in self.get_items():
@@ -23,6 +30,12 @@ class Batch(object):
 
     def __repr__(self):
         return str(self.get_items())
+
+    def __eq__(self, other):
+        eq = type(self) == type(other)
+        for item in self.get_items():
+            eq = eq and item in other.get_items()
+        return eq
 
     def add_item(self, new_item):
         try:
@@ -71,9 +84,13 @@ class Batch(object):
 
 class Directory(Batch):
 
-    def __init__(self,  directory_path, items=[]):
+    def __init__(self,  directory_path, items=None):
         Batch.__init__(self, items=items)
         self.set_directory_path(directory_path)
+
+    def __eq__(self, other):
+        return Batch.__eq__(self, other) and self.get_directory_path() == \
+            other.get_directory_path()
 
     def set_directory_path(self, a_path):
         if not isabs(a_path):
@@ -123,7 +140,7 @@ class Directory(Batch):
 
 class AccessionDirectory(Directory):
 
-    def __init__(self, directory_path, root, accession=None, items=[]):
+    def __init__(self, directory_path, root, accession=None, items=None):
         Directory.__init__(self, directory_path=directory_path, items=items)
         self.set_root_path(root)
         self.accession = accession
@@ -139,6 +156,10 @@ class AccessionDirectory(Directory):
             return (True, None)
         except Exception as e:
             return (False, e)
+
+    def __eq__(self, other):
+        return Directory.__eq__(self, other) and self.get_root() == \
+            other.get_root() and self.get_accession() == other.get_accession()
 
     def get_accession(self):
         return self.accession
