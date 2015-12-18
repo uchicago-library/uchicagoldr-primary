@@ -33,8 +33,16 @@ class Batch(object):
 
     def __eq__(self, other):
         eq = type(self) == type(other)
+        if not eq:
+            return False
         for item in self.get_items():
             eq = eq and item in other.get_items()
+            if not eq:
+                return False
+        for item in other.get_items():
+            eq = eq and item in self.get_items()
+            if not eq:
+                return False
         return eq
 
     def add_item(self, new_item):
@@ -89,8 +97,8 @@ class Directory(Batch):
         self.set_directory_path(directory_path)
 
     def __eq__(self, other):
-        return Batch.__eq__(self, other) and self.get_directory_path() == \
-            other.get_directory_path()
+        return Batch.__eq__(self, other) and \
+            self.get_directory_path() == other.get_directory_path()
 
     def set_directory_path(self, a_path):
         if not isabs(a_path):
@@ -122,13 +130,10 @@ class Directory(Batch):
             self.add_item(item)
 
     def add_item(self, new_item):
-        try:
-            assert isinstance(new_item, Item)
-            assert(self.get_directory_path() in new_item.get_file_path())
-            self.items.append(new_item)
-            return (True, None)
-        except Exception as e:
-            return (False, e)
+        assert isinstance(new_item, Item)
+        assert(self.get_directory_path() in new_item.get_file_path())
+        Batch.add_item(self, new_item)
+        return (True, None)
 
     def clean_out_directory(self):
         """

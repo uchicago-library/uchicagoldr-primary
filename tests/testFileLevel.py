@@ -188,9 +188,18 @@ class TestBatch(unittest.TestCase):
         self.assertEqual(self.testBatch1.get_items(), [i, j])
 
     def testEq(self):
+        self.assertTrue(self.testBatch1 == self.testBatch2)
         self.testBatch1.add_item(Item('/abc'))
         self.testBatch2.add_item(Item('/def'))
         self.assertFalse(self.testBatch1 == self.testBatch2)
+        new_batch = Batch()
+        self.assertFalse(self.testBatch1 == new_batch)
+        self.assertFalse(self.testBatch2 == new_batch)
+        comp_batch1 = Batch()
+        comp_batch2 = Batch()
+        comp_batch1.add_item(Item('/random/long/string/for/path'))
+        comp_batch2.add_item(Item('/random/long/string/for/path'))
+        self.assertEqual(comp_batch1, comp_batch2)
 
     def testSetItemsIter(self):
         i = Item('/legitimate/looking/path.txt')
@@ -222,7 +231,22 @@ class TestDirectory(unittest.TestCase):
         self.assertEqual(len(self.testDirectory1.get_items()), 0)
 
     def testEq(self):
-        pass
+        testDir2 = Directory('/not/the/same/path')
+        self.assertFalse(self.testDirectory1 == testDir2)
+        testDir3 = Directory(getcwd()+'/1234567890123')
+        # Not the same item contents
+        testDir3.add_item(Item(getcwd()+'/1234567890123/testfakefile.txt'))
+        print()
+        print(self.testDirectory1)
+        print(testDir3)
+        self.assertFalse(self.testDirectory1 == testDir3)
+        # No contents
+        testDir4 = Directory(getcwd()+'/1234567890123')
+        self.assertTrue(self.testDirectory1 == testDir4)
+        #Add something...
+        self.testDirectory1.add_item(Item(getcwd() +
+                                          '/1234567890123/testfakefile.txt'))
+        self.assertFalse(self.testDirectory1 == testDir4)
 
     def testSetGetDirectoryPath(self):
         self.assertEqual(self.testDirectory1.get_directory_path(),
@@ -251,6 +275,7 @@ class TestDirectory(unittest.TestCase):
         j = Item(getcwd()+'/1234567890123/testFiles/1.txt')
         k = Item(getcwd()+'/1234567890123/testFiles/1.txt.fits.xml')
         l = Item(getcwd()+'/1234567890123/testFiles/testDir/2.csv')
+        m = Item('/not/in/the/stated/dirpath')
 
         self.testDirectory1.add_item(i)
         self.assertEqual(self.testDirectory1.get_items(), [i])
@@ -260,6 +285,8 @@ class TestDirectory(unittest.TestCase):
         self.assertEqual(self.testDirectory1.get_items(), [i, j, k])
         self.testDirectory1.add_item(l)
         self.assertEqual(self.testDirectory1.get_items(), [i, j, k, l])
+        with self.assertRaises(AssertionError):
+            self.testDirectory1.add_item(m)
 
     def testPopulate(self):
         i = Item(getcwd()+'/1234567890123/testFiles/0.rand')
