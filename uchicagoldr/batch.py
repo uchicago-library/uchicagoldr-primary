@@ -1,7 +1,7 @@
 
 from collections import Iterable
 from os import listdir, rmdir
-from os.path import join, isabs, isfile, isdir, relpath
+from os.path import join, isabs, isfile, isdir, relpath, abspath
 from types import GeneratorType
 from urllib.request import urlopen
 
@@ -104,7 +104,7 @@ class Directory(Batch):
         if not isabs(a_path):
             raise ValueError("path is not absolute!")
         else:
-            self.directory_path = a_path
+            self.directory_path = abspath(a_path)
 
     def get_directory_path(self):
         return self.directory_path
@@ -133,7 +133,6 @@ class Directory(Batch):
         assert isinstance(new_item, Item)
         assert(self.get_directory_path() in new_item.get_file_path())
         Batch.add_item(self, new_item)
-        return (True, None)
 
     def clean_out_directory(self):
         """
@@ -150,21 +149,18 @@ class AccessionDirectory(Directory):
         self.set_root_path(root)
         self.accession = accession
         if self.get_accession() is None:
-            self.get_accession_from_relative_path(
-                self.convert_to_relative_path(self.get_directory_path())
+            self.set_accession(
+                self.find_accession_from_relative_path()
             )
 
     def add_item(self, new_item):
-        try:
-            assert isinstance(new_item, AccessionItem)
-            self.items.append(new_item)
-            return (True, None)
-        except Exception as e:
-            return (False, e)
+        assert isinstance(new_item, AccessionItem)
+        Directory.add_item(self, new_item)
 
     def __eq__(self, other):
-        return Directory.__eq__(self, other) and self.get_root() == \
-            other.get_root() and self.get_accession() == other.get_accession()
+        return Directory.__eq__(self, other) and \
+            self.get_root_path() == other.get_root_path() and \
+            self.get_accession() == other.get_accession()
 
     def get_accession(self):
         return self.accession
@@ -185,11 +181,13 @@ class AccessionDirectory(Directory):
                              "RESTful NOID minter")
         return url_data.split('61001/').rstrip()
 
-    def convert_to_relative_path(self, a_path):
+    def convert_to_relative_path(self, a_path=None):
         if not self.root:
             raise ValueError("There is no directory root on this batch!")
         else:
-            directory_relative_to_root = relpath(self.get_directory_path(),
+            if a_path is None:
+                a_path = self.get_directory_path()
+            directory_relative_to_root = relpath(a_path,
                                                  self.get_root_path())
         return directory_relative_to_root
 
@@ -197,16 +195,19 @@ class AccessionDirectory(Directory):
         if not isabs(a_path):
             raise ValueError("The path you entered is not absolute!")
         else:
-            self.root = a_path
+            self.root = abspath(a_path)
         return True
 
-    def get_accession_from_relative_path(self, a_path):
+    def find_accession_from_relative_path(self, a_path=None):
+        if a_path is None:
+            a_path = self.convert_to_relative_path(
+                self.get_directory_path()
+            )
         if isabs(a_path):
             raise ValueError("cannot get accession from an absolute path")
         else:
             accession, *tail = a_path.split('/')
-            self.accession = accession
-        return True
+            return accession
 
     def collect_from_directory(self, directory_path, root):
         assert isinstance(directory_path, str)

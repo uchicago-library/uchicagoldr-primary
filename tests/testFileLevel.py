@@ -1,6 +1,7 @@
 import unittest
 from os import getcwd
-from os.path import isfile
+from os.path import isfile, split
+from copy import deepcopy
 
 from uchicagoldr.item import Item, AccessionItem
 from uchicagoldr.batch import Batch, Directory, AccessionDirectory
@@ -236,14 +237,11 @@ class TestDirectory(unittest.TestCase):
         testDir3 = Directory(getcwd()+'/1234567890123')
         # Not the same item contents
         testDir3.add_item(Item(getcwd()+'/1234567890123/testfakefile.txt'))
-        print()
-        print(self.testDirectory1)
-        print(testDir3)
         self.assertFalse(self.testDirectory1 == testDir3)
         # No contents
         testDir4 = Directory(getcwd()+'/1234567890123')
         self.assertTrue(self.testDirectory1 == testDir4)
-        #Add something...
+        # Add something...
         self.testDirectory1.add_item(Item(getcwd() +
                                           '/1234567890123/testfakefile.txt'))
         self.assertFalse(self.testDirectory1 == testDir4)
@@ -307,28 +305,149 @@ class TestDirectory(unittest.TestCase):
 
 class testAccessionDirectory(unittest.TestCase):
     def setUp(self):
-        pass
+        self.testAccessionDirectory = AccessionDirectory(
+            getcwd()+'/1234567890123', getcwd()
+        )
 
     def tearDown(self):
-        pass
+        del self.testAccessionDirectory
 
     def testMint(self):
-        pass
+        self.assertTrue(self.testAccessionDirectory)
 
-    def testAddItem(self):
-        pass
+    def testAddGetItem(self):
+        self.testAccessionDirectory.add_item(
+            AccessionItem(getcwd()+'/1234567890123/testFiles/0.rand', getcwd())
+        )
+
+        self.assertEqual(self.testAccessionDirectory.get_items(),
+                         [AccessionItem(
+                             getcwd()+'/1234567890123/testFiles/0.rand',
+                             getcwd()
+                         )]
+                         )
+        self.testAccessionDirectory.add_item(
+            AccessionItem(getcwd()+'/1234567890123/testFiles/1.txt', getcwd())
+        )
+
+        self.assertEqual(self.testAccessionDirectory.get_items(),
+                         [
+                             AccessionItem(getcwd() +
+                                           '/1234567890123/testFiles/0.rand',
+                                           getcwd()),
+                             AccessionItem(getcwd() +
+                                           '/1234567890123/testFiles/1.txt',
+                                           getcwd())
+                         ]
+                         )
 
     def testSetGetFindAccession(self):
-        pass
+        self.assertEqual(self.testAccessionDirectory.get_accession(),
+                         '1234567890123'
+                         )
+        self.testAccessionDirectory.set_accession('0987654321098')
+        self.assertEqual(self.testAccessionDirectory.get_accession(),
+                         '0987654321098'
+                         )
+        self.testAccessionDirectory.set_accession(
+            self.testAccessionDirectory.find_accession_from_relative_path()
+        )
+        self.assertEqual(self.testAccessionDirectory.get_accession(),
+                         '1234567890123'
+                         )
 
     def testGetSetRoot(self):
-        pass
+        self.assertEqual(self.testAccessionDirectory.get_root_path(),
+                         getcwd()
+                         )
+
+        self.testAccessionDirectory.set_root_path('/new/test/root')
+        self.assertEqual(self.testAccessionDirectory.get_root_path(),
+                         '/new/test/root'
+                         )
 
     def testWalkDirectoryPickingFiles(self):
-        pass
+        i = AccessionItem(getcwd() + '/1234567890123/testFiles/0.rand',
+                          getcwd())
+        j = AccessionItem(getcwd() + '/1234567890123/testFiles/1.txt',
+                          getcwd())
+        k = AccessionItem(getcwd() + '/1234567890123/testFiles/1.txt.fits.xml',
+                          getcwd())
+        l = AccessionItem(getcwd() + '/1234567890123/testFiles/testDir/2.csv',
+                          getcwd())
+        matches = 0
+        for x in self.testAccessionDirectory.walk_directory_picking_files():
+            self.assertTrue(x.find_md5_hash() in [i.find_md5_hash(),
+                                                  j.find_md5_hash(),
+                                                  k.find_md5_hash(),
+                                                  l.find_md5_hash()]
+                            )
+            matches += 1
+        self.assertEqual(matches, 4)
 
     def testPopulate(self):
-        pass
+        i = AccessionItem(getcwd()+'/1234567890123/testFiles/0.rand',
+                          getcwd())
+        j = AccessionItem(getcwd()+'/1234567890123/testFiles/1.txt',
+                          getcwd())
+        k = AccessionItem(getcwd()+'/1234567890123/testFiles/1.txt.fits.xml',
+                          getcwd())
+        l = AccessionItem(getcwd()+'/1234567890123/testFiles/testDir/2.csv',
+                          getcwd())
+        dirContents = [i.find_md5_hash(),
+                       j.find_md5_hash(),
+                       k.find_md5_hash(),
+                       l.find_md5_hash()]
+        self.testAccessionDirectory.populate()
+        matches = 0
+        for entry in self.testAccessionDirectory.get_items():
+            matches += 1
+            self.assertTrue(entry.find_md5_hash() in dirContents)
+        self.assertEqual(matches, 4)
+
+    def testEq(self):
+        i = AccessionItem(getcwd()+'/1234567890123/testFiles/0.rand',
+                          getcwd())
+        j = AccessionItem(getcwd()+'/1234567890123/testFiles/1.txt',
+                          getcwd())
+        k = AccessionItem(getcwd()+'/1234567890123/testFiles/1.txt.fits.xml',
+                          getcwd())
+        l = AccessionItem(getcwd()+'/1234567890123/testFiles/testDir/2.csv',
+                          getcwd())
+        blank_same_path = AccessionDirectory(
+            getcwd()+'/1234567890123', getcwd()
+        )
+        self.assertEqual(self.testAccessionDirectory, blank_same_path)
+        # Add something
+        self.testAccessionDirectory.add_item(i)
+        self.assertFalse(self.testAccessionDirectory == blank_same_path)
+        # different paths, same children
+        diff_path = AccessionDirectory(
+            getcwd() + '/1234567890123/testFiles',
+            getcwd())
+        self.assertFalse(self.testAccessionDirectory == diff_path)
+        # different root
+        new_root, one_up = split(getcwd())
+        diff_root = AccessionDirectory(getcwd() + '/1234567890123',
+                                       new_root)
+        self.assertFalse(self.testAccessionDirectory == diff_root)
+
+        # And lets just check adding items in sequence...
+        # Deep copies of the items for the heck of it
+        blank_same_path.add_item(deepcopy(i))
+        self.assertEqual(self.testAccessionDirectory, blank_same_path)
+        blank_same_path.add_item(deepcopy(j))
+        self.assertFalse(self.testAccessionDirectory == blank_same_path)
+        self.testAccessionDirectory.add_item(j)
+        self.assertEqual(self.testAccessionDirectory, blank_same_path)
+        blank_same_path.add_item(deepcopy(k))
+        self.assertFalse(self.testAccessionDirectory == blank_same_path)
+        self.testAccessionDirectory.add_item(k)
+        self.assertEqual(self.testAccessionDirectory, blank_same_path)
+        blank_same_path.add_item(deepcopy(l))
+        self.assertFalse(self.testAccessionDirectory == blank_same_path)
+        self.testAccessionDirectory.add_item(l)
+        self.assertEqual(self.testAccessionDirectory, blank_same_path)
 
 
 class testBashCommand(unittest.TestCase):
