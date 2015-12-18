@@ -2,6 +2,7 @@ import unittest
 from os import getcwd
 from os.path import isfile, split
 from copy import deepcopy
+from subprocess import CompletedProcess, TimeoutExpired
 
 from uchicagoldr.item import Item, AccessionItem
 from uchicagoldr.batch import Batch, Directory, AccessionDirectory
@@ -451,7 +452,51 @@ class testAccessionDirectory(unittest.TestCase):
 
 
 class testBashCommand(unittest.TestCase):
-    pass
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def testSetGetArgs(self):
+        com = BashCommand(['echo', 'test'])
+        self.assertEqual(com.get_args(), ['echo', 'test'])
+        com.set_args(['echo','test2'])
+        self.assertEqual(com.get_args(), ['echo', 'test2'])
+
+    def testGetData(self):
+        com = BashCommand(['echo', 'test'])
+        self.assertTrue(com.run_command()[0])
+        self.assertTrue(isinstance(com.get_data()[0], bool))
+        self.assertTrue(isinstance(com.get_data()[1], CompletedProcess))
+        self.assertTrue(isinstance(com.get_data()[2], bool))
+
+    def testSetGetTimeout(self):
+        com = BashCommand([])
+        com.set_timeout(10)
+        self.assertEqual(com.get_timeout(), 10)
+        com.set_timeout(20)
+        self.assertEqual(com.get_timeout(), 20)
+        com.set_timeout(None)
+        self.assertEqual(com.get_timeout(), None)
+
+    def testRunCommand(self):
+        com = BashCommand(['echo', 'test'])
+        self.assertTrue(com.run_command()[0])
+        self.assertTrue(isinstance(com.run_command()[1], CompletedProcess))
+
+    def testTimeOut(self):
+        com = BashCommand(['sleep','3'])
+        com.set_timeout(5)
+        self.assertTrue(com.run_command()[0])
+        self.assertTrue(com.get_data()[0])
+        self.assertTrue(com.get_data()[2])
+        self.assertTrue(isinstance(com.get_data()[1], CompletedProcess))
+        com.set_timeout(1)
+        self.assertTrue(com.run_command()[0])
+        self.assertTrue(com.get_data()[0])
+        self.assertFalse(com.get_data()[2])
+        self.assertTrue(isinstance(com.get_data()[1], TimeoutExpired))
 
 if __name__ == '__main__':
     unittest.main()

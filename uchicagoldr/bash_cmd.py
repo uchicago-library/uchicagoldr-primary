@@ -1,5 +1,5 @@
 
-from subprocess import run, PIPE, STDOUT
+from subprocess import run, PIPE, STDOUT, TimeoutExpired
 
 
 class BashCommand(object):
@@ -9,6 +9,7 @@ class BashCommand(object):
     data = None
     timeout = None
     command_ran = False
+    command_completed = False
 
     def __init__(self, arguments):
         self.args = arguments
@@ -19,18 +20,25 @@ class BashCommand(object):
             cmd = run(self.args, stdout=PIPE, stderr=STDOUT,
                       timeout=self.timeout, universal_newlines=True)
             self.command_ran = True
+            self.command_completed = True
+        except TimeoutExpired as e:
+            cmd = e
+            self.command_ran = True
+            self.cmd_out = e
+            self.command_completed = False
+            return(True, e, False)
         except Exception as e:
             self.cmd_out = e
-            return(False, e)
+            return(False, e, False)
         try:
             self.cmd_out = cmd
         except Exception as e:
             self.cmd_out = e
-            return (False, e)
-        return (True, cmd)
+            return (False, e, False)
+        return (True, cmd, True)
 
     def get_data(self):
-        return (self.command_ran, self.cmd_out)
+        return (self.command_ran, self.cmd_out, self.command_completed)
 
     def get_args(self):
         return self.args
