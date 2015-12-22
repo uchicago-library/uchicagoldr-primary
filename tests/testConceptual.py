@@ -595,6 +595,7 @@ class testFamily(unittest.TestCase):
             remove('testJSON.json')
 
     def testRecursiveFamilyToJSON(self):
+        from os import remove
         from json import loads
         from json import load
 
@@ -633,6 +634,8 @@ class testFamily(unittest.TestCase):
             self.assertEqual(len(loadedIO['descs']), 2)
             self.assertEqual(loadedIO['descs']['1'], '1')
             self.assertTrue(loadedIO['uuid'])
+
+            remove('testJSON.json')
 
 if __name__ == '__main__':
     unittest.main()
