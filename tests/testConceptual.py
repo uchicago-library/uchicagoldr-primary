@@ -239,18 +239,30 @@ class testFamily(unittest.TestCase):
             self.assertTrue(family == tests[0])
 
     def testInitChildrenAndDescs(self):
-        self.family10 = Family(descs=KVPList([KVP('10', '10')]),children=[self.filePointer1])
-        self.family9 = Family(descs=KVPList([KVP('9', '9')]),children=[self.filePointer2])
-        self.family8 = Family(descs=KVPList([KVP('8', '8')]),children=[self.filePointer3])
-        self.family7 = Family(descs=KVPList([KVP('7', '7')]),children=[self.filePointer4])
-        self.family6 = Family(descs=KVPList([KVP('6', '6')]),children=[self.filePointer5])
-        self.family5 = Family(descs=KVPList([KVP('5', '5')]),children=[self.filePointer6])
+        self.family10 = Family(
+            descs=KVPList([KVP('10', '10')]), children=[self.filePointer1])
+        self.family9 = Family(
+            descs=KVPList([KVP('9', '9')]), children=[self.filePointer2])
+        self.family8 = Family(
+            descs=KVPList([KVP('8', '8')]), children=[self.filePointer3])
+        self.family7 = Family(
+            descs=KVPList([KVP('7', '7')]), children=[self.filePointer4])
+        self.family6 = Family(
+            descs=KVPList([KVP('6', '6')]), children=[self.filePointer5])
+        self.family5 = Family(
+            descs=KVPList([KVP('5', '5')]), children=[self.filePointer6])
         self.family4 = Family(descs=KVPList([KVP('4', '4')]),
-                              children=[self.family9, self.family10, self.filePointer7])
+                              children=[self.family9,
+                                        self.family10,
+                                        self.filePointer7])
         self.family3 = Family(descs=KVPList([KVP('3', '3')]),
-                              children=[self.family7, self.family8, self.filePointer8])
+                              children=[self.family7,
+                                        self.family8,
+                                        self.filePointer8])
         self.family2 = Family(descs=KVPList([KVP('2', '2')]),
-                              children=[self.family5, self.family6, self.filePointer9])
+                              children=[self.family5,
+                                        self.family6,
+                                        self.filePointer9])
         self.family1 = Family(descs=KVPList([KVP('1', '1')]),
                               children=[self.family2, self.family3,
                                         self.family4, self.filePointer10])
@@ -561,10 +573,12 @@ class testFamily(unittest.TestCase):
         jsonString = self.family1.to_json()
 
         with open('testJSON.json', 'w') as IO:
-            jsonObj = self.family1.to_json(string_output=False, targetIO=IO)
+            self.family1.to_json(string_output=False, targetIO=IO)
 
         loadedString = loads(jsonString)
         self.assertEqual(len(loadedString['children']), 3)
+        for entry in loadedString['children']:
+            self.assertTrue(isinstance(entry, str))
         self.assertEqual(len(loadedString['descs']), 2)
         self.assertEqual(loadedString['descs']['1'], '1')
         self.assertTrue(loadedString['uuid'])
@@ -572,12 +586,53 @@ class testFamily(unittest.TestCase):
         with open('testJSON.json', 'r') as inFile:
             loadedIO = load(inFile)
             self.assertEqual(len(loadedIO['children']), 3)
+            for entry in loadedString['children']:
+                self.assertTrue(isinstance(entry, str))
             self.assertEqual(len(loadedIO['descs']), 2)
             self.assertEqual(loadedIO['descs']['1'], '1')
             self.assertTrue(loadedIO['uuid'])
 
             remove('testJSON.json')
 
+    def testRecursiveFamilyToJSON(self):
+        from json import loads
+        from json import load
+
+        self.family1.add_child(self.family2)
+        self.family1.add_child(self.family3)
+        self.family1.add_child(self.family4)
+        self.family2.add_child(self.family5)
+        self.family2.add_child(self.family6)
+        self.family3.add_child(self.family7)
+        self.family3.add_child(self.family8)
+        self.family4.add_child(self.family9)
+        self.family4.add_child(self.family10)
+
+        nestedKVPList = KVPList([KVP('nested_key', 'nested_value')])
+        nest = KVP('nest', nestedKVPList)
+        self.family1.add_desc(nest)
+
+        jsonString = self.family1.recursive_to_json()
+
+        with open('testJSON.json', 'w') as IO:
+            self.family1.recursive_to_json(string_output=False, targetIO=IO)
+
+        loadedString = loads(jsonString)
+        self.assertEqual(len(loadedString['children']), 3)
+        for entry in loadedString['children']:
+            self.assertTrue(isinstance(entry, dict))
+        self.assertEqual(len(loadedString['descs']), 2)
+        self.assertEqual(loadedString['descs']['1'], '1')
+        self.assertTrue(loadedString['uuid'])
+
+        with open('testJSON.json', 'r') as inFile:
+            loadedIO = load(inFile)
+            self.assertEqual(len(loadedIO['children']), 3)
+            for entry in loadedString['children']:
+                self.assertTrue(isinstance(entry, dict))
+            self.assertEqual(len(loadedIO['descs']), 2)
+            self.assertEqual(loadedIO['descs']['1'], '1')
+            self.assertTrue(loadedIO['uuid'])
+
 if __name__ == '__main__':
     unittest.main()
-

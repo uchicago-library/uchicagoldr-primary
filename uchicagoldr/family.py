@@ -1,9 +1,10 @@
 from pickle import dump, load
 from os import getcwd
-from os.path import exists, isdir, join, isfile
+from os.path import exists, isdir, join
 from uuid import uuid4
 from json import dump as json_dump
 from json import dumps as json_dumps
+from json import loads as json_loads
 
 from uchicagoldr.filepointer import FilePointer
 from uchicagoldr.keyvaluepair import KeyValuePair
@@ -13,8 +14,10 @@ from uchicagoldr.keyvaluepairlist import KeyValuePairList
 def load_family_from_dir(uuid, dir):
     pass
 
+
 def load_family_from_json(json):
     pass
+
 
 def load_family_from_db(uuid):
     pass
@@ -173,7 +176,7 @@ class Family(object):
 
     def pop_child_by_index(self, index=None):
         if index is None:
-            index=len(self.get_children())-1
+            index = len(self.get_children())-1
         return self.get_children().pop(index)
 
     def remove_child(self, child):
@@ -279,7 +282,7 @@ class Family(object):
         assert(self.check_flat())
 
         if len(self.get_children()) > 0:
-            poofed_children=[]
+            poofed_children = []
             for child in self.get_children():
                 with open(child+'.family', 'rb') as f:
                     poofed_children.append(load(f))
@@ -316,14 +319,15 @@ class Family(object):
         if leaf:
             if isinstance(self, Family):
                 self.flatten()
-            self.write_to_file(file_name=self.get_uuid()+'.family', path=path, clobber=clobber)
+            self.write_to_file(file_name=self.get_uuid()+'.family',
+                               path=path, clobber=clobber)
 
         else:
             for child in self.get_children():
                 if isinstance(child, Family):
                     child.write_to_dir(path=path, clobber=clobber)
                 elif isinstance(child, FilePointer):
-                    child.write_to_file(path=path, clobber=clober)
+                    child.write_to_file(path=path, clobber=clobber)
             self.write_to_dir(path=path, clobber=clobber)
 
     def write_to_file(self, path=getcwd(), file_name=None, clobber=False):
@@ -356,12 +360,25 @@ class Family(object):
 
         return descsDict
 
-
     def to_json(self, string_output=True, targetIO=None):
         assert(self.check_flat())
         selfDict = {}
         selfDict['uuid'] = self.get_uuid()
         selfDict['children'] = self.get_children()
+        selfDict['descs'] = self.descs_to_dict()
+        if string_output:
+            return json_dumps(selfDict)
+        else:
+            assert(targetIO is not None)
+            return json_dump(selfDict, targetIO)
+
+    def recursive_to_json(self, string_output=True, targetIO=None):
+        assert(self.check_not_flat())
+        selfDict = {}
+        selfDict['uuid'] = self.get_uuid()
+        selfDict['children'] = []
+        for child in self.get_children():
+            selfDict['children'].append(json_loads(child.recursive_to_json()))
         selfDict['descs'] = self.descs_to_dict()
         if string_output:
             return json_dumps(selfDict)
