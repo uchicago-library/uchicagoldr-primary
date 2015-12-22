@@ -2,6 +2,8 @@ from pickle import dump, load
 from os import getcwd
 from os.path import exists, isdir, join, isfile
 from uuid import uuid4
+from json import dump as json_dump
+from json import dumps as json_dumps
 
 from uchicagoldr.filepointer import FilePointer
 from uchicagoldr.keyvaluepair import KeyValuePair
@@ -11,6 +13,8 @@ from uchicagoldr.keyvaluepairlist import KeyValuePairList
 def load_family_from_dir(uuid, dir):
     pass
 
+def load_family_from_json(json):
+    pass
 
 def load_family_from_db(uuid):
     pass
@@ -336,3 +340,31 @@ class Family(object):
 
     def write_to_db(self):
         pass
+
+    def descs_to_dict(self, descs=None):
+        if descs is None:
+            descs = self.get_descs()
+
+        descsDict = {}
+        if len(descs) > 0:
+            for kvp in descs:
+                if not isinstance(kvp.get_value(), KeyValuePairList):
+                    descsDict[kvp.get_key()] = kvp.get_value()
+                else:
+                    descsDict[kvp.get_key()] = \
+                        self.descs_to_dict(descs=kvp.get_value())
+
+        return descsDict
+
+
+    def to_json(self, string_output=True, targetIO=None):
+        assert(self.check_flat())
+        selfDict = {}
+        selfDict['uuid'] = self.get_uuid()
+        selfDict['children'] = self.get_children()
+        selfDict['descs'] = self.descs_to_dict()
+        if string_output:
+            return json_dumps(selfDict)
+        else:
+            assert(targetIO is not None)
+            return json_dump(selfDict, targetIO)

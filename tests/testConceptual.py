@@ -1,4 +1,5 @@
 import unittest
+
 from uchicagoldr.keyvaluepair import KeyValuePair as KVP
 from uchicagoldr.keyvaluepairlist import KeyValuePairList as KVPList
 from uchicagoldr.family import Family
@@ -536,5 +537,47 @@ class testFamily(unittest.TestCase):
     def testFamilyPoofFromDB(self):
         pass
 
+    def testFamilyToJson(self):
+        from json import loads
+        from json import load
+        from os import remove
+
+        self.family1.add_child(self.family2)
+        self.family1.add_child(self.family3)
+        self.family1.add_child(self.family4)
+        self.family2.add_child(self.family5)
+        self.family2.add_child(self.family6)
+        self.family3.add_child(self.family7)
+        self.family3.add_child(self.family8)
+        self.family4.add_child(self.family9)
+        self.family4.add_child(self.family10)
+
+        nestedKVPList = KVPList([KVP('nested_key', 'nested_value')])
+        nest = KVP('nest', nestedKVPList)
+        self.family1.add_desc(nest)
+
+        self.family1.flatten()
+
+        jsonString = self.family1.to_json()
+
+        with open('testJSON.json', 'w') as IO:
+            jsonObj = self.family1.to_json(string_output=False, targetIO=IO)
+
+        loadedString = loads(jsonString)
+        self.assertEqual(len(loadedString['children']), 3)
+        self.assertEqual(len(loadedString['descs']), 2)
+        self.assertEqual(loadedString['descs']['1'], '1')
+        self.assertTrue(loadedString['uuid'])
+
+        with open('testJSON.json', 'r') as inFile:
+            loadedIO = load(inFile)
+            self.assertEqual(len(loadedIO['children']), 3)
+            self.assertEqual(len(loadedIO['descs']), 2)
+            self.assertEqual(loadedIO['descs']['1'], '1')
+            self.assertTrue(loadedIO['uuid'])
+
+            remove('testJSON.json')
+
 if __name__ == '__main__':
     unittest.main()
+
