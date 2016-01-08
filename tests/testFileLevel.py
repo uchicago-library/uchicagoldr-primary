@@ -1,11 +1,12 @@
 import unittest
 from os import getcwd
-from os.path import isfile, split
+from os.path import isfile, split, isdir, exists, join
 from copy import deepcopy
 from subprocess import CompletedProcess, TimeoutExpired
 
 from uchicagoldr.item import Item, AccessionItem
-from uchicagoldr.batch import Batch, Directory, AccessionDirectory
+from uchicagoldr.batch import Batch, Directory, AccessionDirectory, \
+    StagingDirectory
 from uchicagoldr.bash_cmd import BashCommand
 
 
@@ -302,6 +303,21 @@ class TestDirectory(unittest.TestCase):
             matches += 1
             self.assertTrue(entry.find_md5_hash() in dirContents)
         self.assertEqual(matches, 4)
+
+
+class TestStagingDirectory(unittest.TestCase):
+    def testMint(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+
+    def testSpawn(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        test.spawn()
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fixityFromOrigin.txt')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fixityOnDisk.txt')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','log.txt')))
 
 
 class testAccessionDirectory(unittest.TestCase):

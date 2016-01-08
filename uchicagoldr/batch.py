@@ -1,12 +1,14 @@
 
 from collections import Iterable
 from os import listdir, rmdir
-from os.path import join, isabs, isfile, isdir, relpath, abspath
+from os.path import join, isabs, isfile, isdir, relpath, abspath, exists, split
 from types import GeneratorType
 from urllib.request import urlopen
+from re import match
 
 from uchicagoldr.item import Item
 from uchicagoldr.item import AccessionItem
+from uchicagoldr.bash_cmd import BashCommand
 
 
 class Batch(object):
@@ -91,7 +93,6 @@ class Batch(object):
 
 
 class Directory(Batch):
-
     def __init__(self,  directory_path, items=None):
         Batch.__init__(self, items=items)
         self.set_directory_path(directory_path)
@@ -142,8 +143,340 @@ class Directory(Batch):
         rmdir(self.directory_path)
 
 
-class AccessionDirectory(Directory):
+class StagingDirectory(Directory):
+    def __init__(self, root, ark, ead, accno, items=None):
+        self.root = root
+        self.ark = ark
+        self.ead = ead
+        self.accno = accno
+        self.data_path = None
+        self.admin_path = None
+        self.exists_on_disk = False
+        directory_path = join(root, ark)
+        Directory.__init__(self, directory_path=directory_path, items=items)
 
+    def spawn(self):
+        if exists(join(self.root, self.ark)):
+            return False
+
+        try:
+            assert(exists(self.root))
+            mkAdminDirArgs = ['mkdir', '-p', join(self.root,
+                                                  self.ark,
+                                                  self.ead,
+                                                  self.accno,
+                                                  "admin")
+                              ]
+            mkAdminDirCommand = BashCommand(mkAdminDirArgs)
+            assert(mkAdminDirCommand.run_command()[0])
+            assert(mkAdminDirCommand.get_data()[1].returncode == 0)
+            self.set_admin_path(join(self.root, self.ark,
+                                     self.ead, self.accno, "admin"))
+
+            topLevelReqFiles = ['fixityFromOrigin.txt',
+                                'fixityOnDisk.txt',
+                                'log.txt',
+                                ]
+            for f in topLevelReqFiles:
+                touchArgs = ['touch', join(self.get_admin_path(), f)]
+                touchCommand = BashCommand(touchArgs)
+                assert(touchCommand.run_command()[0])
+                assert(touchCommand.get_data()[1].returncode == 0)
+
+            mkDataDirArgs = ['mkdir', join(self.root,
+                                           self.ark,
+                                           self.ead,
+                                           self.accno,
+                                           "data")
+                             ]
+            mkDataDirCommand = BashCommand(mkDataDirArgs)
+            assert(mkDataDirCommand.run_command()[0])
+            assert(mkDataDirCommand.get_data()[1].returncode == 0)
+            self.set_data_path(join(self.root, self.ark,
+                                    self.ead, self.accno, "data"))
+
+            self.set_exists_on_disk(True)
+            return join(self.root, self.ark)
+        except Exception as e:
+            return e
+
+    def get_data_path(self):
+        return self.data_path
+
+    def set_data_path(self, new_data_path):
+        assert(isabs(new_data_path))
+        self.data_path = new_data_path
+
+    def get_admin_path(self):
+        return self.admin_path
+
+    def set_admin_path(self, new_admin_path):
+        assert(isabs(new_admin_path))
+        self.admin_path = new_admin_path
+
+    def get_exists_on_disk(self):
+        return self.exists_on_disk
+
+    def set_exists_on_disk(self, newBool):
+        assert(isinstance(newBool, bool))
+        self.exists_on_disk = newBool
+
+    def validate(self):
+        path = self.directory_path
+        shouldBeRoot = self.root
+        shouldBeArk = self.ark
+        shouldBeEAD = self.ead
+        shouldBeAccNo = self.accno
+
+        observedRoot = None
+        observedArk = None
+        observedEAD = None
+        observedAccNo = None
+
+        if not (isdir(path)):
+            return (False, observedRoot, observedArk,
+                    observedEAD, observedAccNo)
+
+        if split(path)[-1] == '':
+            observedRoot = split(split(path)[0])[0]
+        else:
+            observedRoot = split(path)[0]
+
+        if shouldBeRoot is not None:
+            if shouldBeRoot != observedRoot:
+                return (False,
+                        observedRoot, observedArk,
+                        observedEAD, observedAccNo)
+        shouldBeRoot = observedRoot
+
+        if split(path)[-1] == '':
+            observedArk = split(split(path)[0])[1]
+        else:
+            observedArk = split(path)[1]
+        if shouldBeArk is not None:
+            if shouldBeArk != observedArk:
+                return (False,
+                        observedRoot, observedArk,
+                        observedEAD, observedAccNo)
+        shouldBeArk = observedArk
+        if not match("^\w{13}$", shouldBeArk):
+            return (False,
+                    observedRoot, observedArk,
+                    observedEAD, observedAccNo)
+
+        if len(listdir(join(shouldBeRoot, shouldBeArk))) == 1:
+            observedEAD = listdir(join(observedRoot, shouldBeArk))[0]
+        else:
+            return (False,
+                    observedRoot, observedArk,
+                    observedEAD, observedAccNo)
+        if shouldBeEAD is not None:
+            if shouldBeEAD != observedEAD:
+                return (False,
+                        observedRoot, observedArk,
+                        observedEAD, observedAccNo)
+        shouldBeEAD = observedEAD
+
+        if len(listdir(join(shouldBeRoot, shouldBeArk, shouldBeEAD))) == 1:
+            observedAccNo = listdir(join(
+                shouldBeRoot, shouldBeArk, shouldBeEAD))[0]
+        else:
+            return (False,
+                    observedRoot, observedArk,
+                    observedEAD, observedAccNo)
+        if shouldBeAccNo is not None:
+            if shouldBeAccNo != observedAccNo:
+                return (False,
+                        observedRoot, observedArk,
+                        observedEAD, observedAccNo)
+        shouldBeAccNo = observedAccNo
+        if not match("^\d{4}-\d{3}$", shouldBeAccNo):
+            return (False,
+                    observedRoot, observedArk,
+                    observedEAD, observedAccNo)
+
+        for folder in ['admin', 'data']:
+            if folder not in listdir(join(
+                    shouldBeRoot, shouldBeArk, shouldBeEAD, shouldBeAccNo)):
+                return (False,
+                        observedRoot, observedArk,
+                        observedEAD, observedAccNo)
+        if len(listdir(join(
+                shouldBeRoot, shouldBeArk, shouldBeEAD, shouldBeAccNo))) != 2:
+            return (False,
+                    observedRoot, observedArk,
+                    observedEAD, observedAccNo)
+
+        return (True,
+                observedRoot, observedArk,
+                observedEAD, observedAccNo)
+
+    def _validate_organization(self, targetPath, reqTopFiles=[],
+                               reqDirContents=[]):
+        returnDict = {}
+        returnDict['dirs'] = []
+        returnDict['notDirs'] = []
+        returnDict['prefixes'] = []
+        returnDict['badPrefixes'] = []
+        returnDict['missingDirs'] = []
+        returnDict['missingReqs'] = []
+
+        if not isdir(targetPath):
+            return((False, returnDict))
+
+        targetTopFileList = [x for x in
+                             listdir(targetPath) if isfile(join(targetPath, x))]
+        targetFolderList = [x for x in
+                            listdir(targetPath) if isdir(join(targetPath, x))]
+
+        for x in reqTopFiles:
+            if x not in targetTopFileList:
+                returnDict['missingReqs'].append(join(targetPath, x))
+                return ((False, returnDict))
+
+        for x in targetFolderList:
+            returnDict['dirs'].append(x)
+
+        if targetFolderList != listdir(targetPath):
+            for x in listdir(targetPath):
+                if x not in targetFolderList:
+                    returnDict['notDirs'].append(x)
+
+        for x in targetFolderList:
+            prefix = match('^[a-zA-Z_\-]*', x)
+            try:
+                returnDict['badPrefixes'].append(prefix.group(1))
+            except IndexError:
+                returnDict['prefixes'].append(prefix.group(0))
+            dirContents = [y for y in listdir(join(targetPath, x))]
+            for req in reqDirContents:
+                if req not in dirContents:
+                    returnDict['missingReqs'].append(join(targetPath, x, req))
+
+        returnDict['prefixes'] = set(returnDict['prefixes'])
+        returnDict['badPrefixes'] = set(returnDict['badPrefixes'])
+
+        for prefix in returnDict['prefixes']:
+            prefixSet = [directory for directory in listdir(targetPath)
+                        if match('^'+prefix, directory)]
+            nums = []
+            for folder in prefixSet:
+                num = folder.lstrip(prefix)
+                nums.append(int(num))
+            maxNum = max(nums)
+            for i in range(1, maxNum+1):
+                if i not in nums:
+                    returnDict['missingDirs'].append(prefix+str(num))
+        if len(returnDict['missingDirs']) > 0:
+            return((False, returnDict))
+        if len(returnDict['badPrefixes']) > 0:
+            return((False, returnDict))
+        if len(returnDict['missingReqs']) > 0:
+            return((False, returnDict))
+        return (True, returnDict)
+
+    def _read_fixity_log(self, path):
+        assert(exists(path))
+        existingFixity = {}
+        try:
+            with open(path, 'r') as f:
+                for line in f.readlines():
+                    splitLine = line.split('\t')
+                    splitLine[-1] = splitLine[-1].rstrip('\n')
+                    go = True
+                    for entry in splitLine[1:]:
+                        if entry == 'ERROR':
+                            go = False
+                    if not go:
+                        continue
+                    try:
+                        existingFixity[splitLine[0]] = [splitLine[1], splitLine[2]]
+                    except IndexError:
+                        pass
+        except:
+            pass
+        return existingFixity
+
+
+    def _validate_contained_folder(self, containing_folder):
+        destinationAdminRoot = self.get_admin_path()
+        destinationAdminFolder = join(destinationAdminRoot, containing_folder)
+        destinationDataRoot = self.get_data_path()
+        destinationDataFolder = join(destinationDataRoot, containing_folder)
+
+        existingOriginalFileHashes = self._read_fixity_log(
+                                         join(
+                                           destinationAdminFolder,
+                                           'fixityFromOrigin.txt'
+                                         )
+                                     )
+        existingMovedFileHashes = self._read_fixity_log(
+                                     join(
+                                       destinationAdminFolder,
+                                       'fixityOnDisk.txt'
+                                     )
+                                  )
+
+        notMoved = [key for key in existingOriginalFileHashes
+                    if key not in existingMovedFileHashes]
+        foreignFiles = [key for key in existingMovedFileHashes
+                        if key not in existingOriginalFileHashes]
+        badHash = [key for key in existingOriginalFileHashes
+                   if key not in notMoved and
+                   existingOriginalFileHashes[key] !=
+                   existingMovedFileHashes[key]]
+
+        returnDict = {}
+        returnDict['Original File Hashes'] = existingOriginalFileHashes
+        returnDict['Moved File Hashes'] = existingMovedFileHashes
+        returnDict['Not Moved'] = notMoved
+        returnDict['Foreign Files'] = foreignFiles
+        returnDict['Bad Hashes'] = badHash
+        if len(notMoved) == 0 and \
+                len(foreignFiles) == 0 and \
+                len(badHash) == 0:
+            return (True, returnDict)
+        else:
+            return (False, returnDict)
+
+    def audit(self):
+        data = {}
+        data['rootStatus'] = []
+        data['dataStatus'] = []
+        data['adminStatus'] = []
+        data['containedDirs'] = []
+        rootStatus = self.validate()
+        dataStatus = self._validate_organization(self.get_data_path())
+        adminStatus = self._validate_organization(self.get_admin_path(),
+                                                  reqTopFiles=['record.json',
+                                                               'fileConversions.txt'],
+                                                  reqDirContents=['fixityFromOrigin.txt',
+                                                                  'fixityOnDisk.txt',
+                                                                  'log.txt',
+                                                                  'rsyncFromOrigin.txt'])
+        data['rootStatus'] = rootStatus
+        data['dataStatus'] = dataStatus
+        data['adminStatus'] = adminStatus
+
+        if rootStatus[0] and dataStatus[0] and adminStatus[0]:
+            dirs = [x for x in listdir(self.get_data_path())]
+            for entry in dirs:
+                assert(isdir(entry))
+                data['containedDirs'].append(
+                    self._validate_contained_folder(entry))
+            for entry in data['containedDirs']:
+                if entry[0] is not True:
+                    return (False, data)
+
+            return (True, data)
+        else:
+            return (False, data)
+
+    def ingest(self, path):
+        pass
+
+
+class AccessionDirectory(Directory):
     def __init__(self, directory_path, root, accession=None, items=None):
         Directory.__init__(self, directory_path=directory_path, items=items)
         self.set_root_path(root)
@@ -237,7 +570,3 @@ class AccessionDirectory(Directory):
             elif isdir(fullpath):
                 for child in listdir(fullpath):
                     flat_list.append(join(fullpath, child))
-
-    def populate(self):
-        for item in self.walk_directory_picking_files():
-            self.add_item(item)
