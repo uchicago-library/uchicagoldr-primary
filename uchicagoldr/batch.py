@@ -519,6 +519,23 @@ class StagingDirectory(Directory):
         with open(join(workingAdmin,
                        'rsyncFromOrigin.txt'), 'a') as f:
             f.write(str(rsyncCommand.get_data()[1])+'\n')
+        # if isdir(path):
+        #   thingsToMove = MovableItems()
+        #   walker = FileWalker(path)
+        #   for entry in walker:
+        #       thingToMove = MovableItem(entry, path, workingData)
+        #       thingsToMove.append(thingToMove)
+        #   for thingToMove in thingsToMove.get_items():
+        #       thingToMove.move()
+        #       assert(thingToMove.moved)
+        #       with open(join(workingAdmin,'mvLog.txt'),'a') as f:
+        #           f.write(thingToMove.get_move_result())
+        # elif isfile(path):
+        #   thingToMove = MovableItem(entry, path, workingData)
+        #   thingToMove.move()
+        #   assert(thingToMove.moved)
+        #   with open(join(workingAdmin,'mvLog.txt'),'a' as f:
+        #       f.write(thingToMove.get_move_result())
 
     def _hash_files_at_origin(self, path, workingAdmin, rehash):
         if not rehash:
