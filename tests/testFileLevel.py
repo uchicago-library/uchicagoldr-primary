@@ -315,9 +315,40 @@ class TestStagingDirectory(unittest.TestCase):
         self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000')))
         self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin')))
         self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data')))
-        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fixityFromOrigin.txt')))
-        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fixityOnDisk.txt')))
-        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','log.txt')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt')))
+
+    def testGetSetDataPath(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        self.assertEqual(test.get_data_path(),join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        test.set_data_path(getcwd())
+        self.assertEqual(test.get_data_path(),getcwd())
+
+    def testGetSetAdminPath(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        self.assertEqual(test.get_admin_path(),join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
+        test.set_admin_path(getcwd())
+        self.assertEqual(test.get_admin_path(),getcwd())
+
+    def testGetSetExistsOnDisk(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        self.assertEqual(test.get_exists_on_disk(),False)
+        test.set_exists_on_disk(True)
+        self.assertEqual(test.get_exists_on_disk(),True)
+
+    def testValidate(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        test.spawn()
+        self.assertEqual(test.validate()[0],True)
+
+    def testIngest(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        test.spawn()
+        test.ingest(join(getcwd(),'1234567890123/testFiles/'), prefix='folder')
+
+    def testAudit(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        self.assertFalse(test.audit()[0])
 
 
 class testAccessionDirectory(unittest.TestCase):

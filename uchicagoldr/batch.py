@@ -1,6 +1,6 @@
 
 from collections import Iterable
-from os import listdir, rmdir
+from os import listdir, rmdir, mkdir
 from os.path import join, isabs, isfile, isdir, relpath, abspath, exists, split
 from types import GeneratorType
 from urllib.request import urlopen
@@ -149,8 +149,8 @@ class StagingDirectory(Directory):
         self.ark = ark
         self.ead = ead
         self.accno = accno
-        self.data_path = None
-        self.admin_path = None
+        self.data_path = join(root,ark,ead,accno,'data')
+        self.admin_path = join(root,ark,ead,accno,'admin')
         self.exists_on_disk = False
         directory_path = join(root, ark)
         Directory.__init__(self, directory_path=directory_path, items=items)
@@ -173,9 +173,8 @@ class StagingDirectory(Directory):
             self.set_admin_path(join(self.root, self.ark,
                                      self.ead, self.accno, "admin"))
 
-            topLevelReqFiles = ['fixityFromOrigin.txt',
-                                'fixityOnDisk.txt',
-                                'log.txt',
+            topLevelReqFiles = ['fileConversions.txt',
+                                'record.json',
                                 ]
             for f in topLevelReqFiles:
                 touchArgs = ['touch', join(self.get_admin_path(), f)]
@@ -397,7 +396,6 @@ class StagingDirectory(Directory):
             pass
         return existingFixity
 
-
     def _validate_contained_folder(self, containing_folder):
         destinationAdminRoot = self.get_admin_path()
         destinationAdminFolder = join(destinationAdminRoot, containing_folder)
@@ -472,8 +470,117 @@ class StagingDirectory(Directory):
         else:
             return (False, data)
 
-    def ingest(self, path):
-        pass
+    def ingest(self, path, prefix=None, containingFolder=None, rehash=False):
+        assert(isdir(path))
+        assert(prefix or containingFolder)
+        assert(not (prefix and containingFolder))
+        if rehash:
+            assert(containingFolder)
+
+        if path[-1] != "/":
+            assert(False)
+        assert(self.validate()[0])
+        if not containingFolder:
+            prefixDir = self._prefix_to_dir(prefix)
+            workingData = join(self.get_data_path(), prefixDir)
+            workingAdmin = join(self.get_admin_path(), prefixDir)
+            mkdir(workingData)
+            mkdir(workingAdmin)
+        else:
+            workingData = join(self.get_data_path(), containingFolder)
+            workingAdmin = join(self.get_admin_path(), containingFolder)
+
+        assert(exists(workingData))
+        assert(exists(workingAdmin))
+
+        self._move_files_into_staging(path, workingData, workingAdmin)
+        self._hash_files_at_origin(path, workingAdmin, rehash)
+        self._hash_files_in_staging(workingData, workingAdmin, rehash)
+
+    def _prefix_to_dir(self, prefix):
+        existingPopSubDirs = [name for name in self._getImmediateSubDirs(self.get_data_path())
+                          if match('^'+prefix, name)]
+
+        if len(existingPopSubDirs) == 0:
+            return prefix+str(1)
+        else:
+            nums = [int(dirname.strip(prefix)) for dirname in existingPopSubDirs]
+            nums.sort()
+            nextNum = str(nums[-1]+1)
+            return prefix+str(nextNum)
+
+    def _getImmediateSubDirs(self, path):
+        return [name for name in listdir(path) if isdir(join(path, name))]
+
+    def _move_files_into_staging(self, path, workingData, workingAdmin):
+        rsyncArgs = ['rsync', '-avz', path, workingData]
+        rsyncCommand = BashCommand(rsyncArgs)
+        assert(rsyncCommand.run_command()[0])
+        with open(join(workingAdmin,
+                       'rsyncFromOrigin.txt'), 'a') as f:
+            f.write(str(rsyncCommand.get_data()[1])+'\n')
+
+    def _hash_files_at_origin(self, path, workingAdmin, rehash):
+        if not rehash:
+            if exists(join(workingAdmin,'fixityFromOrigin.txt')):
+                existingHashes = self._read_fixity_log(join(workingAdmin,'fixityFromOrigin.txt'))
+            else:
+                existingHashes = {}
+        else:
+            existingHashes = {}
+
+        directory = Directory(path)
+        self._write_fixity_log(join(workingAdmin,'fixityFromOrigin.txt'), directory, existingHashes)
+
+    def _hash_files_in_staging(self, path, workingAdmin, rehash):
+        if not rehash:
+            if exists(join(workingAdmin,'fixityOnDisk.txt')):
+                existingHashes = self._read_fixity_log(join(workingAdmin,'fixityOnDisk.txt'))
+            else:
+                existingHashes = {}
+        else:
+            existingHashes = {}
+
+        directory = Directory(path)
+        self._write_fixity_log(join(workingAdmin,'fixityOnDisk.txt'), directory, existingHashes)
+
+    def _read_fixity_log(self, path):
+        existingFixity = {}
+        with open(path, 'r') as f:
+            for line in f.readlines():
+                splitLine = line.split('\t')
+                splitLine[-1] = splitLine[-1].rstrip('\n')
+                go = True
+                for entry in splitLine[1:]:
+                    if entry == 'ERROR':
+                        go = False
+                if not go:
+                    continue
+                try:
+                    existingFixity[splitLine[0]] = [splitLine[1], splitLine[2]]
+                except IndexError:
+                    pass
+        return existingFixity
+
+    def _write_fixity_log(self, path, directory, existingHashes=None):
+        newHashes = {}
+        directory.populate()
+        for item in directory.get_items():
+            if item.test_readability():
+                if existingHashes:
+                    if relpath(
+                            item.get_file_path(), start=directory.get_directory_path()
+                    ) in existingHashes:
+                        continue
+                item.set_sha256(item.find_sha256_hash())
+                item.set_md5(item.find_md5_hash())
+                newHashes[relpath(
+                    item.get_file_path(), start=directory.get_directory_path()
+                        )] = [item.get_sha256(), item.get_md5()]
+        with open(path, 'a') as f:
+            for entry in newHashes:
+                f.write(entry+'\t'+newHashes[entry][0] +
+                        "\t"+newHashes[entry][1]+'\n')
 
 
 class AccessionDirectory(Directory):
