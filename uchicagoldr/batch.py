@@ -165,8 +165,8 @@ class StagingDirectory(Directory):
                                      self.ead, self.accno, "admin"))
             self.set_data_path(join(self.root, self.ark,
                                     self.ead, self.accno, "data"))
-            makedirs(self.get_admin_path())
-            makedirs(self.get_data_path())
+            makedirs(self.get_admin_path(),mode=0o750)
+            makedirs(self.get_data_path(),mode=0o750)
             open(join(self.get_admin_path(),'record.json'), 'a').close()
             open(join(self.get_admin_path(),'fileConversions.txt'), 'a').close()
 
