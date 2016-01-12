@@ -1,6 +1,6 @@
 
 from collections import Iterable
-from os import listdir, rmdir, mkdir
+from os import listdir, rmdir, mkdir, makedirs
 from os.path import join, isabs, isfile, isdir, relpath, abspath, exists, split
 from types import GeneratorType
 from urllib.request import urlopen
@@ -161,38 +161,14 @@ class StagingDirectory(Directory):
 
         try:
             assert(exists(self.root))
-            mkAdminDirArgs = ['mkdir', '-p', join(self.root,
-                                                  self.ark,
-                                                  self.ead,
-                                                  self.accno,
-                                                  "admin")
-                              ]
-            mkAdminDirCommand = BashCommand(mkAdminDirArgs)
-            assert(mkAdminDirCommand.run_command()[0])
-            assert(mkAdminDirCommand.get_data()[1].returncode == 0)
             self.set_admin_path(join(self.root, self.ark,
                                      self.ead, self.accno, "admin"))
-
-            topLevelReqFiles = ['fileConversions.txt',
-                                'record.json',
-                                ]
-            for f in topLevelReqFiles:
-                touchArgs = ['touch', join(self.get_admin_path(), f)]
-                touchCommand = BashCommand(touchArgs)
-                assert(touchCommand.run_command()[0])
-                assert(touchCommand.get_data()[1].returncode == 0)
-
-            mkDataDirArgs = ['mkdir', join(self.root,
-                                           self.ark,
-                                           self.ead,
-                                           self.accno,
-                                           "data")
-                             ]
-            mkDataDirCommand = BashCommand(mkDataDirArgs)
-            assert(mkDataDirCommand.run_command()[0])
-            assert(mkDataDirCommand.get_data()[1].returncode == 0)
             self.set_data_path(join(self.root, self.ark,
                                     self.ead, self.accno, "data"))
+            makedirs(self.get_admin_path())
+            makedirs(self.get_data_path())
+            open(join(self.get_admin_path(),'record.json'), 'a').close()
+            open(join(self.get_admin_path(),'fileConversions.txt'), 'a').close()
 
             self.set_exists_on_disk(True)
             return join(self.root, self.ark)
