@@ -1,5 +1,5 @@
 import unittest
-from os import getcwd
+from os import getcwd, remove, rmdir
 from os.path import isfile, split, isdir, exists, join
 from copy import deepcopy
 from subprocess import CompletedProcess, TimeoutExpired
@@ -318,6 +318,14 @@ class TestStagingDirectory(unittest.TestCase):
         self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json')))
         self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt')))
 
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD'))
+        rmdir(join(getcwd(),'abcdefghijklm'))
+
     def testGetSetDataPath(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
         self.assertEqual(test.get_data_path(),join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
@@ -341,10 +349,36 @@ class TestStagingDirectory(unittest.TestCase):
         test.spawn()
         self.assertEqual(test.validate()[0],True)
 
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD'))
+        rmdir(join(getcwd(),'abcdefghijklm'))
+
     def testIngest(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
         test.spawn()
         test.ingest(join(getcwd(),'1234567890123/testFiles/'), prefix='folder')
+
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1','fixityFromOrigin.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1','fixityOnDisk.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1','rsyncFromOrigin.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','0.rand'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','1.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','1.txt.fits.xml'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','testDir','2.csv'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','testDir'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD'))
+        rmdir(join(getcwd(),'abcdefghijklm'))
 
     def testAudit(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
