@@ -470,12 +470,15 @@ class StagingDirectory(Directory):
         else:
             return (False, data)
 
-    def ingest(self, path, prefix=None, containingFolder=None, rehash=False):
+    def ingest(self, path, prefix=None, containingFolder=None,
+               rehash=False, pattern=None):
         assert(isdir(path))
         assert(prefix or containingFolder)
         assert(not (prefix and containingFolder))
         if rehash:
             assert(containingFolder)
+        if pattern != None:
+            assert(isdir(path))
 
         if path[-1] != "/":
             assert(False)
@@ -493,8 +496,8 @@ class StagingDirectory(Directory):
         assert(exists(workingData))
         assert(exists(workingAdmin))
 
-        self._move_files_into_staging(path, workingData, workingAdmin)
-        self._hash_files_at_origin(path, workingAdmin, rehash)
+        self._move_files_into_staging(path, workingData, workingAdmin, pattern)
+        self._hash_files_at_origin(path, workingAdmin, rehash, pattern)
         self._hash_files_in_staging(workingData, workingAdmin, rehash)
 
     def _prefix_to_dir(self, prefix):
@@ -512,7 +515,7 @@ class StagingDirectory(Directory):
     def _getImmediateSubDirs(self, path):
         return [name for name in listdir(path) if isdir(join(path, name))]
 
-    def _move_files_into_staging(self, path, workingData, workingAdmin):
+    def _move_files_into_staging(self, path, workingData, workingAdmin, pattern):
         rsyncArgs = ['rsync', '-avz', path, workingData]
         rsyncCommand = BashCommand(rsyncArgs)
         assert(rsyncCommand.run_command()[0])
@@ -523,21 +526,22 @@ class StagingDirectory(Directory):
         #   thingsToMove = MovableItems()
         #   walker = FileWalker(path)
         #   for entry in walker:
-        #       thingToMove = MovableItem(entry, path, workingData)
-        #       thingsToMove.append(thingToMove)
-        #   for thingToMove in thingsToMove.get_items():
+        #       if match(pattern, entry):
+        #           thingToMove = MovableItem(entry, path, workingData)
+        #           thingsToMove.append(thingToMove)
+        #   for thingToMove in thingsToMove:
         #       thingToMove.move()
         #       assert(thingToMove.moved)
         #       with open(join(workingAdmin,'mvLog.txt'),'a') as f:
         #           f.write(thingToMove.get_move_result())
         # elif isfile(path):
-        #   thingToMove = MovableItem(entry, path, workingData)
+        #   thingToMove = MovableItem(path, split(path)[0], workingData)
         #   thingToMove.move()
         #   assert(thingToMove.moved)
         #   with open(join(workingAdmin,'mvLog.txt'),'a' as f:
         #       f.write(thingToMove.get_move_result())
 
-    def _hash_files_at_origin(self, path, workingAdmin, rehash):
+    def _hash_files_at_origin(self, path, workingAdmin, rehash, pattern):
         if not rehash:
             if exists(join(workingAdmin,'fixityFromOrigin.txt')):
                 existingHashes = self._read_fixity_log(join(workingAdmin,'fixityFromOrigin.txt'))
@@ -547,6 +551,10 @@ class StagingDirectory(Directory):
             existingHashes = {}
 
         directory = Directory(path)
+        directory.populate()
+        for entry in directory.get_items():
+            if not match(pattern, entry.get_file_path()):
+                directory.remove_item(entry)
         self._write_fixity_log(join(workingAdmin,'fixityFromOrigin.txt'), directory, existingHashes)
 
     def _hash_files_in_staging(self, path, workingAdmin, rehash):
@@ -559,6 +567,7 @@ class StagingDirectory(Directory):
             existingHashes = {}
 
         directory = Directory(path)
+        directory.populate()
         self._write_fixity_log(join(workingAdmin,'fixityOnDisk.txt'), directory, existingHashes)
 
     def _read_fixity_log(self, path):
@@ -581,7 +590,6 @@ class StagingDirectory(Directory):
 
     def _write_fixity_log(self, path, directory, existingHashes=None):
         newHashes = {}
-        directory.populate()
         for item in directory.get_items():
             if item.test_readability():
                 if existingHashes:
