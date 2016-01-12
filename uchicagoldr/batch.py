@@ -552,9 +552,10 @@ class StagingDirectory(Directory):
 
         directory = Directory(path)
         directory.populate()
-        for entry in directory.get_items():
-            if not match(pattern, entry.get_file_path()):
-                directory.remove_item(entry)
+        if pattern is not None:
+            for entry in directory.get_items():
+                if not match(pattern, entry.get_file_path()):
+                    directory.remove_item(entry)
         self._write_fixity_log(join(workingAdmin,'fixityFromOrigin.txt'), directory, existingHashes)
 
     def _hash_files_in_staging(self, path, workingAdmin, rehash):
