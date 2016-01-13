@@ -137,8 +137,8 @@ class FileWalker(object):
 
     def __iter__(self):
         return self.files
-
-    def _create_generator(self, directory_path):
+    
+    def _create_generator(self, directory_path, filter_pattern=None):
         flat_list = listdir(self.directory_path)
         while flat_list:
             node = flat_list.pop()
@@ -149,9 +149,19 @@ class FileWalker(object):
                 for child in listdir(fullpath):
                     flat_list.append(join(fullpath, child))
         
-    def walk_directory_picking_files(self, directory_path):
+    def walk_directory(self, directory_path):
         the_generator = self._create_generator(directory_path)
         self.files = the_generator
+
+class Validator(object):
+    def __init__(self, validate_type):
+        self.engine = validate_type
+
+    def build():
+        if self.engine == 'admin':
+            return AdminValidator()
+        elif self.engine == 'data':
+            return DataValidator()
         
 class StagingDirectory(Directory):
     ark = ""
@@ -161,10 +171,11 @@ class StagingDirectory(Directory):
     admin_path = ""
     exists_on_disk = False
     ark_pattern = r"^\w{13}$"
-    ead_pattern = r"^ICU[.].*$"
+    ead_pattern = r"^ICU[\.].*$"
     accno_pattern = r"^\d{4}[-]\d{3}$"
-    allowable_prefixes = ['disk','hd','drive','folder','box','volume','issue','v','i']
-    delegate = None
+    prefix_pattern = r"[a-z]\w{1,}$"
+    file_delegate = None
+    validate_delegate = None
     
     def __init__(self, directory_path, ark, ead, accno, prefix):
         if exists(directory_path):
@@ -178,17 +189,20 @@ class StagingDirectory(Directory):
             raise ValueError("{} is not a valid ead identifier.".format(ead))
         if not re_compile(accno_pattern).match(accno):
             raise ValueError("{} is not a valid accno identifier.".format(accno))
-        if not prefix in allowable_prefixes:
-            raise ValueError("{} is not a valid prefix.".format(prefix))
+        if not re_compile(prefix_pattern).match(prefix):
+            raise ValueError("prefix {} needs to be a string alphanumeric" + \
+                             " characters starting with any character" + \
+                             "between a and z")
+    
         self.ark = ark
         self.ead = ead
         self.accno = accno
         self.prefix = prefix
         self.file_delegate = FileWalker()
-        
-    def find_files(self):
-        self.file_finder.walk_files(self.directory_path)
-        
+        self.file_delegate.walk_directory(self.directory_path)
+        self.validate_admin = ValidatorFactory('admin')
+        self.validate_data = ValidatorFactory('data')
+                
     def validate():
         pass
     
