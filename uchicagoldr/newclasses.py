@@ -158,10 +158,19 @@ class FileWalker(object):
         for a_file in self.files:
             mi = MoveableItem(fullpath, self.source_root, destination_path)
             #mi.copy_into_new_location()
-        
+
+class Validator(object):
+    def __init__(self):
+        pass
+
+    
 class DataValidator(Validator):
     def __init__(self):
-        self.
+        pass
+
+class AdminValidator(Validator):
+    def __init__(self):
+        pass
         
 class ValidatorFactory(object):
     def __init__(self, validate_type):
