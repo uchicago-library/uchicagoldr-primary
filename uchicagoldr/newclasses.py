@@ -131,6 +131,28 @@ class Directory(Batch):
         else:
             return False
 
+class FileWalker(object):
+    def __init__(self):
+        self.files = []
+
+    def __iter__(self):
+        return self.files
+
+    def _create_generator(self, directory_path):
+        flat_list = listdir(self.directory_path)
+        while flat_list:
+            node = flat_list.pop()
+            fullpath = join(self.directory_path, node)
+            if isfile(fullpath):
+                yield fullpath
+            elif isdir(fullpath):
+                for child in listdir(fullpath):
+                    flat_list.append(join(fullpath, child))
+        
+    def walk_directory_picking_files(self, directory_path):
+        the_generator = self._create_generator(directory_path)
+        self.files = the_generator
+        
 class StagingDirectory(Directory):
     ark = ""
     ead = ""
@@ -142,6 +164,7 @@ class StagingDirectory(Directory):
     ead_pattern = r"^ICU[.].*$"
     accno_pattern = r"^\d{4}[-]\d{3}$"
     allowable_prefixes = ['disk','hd','drive','folder','box','volume','issue','v','i']
+    delegate = None
     
     def __init__(self, directory_path, ark, ead, accno, prefix):
         if exists(directory_path):
@@ -161,7 +184,11 @@ class StagingDirectory(Directory):
         self.ead = ead
         self.accno = accno
         self.prefix = prefix
-
+        self.file_delegate = FileWalker()
+        
+    def find_files(self):
+        self.file_finder.walk_files(self.directory_path)
+        
     def validate():
         pass
     
@@ -171,21 +198,3 @@ class StagingDirectory(Directory):
     def ingest():
         pass
 
-class FileWalker(object):
-    def __init__(self, directory_path):
-        self.directory_path = directory_path
-        self.files = self.walk_directory_picking_files()
-
-    def __iter__(self):
-        return self.files
-
-    def walk_directory_picking_files(self):
-        flat_list = listdir(self.directory_path)
-        while flat_list:
-            node = flat_list.pop()
-            fullpath = join(self.directory_path, node)
-            if isfile(fullpath):
-                yield fullpath
-            elif isdir(fullpath):
-                for child in listdir(fullpath):
-                    flat_list.append(join(fullpath, child))
