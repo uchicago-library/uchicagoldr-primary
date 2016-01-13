@@ -153,6 +153,10 @@ class FileWalker(object):
         the_generator = self._create_generator(directory_path)
         self.files = the_generator
 
+class DataValidator(Validator):
+    def __init__(self):
+        self.
+        
 class ValidatorFactory(object):
     def __init__(self, validate_type):
         self.engine = validate_type
@@ -177,7 +181,8 @@ class StagingDirectory(Directory):
     file_delegate = None
     validate_delegate = None
     
-    def __init__(self, directory_path, ark, ead, accno, prefix):
+    def __init__(self, directory_path, destination_root,
+                 ark, ead, accno, prefix):
         if exists(directory_path):
             self.directory_path = directory_path
             self.exists_on_disk = True
@@ -193,22 +198,27 @@ class StagingDirectory(Directory):
             raise ValueError("prefix {} needs to be a string alphanumeric" + \
                              " characters starting with any character" + \
                              "between a and z")
-    
+        
         self.ark = ark
         self.ead = ead
         self.accno = accno
         self.prefix = prefix
+        self.final_destination = destination_root
         self.file_delegate = FileWalker()
         self.file_delegate.walk_directory(self.directory_path)
         self.validate_admin = ValidatorFactory('admin')
         self.validate_data = ValidatorFactory('data')
                 
     def validate():
-        pass
+        self.data_validator.validate()
+        self.admin_validator.validate()
+        
     
     def audit():
-        pass
+        self.data_validator.validate()
+        self.admin_validator.validate()
     
     def ingest():
-        pass
+        self.audit()
+        self.file_delegate.move_files(self.final_destination)
 
