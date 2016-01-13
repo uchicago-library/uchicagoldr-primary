@@ -1,7 +1,7 @@
 
 from uchicagldrconfig.LDRConfiguration import LDRConfiguration
 
-config = LDRConfiguration("C:\Users\tdanstrom\Documents\source_code\ldr_configuraton").get_config()
+config = LDRConfiguration().get_config()
 
 class LDRError(object):
     source = None
