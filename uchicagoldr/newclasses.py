@@ -153,7 +153,7 @@ class FileWalker(object):
         the_generator = self._create_generator(directory_path)
         self.files = the_generator
 
-class Validator(object):
+class ValidatorFactory(object):
     def __init__(self, validate_type):
         self.engine = validate_type
 
