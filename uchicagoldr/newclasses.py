@@ -140,6 +140,7 @@ class FileWalker(object):
     
     def _create_generator(self, directory_path, filter_pattern=None):
         flat_list = listdir(self.directory_path)
+        self.source_root = directory_path
         while flat_list:
             node = flat_list.pop()
             fullpath = join(self.directory_path, node)
@@ -153,6 +154,11 @@ class FileWalker(object):
         the_generator = self._create_generator(directory_path)
         self.files = the_generator
 
+    def move_files(self, destination_path):
+        for a_file in self.files:
+            mi = MoveableItem(fullpath, self.source_root, destination_path)
+            #mi.copy_into_new_location()
+        
 class DataValidator(Validator):
     def __init__(self):
         self.
