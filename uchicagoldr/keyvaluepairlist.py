@@ -68,7 +68,7 @@ class KeyValuePairList(MutableSequence):
             if isinstance(entry.get_value(), KeyValuePairList):
                 noInfin = noInfin and entry.get_value()._check_recursion(seen=seen)
                 if not noInfin:
-                    break
+                    return False
 
         return noInfin
 

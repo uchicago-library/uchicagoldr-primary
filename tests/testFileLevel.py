@@ -1,11 +1,12 @@
 import unittest
-from os import getcwd
-from os.path import isfile, split
+from os import getcwd, remove, rmdir
+from os.path import isfile, split, isdir, exists, join
 from copy import deepcopy
 from subprocess import CompletedProcess, TimeoutExpired
 
 from uchicagoldr.item import Item, AccessionItem
-from uchicagoldr.batch import Batch, Directory, AccessionDirectory
+from uchicagoldr.batch import Batch, Directory, AccessionDirectory, \
+    StagingDirectory
 from uchicagoldr.bash_cmd import BashCommand
 
 
@@ -302,6 +303,86 @@ class TestDirectory(unittest.TestCase):
             matches += 1
             self.assertTrue(entry.find_md5_hash() in dirContents)
         self.assertEqual(matches, 4)
+
+
+class TestStagingDirectory(unittest.TestCase):
+    def testMint(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+
+    def testSpawn(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        test.spawn()
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json')))
+        self.assertTrue(exists(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt')))
+
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD'))
+        rmdir(join(getcwd(),'abcdefghijklm'))
+
+    def testGetSetDataPath(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        self.assertEqual(test.get_data_path(),join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        test.set_data_path(getcwd())
+        self.assertEqual(test.get_data_path(),getcwd())
+
+    def testGetSetAdminPath(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        self.assertEqual(test.get_admin_path(),join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
+        test.set_admin_path(getcwd())
+        self.assertEqual(test.get_admin_path(),getcwd())
+
+    def testGetSetExistsOnDisk(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        self.assertEqual(test.get_exists_on_disk(),False)
+        test.set_exists_on_disk(True)
+        self.assertEqual(test.get_exists_on_disk(),True)
+
+    def testValidate(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        test.spawn()
+        self.assertEqual(test.validate()[0],True)
+
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD'))
+        rmdir(join(getcwd(),'abcdefghijklm'))
+
+    def testIngest(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        test.spawn()
+        test.ingest(join(getcwd(),'1234567890123/testFiles/'), prefix='folder')
+
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1','fixityFromOrigin.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1','fixityOnDisk.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1','rsyncFromOrigin.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','0.rand'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','1.txt'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','1.txt.fits.xml'))
+        remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','testDir','2.csv'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1','testDir'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data','folder1'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000'))
+        rmdir(join(getcwd(),'abcdefghijklm','TESTEAD'))
+        rmdir(join(getcwd(),'abcdefghijklm'))
+
+    def testAudit(self):
+        test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
+        self.assertFalse(test.audit()[0])
 
 
 class testAccessionDirectory(unittest.TestCase):
