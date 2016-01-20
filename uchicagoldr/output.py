@@ -20,38 +20,43 @@ class LDRError(object):
     def get_message(self):
         return self.message
 
-class Input(object):
-    data_type = None
-    data_value = None
+# class Input(object):
+#     data_type = None
+#     data_value = None
 
-    def __init__(self, dtype):
-        self.data_type = dtype
+#     def __init__(self, dtype):
+#         self.data_type = dtype
 
-    def set_value(self, dvalue):
-        if isinstance(dvalue, self.data_type):
-            self.data_value = dvalue
-        else:
-            self.wrong_value = dvalue
-            return ErrorFactory().build(self)
+#     def set_value(self, dvalue):
+#         if isinstance(dvalue, self.data_type):
+#             self.data_value = dvalue
+#         else:
+#             self.wrong_value = dvalue
+#             return ErrorFactory().build(self)
     
      
-class ErrorFactory(object):
-    def __init__(self):
-        self.identifier = "error factory: {}".format(datetime.now().isoformat())
+# class ErrorFactory(object):
+#     def __init__(self):
+#         self.identifier = "error factory: {}".format(datetime.now().isoformat())
 
-    def build(self, input):
-        if isinstance(input, Input):
-            if input.data_type == 'choice':
-                return ChooseBetween()
-            elif input.data_type == 'trueorfalse':
-                return TrueOrFalse()
-            elif input.data_type == 'providevalue':
-                return ProvideValue()
+#     def build(self, input):
+#         if isinstance(input, Input):
+#             if input.data_type == 'choice':
+#                 return ChooseBetween()
+#             elif input.data_type == 'trueorfalse':
+#                 return TrueOrFalse()
+#             elif input.data_type == 'providevalue':
+#                 return ProvideValue()
             
-        else:
-            return TypeError("must pass an input instance to this method")
-    
+#         else:
+#             return TypeError("must pass an input instance to this method")
+
+# output = Output('txt')
+# output.add_error(input)
+# return output
+        
 class Output(object):
+    requests = []
     status = False
     error = None
     data  = None
@@ -70,7 +75,13 @@ class Output(object):
             return -1
         else:
             self.error = error_object
-    
+
+    def add_request(self, request):
+        if isinstance(requet, Request):
+            self.requests.append(request)
+        else:
+            return TypeError("must pass an instance of Request class")
+        
     def get_error(self):
         if self.error != None:
             return "{0}: {1}".format(self.error.get_label(),
