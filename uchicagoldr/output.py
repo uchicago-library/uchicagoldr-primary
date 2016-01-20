@@ -144,8 +144,17 @@ class Output(object):
         return self.status
 
     def get_data(self):
-        return self.data
-
+        if self.data:
+            return self.data
+        else:
+            return False
+        
+    def get_requests(self):
+        if len(self.requests) > 0:
+            return self.requests
+        else:
+            return False
+        
     def add_data(self, data_object):
         if self.type != None data_object.__name__.lower() == self.type:
             self.data = data_object
