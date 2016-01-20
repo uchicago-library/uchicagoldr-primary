@@ -19,7 +19,6 @@ class LDRError(object):
 
     def get_message(self):
         return self.message
-        
 
 class Input(object):
     data_type = None
@@ -32,7 +31,25 @@ class Input(object):
         if isinstance(dvalue, self.data_type):
             self.data_value = dvalue
         else:
-            return ErrorFactory().build(self.data_type, self)
+            self.wrong_value = dvalue
+            return ErrorFactory().build(self)
+    
+     
+class ErrorFactory(object):
+    def __init__(self):
+        self.identifier = "error factory: {}".format(datetime.now().isoformat())
+
+    def build(self, input):
+        if isinstance(input, Input):
+            if input.data_type == 'choice':
+                return ChooseBetween()
+            elif input.data_type == 'trueorfalse':
+                return TrueOrFalse()
+            elif input.data_type == 'providevalue':
+                return ProvideValue()
+            
+        else:
+            return TypeError("must pass an input instance to this method")
     
 class Output(object):
     status = False
