@@ -1,6 +1,6 @@
 
 from collections import Iterable
-from os import listdir, rmdir, mkdir, makedirs
+from os import listdir, rmdir, mkdir, makedirs, walk
 from os.path import join, isabs, isfile, isdir, relpath, abspath, exists, split
 from types import GeneratorType
 from urllib.request import urlopen
@@ -157,10 +157,11 @@ class StagingDirectory(Directory):
 
     def spawn(self):
         if exists(join(self.root, self.ark)):
-            return False
+            return (False, None)
 
         try:
             assert(exists(self.root))
+            exists_already = [x for x in walk(join(self.root, self.ark))]
             self.set_admin_path(join(self.root, self.ark,
                                      self.ead, self.accno, "admin"))
             self.set_data_path(join(self.root, self.ark,
@@ -172,9 +173,11 @@ class StagingDirectory(Directory):
                       'fileConversions.txt'), 'a').close()
 
             self.set_exists_on_disk(True)
-            return join(self.root, self.ark)
+            exists_now = [x for x in walk(join(self.root, self.ark))]
+            difference = [x for x in exists_now if x not in exists_already]
+            return (True, difference)
         except Exception as e:
-            return e
+            return (False,e)
 
     def get_data_path(self):
         return self.data_path
@@ -455,6 +458,8 @@ class StagingDirectory(Directory):
         self._move_files_into_staging(path, workingData, workingAdmin, pattern)
         self._hash_files_at_origin(path, workingAdmin, rehash, pattern)
         self._hash_files_in_staging(workingData, workingAdmin, rehash)
+
+        return prefixDir
 
     def _prefix_to_dir(self, prefix):
         existingPopSubDirs = [name for name in
