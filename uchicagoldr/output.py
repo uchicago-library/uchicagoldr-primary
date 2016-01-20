@@ -54,7 +54,35 @@ class LDRError(object):
 # output = Output('txt')
 # output.add_error(input)
 # return output
-        
+
+class InputRequestType(object):
+    type = None
+    valid = None
+
+    def validate(value):
+        return isinstance(value, self.type)
+
+class ChooseBetween(object):
+    choices = []
+    valid = None
+
+    def validate(value):
+        if value in choices:
+            return True
+        else:
+            return False
+
+class TrueOrFalse(object):
+    valid = None
+    condition = False
+    
+    def validate(value):
+        if bool(value) == condition:
+            return True
+        else:
+            return False
+
+    
 class Output(object):
     requests = []
     status = False
