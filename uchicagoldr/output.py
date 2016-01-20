@@ -67,6 +67,7 @@ class Output(object):
         else:
             self.type = None
         self.data = None
+        self.requests = []
 
     def add_error(self, error_object):
         if self.error != None:
