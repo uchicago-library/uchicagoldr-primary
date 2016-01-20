@@ -57,13 +57,16 @@ class LDRError(object):
 
 class InputRequestType(object):
     type = None
-    valid = None
+    validate_function = None
 
     def __init__(self, vtype):
         self.type = vtype
+
+    def validate_function(self):
+        return True
     
     def validate(self):
-        return isinstance(self.value, self.type)
+        return isinstance(self.value, self.type) and self.validate_function()
 
 class ChooseBetween(object):
     choices = []
