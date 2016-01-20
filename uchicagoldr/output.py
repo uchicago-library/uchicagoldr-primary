@@ -1,7 +1,7 @@
 
 from uchicagldrconfig.LDRConfiguration import LDRConfiguration
 
-config = LDRConfiguration().get_config()
+config = LDRConfiguration()
 
 class LDRError(object):
     source = None
@@ -21,6 +21,19 @@ class LDRError(object):
         return self.message
         
 
+class Input(object):
+    data_type = None
+    data_value = None
+
+    def __init__(self, dtype):
+        self.data_type = dtype
+
+    def set_value(self, dvalue):
+        if isinstance(dvalue, self.data_type):
+            self.data_value = dvalue
+        else:
+            return ErrorFactory().build(self.data_type, self)
+    
 class Output(object):
     status = False
     error = None
