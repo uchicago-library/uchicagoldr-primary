@@ -59,13 +59,19 @@ class InputRequestType(object):
     type = None
     valid = None
 
-    def validate(value):
-        return isinstance(value, self.type)
+    def __init__(self, vtype):
+        self.type = vtype
+    
+    def validate(self):
+        return isinstance(self.value, self.type)
 
 class ChooseBetween(object):
     choices = []
     valid = None
 
+    def __init__(self, options):
+        self.choices = options
+    
     def validate(value):
         if value in choices:
             return True
@@ -75,14 +81,30 @@ class ChooseBetween(object):
 class TrueOrFalse(object):
     valid = None
     condition = False
-    
+
+    def __init__(self, condition):
+        self.condition = condition
+        
     def validate(value):
         if bool(value) == condition:
             return True
         else:
             return False
 
+class ConfirmRequest(object):
+    valid = None
+    value = None
+    required = 'Y'
     
+    def __init__(self, value):
+        self.value = value
+
+    def validate(self):
+        if self.value == required:
+            return True
+        else:
+            return False
+        
 class Output(object):
     requests = []
     status = False
