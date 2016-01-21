@@ -22,3 +22,6 @@ class OutputHandler(object):
     def handle_errors(self):
         handler = self.errorhandler(self.output.error)
         return handler.handle_error()
+
+    def fatal_error(self, message):
+        return LDRError(message)
