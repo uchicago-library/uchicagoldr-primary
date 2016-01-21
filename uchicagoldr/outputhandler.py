@@ -47,7 +47,7 @@ class OutputHandler(object)
         return displayer.display()
 
     def handle_requests(self):
-        raise NotImplemented
+        return request_handler.handle_request()
 
     def handle_errors(self):
         raise NotImplemented
