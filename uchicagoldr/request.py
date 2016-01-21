@@ -72,7 +72,7 @@ class TrueOrFalse(Request):
         return isinstance(bool, response)
 
 
-class ConfirmRequest(Request):
+class Confirm(Request):
     def __init__(self, value, validator=None, prompt=None):
         if validator is None:
             validator = self._validator
