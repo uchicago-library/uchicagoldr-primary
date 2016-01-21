@@ -1,5 +1,22 @@
 from uchicagoldr.output import Outport
 
+class Displayer(object):
+    def __init__(self, kind):
+	self.class_being_displayed = kind
+
+    def display():
+	if self.class_being_displayed == 'family':
+		return NotImplemented
+	if self.class_being_displayed == 'directory':
+		return NotImplemented
+	if self.class_being_displayed == 'string':
+		return NotImplemented
+	if self.class_being_displayed == 'item':
+		return NotImplemented
+	if self.class_being_displayed == 'accessionitem':
+		return NotImplemented
+    
+
 class OutputHandler(object)
 
     kind = 'Abstract base class'
@@ -7,9 +24,10 @@ class OutputHandler(object)
     def __init__(self, output_instance):
         assert(isinstance(output_instance, Output))
         self.output_instance = output_instance
+	displayer = Display(output_instance.type)
 
     def display_data(self):
-        raise NotImplemented
+        return displayer.display()
 
     def handle_requests(self):
         raise NotImplemented
