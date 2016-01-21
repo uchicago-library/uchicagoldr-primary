@@ -17,10 +17,8 @@ class OutputHandler(object):
     def handle_requests(self):
         for request in self.requests:
             handler = self.requesthandler(request)
-            yield handler.handle_request()
+            yield type((request), handler.handle_request())
 
     def handle_errors(self):
         handler = self.errorhandler(self.output.error)
         return handler.handle_error()
-
-
