@@ -1,6 +1,6 @@
-from uchicagoldr.request import *
+from uchicagoldr.request import InputType
 
-class RequestType(Request):
+class RequestType(InputType):
     def __init__(self, prompt):
         self.prompt = prompt
-        Request.__init__(self, str(), validator=self._ark_validation(), prompt=prompt)
+        InputType.__init__(self, str(), validator=self._ark_validation(), prompt=prompt)
