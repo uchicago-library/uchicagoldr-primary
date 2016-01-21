@@ -51,15 +51,28 @@ class Batch(object):
         try:
             assert isinstance(new_item, Item)
             self.items.append(new_item)
-            return (True, None)
+            return output(status=True)
         except Exception as e:
+            output
             return (False, e)
 
     def get_item_by_index(self, index):
         return self.get_items()[index]
 
+    def output_item_by_index(self, index):
+        output = Output()
+        output.add_data(self.get_item_by_index(index))
+        output.set_status(True)
+        return output
+
     def get_item(self, item):
         return self.get_item_by_index(self.get_items().index(item))
+
+    def output_item(self, item):
+        output = Output()
+        output.add_data(self.get_item)
+        output.set_status(True)
+        return output
 
     def remove_item_by_index(self, index):
         self.get_items().pop(index)
@@ -91,6 +104,10 @@ class Batch(object):
     def get_items(self):
         return self.items
 
+    def output_items(self):
+        output = Output()
+        output.add_data(self.get_items())
+
 
 class Directory(Batch):
     def __init__(self,  directory_path, items=None):
@@ -110,7 +127,13 @@ class Directory(Batch):
     def get_directory_path(self):
         return self.directory_path
 
-    def walk_directory_picking_files(self):
+    def output_directory_path(self):
+        output = Output()
+        output.add_data(self.get_directory_path())
+        output.set_status(True)
+        return output
+
+    def _walk_directory_picking_files(self):
         """
         walks a directory tree and creates a generator full of AccessionItem
         instances for each regular file
@@ -127,13 +150,17 @@ class Directory(Batch):
                     flat_list.append(join(fullpath, child))
 
     def populate(self):
-        for item in self.walk_directory_picking_files():
+        for item in self._walk_directory_picking_files():
             self.add_item(item)
+        output = Output()
+        output.set_status(True)
+        return output
 
     def add_item(self, new_item):
         assert isinstance(new_item, Item)
         assert(self.get_directory_path() in new_item.get_file_path())
         Batch.add_item(self, new_item)
+        return Output(status=True)
 
     def clean_out_directory(self):
         """
@@ -141,6 +168,8 @@ class Directory(Batch):
         the batch directory is not empty
         """
         rmdir(self.directory_path)
+        output = Output(status=True)
+        return output
 
 
 class StagingDirectory(Directory):
@@ -659,12 +688,12 @@ class AccessionDirectory(Directory):
         directory_relative_to_root = self. \
                                      convert_to_relative_path(directory_path)
         self.get_accession_from_relative_path(directory_relative_to_root)
-        generator_of_items = self.walk_directory_picking_files(
+        generator_of_items = self._walk_directory_picking_files(
                                                         self.directory_path
         )
         self.items = generator_of_items
 
-    def walk_directory_picking_files(self):
+    def _walk_directory_picking_files(self):
         """
         walks a directory tree and creates a generator full of AccessionItem
         instances for each regular file
