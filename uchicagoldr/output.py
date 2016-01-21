@@ -5,6 +5,8 @@ config = LDRConfiguration()
 
 class Output(object):
     requests = []
+    type_string = None
+    status = None
     error = None
     data  = None
 
