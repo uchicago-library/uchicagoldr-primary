@@ -17,6 +17,22 @@ class Displayer(object):
 		return NotImplemented
     
 
+class RequestHandler(object):
+    def __init__(self, kind):
+        self.type_of_requests = kind
+        
+    def handle_requests(self):
+	if self.class_being_displayed == 'family':
+		return NotImplemented
+	if self.class_being_displayed == 'directory':
+		return NotImplemented
+	if self.class_being_displayed == 'string':
+		return NotImplemented
+	if self.class_being_displayed == 'item':
+		return NotImplemented
+	if self.class_being_displayed == 'accessionitem':
+		return NotImplemented        
+
 class OutputHandler(object)
 
     kind = 'Abstract base class'
@@ -25,6 +41,7 @@ class OutputHandler(object)
         assert(isinstance(output_instance, Output))
         self.output_instance = output_instance
 	displayer = Display(output_instance.type)
+        request_handler = RequestHandler(output_instance.type)
 
     def display_data(self):
         return displayer.display()
