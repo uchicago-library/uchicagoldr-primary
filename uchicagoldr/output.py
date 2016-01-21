@@ -10,10 +10,10 @@ class Output(object):
     error = None
     data  = None
 
-    def __init__(self, type_string=None, status=None):
-        if type_string is None:
+    def __init__(self, type_string, status=None):
+        if not type_string:
             type_string = 'nonetype'
-        if type_string in config['outputinformation']['valid_types']
+        elif typestring in config['outputinformation']['valid_types']:
             self.type = type_string
         else:
             self.type = None
