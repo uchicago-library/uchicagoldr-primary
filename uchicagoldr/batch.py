@@ -69,6 +69,9 @@ class Batch(object):
     def get_item_by_index(self, index):
         return self.get_items()[index]
 
+    def get_item(self, item):
+        return self.get_item_by_index(self.get_items().index(item))
+
     def output_item_by_index(self, index):
         output = Output()
         if index > len(self.get_items()-1):
@@ -82,9 +85,6 @@ class Batch(object):
             error = LDRError(e)
             output.add_error(error)
             return output
-
-    def get_item(self, item):
-        return self.get_item_by_index(self.get_items().index(item))
 
     def output_item(self, item):
         output = Output()
@@ -108,9 +108,6 @@ class Batch(object):
             output.add_error(LDRError(e))
             return output
 
-    def pop_item_by_index(self, index):
-        return self.get_items().pop(index)
-
     def remove_item(self, item):
         try:
             self.get_items().pop(self.get_items().index(item))
@@ -120,8 +117,20 @@ class Batch(object):
             output.add_error(LDRError(e))
             return output
 
+    def pop_item_by_index(self, index):
+        return self.get_items().pop(index)
+
     def pop_item(self, item):
         return self.get_items().pop(self.get_items().index(item))
+
+    def get_items(self):
+        return self.items
+
+    def output_items(self):
+        output = Output()
+        output.add_data(self.get_items())
+        output.set_status(True)
+        return output
 
     def set_items(self, items):
         if not (isinstance(items, GeneratorType) or \
@@ -151,15 +160,6 @@ class Batch(object):
         assert isinstance(some_iterable, Iterable)
         self.items = some_iterable
 
-    def get_items(self):
-        return self.items
-
-    def output_items(self):
-        output = Output()
-        output.add_data(self.get_items())
-        output.set_status(True)
-        return output
-
 
 class Directory(Batch):
     def __init__(self,  directory_path, items=None):
@@ -172,9 +172,12 @@ class Directory(Batch):
 
     def set_directory_path(self, a_path):
         if not isabs(a_path):
-            raise ValueError("path is not absolute!")
+            output = Output()
+            output.add_error(LDRError(ValueError("path is not absolute!")))
+            return output
         else:
             self.directory_path = abspath(a_path)
+            return Output(status=True)
 
     def get_directory_path(self):
         return self.directory_path
@@ -184,6 +187,34 @@ class Directory(Batch):
         output.add_data(self.get_directory_path())
         output.set_status(True)
         return output
+
+    def populate(self):
+        for item in self._walk_directory_picking_files():
+            s = self.add_item(item)
+            if s.status is not True:
+                return Output()
+        output = Output()
+        output.set_status(True)
+        output.add_data(self.get_items())
+        return output
+
+    def add_item(self, new_item):
+        assert isinstance(new_item, Item)
+        assert(self.get_directory_path() in new_item.get_file_path())
+        Batch.add_item(self, new_item)
+        return Output(status=True)
+
+    def clean_out_directory(self):
+        """
+        attempts to delete the batch directory; it will fail if
+        the batch directory is not empty
+        """
+        try:
+            rmdir(self.directory_path)
+            output = Output(status=True)
+            return output
+        except:
+            return Output()
 
     def _walk_directory_picking_files(self):
         """
@@ -201,28 +232,6 @@ class Directory(Batch):
                 for child in listdir(fullpath):
                     flat_list.append(join(fullpath, child))
 
-    def populate(self):
-        for item in self._walk_directory_picking_files():
-            self.add_item(item)
-        output = Output()
-        output.set_status(True)
-        return output
-
-    def add_item(self, new_item):
-        assert isinstance(new_item, Item)
-        assert(self.get_directory_path() in new_item.get_file_path())
-        Batch.add_item(self, new_item)
-        return Output(status=True)
-
-    def clean_out_directory(self):
-        """
-        attempts to delete the batch directory; it will fail if
-        the batch directory is not empty
-        """
-        rmdir(self.directory_path)
-        output = Output(status=True)
-        return output
-
 
 class StagingDirectory(Directory):
     def __init__(self, root, ark, ead, accno, items=None):
@@ -237,11 +246,16 @@ class StagingDirectory(Directory):
         Directory.__init__(self, directory_path=directory_path, items=items)
 
     def spawn(self):
-        if exists(join(self.root, self.ark)):
-            return (False, None)
+        if self.validate().status is True:
+            output = Output()
+            output.add_error(LDRError('the staging directory already exists!'))
+            return output
 
         try:
-            assert(exists(self.root))
+            if not isabs(self.root) or not exists(self.root):
+                output = Output()
+                output.add_request(ProvideNewRoot())
+                return output
             exists_already = [x for x in walk(join(self.root, self.ark))]
             self.set_admin_path(join(self.root, self.ark,
                                      self.ead, self.accno, "admin"))
@@ -256,26 +270,52 @@ class StagingDirectory(Directory):
             self.set_exists_on_disk(True)
             exists_now = [x for x in walk(join(self.root, self.ark))]
             difference = [x for x in exists_now if x not in exists_already]
-            return (True, difference)
+            output=Output(status=True)
+            output.add_data(difference)
+            return output
         except Exception as e:
-            return (False,e)
+            output=Output()
+            output.add_error(LDRError(e))
+            return output
 
     def get_data_path(self):
         return self.data_path
 
+    def output_data_path(self):
+        output = Output(status=True)
+        output.add_data(self.get_data_path())
+        return output
+
     def set_data_path(self, new_data_path):
         assert(isabs(new_data_path))
+        if not isabs(new_data_path):
+            output=Output(status=False)
+            output.add_request(ProvideNewDataPath())
+            return output
         self.data_path = new_data_path
+        return Output(status=True)
 
     def get_admin_path(self):
         return self.admin_path
 
+    def output_admin_path(self):
+        output=Output(status=True)
+        output.add_data(self.get_admin_path())
+        return output
+
     def set_admin_path(self, new_admin_path):
-        assert(isabs(new_admin_path))
+        if not isabs(new_admin_path):
+            output=Output(status=False)
+            output.add_request(ProvideNewAdminPath())
+            return output
         self.admin_path = new_admin_path
+        return Output(status=True)
 
     def get_exists_on_disk(self):
         return self.exists_on_disk
+
+    def output_exists_on_disk(self):
+        pass
 
     def set_exists_on_disk(self, newBool):
         assert(isinstance(newBool, bool))
@@ -678,7 +718,7 @@ class AccessionDirectory(Directory):
 
     def add_item(self, new_item):
         assert isinstance(new_item, AccessionItem)
-        Directory.add_item(self, new_item)
+        return Directory.add_item(self, new_item)
 
     def __eq__(self, other):
         return Directory.__eq__(self, other) and \
@@ -688,12 +728,16 @@ class AccessionDirectory(Directory):
     def get_accession(self):
         return self.accession
 
+    def output_accession(self):
+        pass
     def set_accession(self, new_accession):
         self.accession = new_accession
 
     def get_root_path(self):
         return self.root
 
+    def output_root_path(self):
+        pass
     def mint_accession_identifier(self):
         url_data = urlopen("https://y1.lib.uchicago.edu/cgi-bin/minter/" +
                            "noid?action=minter&n=1")

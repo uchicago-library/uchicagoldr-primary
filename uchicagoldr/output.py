@@ -63,7 +63,7 @@ class Output(object):
             return False
 
     def add_data(self, data_object):
-        if self.type != None and data_object.__name__.lower() == self.type:
+        if self.type_string != None and data_object.__name__.lower() == self.type_string:
             self.data = data_object
             return 0
         else:
