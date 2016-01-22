@@ -1,6 +1,5 @@
 from uchicagoldr.request import Request, InputType, ChooseBetween, \
     ChooseMultiple, TrueOrFalse, Confirm
-from uchicagoldr.output import Output
 from ast import literal_eval
 
 
@@ -11,35 +10,44 @@ class RequestHandler(object):
 
     def handle_request(self):
         response = None
-        while not self.request.validate(response):
-            if isinstance(self.request, InputType):
-                response = self._handle_inpute_type()
-            elif isinstance(self.request, ChooseBetween):
-                response = self._handle_choose_between()
-            elif isinstance(self.request, ChooseMultiple):
-                response = self._handle_choose_multiple()
-            elif isinstance(self.request, TrueOrFalse):
-                response = self._handle_true_or_false()
-            elif isinstance(self.request, Confirm):
-                response = self._handle_confirm()
-            else:
-                raise AssertionError
+        try:
+            while not self.request.validate(response):
+                if isinstance(self.request, InputType):
+                    response = self._handle_inpute_type()
+                elif isinstance(self.request, ChooseBetween):
+                    response = self._handle_choose_between()
+                elif isinstance(self.request, ChooseMultiple):
+                    response = self._handle_choose_multiple()
+                elif isinstance(self.request, TrueOrFalse):
+                    response = self._handle_true_or_false()
+                elif isinstance(self.request, Confirm):
+                    response = self._handle_confirm()
+                else:
+                    raise NotImplemented('The request type does not have ' +
+                                         'an associated handler.')
+        except NotImplemented as e:
+            raise e
         return response
 
     def _handle_true_or_false(self):
-        return NotImplemented
+        raise NotImplemented('The RequestHandler does not implement ' +
+                             'handling for TrueOrFalse style requests.')
 
     def _handle_input_type(self):
-        return NotImplemented
+        raise NotImplemented('The RequestHandler does not implement ' +
+                             'handling for InputType style requests.')
 
     def _handle_choose_between(self):
-        return NotImplemented
+        raise NotImplemented('The RequestHandler does not implement ' +
+                             'handling for ChooseBetween style requests.')
 
     def _handle_choose_multiple(self):
-        return NotImplemented
+        raise NotImplemented('The RequestHandler does not implement ' +
+                             'handling for ChooseMultiple style requests.')
 
     def _handle_confirm(self):
-        return NotImplemented
+        raise NotImplemented('The RequestHandler does not implement ' +
+                             'handling for ChooseMultiple style requests.')
 
 
 class CLIRequestHandler(RequestHandler):
