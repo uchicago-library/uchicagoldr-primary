@@ -208,7 +208,7 @@ class TestBatch(unittest.TestCase):
         i = Item('/legitimate/looking/path.txt')
         j = Item('/another/path')
         testIter = [i, j]
-        self.testBatch1.set_items(testIter)
+        a = self.testBatch1.set_items(testIter)
         self.assertEqual(self.testBatch1.get_items(), [i, j])
 
     def testSetItemsGen(self):
@@ -261,7 +261,7 @@ class TestDirectory(unittest.TestCase):
         k = Item(getcwd() + '/1234567890123/testFiles/1.txt.fits.xml')
         l = Item(getcwd() + '/1234567890123/testFiles/testDir/2.csv')
         matches = 0
-        for x in self.testDirectory1.walk_directory_picking_files():
+        for x in self.testDirectory1._walk_directory_picking_files():
             self.assertTrue(x.find_md5_hash() in [i.find_md5_hash(),
                                                   j.find_md5_hash(),
                                                   k.find_md5_hash(),
@@ -458,7 +458,7 @@ class testAccessionDirectory(unittest.TestCase):
         l = AccessionItem(getcwd() + '/1234567890123/testFiles/testDir/2.csv',
                           getcwd())
         matches = 0
-        for x in self.testAccessionDirectory.walk_directory_picking_files():
+        for x in self.testAccessionDirectory._walk_directory_picking_files():
             self.assertTrue(x.find_md5_hash() in [i.find_md5_hash(),
                                                   j.find_md5_hash(),
                                                   k.find_md5_hash(),

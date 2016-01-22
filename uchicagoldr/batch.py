@@ -9,6 +9,9 @@ from re import match
 from uchicagoldr.item import Item
 from uchicagoldr.item import AccessionItem
 from uchicagoldr.bash_cmd import BashCommand
+from uchicagoldr.request_types import *
+from uchicagoldr.ldrerror import LDRError
+from uchicagoldr.output import Output
 
 
 class Batch(object):
@@ -23,6 +26,7 @@ class Batch(object):
             pass
         else:
             raise TypeError
+
         if items is not None:
             self.set_items(items)
 
@@ -48,56 +52,102 @@ class Batch(object):
         return eq
 
     def add_item(self, new_item):
+        if not isinstance(new_item, Item):
+            request = ProvideNewItemInstance()
+            output = Output()
+            output.add_request(request)
+            return output
         try:
-            assert isinstance(new_item, Item)
             self.items.append(new_item)
-            return output(status=True)
+            return Output(status=True)
         except Exception as e:
-            output
-            return (False, e)
+            output = Output()
+            error = LDRError(e)
+            output.add_error(error)
+            return output
 
     def get_item_by_index(self, index):
         return self.get_items()[index]
 
     def output_item_by_index(self, index):
         output = Output()
-        output.add_data(self.get_item_by_index(index))
-        output.set_status(True)
-        return output
+        if index > len(self.get_items()-1):
+            output.add_request(ProvideNewIndex())
+            return output
+        try:
+            output.add_data(self.get_item_by_index(index))
+            output.set_status(True)
+            return output
+        except Exception as e:
+            error = LDRError(e)
+            output.add_error(error)
+            return output
 
     def get_item(self, item):
         return self.get_item_by_index(self.get_items().index(item))
 
     def output_item(self, item):
         output = Output()
-        output.add_data(self.get_item)
-        output.set_status(True)
-        return output
+        if not isinstance(item, Item):
+            output.add_request(ProvideNewItemInstance())
+            return output
+        try:
+            output.add_data(self.get_item)
+            output.set_status(True)
+            return output
+        except Exception as e:
+            output.add_error(LDRError(e))
+            return output
 
     def remove_item_by_index(self, index):
-        self.get_items().pop(index)
+        try:
+            self.get_items().pop(index)
+            return output(status=True)
+        except Exception as e:
+            output = Output()
+            output.add_error(LDRError(e))
+            return output
 
     def pop_item_by_index(self, index):
         return self.get_items().pop(index)
 
     def remove_item(self, item):
-        self.get_items().pop(self.get_items().index(item))
+        try:
+            self.get_items().pop(self.get_items().index(item))
+            return Output(status=True)
+        except Exception as e:
+            output = Output()
+            output.add_error(LDRError(e))
+            return output
 
     def pop_item(self, item):
         return self.get_items().pop(self.get_items().index(item))
 
     def set_items(self, items):
-        assert(isinstance(items, GeneratorType) or isinstance(items, Iterable))
-        if isinstance(items, GeneratorType):
-            self.set_items_gen(items)
-        if isinstance(items, Iterable):
-            self.set_items_iter(items)
+        if not (isinstance(items, GeneratorType) or \
+                isinstance(items, Iterable)):
+            output = Output()
+            output.add_request(ProvideNewItemsInstance())
+            return output
+        try:
+            if isinstance(items, GeneratorType):
+                self._set_items_gen(items)
+                return Output(status=True)
+            elif isinstance(items, Iterable):
+                self._set_items_iter(items)
+                return Output(status=True)
+            else:
+                return Output(status=False)
+        except Exception as e:
+            output = Output()
+            output.add_error(LDRError(e))
+            return output
 
-    def set_items_gen(self, generator_object):
+    def _set_items_gen(self, generator_object):
         assert isinstance(generator_object, GeneratorType)
         self.items = generator_object
 
-    def set_items_iter(self, some_iterable):
+    def _set_items_iter(self, some_iterable):
         assert isinstance(some_iterable, Iterable)
         self.items = some_iterable
 
@@ -107,6 +157,8 @@ class Batch(object):
     def output_items(self):
         output = Output()
         output.add_data(self.get_items())
+        output.set_status(True)
+        return output
 
 
 class Directory(Batch):

@@ -1,5 +1,6 @@
 
 from uchicagoldrconfig.LDRConfiguration import LDRConfiguration
+from uchicagoldr.request import Request
 
 config = LDRConfiguration()
 
@@ -10,7 +11,7 @@ class Output(object):
     error = None
     data  = None
 
-    def __init__(self, type_string, status=None):
+    def __init__(self, type_string=None, status=None):
         if not type_string:
             type_string = 'nonetype'
         elif typestring in config['outputinformation']['valid_types']:
@@ -33,7 +34,7 @@ class Output(object):
             self.error = error_object
 
     def add_request(self, request):
-        if isinstance(requet, Request):
+        if isinstance(request, Request):
             self.requests.append(request)
         else:
             return TypeError("must pass an instance of Request class")
