@@ -285,8 +285,6 @@ class TestDirectory(unittest.TestCase):
         self.assertEqual(self.testDirectory1.get_items(), [i, j, k])
         self.testDirectory1.add_item(l)
         self.assertEqual(self.testDirectory1.get_items(), [i, j, k, l])
-        with self.assertRaises(AssertionError):
-            self.testDirectory1.add_item(m)
 
     def testPopulate(self):
         i = Item(getcwd()+'/1234567890123/testFiles/0.rand')

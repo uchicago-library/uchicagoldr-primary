@@ -9,8 +9,8 @@ from re import match
 from uchicagoldr.item import Item
 from uchicagoldr.item import AccessionItem
 from uchicagoldr.bash_cmd import BashCommand
-from uchicagoldr.request_types import *
-from uchicagoldr.ldrerror import LDRError
+from uchicagoldr.request import *
+from uchicagoldr.error import LDRNonFatal, LDRFatal
 from uchicagoldr.output import Output
 
 
@@ -54,15 +54,15 @@ class Batch(object):
     def add_item(self, new_item):
         if not isinstance(new_item, Item):
             request = ProvideNewItemInstance()
-            output = Output()
+            output = Output(None, status=False)
             output.add_request(request)
             return output
         try:
             self.items.append(new_item)
-            return Output(status=True)
+            return Output(None, status=True)
         except Exception as e:
-            output = Output()
-            error = LDRError(e)
+            output = Output(None, status=False)
+            error = LDRFatal(e)
             output.add_error(error)
             return output
 
@@ -73,29 +73,34 @@ class Batch(object):
         return self.get_item_by_index(self.get_items().index(item))
 
     def output_item_by_index(self, index):
-        output = Output()
         if index > len(self.get_items()-1):
+            output = Output(None, status=False)
             output.add_request(ProvideNewIndex())
             return output
         try:
+            output = Output(Item)
             output.add_data(self.get_item_by_index(index))
             output.set_status(True)
             return output
         except Exception as e:
+            output = Output(None)
             error = LDRError(e)
             output.add_error(error)
             return output
 
     def output_item(self, item):
-        output = Output()
         if not isinstance(item, Item):
+            output = Output(None, status=False)
             output.add_request(ProvideNewItemInstance())
             return output
         try:
-            output.add_data(self.get_item)
+            Output = Output(Item)
+            if not output.add_data(self.get_item):
+                raise ValueError
             output.set_status(True)
             return output
         except Exception as e:
+            output = Output(None, status=False)
             output.add_error(LDRError(e))
             return output
 
@@ -135,20 +140,20 @@ class Batch(object):
     def set_items(self, items):
         if not (isinstance(items, GeneratorType) or \
                 isinstance(items, Iterable)):
-            output = Output()
+            output = Output(None)
             output.add_request(ProvideNewItemsInstance())
             return output
         try:
             if isinstance(items, GeneratorType):
                 self._set_items_gen(items)
-                return Output(status=True)
+                return Output(None, status=True)
             elif isinstance(items, Iterable):
                 self._set_items_iter(items)
-                return Output(status=True)
+                return Output(None, status=True)
             else:
-                return Output(status=False)
+                return Output(None, status=False)
         except Exception as e:
-            output = Output()
+            output = Output(None)
             output.add_error(LDRError(e))
             return output
 
@@ -172,18 +177,18 @@ class Directory(Batch):
 
     def set_directory_path(self, a_path):
         if not isabs(a_path):
-            output = Output()
-            output.add_error(LDRError(ValueError("path is not absolute!")))
+            output = Output(None, status=False)
+            output.add_request(ProvideAbsolutePath())
             return output
         else:
             self.directory_path = abspath(a_path)
-            return Output(status=True)
+            return Output(None, status=True)
 
     def get_directory_path(self):
         return self.directory_path
 
     def output_directory_path(self):
-        output = Output()
+        output = Output('str')
         output.add_data(self.get_directory_path())
         output.set_status(True)
         return output
@@ -191,18 +196,24 @@ class Directory(Batch):
     def populate(self):
         for item in self._walk_directory_picking_files():
             s = self.add_item(item)
-            if s.status is not True:
-                return Output()
-        output = Output()
-        output.set_status(True)
-        output.add_data(self.get_items())
+            if s.get_status() is not True:
+                return s
+        output = Output(None)
+        output.set_output_passed()
         return output
 
     def add_item(self, new_item):
-        assert isinstance(new_item, Item)
-        assert(self.get_directory_path() in new_item.get_file_path())
+        if not isinstance(new_item, Item):
+            output = Output(None, status=False)
+            output.add_request(ProvideNewItemInstance())
+            return output
+        if not (self.get_directory_path() in new_item.get_file_path()):
+            output = Output(None, status=False)
+            output.add_error(LDRNonFatal("Item path did not contain " +
+                                         "directory path."))
+            return output
         Batch.add_item(self, new_item)
-        return Output(status=True)
+        return Output(None, status=True)
 
     def clean_out_directory(self):
         """
@@ -211,10 +222,10 @@ class Directory(Batch):
         """
         try:
             rmdir(self.directory_path)
-            output = Output(status=True)
+            output = Output(None, status=True)
             return output
         except:
-            return Output()
+            return Output(None, status=False)
 
     def _walk_directory_picking_files(self):
         """
@@ -246,7 +257,7 @@ class StagingDirectory(Directory):
         Directory.__init__(self, directory_path=directory_path, items=items)
 
     def spawn(self):
-        if self.validate().status is True:
+        if self.validate().get_status() is True:
             output = Output()
             output.add_error(LDRError('the staging directory already exists!'))
             return output
@@ -293,7 +304,7 @@ class StagingDirectory(Directory):
             output.add_request(ProvideNewDataPath())
             return output
         self.data_path = new_data_path
-        return Output(status=True)
+        return Output(None, status=True)
 
     def get_admin_path(self):
         return self.admin_path
@@ -309,7 +320,7 @@ class StagingDirectory(Directory):
             output.add_request(ProvideNewAdminPath())
             return output
         self.admin_path = new_admin_path
-        return Output(status=True)
+        return Output(None, status=True)
 
     def get_exists_on_disk(self):
         return self.exists_on_disk

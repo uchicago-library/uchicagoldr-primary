@@ -1,7 +1,7 @@
 from os.path import isabs
 
 from collections import Iterable
-from uchicagoldr import Item
+from uchicagoldr.item import Item
 
 
 class Request(object):
@@ -102,6 +102,12 @@ class ProvideNewItemsInstance(InputType):
         return isinstance(response, list) or \
             str(type(response)) == "<class 'generator'>"
 
+
+class ProvideNewItemInstance(InputType):
+    def __init__(self):
+        self.prompt = "The object you provided was not a valid item " + \
+            "instance. Please supply a valid item instance."
+        InputType.__init__(self, Item, prompt=self.prompt)
 
 class ProvideNewItemInstance(InputType):
     def __init__(self):
