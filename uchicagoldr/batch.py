@@ -179,45 +179,62 @@ class Directory(Batch):
         return Batch.__eq__(self, other) and \
             self.get_directory_path() == other.get_directory_path()
 
+    def _output_self_true(self):
+        output = Output('directory', status=True)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def _output_self_false(self, requests=[], errors=[]):
+        output = Output('directory', status=False)
+        for r in requests:
+            output.add_request(r)
+        for e in errors:
+            output.add_error(e)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+        return self._output_self_true()
+
     def set_directory_path(self, a_path):
         if not isabs(a_path):
-            output = Output(None, status=False)
-            output.add_request(ProvideAbsolutePath())
-            return output
+            r = ProvideAbsolutePath()
+            return self._output_self_false(requests=[r])
         else:
             self.directory_path = abspath(a_path)
-            return Output(None, status=True)
+            return self._output_self_true()
 
     def get_directory_path(self):
         return self.directory_path
 
-    def output_directory_path(self):
-        output = Output('str')
-        output.add_data(self.get_directory_path())
-        output.set_status(True)
-        return output
-
     def populate(self):
+        errors = []
         for item in self._walk_directory_picking_files():
             s = self.add_item(item)
             if s.get_status() is not True:
-                return s
-        output = Output(None)
-        output.set_output_passed()
-        return output
+                for request in s.get_requests():
+                    errors.append(LDRFatal(NotImplemented))
+                for error in s.get_errors():
+                    errors.append(error)
+        if len(errors) > 0:
+            return self._output_self_false(errors=errors)
+        else:
+            return self._output_self_true()
 
     def add_item(self, new_item):
         if not isinstance(new_item, Item):
-            output = Output(None, status=False)
-            output.add_request(ProvideNewItemInstance())
-            return output
+            return self._output_self_false(requests=[ProvideNewItemInstance()])
         if not (self.get_directory_path() in new_item.get_file_path()):
-            output = Output(None, status=False)
-            output.add_error(LDRNonFatal("Item path did not contain " +
-                                         "directory path."))
-            return output
-        Batch.add_item(self, new_item)
-        return Output(None, status=True)
+            e = LDRNonFatal("Item path did not contain " +
+                            "directory path. Item not added.")
+            return self._output_self_false(errors=[e])
+        try:
+            Batch.add_item(self, new_item)
+            return self._output_self_true()
+        except Exception as e:
+            error = LDRFatal(e)
+            return self._output_self_false(errors=[error])
 
     def clean_out_directory(self):
         """
@@ -226,10 +243,9 @@ class Directory(Batch):
         """
         try:
             rmdir(self.directory_path)
-            output = Output(None, status=True)
-            return output
-        except:
-            return Output(None, status=False)
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def _walk_directory_picking_files(self):
         """
@@ -259,6 +275,22 @@ class StagingDirectory(Directory):
         self.exists_on_disk = False
         directory_path = join(root, ark)
         Directory.__init__(self, directory_path=directory_path, items=items)
+
+    def _output_self_true(self):
+        output = Output('stagingdirectory', status=True)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def _output_self_false(self, requests=[], errors=[]):
+        output = Output('stagingdirectory', status=False)
+        for r in requests:
+            output.add_request(r)
+        for e in errors:
+            output.add_error(e)
+        if not output.add_data(self):
+            raise ValueError
+        return output
 
     def spawn(self):
         if self.validate().get_status() is True:
@@ -739,6 +771,22 @@ class AccessionDirectory(Directory):
         return Directory.__eq__(self, other) and \
             self.get_root_path() == other.get_root_path() and \
             self.get_accession() == other.get_accession()
+
+    def _output_self_true(self):
+        output = Output('accessiondirectory', status=True)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def _output_self_false(self, requests=[], errors=[]):
+        output = Output('accessiondirectory', status=False)
+        for r in requests:
+            output.add_request(r)
+        for e in errors:
+            output.add_error(e)
+        if not output.add_data(self):
+            raise ValueError
+        return output
 
     def get_accession(self):
         return self.accession
