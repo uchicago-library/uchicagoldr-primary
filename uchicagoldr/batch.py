@@ -51,20 +51,36 @@ class Batch(object):
                 return False
         return eq
 
+    def _output_self_true(self):
+        output = Output('batch', status=True)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def _output_self_false(self, requests=[], errors=[]):
+        output = Output('batch', status=False)
+        for r in requests:
+            output.add_request(r)
+        for e in errors:
+            output.add_error(e)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def output(self):
+        return self._output_self_true()
+
     def add_item(self, new_item):
         if not isinstance(new_item, Item):
             request = ProvideNewItemInstance()
-            output = Output(None, status=False)
-            output.add_request(request)
-            return output
+            return self._output_self_false(requests=[request])
         try:
             self.items.append(new_item)
-            return Output(None, status=True)
+            output = Output(Batch, status=True)
+            return self._output_self_true()
         except Exception as e:
-            output = Output(None, status=False)
             error = LDRFatal(e)
-            output.add_error(error)
-            return output
+            return self._output_self_false(errors=[error])
 
     def get_item_by_index(self, index):
         return self.get_items()[index]
@@ -74,53 +90,41 @@ class Batch(object):
 
     def output_item_by_index(self, index):
         if index > len(self.get_items()-1):
-            output = Output(None, status=False)
-            output.add_request(ProvideNewIndex())
-            return output
+            return self._output_self_false(requests=[ProvideNewIndex()])
         try:
             output = Output(Item)
-            output.add_data(self.get_item_by_index(index))
-            output.set_status(True)
+            if not output.add_data(self.get_item_by_index(index)):
+                raise ValueError
+            output.set_output_passed()
             return output
         except Exception as e:
-            output = Output(None)
-            error = LDRError(e)
-            output.add_error(error)
-            return output
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def output_item(self, item):
         if not isinstance(item, Item):
-            output = Output(None, status=False)
-            output.add_request(ProvideNewItemInstance())
-            return output
+            return self._output_self_false(requests=[ProvideNewItemInstance()])
         try:
             Output = Output(Item)
             if not output.add_data(self.get_item):
                 raise ValueError
-            output.set_status(True)
+            output.set_output_passed()
             return output
         except Exception as e:
-            output = Output(None, status=False)
-            output.add_error(LDRError(e))
-            return output
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def remove_item_by_index(self, index):
         try:
             self.get_items().pop(index)
-            return output(status=True)
+            return self._output_self_true()
         except Exception as e:
-            output = Output()
-            output.add_error(LDRError(e))
-            return output
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def remove_item(self, item):
         try:
             self.get_items().pop(self.get_items().index(item))
-            return Output(status=True)
+            return self._output_self_true()
         except Exception as e:
-            output = Output()
-            output.add_error(LDRError(e))
-            return output
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def pop_item_by_index(self, index):
         return self.get_items().pop(index)
@@ -132,9 +136,10 @@ class Batch(object):
         return self.items
 
     def output_items(self):
-        output = Output()
-        output.add_data(self.get_items())
-        output.set_status(True)
+        output = Output('item')
+        if not output.add_data(self.get_items()):
+            raise ValueError
+        output.set_output_passed()
         return output
 
     def set_items(self, items):
@@ -146,16 +151,15 @@ class Batch(object):
         try:
             if isinstance(items, GeneratorType):
                 self._set_items_gen(items)
-                return Output(None, status=True)
+                return self._output_self_true()
             elif isinstance(items, Iterable):
                 self._set_items_iter(items)
-                return Output(None, status=True)
+                return self._output_self_true()
             else:
-                return Output(None, status=False)
+                e = LDRFatal(TypeError)
+                return self._output_self_false(errors=[e])
         except Exception as e:
-            output = Output(None)
-            output.add_error(LDRError(e))
-            return output
+            return self._output_self_false(errors=[e])
 
     def _set_items_gen(self, generator_object):
         assert isinstance(generator_object, GeneratorType)
