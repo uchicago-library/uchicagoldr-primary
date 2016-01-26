@@ -613,13 +613,16 @@ class StagingDirectory(Directory):
         if not dataStatus[0]:
             e_str = ""
             if len(dataStatus['badPrefixes']) > 0:
-                e_str.append("Malformed Prefixes: {}".format(", ".join(dataStatus['badPrefixes'])))
+                e_str.append("Malformed Prefixes: {}".format(", ".join(
+                    dataStatus['badPrefixes'])))
                 e_str.append("\n")
             if len(dataStatus['missingDirs']) > 0:
-                e_str.append("Missing Directories: {}".format(", ".join(dataStatus['missingDirs'])))
+                e_str.append("Missing Directories: {}".format(", ".join(
+                    dataStatus['missingDirs'])))
                 e_str.append("\n")
             if len(dataStatus['missingReqs']) > 0:
-                e_str.append("Missing Requirements: {}".format(", ".join(dataStatus['missingReqs'])))
+                e_str.append("Missing Requirements: {}".format(", ".join(
+                    dataStatus['missingReqs'])))
 
             e = LDRNonFatal("Your data directory appears to be invalid.\n" +
                             e_str)
@@ -628,7 +631,7 @@ class StagingDirectory(Directory):
         adminStatus = self._validate_organization(
             self.get_admin_path(),
             reqTopFiles=['record.json',
-                        'fileConversions.txt'],
+                         'fileConversions.txt'],
             reqDirContents=['fixityFromOrigin.txt',
                             'fixityOnDisk.txt',
                             'log.txt',
@@ -658,7 +661,7 @@ class StagingDirectory(Directory):
                             "folder.")
             return self._return_self_false(errors=[e])
         if rehash and not containingFolder:
-            e = LDRNonFatal("In order to read existing hashes you must "+
+            e = LDRNonFatal("In order to read existing hashes you must " +
                             "specify a containing folder that already " +
                             "exists with hash data.")
             return self._return_self_false(errors=[e])
@@ -699,7 +702,8 @@ class StagingDirectory(Directory):
                             "repopulate the staging directory with an updated "
                             "listing. Errors reported follow:\n" +
                             "{}".format("\n".join(
-                                [x.message for x in add_new_items_output.get_errors()])))
+                                [x.message for x in
+                                 add_new_items_output.get_errors()])))
 
         return self._output_self_true()
 
@@ -838,8 +842,16 @@ class AccessionDirectory(Directory):
             )
 
     def add_item(self, new_item):
-        assert isinstance(new_item, AccessionItem)
         return Directory.add_item(self, new_item)
+        if not isinstance(new_item, AccessionItem):
+            request = ProvideNewAccessionItemInstance()
+            return self._output_self_false(requests=[request])
+        try:
+            self.items.append(new_item)
+            return self._output_self_true()
+        except Exception as e:
+            error = LDRFatal(e)
+            return self._output_self_false(errors=[error])
 
     def __eq__(self, other):
         return Directory.__eq__(self, other) and \
@@ -867,11 +879,12 @@ class AccessionDirectory(Directory):
 
     def set_accession(self, new_accession):
         self.accession = new_accession
+        return self._output_self_true()
 
     def get_root_path(self):
         return self.root
 
-    def mint_accession_identifier(self):
+    def get_new_accession_identifier(self):
         url_data = urlopen("https://y1.lib.uchicago.edu/cgi-bin/minter/" +
                            "noid?action=minter&n=1")
         if url_data.status == 200:
@@ -881,7 +894,7 @@ class AccessionDirectory(Directory):
                              "RESTful NOID minter")
         return url_data.split('61001/').rstrip()
 
-    def convert_to_relative_path(self, a_path=None):
+    def _convert_to_relative_path(self, a_path=None):
         if not self.root:
             raise ValueError("There is no directory root on this batch!")
         else:
@@ -893,14 +906,15 @@ class AccessionDirectory(Directory):
 
     def set_root_path(self, a_path):
         if not isabs(a_path):
-            raise ValueError("The path you entered is not absolute!")
+            r = ProvideNewRoot()
+            return self._output_self_false(requests=[r])
         else:
             self.root = abspath(a_path)
-        return True
+            return self._output_self_true()
 
     def find_accession_from_relative_path(self, a_path=None):
         if a_path is None:
-            a_path = self.convert_to_relative_path(
+            a_path = self._convert_to_relative_path(
                 self.get_directory_path()
             )
         if isabs(a_path):
@@ -915,12 +929,13 @@ class AccessionDirectory(Directory):
         self.set_directory_path(directory_path)
         self.set_root_path(root)
         directory_relative_to_root = self. \
-                                     convert_to_relative_path(directory_path)
-        self.get_accession_from_relative_path(directory_relative_to_root)
+                                     _convert_to_relative_path(directory_path)
+        self.find_accession_from_relative_path(directory_relative_to_root)
         generator_of_items = self._walk_directory_picking_files(
                                                         self.directory_path
         )
         self.items = generator_of_items
+        return self.output_self_true()
 
     def _walk_directory_picking_files(self):
         """
