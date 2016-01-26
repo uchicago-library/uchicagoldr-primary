@@ -20,7 +20,7 @@ class Request(object):
         return self.validator(response)
 
 
-class InputType(Request):
+class InputType(Request
     def __init__(self, vtype, validator=None, prompt=None):
         if validator is None:
             validator = self._validator
@@ -109,6 +109,7 @@ class ProvideNewItemInstance(InputType):
             "instance. Please supply a valid item instance."
         InputType.__init__(self, Item, prompt=self.prompt)
 
+
 class ProvideNewItemInstance(InputType):
     def __init__(self):
         self.prompt = 'The instance you provided is not an item. Please ' + \
@@ -137,6 +138,17 @@ class ProvideAbsolutePath(InputType):
 
     def _validator(self, response):
         return isinstance(response, str) and isabs(response)
+
+class ProvideNewIngestTargetPath(InputType):
+    def __init__(self):
+        self.prompt = "The ingest target directory you specified is " + \
+            "invalid. Targets must be directories specified by absolute " + \
+            "paths."
+        InputType.__init__(self, str, validator=self._validator,
+                           prompt=self.prompt)
+
+    def _validator(self, response):
+        return isinstance(response, str) and isdir(response)
 
 
 class ProvideNewRoot(ProvideAbsolutePath):
