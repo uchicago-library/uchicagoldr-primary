@@ -72,7 +72,8 @@ class Batch(object):
 
     def add_item(self, new_item):
         if not isinstance(new_item, Item):
-            request = ProvideNewItemInstance()
+            fte = LDRNonFatal('The specified object was not an item')
+            request = ProvideNewItemInstance(fte)
             return self._output_self_false(requests=[request])
         try:
             self.items.append(new_item)
@@ -89,7 +90,8 @@ class Batch(object):
 
     def output_item_by_index(self, index):
         if index > len(self.get_items()-1):
-            return self._output_self_false(requests=[ProvideNewIndex()])
+            fte = LDRNonFatal("The provided index was invalid")
+            return self._output_self_false(requests=[ProvideNewIndex(fte)])
         try:
             output = Output(Item)
             if not output.add_data(self.get_item_by_index(index)):
@@ -145,7 +147,9 @@ class Batch(object):
         if not (isinstance(items, GeneratorType) or
                 isinstance(items, Iterable)):
             output = Output(None)
-            output.add_request(ProvideNewItemsInstance())
+            fte = LDRNonFatal('The provided object was not an iterable ' +
+                              'or generator')
+            output.add_request(ProvideNewItemsInstance(fte))
             return output
         try:
             if isinstance(items, GeneratorType):
@@ -198,7 +202,8 @@ class Directory(Batch):
 
     def set_directory_path(self, a_path):
         if not isabs(a_path):
-            r = ProvideAbsolutePath()
+            fte = LDRNonFatal('The provided path was not absolute')
+            r = ProvideAbsolutePath(fte)
             return self._output_self_false(requests=[r])
         else:
             self.directory_path = abspath(a_path)
@@ -223,7 +228,9 @@ class Directory(Batch):
 
     def add_item(self, new_item):
         if not isinstance(new_item, Item):
-            return self._output_self_false(requests=[ProvideNewItemInstance()])
+            fte = 'The provided object was not an item instance'
+            return self._output_self_false(
+                requests=[ProvideNewItemInstance(fte)])
         if not (self.get_directory_path() in new_item.get_file_path()):
             e = LDRNonFatal("Item path did not contain " +
                             "directory path. Item not added.")
@@ -298,7 +305,9 @@ class StagingDirectory(Directory):
 
         try:
             if not isabs(self.root) or not exists(self.root):
-                r = ProvideNewRoot()
+                fte = LDRNonFatal('The provided root either does not exist ' +
+                                  'on disk or is not an absolute path.')
+                r = ProvideNewRoot(fte)
                 return self._output_self_false(requests=[r])
             exists_already = [x for x in walk(join(self.root, self.ark))]
             self.set_admin_path(join(self.root, self.ark,
@@ -329,7 +338,8 @@ class StagingDirectory(Directory):
 
     def set_data_path(self, new_data_path):
         if not isabs(new_data_path):
-            return self._output_self_false(requests=[ProvideNewDataPath()])
+            fte = LDRNonFatal('The provided data path was not absolute')
+            return self._output_self_false(requests=[ProvideNewDataPath(fte)])
         self.data_path = new_data_path
         return self._output_self_true()
 
@@ -338,7 +348,8 @@ class StagingDirectory(Directory):
 
     def set_admin_path(self, new_admin_path):
         if not isabs(new_admin_path):
-            return self._output_self_false(requests=[ProvideNewAdminPath()])
+            fte = LDRNonFatal('The provided admin path was not absolute')
+            return self._output_self_false(requests=[ProvideNewAdminPath(fte)])
         self.admin_path = new_admin_path
         return self._output_self_true()
 
@@ -348,7 +359,9 @@ class StagingDirectory(Directory):
     def set_exists_on_disk(self, newBool):
         assert(isinstance(newBool, bool))
         if not isinstance(newBool, bool):
-            return self._output_self_false(requests=InputType(bool))
+            fte = LDRNonFatal('exists_on_disk can not be set to a ' +
+                              'non-boolean value')
+            return self._output_self_false(requests=InputType(fte, bool))
         self.exists_on_disk = newBool
 
     def _check_dir(self, path, cardinality=None, reqDirs=[], reqFiles=[]):
@@ -652,7 +665,8 @@ class StagingDirectory(Directory):
     def ingest(self, path, prefix=None, containingFolder=None,
                rehash=False, pattern=None):
         if not isdir(path):
-            r = ProvideNewIngestTargetPath()
+            fte = LDRNonFatal('The provided path was not a directory.')
+            r = ProvideNewIngestTargetPath(fte)
             return self._return_self_false(requests=[r])
         if prefix and containingFolder:
             e = LDRNonFatal("A prefix and a containing folder can not " +
@@ -813,7 +827,7 @@ class StagingDirectory(Directory):
     def _write_fixity_log(self, path, directory, existingHashes=None):
         newHashes = {}
         for item in directory.get_items():
-            if item.test_readability():
+            if item.find_readability():
                 if existingHashes:
                     if relpath(
                         item.get_file_path(),
@@ -844,7 +858,9 @@ class AccessionDirectory(Directory):
     def add_item(self, new_item):
         return Directory.add_item(self, new_item)
         if not isinstance(new_item, AccessionItem):
-            request = ProvideNewAccessionItemInstance()
+            fte = LDRNonFatal('The provided object was not an ' +
+                              'AccessionItem')
+            request = ProvideNewAccessionItemInstance(fte)
             return self._output_self_false(requests=[request])
         try:
             self.items.append(new_item)
@@ -906,7 +922,8 @@ class AccessionDirectory(Directory):
 
     def set_root_path(self, a_path):
         if not isabs(a_path):
-            r = ProvideNewRoot()
+            fte = LDRNonFatal('The provided root path was not absolute')
+            r = ProvideNewRoot(fte)
             return self._output_self_false(requests=[r])
         else:
             self.root = abspath(a_path)

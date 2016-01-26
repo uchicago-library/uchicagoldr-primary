@@ -1,5 +1,6 @@
 from uchicagoldr.error import LDRError, LDRNonFatal, LDRFatal
 from uchicagoldr.convenience import get_valid_types
+from uchicagoldr.request import Request
 
 class Output(object):
     _type_string = None
@@ -28,7 +29,7 @@ class Output(object):
             self.errors.append(error_object)
 
     def add_request(self, request):
-        if isinstance(requet, Request):
+        if isinstance(request, Request):
             self.requests.append(request)
         else:
             return TypeError("must pass an instance of Request class")

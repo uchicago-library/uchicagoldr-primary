@@ -6,6 +6,10 @@ from os.path import exists, join, relpath, splitext, basename, isabs, abspath
 from mimetypes import guess_type
 from re import compile as re_compile
 
+from uchicagoldr.request import Request, InputType, ChooseBetween, \
+    ChooseMultiple, TrueOrFalse, Confirm, ProvideNewArk, ProvideNewFilePath
+from uchicagoldr.error import LDRNonFatal, LDRFatal
+from uchicagoldr.output import Output
 
 class Item(object):
     """
@@ -15,7 +19,7 @@ class Item(object):
     def __init__(self, path):
         assert(isabs(path))
         self.filepath = path
-        self.set_readability(self.test_readability())
+        self.set_readability(self.find_readability())
 
     def __repr__(self):
         return self.get_file_path()
@@ -25,7 +29,26 @@ class Item(object):
             other.get_file_path()
         return eq
 
-    def test_readability(self):
+    def _output_self_true(self):
+        output = Output('item', status=True)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def _output_self_false(self, requests=[], errors = []):
+        output = Output('item', status=False)
+        for f in requests:
+            output.add_request(r)
+        for e in errors:
+            output.add_error(e)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def output(self):
+        return self._output_self_true()
+
+    def find_readability(self):
         if access(self.filepath, R_OK):
             return True
         else:
@@ -33,7 +56,13 @@ class Item(object):
 
     def set_readability(self, readable_notice):
         assert(isinstance(readable_notice, bool))
+        if not isinstance(readable_notice, bool):
+            fte = LDRNonFatal("The readability value can not be set to a "
+                              "non-boolean value.")
+            r = InputType(fte, bool)
+            return self._output_self_false(requests=[r])
         self.can_read = readable_notice
+        return self._output_self_true()
 
     def read_file(self):
         assert(self.can_read)
@@ -74,9 +103,11 @@ class Item(object):
 
     def set_md5(self, hash_value):
         self.md5 = hash_value
+        return self._output_self_true()
 
     def set_sha256(self, hash_value):
         self.sha256 = hash_value
+        return self._output_self_true()
 
     def get_md5(self):
         return self.md5
@@ -89,7 +120,12 @@ class Item(object):
 
     def set_file_path(self, new_file_path):
         assert(isabs(new_file_path))
+        if not isabs(new_file_path):
+            fte = LDRNonFatal("The item filepath must be an absolute path.")
+            r = ProvideNewFilePath(fte)
+            return self._output_self_false(requests=[r])
         self.filepath = abspath(new_file_path)
+        return self._output_self_true()
 
     def find_file_name(self):
         return basename(self.filepath)
@@ -102,6 +138,7 @@ class Item(object):
 
     def set_file_extension(self, value):
         self.file_extension = value
+        return self._output_self_true()
 
     def get_file_extension(self):
         return self.file_extension
@@ -110,10 +147,12 @@ class Item(object):
         return stat(self.filepath).st_size
 
     def set_file_size(self, size_info):
-        if isinstance(size_info, int):
-            self.file_size = size_info
-        else:
-            raise ValueError("You did not pass an integer.")
+        if not isinstance(size_info, int):
+            fte = LDRNonFatal("The file size must be specified as an integer.")
+            r = InputType(fte, int)
+            return self._output_self_false(requests=[r])
+        self.file_size = size_info
+        return self._output_self_true()
 
     def get_file_size(self):
         return self.file_size
@@ -144,6 +183,7 @@ class Item(object):
 
     def set_file_mime_type(self, mimetype_value):
         self.mimetype = mimetype_value
+        return self._output_self_true()
 
     def get_file_mime_type(self):
         return self.mimetype
@@ -181,12 +221,33 @@ class AccessionItem(Item):
             other.get_root_path() and self.get_accession() == \
             other.get_accession()
 
+    def _output_self_true(self):
+        output = Output('accessionitem', status=True)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def _output_self_false(self, requests=[], errors = []):
+        output = Output('accessionitem', status=False)
+        for r in requests:
+            output.add_request(r)
+        for e in errors:
+            output.add_error(e)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
     def get_root_path(self):
         return self.root_path
 
     def set_root_path(self, new_root_path):
         assert(isabs(new_root_path))
+        if not isabs(new_root_path):
+            fte = LDRNonFatal("The root path specified was not absolute.")
+            r = ProvideNewRoot(fte)
+            return self._output_self_false(requests=[r])
         self.root_path = abspath(new_root_path)
+        return self._output_self_true()
 
     def find_canonical_filepath(self):
         assert self.accession
@@ -196,6 +257,7 @@ class AccessionItem(Item):
 
     def set_canonical_filepath(self, canonical_path):
         self.canonical_filepath = canonical_path
+        return self._output_self_true()
 
     def get_canonical_filepath(self):
         return self.canonical_filepath
@@ -206,10 +268,11 @@ class AccessionItem(Item):
         return accession
 
     def set_accession(self, identifier):
-        if re_compile('^\w{13}$').match(identifier):
-            self.accession = identifier
-        else:
-            raise ValueError("You did not pass a valid noid")
+        if not re_compile('^\w{13}$').match(identifier):
+            fte = LDRNonFatal("The ARK specified was invalid.")
+            r = ProvideNewArk(fte)
+            return self._output_self_false(requests=[r])
+        self.accession = identifier
 
     def get_accession(self):
         return self.accession
@@ -224,16 +287,16 @@ class AccessionItem(Item):
         path_sans_root = relpath(self.filepath, self.root_path)
         destination_full_path = join(new_root_directory, path_sans_root)
         self.destination = destination_full_path
-        return True
-    
+        return self._output_self_true()
+
     def move_into_new_location(self):
         try:
             move(self.filepath, self.destination)
-            return (True,None)
+            return self._output_self_true()
         except Exception as e:
-            error = e
-            return (False,e)
-        
+            error = LDRFatal(e)
+            return self._output_self_false(errors=[error])
+
     def copy_source_directory_tree_to_destination(self):
         destination_directories = dirname(self.destination).split('/')
         directory_tree = ""
@@ -243,23 +306,26 @@ class AccessionItem(Item):
                 try:
                     mkdir(directory_tree,0o740)
                 except Exception as e:
-                    return (False,e)
-        return (True,None)
-    
+                    error = LDRFatal(e)
+                    return self._output_self_false(errors=[error])
+        return self._output_self_true()
+
     def clean_out_source_directory_tree(self):
         directory_tree = dirname(self.filepath)
         for src_dir, dirs, files in walk(directory_tree):
             try:
                 rmdir(src_dir)
-                return (True,None)
+                return self._output_self_true()
             except Exception as e:
-                return (False,e)
-    
+                error = LDRFatal(e)
+                return self._output_self_false(errors=[error])
+
     def set_destination_ownership(self, user_name, group_name):
         uid = getpwnam(user_name).pw_uid
         gid = getgrnam(group_name).gr_gid
         try:
             chown(self.destination, uid, gid)
-            return (True,None)
+            return self._output_self_true()
         except Exception as e:
-            return (False,e)
+            error = LDRFatal(e)
+            return self._output_self_false(errors=[error])

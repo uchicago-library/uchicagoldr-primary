@@ -24,8 +24,8 @@ class TestItem(unittest.TestCase):
         self.assertTrue(self.j)
 
     def testTestReadability(self):
-        self.assertTrue(self.i.test_readability())
-        self.assertTrue(self.j.test_readability())
+        self.assertTrue(self.i.find_readability())
+        self.assertTrue(self.j.find_readability())
 
     def testGetSetFilePath(self):
         self.assertEqual(self.i.get_file_path(),
@@ -151,8 +151,8 @@ class TestAccessionItem(unittest.TestCase):
         self.i.set_accession('0987654321098')
         self.assertEqual(self.i.get_accession(), '0987654321098')
 
-        with self.assertRaises(ValueError):
-            self.j.set_accession('1')
+        out = self.j.set_accession('1')
+        self.assertFalse(out.get_status())
 
     def testSetGetFindCannonicalPath(self):
         self.i.set_canonical_filepath(self.i.find_canonical_filepath())
