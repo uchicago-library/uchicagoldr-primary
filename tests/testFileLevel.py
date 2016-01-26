@@ -345,7 +345,7 @@ class TestStagingDirectory(unittest.TestCase):
     def testValidate(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
         test.spawn()
-        self.assertEqual(test.validate()[0],True)
+        self.assertEqual(test.validate().get_status(),True)
 
         remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt'))
         remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json'))
@@ -380,7 +380,7 @@ class TestStagingDirectory(unittest.TestCase):
 
     def testAudit(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
-        self.assertFalse(test.audit()[0])
+        self.assertFalse(test.audit().get_status())
 
 
 class testAccessionDirectory(unittest.TestCase):
