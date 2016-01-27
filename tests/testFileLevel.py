@@ -217,28 +217,59 @@ class TestAccessionItem(unittest.TestCase):
         self.assertEqual(self.j.get_root_path(), getcwd())
         self.assertEqual(self.j.get_root_path(),
                          self.i.get_root_path())
-        self.i.set_root_path('/new/path')
+        good_output = self.i.set_root_path('/new/path')
         self.assertEqual(self.i.get_root_path(), '/new/path')
         self.j.set_root_path('/new/path/again/')
         self.assertEqual(self.j.get_root_path(), '/new/path/again')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_root_path({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.i.set_root_path('../one/dir/up/')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testSetGetFindAccession(self):
-        self.i.set_accession(self.i.find_file_accession())
+        good_output = self.i.set_accession(self.i.find_file_accession())
         self.assertEqual(self.i.get_accession(), '1234567890123')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.j.set_accession(self.j.find_file_accession())
         self.assertEqual(self.j.get_accession(), '1234567890123')
 
         self.i.set_accession('0987654321098')
         self.assertEqual(self.i.get_accession(), '0987654321098')
 
-        out = self.j.set_accession('1')
-        self.assertFalse(out.get_status())
+        bad_output = self.j.set_accession('1')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.j.set_accession({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testSetGetFindCannonicalPath(self):
-        self.i.set_canonical_filepath(self.i.find_canonical_filepath())
+        good_output = self.i.set_canonical_filepath(self.i.find_canonical_filepath())
         self.assertEqual(self.i.get_canonical_filepath(), 'testFiles/0.rand')
         self.j.set_canonical_filepath(self.j.find_canonical_filepath())
         self.assertEqual(self.j.get_canonical_filepath(), 'testFiles/1.txt')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.j.set_canonical_filepath({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
         with self.assertRaises(AssertionError):
             self.i.set_file_path('/new/path/to/file.txt')

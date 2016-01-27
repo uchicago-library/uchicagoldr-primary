@@ -307,6 +307,10 @@ class AccessionItem(Item):
 
     def set_root_path(self, new_root_path):
         try:
+            if not isinstance(new_root_path, str):
+                fte = LDRFatal("The root path specified was not a string.")
+                r = ProvideNewRoot(fte)
+                return self._output_self_false(requests=[r])
             if not isabs(new_root_path):
                 fte = LDRNonFatal("The root path specified was not absolute.")
                 r = ProvideNewRoot(fte)
@@ -343,11 +347,16 @@ class AccessionItem(Item):
 
     def set_accession(self, identifier):
         try:
+            if not isinstance(identifier, str):
+                fte = LDRFatal("The ARK specified was not a string.")
+                r = ProvideNewArk(fte)
+                return self._output_self_false(requests=[r])
             if not re_compile('^\w{13}$').match(identifier):
                 fte = LDRNonFatal("The ARK specified was invalid.")
                 r = ProvideNewArk(fte)
                 return self._output_self_false(requests=[r])
             self.accession = identifier
+            return self._output_self_true()
         except Exception as e:
             return self._output_self_false(errors=[LDRFatal(e)])
 
