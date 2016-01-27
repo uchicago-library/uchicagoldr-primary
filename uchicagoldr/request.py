@@ -12,7 +12,7 @@ class Request(object):
         if validator is not None:
             self.validator = validator
         else:
-            self.validator = self._dummy_validator
+            self.validator = self._validator
 
         self.prompt = prompt
         self.set_fall_through_error(fall_through_error)
