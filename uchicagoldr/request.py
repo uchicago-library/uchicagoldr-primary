@@ -259,6 +259,7 @@ class ProvideGroupName(InputType):
             "provide a valid user name."
         InputType.__init__(self, fte, str, prompt=self.prompt)
 
+
 class ProvideNewIngestTargetPath(InputType):
     def __init__(self, fte):
         self.prompt = "The ingest target directory you specified is " + \
@@ -304,25 +305,3 @@ class ProvideNewArk(InputType):
 
     def _validator(self, response):
         return isinstance(response, str) and match('^\w{13}$', response)
-
-
-class MissingSourceDirectory(InputType):
-    def __init__(self, fte):
-        self.prompt = "the source directory you entered does not exist."
-        InputType.__init__(self, fte, str, validator=self._ark_validation,
-                           prompt=self.prompt)
-
-
-class MissingDestinationDirectory(InputType):
-    def __init__(self, fte):
-        self.prompt = "the destination directory you entered does not exist."
-        InputType.__init__(self, fte, str, validator=self._ark_validation,
-                           prompt=self.prompt)
-
-
-class CollissionProblem(InputType):
-    def __init__(self, fte, collisions):
-        self.prompt = "there was a collision between the " + \
-            "following files".format(', '.join(collisions))
-        InputType.__init__(self, fte, str, validator=self._ark_validation,
-                           prompt=self.prompt)

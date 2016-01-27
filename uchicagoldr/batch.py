@@ -89,10 +89,10 @@ class Batch(object):
         return self.get_item_by_index(self.get_items().index(item))
 
     def output_item_by_index(self, index):
-        if index > len(self.get_items()-1):
-            fte = LDRNonFatal("The provided index was invalid")
-            return self._output_self_false(requests=[ProvideNewIndex(fte)])
         try:
+            if index > len(self.get_items()-1):
+                fte = LDRNonFatal("The provided index was invalid")
+                return self._output_self_false(requests=[ProvideNewIndex(fte)])
             output = Output(Item)
             if not output.add_data(self.get_item_by_index(index)):
                 raise ValueError
@@ -102,9 +102,10 @@ class Batch(object):
             return self._output_self_false(errors=[LDRFatal(e)])
 
     def output_item(self, item):
-        if not isinstance(item, Item):
-            return self._output_self_false(requests=[ProvideNewItemInstance()])
         try:
+            if not isinstance(item, Item):
+                return self._output_self_false(requests=[
+                    ProvideNewItemInstance()])
             output = Output(Item)
             if not output.add_data(self.get_item):
                 raise ValueError
@@ -115,6 +116,9 @@ class Batch(object):
 
     def remove_item_by_index(self, index):
         try:
+            if index > len(self.get_items()-1):
+                fte = LDRNonFatal("The provided index was invalid")
+                return self._output_self_false(requests=[ProvideNewIndex(fte)])
             self.get_items().pop(index)
             return self._output_self_true()
         except Exception as e:
@@ -122,6 +126,9 @@ class Batch(object):
 
     def remove_item(self, item):
         try:
+            if not isinstance(item, Item):
+                return self._output_self_false(requests=[
+                    ProvideNewItemInstance()])
             self.get_items().pop(self.get_items().index(item))
             return self._output_self_true()
         except Exception as e:
@@ -144,14 +151,13 @@ class Batch(object):
         return output
 
     def set_items(self, items):
-        if not (isinstance(items, GeneratorType) or
-                isinstance(items, Iterable)):
-            output = Output(None)
-            fte = LDRNonFatal('The provided object was not an iterable ' +
-                              'or generator')
-            output.add_request(ProvideNewItemsInstance(fte))
-            return output
         try:
+            if not (isinstance(items, GeneratorType) or
+                    isinstance(items, Iterable)):
+                fte = LDRNonFatal('The provided object was not an iterable ' +
+                                  'or generator')
+                r = ProvideNewItemsInstance(fte)
+                return self._output_self_false(requests=[r])
             if isinstance(items, GeneratorType):
                 self._set_items_gen(items)
                 return self._output_self_true()
@@ -201,41 +207,50 @@ class Directory(Batch):
         return self._output_self_true()
 
     def set_directory_path(self, a_path):
-        if not isabs(a_path):
-            fte = LDRNonFatal('The provided path was not absolute')
-            r = ProvideAbsolutePath(fte)
-            return self._output_self_false(requests=[r])
-        else:
+        try:
+            if not isinstance(a_path, str):
+                fte = LDRNonFatal('The provided path was not a string')
+                r = ProvideAbsolutePath(fte)
+                return self._output_self_false(requests=[r])
+            if not isabs(a_path):
+                fte = LDRNonFatal('The provided path was not absolute')
+                r = ProvideAbsolutePath(fte)
+                return self._output_self_false(requests=[r])
             self.directory_path = abspath(a_path)
             return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_directory_path(self):
         return self.directory_path
 
     def populate(self):
-        errors = []
-        for item in self._walk_directory_picking_files():
-            s = self.add_item(item)
-            if s.get_status() is not True:
-                for request in s.get_requests():
-                    errors.append(LDRFatal(NotImplemented))
-                for error in s.get_errors():
-                    errors.append(error)
-        if len(errors) > 0:
-            return self._output_self_false(errors=errors)
-        else:
-            return self._output_self_true()
+        try:
+            errors = []
+            for item in self._walk_directory_picking_files():
+                s = self.add_item(item)
+                if s.get_status() is not True:
+                    for request in s.get_requests():
+                        errors.append(LDRFatal(NotImplemented))
+                    for error in s.get_errors():
+                        errors.append(error)
+            if len(errors) > 0:
+                return self._output_self_false(errors=errors)
+            else:
+                return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def add_item(self, new_item):
-        if not isinstance(new_item, Item):
-            fte = 'The provided object was not an item instance'
-            return self._output_self_false(
-                requests=[ProvideNewItemInstance(fte)])
-        if not (self.get_directory_path() in new_item.get_file_path()):
-            e = LDRNonFatal("Item path did not contain " +
-                            "directory path. Item not added.")
-            return self._output_self_false(errors=[e])
         try:
+            if not isinstance(new_item, Item):
+                fte = 'The provided object was not an item instance'
+                return self._output_self_false(
+                    requests=[ProvideNewItemInstance(fte)])
+            if not (self.get_directory_path() in new_item.get_file_path()):
+                e = LDRNonFatal("Item path did not contain " +
+                                "directory path. Item not added.")
+                return self._output_self_false(errors=[e])
             Batch.add_item(self, new_item)
             return self._output_self_true()
         except Exception as e:
@@ -347,21 +362,34 @@ class StagingDirectory(Directory):
         return self.admin_path
 
     def set_admin_path(self, new_admin_path):
-        if not isabs(new_admin_path):
-            fte = LDRNonFatal('The provided admin path was not absolute')
-            return self._output_self_false(requests=[ProvideNewAdminPath(fte)])
-        self.admin_path = new_admin_path
-        return self._output_self_true()
+        try:
+            if not isinstance(new_admin_path, str):
+                fte = LDRFatal('The provided admin path was not a string')
+                return self._output_self_false(requests=[ProvideNewAdminPath(fte)])
+            if not isabs(new_admin_path):
+                fte = LDRNonFatal('The provided admin path was not absolute')
+                return self._output_self_false(requests=[ProvideNewAdminPath(fte)])
+            self.admin_path = new_admin_path
+            return self._output_self_true()
+        except Exception as e:
+            error = LDRFatal(e)
+            return self._output_self_false(errors=[error])
 
     def get_exists_on_disk(self):
         return self.exists_on_disk
 
     def set_exists_on_disk(self, newBool):
-        if not isinstance(newBool, bool):
-            fte = LDRNonFatal('exists_on_disk can not be set to a ' +
-                              'non-boolean value')
-            return self._output_self_false(requests=ProvideExistsOnDisk(fte))
-        self.exists_on_disk = newBool
+        try:
+            if not isinstance(newBool, bool):
+                fte = LDRNonFatal('exists_on_disk can not be set to a ' +
+                                'non-boolean value')
+                return self._output_self_false(requests=ProvideExistsOnDisk(fte))
+            self.exists_on_disk = newBool
+            return self._output_self_true()
+        except Exception as e:
+            error = LDRFatal(e)
+            return self._output_self_false(errors=[error])
+
 
     def _check_dir(self, path, cardinality=None, reqDirs=[], reqFiles=[]):
         if not isabs(path):
@@ -390,116 +418,119 @@ class StagingDirectory(Directory):
                 missing_dirs, missing_files)
 
     def validate(self):
-        path = self.directory_path
-        shouldBeRoot = self.root
-        shouldBeArk = self.ark
-        shouldBeEAD = self.ead
-        shouldBeAccNo = self.accno
+        try:
+            path = self.directory_path
+            shouldBeRoot = self.root
+            shouldBeArk = self.ark
+            shouldBeEAD = self.ead
+            shouldBeAccNo = self.accno
 
-        observedRoot = None
-        observedArk = None
-        observedEAD = None
-        observedAccNo = None
+            observedRoot = None
+            observedArk = None
+            observedEAD = None
+            observedAccNo = None
 
-        if not (isdir(path)):
-            e = LDRNonFatal("The root directory path is not a directory " +
-                            "on disk.\n" +
-                            "Path: {}".format(path))
-            return self._output_self_false(errors=[e])
+            if not (isdir(path)):
+                e = LDRNonFatal("The root directory path is not a directory " +
+                                "on disk.\n" +
+                                "Path: {}".format(path))
+                return self._output_self_false(errors=[e])
 
-        if split(path)[-1] == '':
-            observedRoot = split(split(path)[0])[0]
-        else:
-            observedRoot = split(path)[0]
+            if split(path)[-1] == '':
+                observedRoot = split(split(path)[0])[0]
+            else:
+                observedRoot = split(path)[0]
 
-        if shouldBeRoot != observedRoot:
-            e = LDRNonFatal("The observed root does not match the root " +
-                            "specified in the object.\n" +
-                            "Observed Root: {}".format(observedRoot) +
-                            "Specified Root: {}".format(shouldBeRoot))
-            return self._output_self_false(errors=[e])
+            if shouldBeRoot != observedRoot:
+                e = LDRNonFatal("The observed root does not match the root " +
+                                "specified in the object.\n" +
+                                "Observed Root: {}".format(observedRoot) +
+                                "Specified Root: {}".format(shouldBeRoot))
+                return self._output_self_false(errors=[e])
 
-        if split(path)[-1] == '':
-            observedArk = split(split(path)[0])[1]
-        else:
-            observedArk = split(path)[1]
+            if split(path)[-1] == '':
+                observedArk = split(split(path)[0])[1]
+            else:
+                observedArk = split(path)[1]
 
-        if shouldBeArk != observedArk:
-            e = LDRNonFatal("The observed ARK does not match the ARK " +
-                            "specified in the object.\n" +
-                            "Observed ARK: {}".format(observedArk) +
-                            "Specified ARK: {}".format(shouldBeArk))
-            return self._output_self_false(errors=[e])
+            if shouldBeArk != observedArk:
+                e = LDRNonFatal("The observed ARK does not match the ARK " +
+                                "specified in the object.\n" +
+                                "Observed ARK: {}".format(observedArk) +
+                                "Specified ARK: {}".format(shouldBeArk))
+                return self._output_self_false(errors=[e])
 
-        if not match("^\w{13}$", shouldBeArk):
-            e = LDRNonFatal("The observed ARK does not contain " +
-                            "13 characters.\n" +
-                            "Observed ARK: {}".format(observedArk))
-            return self._output_self_false(errors=[e])
+            if not match("^\w{13}$", shouldBeArk):
+                e = LDRNonFatal("The observed ARK does not contain " +
+                                "13 characters.\n" +
+                                "Observed ARK: {}".format(observedArk))
+                return self._output_self_false(errors=[e])
 
-        ArkDirCheck = self._check_dir(join(shouldBeRoot, shouldBeArk))
-        if ArkDirCheck[2] != 1:
-            e = LDRNonFatal("The ARK directory contains more than one " +
-                            "folder.\n" +
-                            "Path: {}\n".format(join(shouldBeRoot,
-                                                     shouldBeArk)) +
-                            "Contents: {}".format(str(ArkDirCheck[1])))
-            return self._output_self_false(errors=[e])
-        else:
-            observedEAD = ArkDirCheck[1][0]
+            ArkDirCheck = self._check_dir(join(shouldBeRoot, shouldBeArk))
+            if ArkDirCheck[2] != 1:
+                e = LDRNonFatal("The ARK directory contains more than one " +
+                                "folder.\n" +
+                                "Path: {}\n".format(join(shouldBeRoot,
+                                                        shouldBeArk)) +
+                                "Contents: {}".format(str(ArkDirCheck[1])))
+                return self._output_self_false(errors=[e])
+            else:
+                observedEAD = ArkDirCheck[1][0]
 
-        if shouldBeEAD != observedEAD:
-            e = LDRNonFatal("The observed EADID does not match the EADID " +
-                            "specified in the object.\n" +
-                            "Observed EADID: {}".format(observedEAD) +
-                            "Specified EADID: {}".format(shouldBeEAD))
-            return self._output_self_false(errors=[e])
+            if shouldBeEAD != observedEAD:
+                e = LDRNonFatal("The observed EADID does not match the EADID " +
+                                "specified in the object.\n" +
+                                "Observed EADID: {}".format(observedEAD) +
+                                "Specified EADID: {}".format(shouldBeEAD))
+                return self._output_self_false(errors=[e])
 
-        EADDirCheck = self._check_dir(join(shouldBeRoot, shouldBeArk,
-                                           shouldBeEAD))
-        if EADDirCheck[2] != 1:
-            e = LDRNonFatal("The EAD directory contains more than one " +
-                            "folder.\n" +
-                            "Path: {}\n".format(join(shouldBeRoot,
-                                                     shouldBeArk,
-                                                     shouldBeEAD)) +
-                            "Contents: {}".format(str(EADDirCheck[1])))
-            return self._output_self_false(errors=[e])
-        else:
-            observedAccNo = EADDirCheck[1][0]
+            EADDirCheck = self._check_dir(join(shouldBeRoot, shouldBeArk,
+                                            shouldBeEAD))
+            if EADDirCheck[2] != 1:
+                e = LDRNonFatal("The EAD directory contains more than one " +
+                                "folder.\n" +
+                                "Path: {}\n".format(join(shouldBeRoot,
+                                                        shouldBeArk,
+                                                        shouldBeEAD)) +
+                                "Contents: {}".format(str(EADDirCheck[1])))
+                return self._output_self_false(errors=[e])
+            else:
+                observedAccNo = EADDirCheck[1][0]
 
-        if shouldBeAccNo != observedAccNo:
-            e = LDRNonFatal("The observed accession number does not match " +
-                            "the accession number specified in the object.\n" +
-                            "Observed Acc No: {}".format(observedAccNo) +
-                            "Specified Acc No: {}".format(shouldBeAccNo))
-            return self._output_self_false(errors=[e])
+            if shouldBeAccNo != observedAccNo:
+                e = LDRNonFatal("The observed accession number does not match " +
+                                "the accession number specified in the object.\n" +
+                                "Observed Acc No: {}".format(observedAccNo) +
+                                "Specified Acc No: {}".format(shouldBeAccNo))
+                return self._output_self_false(errors=[e])
 
-        if not match("^\d{4}-\d{3}$", shouldBeAccNo):
-            e = LDRNonFatal("The observed accession number does not " +
-                            "contain four digits followed by a dash " +
-                            "followed by three more digits.\n" +
-                            "Observed Acc No: {}".format(observedAccNo))
-            return self._output_self_false(errors=[e])
+            if not match("^\d{4}-\d{3}$", shouldBeAccNo):
+                e = LDRNonFatal("The observed accession number does not " +
+                                "contain four digits followed by a dash " +
+                                "followed by three more digits.\n" +
+                                "Observed Acc No: {}".format(observedAccNo))
+                return self._output_self_false(errors=[e])
 
-        AccNoDirCheck = self._check_dir(join(shouldBeRoot, shouldBeArk,
-                                             shouldBeEAD, shouldBeAccNo),
-                                        cardinality=2,
-                                        reqDirs=['admin', 'data']
-                                        )
-        if AccNoDirCheck[0] is not True:
-            e = LDRNonFatal("The observed accession number directory " +
-                            "is not properly formatted. It should " +
-                            "contain only two directories " +
-                            "'admin' and 'data'.\n" +
-                            "Path: {}\n".format(join(shouldBeRoot,
-                                                     shouldBeArk,
-                                                     shouldBeEAD,
-                                                     shouldBeAccNo)) +
-                            "Contents: {}".format(str(AccNoDirCheck[1])))
-            return self._output_self_false(errors=[e])
+            AccNoDirCheck = self._check_dir(join(shouldBeRoot, shouldBeArk,
+                                                shouldBeEAD, shouldBeAccNo),
+                                            cardinality=2,
+                                            reqDirs=['admin', 'data']
+                                            )
+            if AccNoDirCheck[0] is not True:
+                e = LDRNonFatal("The observed accession number directory " +
+                                "is not properly formatted. It should " +
+                                "contain only two directories " +
+                                "'admin' and 'data'.\n" +
+                                "Path: {}\n".format(join(shouldBeRoot,
+                                                        shouldBeArk,
+                                                        shouldBeEAD,
+                                                        shouldBeAccNo)) +
+                                "Contents: {}".format(str(AccNoDirCheck[1])))
+                return self._output_self_false(errors=[e])
 
-        return self._output_self_true()
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def _validate_organization(self, targetPath, reqTopFiles=[],
                                reqDirContents=[]):
@@ -607,118 +638,126 @@ class StagingDirectory(Directory):
             return (False, returnDict)
 
     def audit(self):
-        data = {}
-        data['rootStatus'] = []
-        data['dataStatus'] = []
-        data['adminStatus'] = []
-        data['containedDirs'] = []
-        rootStatus = self.validate()
-        if rootStatus.get_status() is not True:
-            e = LDRNonFatal("Your staging root structure is not valid. " +
-                            "The validator reports the following errors:\n" +
-                            "\n".join(
-                                [x.message for x in rootStatus.get_errors()]
-                            ))
-            return self._output_self_false(errors=[e])
+        try:
+            data = {}
+            data['rootStatus'] = []
+            data['dataStatus'] = []
+            data['adminStatus'] = []
+            data['containedDirs'] = []
+            rootStatus = self.validate()
+            if rootStatus.get_status() is not True:
+                e = LDRNonFatal("Your staging root structure is not valid. " +
+                                "The validator reports the following errors:\n" +
+                                "\n".join(
+                                    [x.message for x in rootStatus.get_errors()]
+                                ))
+                return self._output_self_false(errors=[e])
 
-        dataStatus = self._validate_organization(self.get_data_path())
-        if not dataStatus[0]:
-            e_str = ""
-            if len(dataStatus['badPrefixes']) > 0:
-                e_str.append("Malformed Prefixes: {}".format(", ".join(
-                    dataStatus['badPrefixes'])))
-                e_str.append("\n")
-            if len(dataStatus['missingDirs']) > 0:
-                e_str.append("Missing Directories: {}".format(", ".join(
-                    dataStatus['missingDirs'])))
-                e_str.append("\n")
-            if len(dataStatus['missingReqs']) > 0:
-                e_str.append("Missing Requirements: {}".format(", ".join(
-                    dataStatus['missingReqs'])))
+            dataStatus = self._validate_organization(self.get_data_path())
+            if not dataStatus[0]:
+                e_str = ""
+                if len(dataStatus['badPrefixes']) > 0:
+                    e_str.append("Malformed Prefixes: {}".format(", ".join(
+                        dataStatus['badPrefixes'])))
+                    e_str.append("\n")
+                if len(dataStatus['missingDirs']) > 0:
+                    e_str.append("Missing Directories: {}".format(", ".join(
+                        dataStatus['missingDirs'])))
+                    e_str.append("\n")
+                if len(dataStatus['missingReqs']) > 0:
+                    e_str.append("Missing Requirements: {}".format(", ".join(
+                        dataStatus['missingReqs'])))
 
-            e = LDRNonFatal("Your data directory appears to be invalid.\n" +
-                            e_str)
-            return self._output_self_false(errors=[e])
-        #
-        adminStatus = self._validate_organization(
-            self.get_admin_path(),
-            reqTopFiles=['record.json',
-                         'fileConversions.txt'],
-            reqDirContents=['fixityFromOrigin.txt',
-                            'fixityOnDisk.txt',
-                            'log.txt',
-                            'rsyncFromOrigin.txt'])
+                e = LDRNonFatal("Your data directory appears to be invalid.\n" +
+                                e_str)
+                return self._output_self_false(errors=[e])
+            #
+            adminStatus = self._validate_organization(
+                self.get_admin_path(),
+                reqTopFiles=['record.json',
+                            'fileConversions.txt'],
+                reqDirContents=['fixityFromOrigin.txt',
+                                'fixityOnDisk.txt',
+                                'log.txt',
+                                'rsyncFromOrigin.txt'])
 
-        if rootStatus.get_status() and dataStatus[0] and adminStatus[0]:
-            dirs = [x for x in listdir(self.get_data_path())]
-            for entry in dirs:
-                assert(isdir(entry))
-                data['containedDirs'].append(
-                    self._validate_contained_folder(entry))
-            for entry in data['containedDirs']:
-                if entry[0] is not True:
-                    return (False, data)
+            if rootStatus.get_status() and dataStatus[0] and adminStatus[0]:
+                dirs = [x for x in listdir(self.get_data_path())]
+                for entry in dirs:
+                    assert(isdir(entry))
+                    data['containedDirs'].append(
+                        self._validate_contained_folder(entry))
+                for entry in data['containedDirs']:
+                    if entry[0] is not True:
+                        e = LDRFatal()
+                        e.message = str(data)
+                        return self._ouput_self_false(errors=[e])
 
-            return (True, data)
+                return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def ingest(self, path, prefix=None, containingFolder=None,
                rehash=False, pattern=None):
-        if not isdir(path):
-            fte = LDRNonFatal('The provided path was not a directory.')
-            r = ProvideNewIngestTargetPath(fte)
-            return self._return_self_false(requests=[r])
-        if prefix and containingFolder:
-            e = LDRNonFatal("A prefix and a containing folder can not " +
-                            "be specified at the same time. A prefix " +
-                            "implies the creation of a new containing " +
-                            "folder.")
-            return self._return_self_false(errors=[e])
-        if rehash and not containingFolder:
-            e = LDRNonFatal("In order to read existing hashes you must " +
-                            "specify a containing folder that already " +
-                            "exists with hash data.")
-            return self._return_self_false(errors=[e])
+        try:
+            if not isdir(path):
+                fte = LDRNonFatal('The provided path was not a directory.')
+                r = ProvideNewIngestTargetPath(fte)
+                return self._return_self_false(requests=[r])
+            if prefix and containingFolder:
+                e = LDRNonFatal("A prefix and a containing folder can not " +
+                                "be specified at the same time. A prefix " +
+                                "implies the creation of a new containing " +
+                                "folder.")
+                return self._return_self_false(errors=[e])
+            if rehash and not containingFolder:
+                e = LDRNonFatal("In order to read existing hashes you must " +
+                                "specify a containing folder that already " +
+                                "exists with hash data.")
+                return self._return_self_false(errors=[e])
 
-        if path[-1] != "/":
-            e = LDRNonFatal("Path syntax is incorrect. " +
-                            "Paths must end with a '/'")
-            return self._return_self_false(errors=[e])
-        if not self.validate().get_status():
-            e = LDRNonFatal("Your staging directory is no longer valid. " +
-                            "Remedy your staging directory on disk in " +
-                            "order to continue ingesting new materials.")
-        if not containingFolder:
-            prefixDir = self._prefix_to_dir(prefix)
-            workingData = join(self.get_data_path(), prefixDir)
-            workingAdmin = join(self.get_admin_path(), prefixDir)
-            mkdir(workingData)
-            mkdir(workingAdmin)
-        else:
-            workingData = join(self.get_data_path(), containingFolder)
-            workingAdmin = join(self.get_admin_path(), containingFolder)
+            if path[-1] != "/":
+                e = LDRNonFatal("Path syntax is incorrect. " +
+                                "Paths must end with a '/'")
+                return self._return_self_false(errors=[e])
+            if not self.validate().get_status():
+                e = LDRNonFatal("Your staging directory is no longer valid. " +
+                                "Remedy your staging directory on disk in " +
+                                "order to continue ingesting new materials.")
+            if not containingFolder:
+                prefixDir = self._prefix_to_dir(prefix)
+                workingData = join(self.get_data_path(), prefixDir)
+                workingAdmin = join(self.get_admin_path(), prefixDir)
+                mkdir(workingData)
+                mkdir(workingAdmin)
+            else:
+                workingData = join(self.get_data_path(), containingFolder)
+                workingAdmin = join(self.get_admin_path(), containingFolder)
 
-        if not exists(workingData):
-            e = LDRNonFatal("The containing folder for the data could " +
-                            "not be found.")
-            return self._return_self_false(errors=[e])
-        if not exists(workingAdmin):
-            e = LDRNonFatal("The containing folder for the admin files could " +
-                            "not be found.")
-            return self._return_self_false(errors=[e])
+            if not exists(workingData):
+                e = LDRNonFatal("The containing folder for the data could " +
+                                "not be found.")
+                return self._return_self_false(errors=[e])
+            if not exists(workingAdmin):
+                e = LDRNonFatal("The containing folder for the admin files could " +
+                                "not be found.")
+                return self._return_self_false(errors=[e])
 
-        self._move_files_into_staging(path, workingData, workingAdmin, pattern)
-        self._hash_files_at_origin(path, workingAdmin, rehash, pattern)
-        self._hash_files_in_staging(workingData, workingAdmin, rehash)
-        add_new_items_output = self.populate()
-        if not add_new_items_output.get_status():
-            e = LDRNonFatal("A problem occured while attempting to " +
-                            "repopulate the staging directory with an updated "
-                            "listing. Errors reported follow:\n" +
-                            "{}".format("\n".join(
-                                [x.message for x in
-                                 add_new_items_output.get_errors()])))
+            self._move_files_into_staging(path, workingData, workingAdmin, pattern)
+            self._hash_files_at_origin(path, workingAdmin, rehash, pattern)
+            self._hash_files_in_staging(workingData, workingAdmin, rehash)
+            add_new_items_output = self.populate()
+            if not add_new_items_output.get_status():
+                e = LDRNonFatal("A problem occured while attempting to " +
+                                "repopulate the staging directory with an updated "
+                                "listing. Errors reported follow:\n" +
+                                "{}".format("\n".join(
+                                    [x.message for x in
+                                    add_new_items_output.get_errors()])))
 
-        return self._output_self_true()
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def _prefix_to_dir(self, prefix):
         existingPopSubDirs = [name for name in
@@ -893,8 +932,19 @@ class AccessionDirectory(Directory):
         return self.accession
 
     def set_accession(self, new_accession):
-        self.accession = new_accession
-        return self._output_self_true()
+        try:
+            if not isinstance(new_accession, str):
+                fte = LDRFatal("The provided accession was not a string")
+                r = ProvideNewArk(fte)
+                return self._output_self_false(requests=[r])
+            if not match('^\w{13}$', new_accession):
+                fte = LDRFatal("The provided accession was not a valid ark.")
+                r = ProvideNewArk(fte)
+                return self._output_self_false(requests=[r])
+            self.accession = new_accession
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_root_path(self):
         return self.root
@@ -920,13 +970,20 @@ class AccessionDirectory(Directory):
         return directory_relative_to_root
 
     def set_root_path(self, a_path):
-        if not isabs(a_path):
-            fte = LDRNonFatal('The provided root path was not absolute')
-            r = ProvideNewRoot(fte)
-            return self._output_self_false(requests=[r])
-        else:
-            self.root = abspath(a_path)
-            return self._output_self_true()
+        try:
+            if not isinstance(a_path, str):
+                fte = LDRNonFatal('The provided root path was not a string')
+                r = ProvideNewRoot(fte)
+                return self._output_self_false(requests=[r])
+            if not isabs(a_path):
+                fte = LDRNonFatal('The provided root path was not absolute')
+                r = ProvideNewRoot(fte)
+                return self._output_self_false(requests=[r])
+            else:
+                self.root = abspath(a_path)
+                return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def find_accession_from_relative_path(self, a_path=None):
         if a_path is None:
