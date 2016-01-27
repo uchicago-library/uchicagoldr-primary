@@ -114,8 +114,13 @@ class Item(object):
 
     def set_md5(self, hash_value):
         try:
+            if not isinstance(hash_value, str):
+                fte = LDRFatal("The provided value for set md5 is " +
+                               "not a string.")
+                r = ProvideMD5(fte)
+                return self._output_self_false(requests=[r])
             if not match("^[a-zA-Z\d]{32}$", hash_value):
-                fte = LDRFatal("The provided string is not a valid "
+                fte = LDRFatal("The provided string is not a valid " +
                                "md5 hash hex digest.")
                 r = ProvideMD5(fte)
                 return self._output_self_false(requests=[r])
@@ -127,8 +132,13 @@ class Item(object):
 
     def set_sha256(self, hash_value):
         try:
+            if not isinstance(hash_value, str):
+                fte = LDRFatal("The provided value for set sha256 is " +
+                               "not a string.")
+                r = ProvideSHA256(fte)
+                return self._output_self_false(requests=[r])
             if not match("^[a-zA-Z\d]{64}$", hash_value):
-                fte = LDRFatal("The provided string is not a valid "
+                fte = LDRFatal("The provided string is not a valid " +
                                "sha256 hash hex digest.")
                 r = ProvideSHA256(fte)
                 return self._output_self_false(requests=[r])
@@ -170,6 +180,11 @@ class Item(object):
 
     def set_file_extension(self, value):
         try:
+            if not isinstance(value, str):
+                fte = LDRFatal("Argument passed to set file extension " +
+                               "was not a string")
+                r = ProvideFileExtension(fte)
+                return self._output_self_false(requests=[r])
             if not match(".*\..*", value):
                 fte = LDRFatal("Invalid file extension specified.")
                 r = ProvideFileExtension(fte)

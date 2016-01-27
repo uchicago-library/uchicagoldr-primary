@@ -25,9 +25,18 @@ class TestItem(unittest.TestCase):
         self.assertTrue(self.i)
         self.assertTrue(self.j)
 
-    def testTestReadability(self):
+    def testFindGetSetReadability(self):
         self.assertTrue(self.i.find_readability())
         self.assertTrue(self.j.find_readability())
+
+        good_output = self.i.set_readability(self.i.find_readability())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_readability("illiterate")
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
 
     def testGetSetFilePath(self):
         self.assertEqual(self.i.get_file_path(),
@@ -59,7 +68,6 @@ class TestItem(unittest.TestCase):
         self.assertEqual(len(i_really_bad_output.get_errors()),1)
         self.assertEqual(len(i_really_bad_output.get_requests()),0)
 
-
     def testEq(self):
         i_same = Item(getcwd()+'/1234567890123/testFiles/0.rand')
         self.assertTrue(i_same == self.i)
@@ -71,13 +79,27 @@ class TestItem(unittest.TestCase):
         self.assertFalse(j_diff == self.j)
 
     def testSetGetFindMD5(self):
-        self.i.set_md5(self.i.find_md5_hash())
+        good_output = self.i.set_md5(self.i.find_md5_hash())
         self.assertEqual(self.i.get_md5(), 'c00ecc4e3efa25d17842217b57e999dd')
         self.j.set_md5(self.j.find_md5_hash())
         self.assertEqual(self.j.get_md5(), 'd03fd97600532ef84ddc1e578ea843e9')
 
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_requests()),0)
+        self.assertEqual(len(good_output.get_errors()),0)
+
+        bad_output = self.i.set_md5({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
+
+        bad_output = self.i.set_md5('123')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
+
     def testSetGetFindSHA(self):
-        self.i.set_sha256(self.i.find_sha256_hash())
+        good_output = self.i.set_sha256(self.i.find_sha256_hash())
         self.assertEqual(
             self.i.get_sha256(),
             '7edd27408a15d28d96874938ff7211d3591f301c52c0cc5fd2483d25afc5ad90'
@@ -87,14 +109,35 @@ class TestItem(unittest.TestCase):
             self.j.get_sha256(),
             'a7a3d006d0b37872526f57529014864b1da514e9e00799eb4f8b71d080c5a9a6'
         )
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_requests()),0)
+        self.assertEqual(len(good_output.get_errors()),0)
+
+        bad_output = self.i.set_sha256({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
+
+        bad_output = self.i.set_sha256('123')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
 
     def testSetGetFindMime(self):
-        self.i.set_file_mime_type(self.i.find_file_mime_type())
+        good_output = self.i.set_file_mime_type(self.i.find_file_mime_type())
         self.assertEqual(self.i.get_file_mime_type(),
                          'application/octet-stream')
         self.j.set_file_mime_type(self.j.find_file_mime_type())
         self.assertEqual(self.j.get_file_mime_type(),
                          "text/plain")
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_file_mime_type({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testFindFileName(self):
         self.assertEqual(self.i.find_file_name(), '0.rand')
@@ -108,16 +151,37 @@ class TestItem(unittest.TestCase):
         self.assertEqual(self.i.find_file_name_no_extension(), 'with.several')
 
     def testSetGetFindFileExtension(self):
-        self.i.set_file_extension(self.i.find_file_extension())
+        good_output = self.i.set_file_extension(self.i.find_file_extension())
         self.assertEqual(self.i.get_file_extension(), '.rand')
         self.j.set_file_extension(self.j.find_file_extension())
         self.assertEqual(self.j.get_file_extension(), '.txt')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_file_extension({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.i.set_file_extension('txt')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testFindGetSetFileSize(self):
-        self.i.set_file_size(self.i.find_file_size())
+        good_output = self.i.set_file_size(self.i.find_file_size())
         self.assertEqual(self.i.get_file_size(), 1048576)
         self.j.set_file_size(self.j.find_file_size())
         self.assertEqual(self.j.get_file_size(), 20)
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_file_size({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testFindTechnicalMetadata(self):
         self.assertFalse(self.i.find_technical_metadata())
