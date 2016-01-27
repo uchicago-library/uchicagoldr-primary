@@ -6,10 +6,10 @@ from os.path import exists, join, relpath, splitext, basename, isabs, abspath
 from mimetypes import guess_type
 from re import compile as re_compile
 
-from uchicagoldr.request import Request, InputType, ChooseBetween, \
-    ChooseMultiple, TrueOrFalse, Confirm, ProvideNewArk, ProvideNewFilePath
 from uchicagoldr.error import LDRNonFatal, LDRFatal
 from uchicagoldr.output import Output
+from uchicagoldr.request import ProvideNewFilePath, ProvideReadability, \
+    ProvideNewRoot, ProvideNewArk
 
 class Item(object):
     """
@@ -55,11 +55,10 @@ class Item(object):
             return False
 
     def set_readability(self, readable_notice):
-        assert(isinstance(readable_notice, bool))
         if not isinstance(readable_notice, bool):
             fte = LDRNonFatal("The readability value can not be set to a "
                               "non-boolean value.")
-            r = InputType(fte, bool)
+            r = ProvideReadability(fte)
             return self._output_self_false(requests=[r])
         self.can_read = readable_notice
         return self._output_self_true()
@@ -149,7 +148,7 @@ class Item(object):
     def set_file_size(self, size_info):
         if not isinstance(size_info, int):
             fte = LDRNonFatal("The file size must be specified as an integer.")
-            r = InputType(fte, int)
+            r = ProvideFileSize(fte)
             return self._output_self_false(requests=[r])
         self.file_size = size_info
         return self._output_self_true()

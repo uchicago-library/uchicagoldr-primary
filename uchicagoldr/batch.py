@@ -357,11 +357,10 @@ class StagingDirectory(Directory):
         return self.exists_on_disk
 
     def set_exists_on_disk(self, newBool):
-        assert(isinstance(newBool, bool))
         if not isinstance(newBool, bool):
             fte = LDRNonFatal('exists_on_disk can not be set to a ' +
                               'non-boolean value')
-            return self._output_self_false(requests=InputType(fte, bool))
+            return self._output_self_false(requests=ProvideExistsOnDisk(fte))
         self.exists_on_disk = newBool
 
     def _check_dir(self, path, cardinality=None, reqDirs=[], reqFiles=[]):

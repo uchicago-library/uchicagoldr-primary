@@ -5,6 +5,7 @@ from re import match
 
 from collections import Iterable
 
+import uchicagoldr.item
 from uchicagoldr.error import LDRFatal, LDRNonFatal
 
 
@@ -105,6 +106,27 @@ class Confirm(Request):
         return isinstance(bool, response)
 
 
+class ProvideExistsOnDisk(InputType):
+    def __init__(self, fte):
+        self.prompt = "The value provided to exists_on_disk was not a " + \
+            "boolean. Please provide a boolean value."
+        InputType.__init__(self, fte, bool, prompt=self.prompt)
+
+
+class ProvideReadability(InputType):
+    def __init__(self, fte):
+        self.prompt = "The value provided to set readability was not a " + \
+            "boolean. Please provide a boolean value."
+        InputType.__init__(self, fte, bool, prompt=self.prompt)
+
+
+class ProvideFileSize(InputType):
+    def __init__(self, fte):
+        self.prompt = "The value provided to set file size was not an " + \
+            "integer. Please provide an integer value."
+        InputType.__init__(self, fte, int, prompt=self.prompt)
+
+
 class ProvideNewItemsInstance(InputType):
     def __init__(self, fte):
         self.prompt = "The items you provided were not a list or " + \
@@ -121,14 +143,14 @@ class ProvideNewItemInstance(InputType):
     def __init__(self, fte):
         self.prompt = "The object you provided was not a valid item " + \
             "instance. Please supply a valid item instance."
-        InputType.__init__(self, fte, Item, prompt=self.prompt)
+        InputType.__init__(self, fte, uchicagoldr.item.Item, prompt=self.prompt)
 
 
 class ProvideNewAccessionItemInstance(InputType):
     def __init__(self, fte):
         self.prompt = "The object you provided was not a valid accession " + \
             "item instance. Please supply a valid accession item instance."
-        InputType.__init__(self, fte, AccessionItem, prompt=self.prompt)
+        InputType.__init__(self, fte, uchicagoldr.item.AccessionItem, prompt=self.prompt)
 
 
 class ProvideNewIndex(InputType):
