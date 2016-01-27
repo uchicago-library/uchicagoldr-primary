@@ -1,6 +1,4 @@
-from os.path import isabs
-from os.path import isfile
-from os.path import isdir
+from os.path import isabs, isfile, isdir, exists
 from re import match
 
 from collections import Iterable
@@ -120,11 +118,47 @@ class ProvideReadability(InputType):
         InputType.__init__(self, fte, bool, prompt=self.prompt)
 
 
+class ProvideMD5(InputType):
+    def __init__(self, fte):
+        self.prompt = "The value provided to set md5 was not valid. " + \
+            "Please provide a valid md5 hash hex digest."
+        InputType.__init__(self, fte, str, validator=self._validator,
+                           prompt=self.prompt)
+
+    def _validator(self, response):
+        return bool(match("^[a-zA-Z\d]{32}$", response))
+
+
+class ProvideSHA256(InputType):
+    def __init__(self, fte):
+        self.prompt = "The value provided to set sha256 was not valid. " + \
+            "Please provide a valid sha256 hash hex digest."
+        InputType.__init__(self, fte, str, validator=self._validator,
+                           prompt=self.prompt)
+
+    def _validator(self, response):
+        return bool(match("^[a-zA-Z\d]{64}$", response))
+
+
 class ProvideFileSize(InputType):
     def __init__(self, fte):
         self.prompt = "The value provided to set file size was not an " + \
             "integer. Please provide an integer value."
         InputType.__init__(self, fte, int, prompt=self.prompt)
+
+
+class ProvideMimetype(InputType):
+    def __init__(self, fte):
+        self.prompt = "The mimetype specified was invalid. Please " + \
+            "specify a valid mimetype."
+        InputType.__init__(self, fte, str, prompt=self.prompt)
+
+
+class ProvideCanonicalFilePath(InputType):
+    def __init__(self, fte):
+        self.prompt = "The canonical file path was invalid. Please " + \
+            "specify a valid canonical file path."
+        InputType.__init__(self, fte, str, prompt=self.prompt)
 
 
 class ProvideNewItemsInstance(InputType):
@@ -150,7 +184,19 @@ class ProvideNewAccessionItemInstance(InputType):
     def __init__(self, fte):
         self.prompt = "The object you provided was not a valid accession " + \
             "item instance. Please supply a valid accession item instance."
-        InputType.__init__(self, fte, uchicagoldr.item.AccessionItem, prompt=self.prompt)
+        InputType.__init__(self, fte, uchicagoldr.item.AccessionItem,
+                           prompt=self.prompt)
+
+
+class ProvideFileExtension(InputType):
+    def __init__(self, fte):
+        self.prompt = "The file extension was not valid. Please supply " + \
+            "a valid file extension"
+        InputType.__init__(self, fte, str, validator=self._validator,
+                           prompt=self.prompt)
+
+    def _validator(self, response):
+        return bool(match(".*\..*", response))
 
 
 class ProvideNewIndex(InputType):
@@ -176,6 +222,18 @@ class ProvideAbsolutePath(InputType):
         return isinstance(response, str) and isabs(response)
 
 
+class ProvideDestinationDirectory(InputType):
+    def __init__(self, fte):
+        self.prompt = "The destination directory path you provided was " + \
+            "not absolute, does not exist on disk, or is not a directory. " + \
+            "Please provide a valid destination directory path."
+        InputType.__init__(self, fte, str, validator=self._validator,
+                           prompt=self.prompt)
+
+    def _validator(self, response):
+        return isabs(response) and exists(response) and isdir(response)
+
+
 class ProvideNewFilePath(ProvideAbsolutePath):
     def __init__(self, fte):
         self.prompt = "The path you provided was not absolute or did not " + \
@@ -187,6 +245,19 @@ class ProvideNewFilePath(ProvideAbsolutePath):
         return isinstance(response, str) and isabs(response) and \
             isfile(response)
 
+
+class ProvideUserName(InputType):
+    def __init__(self, fte):
+        self.prompt = "The user name specified was invalid. Please " + \
+            "provide a valid user name."
+        InputType.__init__(self, fte, str, prompt=self.prompt)
+
+
+class ProvideGroupName(InputType):
+    def __init__(self, fte):
+        self.prompt = "The group name specified was invalid. Please " + \
+            "provide a valid user name."
+        InputType.__init__(self, fte, str, prompt=self.prompt)
 
 class ProvideNewIngestTargetPath(InputType):
     def __init__(self, fte):

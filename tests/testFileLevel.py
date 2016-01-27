@@ -8,6 +8,8 @@ from uchicagoldr.item import Item, AccessionItem
 from uchicagoldr.batch import Batch, Directory, AccessionDirectory, \
     StagingDirectory
 from uchicagoldr.bash_cmd import BashCommand
+from uchicagoldr.request import *
+from uchicagoldr.error import LDRError, LDRFatal, LDRNonFatal
 
 
 class TestItem(unittest.TestCase):
@@ -34,15 +36,29 @@ class TestItem(unittest.TestCase):
         self.assertEqual(self.j.get_file_path(),
                          getcwd()+'/1234567890123/testFiles/1.txt')
         self.assertTrue(isfile(self.j.get_file_path()))
-        self.i.set_file_path('/new/path')
+        i_output = self.i.set_file_path('/new/path')
         self.assertEqual(self.i.get_file_path(), '/new/path')
-        self.j.set_file_path('/new/path/again/')
+        j_output = self.j.set_file_path('/new/path/again/')
         self.assertEqual(self.j.get_file_path(), '/new/path/again')
+        self.assertTrue(i_output.get_status())
+        self.assertTrue(j_output.get_status())
 
-        with self.assertRaises(AssertionError):
-            self.j.set_file_path('this isn\'t a valid filepath')
-        with self.assertRaises(AssertionError):
-            self.i.set_file_path('this/is/more/convincing')
+        j_bad_output = self.j.set_file_path('this isn\'t a valid filepath')
+        i_bad_output = self.i.set_file_path('this/is/more/convincing')
+        self.assertFalse(i_bad_output.get_status())
+        self.assertFalse(j_bad_output.get_status())
+        self.assertTrue(isinstance(i_bad_output.get_requests()[0], ProvideNewFilePath))
+        self.assertTrue(isinstance(j_bad_output.get_requests()[0], ProvideNewFilePath))
+        self.assertEqual(len(i_bad_output.get_requests()), 1)
+        self.assertEqual(len(j_bad_output.get_requests()), 1)
+        self.assertEqual(len(i_bad_output.get_errors()), 0)
+        self.assertEqual(len(j_bad_output.get_errors()), 0)
+
+        i_really_bad_output = self.i.set_file_path(['bad','type'])
+        self.assertTrue(isinstance(i_really_bad_output.get_errors()[0],LDRFatal))
+        self.assertEqual(len(i_really_bad_output.get_errors()),1)
+        self.assertEqual(len(i_really_bad_output.get_requests()),0)
+
 
     def testEq(self):
         i_same = Item(getcwd()+'/1234567890123/testFiles/0.rand')

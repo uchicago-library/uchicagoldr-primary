@@ -35,10 +35,7 @@ class Output(object):
             return TypeError("must pass an instance of Request class")
 
     def get_errors(self):
-        if self.errors != []:
-            return self.errors
-        else:
-            return False
+        return self.errors
 
     def get_status(self):
         return self._status
