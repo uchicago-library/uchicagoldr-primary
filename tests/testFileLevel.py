@@ -296,10 +296,20 @@ class TestBatch(unittest.TestCase):
     def testAddGetItem(self):
         i = Item('/legitimate/looking/path.txt')
         j = Item('/another/path')
-        self.testBatch1.add_item(i)
+        good_output = self.testBatch1.add_item(i)
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.assertEqual(self.testBatch1.get_items(), [i])
         self.testBatch1.add_item(j)
+        self.assertEqual(self.testBatch1.get_item_by_index(0), i)
+        self.assertEqual(self.testBatch1.get_item_by_index(1), j)
         self.assertEqual(self.testBatch1.get_items(), [i, j])
+
+        bad_output = self.testBatch1.add_item([])
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testEq(self):
         self.assertTrue(self.testBatch1 == self.testBatch2)
@@ -319,19 +329,34 @@ class TestBatch(unittest.TestCase):
         i = Item('/legitimate/looking/path.txt')
         j = Item('/another/path')
         testIter = [i, j]
-        a = self.testBatch1.set_items(testIter)
+        good_output = self.testBatch1.set_items(testIter)
         self.assertEqual(self.testBatch1.get_items(), [i, j])
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.testBatch1.set_items(1)
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testSetItemsGen(self):
         i = Item('/legitimate/looking/path.txt')
         j = Item('/another/path')
         testIter = [i, j]
-        self.testBatch2.set_items(x for x in testIter)
+        good_output = self.testBatch2.set_items(x for x in testIter)
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         iteration = -1
         for item in self.testBatch2.get_items():
             iteration += 1
             self.assertEqual(item, testIter[iteration])
 
+        bad_output = self.testBatch1.set_items(1)
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
 class TestDirectory(unittest.TestCase):
     def setUp(self):
