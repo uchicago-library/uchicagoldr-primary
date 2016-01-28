@@ -9,15 +9,15 @@ class Output(object):
     requests = []
     data  = None
 
-    def __init__(self, type_string, status=False):
+    def __init__(self, type_string, status=None):
         if type_string in get_valid_types():
             self._type_string = type_string
         else:
             self._type_string = None
-        if status:
+        if status is not None:
             self._status = status
         else:
-            self._status = None
+            self._status = False
         self.data = None
         self.requests = []
         self.errors = []

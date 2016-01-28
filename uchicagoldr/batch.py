@@ -244,7 +244,7 @@ class Directory(Batch):
     def add_item(self, new_item):
         try:
             if not isinstance(new_item, Item):
-                fte = 'The provided object was not an item instance'
+                fte = LDRFatal('The provided object was not an item instance')
                 return self._output_self_false(
                     requests=[ProvideNewItemInstance(fte)])
             if not (self.get_directory_path() in new_item.get_file_path()):
@@ -346,12 +346,15 @@ class StagingDirectory(Directory):
             else:
                 return self._output_self_true()
         except Exception as e:
-            return self.output_self_false(errors=[LDRFatal(e)])
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_data_path(self):
         return self.data_path
 
     def set_data_path(self, new_data_path):
+        if not isinstance(new_data_path, str):
+            fte = LDRFatal('The provided data path was not a string')
+            return self._output_self_false(requests=[ProvideNewDataPath(fte)])
         if not isabs(new_data_path):
             fte = LDRNonFatal('The provided data path was not absolute')
             return self._output_self_false(requests=[ProvideNewDataPath(fte)])
@@ -389,7 +392,6 @@ class StagingDirectory(Directory):
         except Exception as e:
             error = LDRFatal(e)
             return self._output_self_false(errors=[error])
-
 
     def _check_dir(self, path, cardinality=None, reqDirs=[], reqFiles=[]):
         if not isabs(path):
@@ -700,30 +702,40 @@ class StagingDirectory(Directory):
     def ingest(self, path, prefix=None, containingFolder=None,
                rehash=False, pattern=None):
         try:
+            if not isinstance(path, str):
+                fte = LDRFatal("The provided path was not a string")
+                r = ProvideNewIngestTargetPath(fte)
+                return self._output_self_false(requests=[r])
+            if not exists(path):
+                fte = LDRFatal("The provided path does not exist.")
+                r = ProvideNewIngestTargetPath(fte)
+                return self._output_self_false(requests=[r])
             if not isdir(path):
                 fte = LDRNonFatal('The provided path was not a directory.')
                 r = ProvideNewIngestTargetPath(fte)
-                return self._return_self_false(requests=[r])
+                return self._output_self_false(requests=[r])
             if prefix and containingFolder:
                 e = LDRNonFatal("A prefix and a containing folder can not " +
                                 "be specified at the same time. A prefix " +
                                 "implies the creation of a new containing " +
                                 "folder.")
-                return self._return_self_false(errors=[e])
+                return self._output_self_false(errors=[e])
             if rehash and not containingFolder:
                 e = LDRNonFatal("In order to read existing hashes you must " +
                                 "specify a containing folder that already " +
                                 "exists with hash data.")
-                return self._return_self_false(errors=[e])
+                return self._output_self_false(errors=[e])
 
             if path[-1] != "/":
-                e = LDRNonFatal("Path syntax is incorrect. " +
+                fte = LDRNonFatal("Path syntax is incorrect. " +
                                 "Paths must end with a '/'")
-                return self._return_self_false(errors=[e])
+                r = ProvideNewIngestTargetPath(fte)
+                return self._output_self_false(requests=[r])
             if not self.validate().get_status():
                 e = LDRNonFatal("Your staging directory is no longer valid. " +
                                 "Remedy your staging directory on disk in " +
                                 "order to continue ingesting new materials.")
+                return self._output_self_false(errors=[e])
             if not containingFolder:
                 prefixDir = self._prefix_to_dir(prefix)
                 workingData = join(self.get_data_path(), prefixDir)
@@ -737,11 +749,11 @@ class StagingDirectory(Directory):
             if not exists(workingData):
                 e = LDRNonFatal("The containing folder for the data could " +
                                 "not be found.")
-                return self._return_self_false(errors=[e])
+                return self._output_self_false(errors=[e])
             if not exists(workingAdmin):
                 e = LDRNonFatal("The containing folder for the admin files could " +
                                 "not be found.")
-                return self._return_self_false(errors=[e])
+                return self._output_self_false(errors=[e])
 
             self._move_files_into_staging(path, workingData, workingAdmin, pattern)
             self._hash_files_at_origin(path, workingAdmin, rehash, pattern)

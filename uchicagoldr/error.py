@@ -31,6 +31,8 @@ class LDRFatal(LDRError):
     def __init__(self, ex=None):
         if ex is not None:
             self.message = "{}: {}".format(type(ex), str(ex))
+            if isinstance(ex, Exception):
+                self.message = self.message + ex.__repr__()
         else:
             self.message = message
         self.category = "fatal"
