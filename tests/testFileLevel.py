@@ -1,5 +1,5 @@
 import unittest
-from os import getcwd, remove, rmdir
+from os import getcwd, remove, rmdir, listdir
 from os.path import isfile, split, isdir, exists, join
 from copy import deepcopy
 from subprocess import CompletedProcess, TimeoutExpired
@@ -8,6 +8,9 @@ from uchicagoldr.item import Item, AccessionItem
 from uchicagoldr.batch import Batch, Directory, AccessionDirectory, \
     StagingDirectory
 from uchicagoldr.bash_cmd import BashCommand
+from uchicagoldr.request import *
+from uchicagoldr.error import LDRError, LDRFatal, LDRNonFatal
+
 
 
 class TestItem(unittest.TestCase):
@@ -23,9 +26,18 @@ class TestItem(unittest.TestCase):
         self.assertTrue(self.i)
         self.assertTrue(self.j)
 
-    def testTestReadability(self):
-        self.assertTrue(self.i.test_readability())
-        self.assertTrue(self.j.test_readability())
+    def testFindGetSetReadability(self):
+        self.assertTrue(self.i.find_readability())
+        self.assertTrue(self.j.find_readability())
+
+        good_output = self.i.set_readability(self.i.find_readability())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_readability("illiterate")
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
 
     def testGetSetFilePath(self):
         self.assertEqual(self.i.get_file_path(),
@@ -34,15 +46,28 @@ class TestItem(unittest.TestCase):
         self.assertEqual(self.j.get_file_path(),
                          getcwd()+'/1234567890123/testFiles/1.txt')
         self.assertTrue(isfile(self.j.get_file_path()))
-        self.i.set_file_path('/new/path')
+        i_output = self.i.set_file_path('/new/path')
         self.assertEqual(self.i.get_file_path(), '/new/path')
-        self.j.set_file_path('/new/path/again/')
+        j_output = self.j.set_file_path('/new/path/again/')
         self.assertEqual(self.j.get_file_path(), '/new/path/again')
+        self.assertTrue(i_output.get_status())
+        self.assertTrue(j_output.get_status())
 
-        with self.assertRaises(AssertionError):
-            self.j.set_file_path('this isn\'t a valid filepath')
-        with self.assertRaises(AssertionError):
-            self.i.set_file_path('this/is/more/convincing')
+        j_bad_output = self.j.set_file_path('this isn\'t a valid filepath')
+        i_bad_output = self.i.set_file_path('this/is/more/convincing')
+        self.assertFalse(i_bad_output.get_status())
+        self.assertFalse(j_bad_output.get_status())
+        self.assertTrue(isinstance(i_bad_output.get_requests()[0], ProvideNewFilePath))
+        self.assertTrue(isinstance(j_bad_output.get_requests()[0], ProvideNewFilePath))
+        self.assertEqual(len(i_bad_output.get_requests()), 1)
+        self.assertEqual(len(j_bad_output.get_requests()), 1)
+        self.assertEqual(len(i_bad_output.get_errors()), 0)
+        self.assertEqual(len(j_bad_output.get_errors()), 0)
+
+        i_really_bad_output = self.i.set_file_path(['bad','type'])
+        self.assertTrue(isinstance(i_really_bad_output.get_errors()[0],LDRFatal))
+        self.assertEqual(len(i_really_bad_output.get_errors()),1)
+        self.assertEqual(len(i_really_bad_output.get_requests()),0)
 
     def testEq(self):
         i_same = Item(getcwd()+'/1234567890123/testFiles/0.rand')
@@ -55,13 +80,27 @@ class TestItem(unittest.TestCase):
         self.assertFalse(j_diff == self.j)
 
     def testSetGetFindMD5(self):
-        self.i.set_md5(self.i.find_md5_hash())
+        good_output = self.i.set_md5(self.i.find_md5_hash())
         self.assertEqual(self.i.get_md5(), 'c00ecc4e3efa25d17842217b57e999dd')
         self.j.set_md5(self.j.find_md5_hash())
         self.assertEqual(self.j.get_md5(), 'd03fd97600532ef84ddc1e578ea843e9')
 
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_requests()),0)
+        self.assertEqual(len(good_output.get_errors()),0)
+
+        bad_output = self.i.set_md5({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
+
+        bad_output = self.i.set_md5('123')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
+
     def testSetGetFindSHA(self):
-        self.i.set_sha256(self.i.find_sha256_hash())
+        good_output = self.i.set_sha256(self.i.find_sha256_hash())
         self.assertEqual(
             self.i.get_sha256(),
             '7edd27408a15d28d96874938ff7211d3591f301c52c0cc5fd2483d25afc5ad90'
@@ -71,14 +110,35 @@ class TestItem(unittest.TestCase):
             self.j.get_sha256(),
             'a7a3d006d0b37872526f57529014864b1da514e9e00799eb4f8b71d080c5a9a6'
         )
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_requests()),0)
+        self.assertEqual(len(good_output.get_errors()),0)
+
+        bad_output = self.i.set_sha256({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
+
+        bad_output = self.i.set_sha256('123')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_requests()),1)
+        self.assertEqual(len(bad_output.get_errors()),0)
 
     def testSetGetFindMime(self):
-        self.i.set_file_mime_type(self.i.find_file_mime_type())
+        good_output = self.i.set_file_mime_type(self.i.find_file_mime_type())
         self.assertEqual(self.i.get_file_mime_type(),
                          'application/octet-stream')
         self.j.set_file_mime_type(self.j.find_file_mime_type())
         self.assertEqual(self.j.get_file_mime_type(),
                          "text/plain")
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_file_mime_type({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testFindFileName(self):
         self.assertEqual(self.i.find_file_name(), '0.rand')
@@ -92,16 +152,37 @@ class TestItem(unittest.TestCase):
         self.assertEqual(self.i.find_file_name_no_extension(), 'with.several')
 
     def testSetGetFindFileExtension(self):
-        self.i.set_file_extension(self.i.find_file_extension())
+        good_output = self.i.set_file_extension(self.i.find_file_extension())
         self.assertEqual(self.i.get_file_extension(), '.rand')
         self.j.set_file_extension(self.j.find_file_extension())
         self.assertEqual(self.j.get_file_extension(), '.txt')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_file_extension({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.i.set_file_extension('txt')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testFindGetSetFileSize(self):
-        self.i.set_file_size(self.i.find_file_size())
+        good_output = self.i.set_file_size(self.i.find_file_size())
         self.assertEqual(self.i.get_file_size(), 1048576)
         self.j.set_file_size(self.j.find_file_size())
         self.assertEqual(self.j.get_file_size(), 20)
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_file_size({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testFindTechnicalMetadata(self):
         self.assertFalse(self.i.find_technical_metadata())
@@ -137,28 +218,59 @@ class TestAccessionItem(unittest.TestCase):
         self.assertEqual(self.j.get_root_path(), getcwd())
         self.assertEqual(self.j.get_root_path(),
                          self.i.get_root_path())
-        self.i.set_root_path('/new/path')
+        good_output = self.i.set_root_path('/new/path')
         self.assertEqual(self.i.get_root_path(), '/new/path')
         self.j.set_root_path('/new/path/again/')
         self.assertEqual(self.j.get_root_path(), '/new/path/again')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.i.set_root_path({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.i.set_root_path('../one/dir/up/')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testSetGetFindAccession(self):
-        self.i.set_accession(self.i.find_file_accession())
+        good_output = self.i.set_accession(self.i.find_file_accession())
         self.assertEqual(self.i.get_accession(), '1234567890123')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.j.set_accession(self.j.find_file_accession())
         self.assertEqual(self.j.get_accession(), '1234567890123')
 
         self.i.set_accession('0987654321098')
         self.assertEqual(self.i.get_accession(), '0987654321098')
 
-        with self.assertRaises(ValueError):
-            self.j.set_accession('1')
+        bad_output = self.j.set_accession('1')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.j.set_accession({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testSetGetFindCannonicalPath(self):
-        self.i.set_canonical_filepath(self.i.find_canonical_filepath())
+        good_output = self.i.set_canonical_filepath(self.i.find_canonical_filepath())
         self.assertEqual(self.i.get_canonical_filepath(), 'testFiles/0.rand')
         self.j.set_canonical_filepath(self.j.find_canonical_filepath())
         self.assertEqual(self.j.get_canonical_filepath(), 'testFiles/1.txt')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.j.set_canonical_filepath({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
         with self.assertRaises(AssertionError):
             self.i.set_file_path('/new/path/to/file.txt')
@@ -185,10 +297,20 @@ class TestBatch(unittest.TestCase):
     def testAddGetItem(self):
         i = Item('/legitimate/looking/path.txt')
         j = Item('/another/path')
-        self.testBatch1.add_item(i)
+        good_output = self.testBatch1.add_item(i)
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.assertEqual(self.testBatch1.get_items(), [i])
         self.testBatch1.add_item(j)
+        self.assertEqual(self.testBatch1.get_item_by_index(0), i)
+        self.assertEqual(self.testBatch1.get_item_by_index(1), j)
         self.assertEqual(self.testBatch1.get_items(), [i, j])
+
+        bad_output = self.testBatch1.add_item([])
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testEq(self):
         self.assertTrue(self.testBatch1 == self.testBatch2)
@@ -208,19 +330,34 @@ class TestBatch(unittest.TestCase):
         i = Item('/legitimate/looking/path.txt')
         j = Item('/another/path')
         testIter = [i, j]
-        self.testBatch1.set_items(testIter)
+        good_output = self.testBatch1.set_items(testIter)
         self.assertEqual(self.testBatch1.get_items(), [i, j])
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.testBatch1.set_items(1)
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testSetItemsGen(self):
         i = Item('/legitimate/looking/path.txt')
         j = Item('/another/path')
         testIter = [i, j]
-        self.testBatch2.set_items(x for x in testIter)
+        good_output = self.testBatch2.set_items(x for x in testIter)
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         iteration = -1
         for item in self.testBatch2.get_items():
             iteration += 1
             self.assertEqual(item, testIter[iteration])
 
+        bad_output = self.testBatch1.set_items(1)
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
 class TestDirectory(unittest.TestCase):
     def setUp(self):
@@ -251,9 +388,22 @@ class TestDirectory(unittest.TestCase):
     def testSetGetDirectoryPath(self):
         self.assertEqual(self.testDirectory1.get_directory_path(),
                          getcwd()+'/1234567890123')
-        self.testDirectory1.set_directory_path('/new/dir/path')
+        good_output = self.testDirectory1.set_directory_path('/new/dir/path')
         self.assertEqual(self.testDirectory1.get_directory_path(),
                          '/new/dir/path')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = self.testDirectory1.set_directory_path({})
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.testDirectory1.set_directory_path('relative/path')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testWalkDirectoryPickingFiles(self):
         i = Item(getcwd() + '/1234567890123/testFiles/0.rand')
@@ -261,7 +411,7 @@ class TestDirectory(unittest.TestCase):
         k = Item(getcwd() + '/1234567890123/testFiles/1.txt.fits.xml')
         l = Item(getcwd() + '/1234567890123/testFiles/testDir/2.csv')
         matches = 0
-        for x in self.testDirectory1.walk_directory_picking_files():
+        for x in self.testDirectory1._walk_directory_picking_files():
             self.assertTrue(x.find_md5_hash() in [i.find_md5_hash(),
                                                   j.find_md5_hash(),
                                                   k.find_md5_hash(),
@@ -277,7 +427,10 @@ class TestDirectory(unittest.TestCase):
         l = Item(getcwd()+'/1234567890123/testFiles/testDir/2.csv')
         m = Item('/not/in/the/stated/dirpath')
 
-        self.testDirectory1.add_item(i)
+        good_output = self.testDirectory1.add_item(i)
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.assertEqual(self.testDirectory1.get_items(), [i])
         self.testDirectory1.add_item(j)
         self.assertEqual(self.testDirectory1.get_items(), [i, j])
@@ -285,8 +438,18 @@ class TestDirectory(unittest.TestCase):
         self.assertEqual(self.testDirectory1.get_items(), [i, j, k])
         self.testDirectory1.add_item(l)
         self.assertEqual(self.testDirectory1.get_items(), [i, j, k, l])
-        with self.assertRaises(AssertionError):
-            self.testDirectory1.add_item(m)
+
+        bad_output = self.testDirectory1.add_item('this')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.testDirectory1.add_item(m)
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 1)
+        self.assertEqual(len(bad_output.get_requests()), 0)
+
+        self.assertEqual(self.testDirectory1.get_items(), [i, j, k, l])
 
     def testPopulate(self):
         i = Item(getcwd()+'/1234567890123/testFiles/0.rand')
@@ -297,7 +460,10 @@ class TestDirectory(unittest.TestCase):
                        j.find_md5_hash(),
                        k.find_md5_hash(),
                        l.find_md5_hash()]
-        self.testDirectory1.populate()
+        good_output = self.testDirectory1.populate()
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         matches = 0
         for entry in self.testDirectory1.get_items():
             matches += 1
@@ -329,29 +495,65 @@ class TestStagingDirectory(unittest.TestCase):
     def testGetSetDataPath(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
         self.assertEqual(test.get_data_path(),join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
-        test.set_data_path(getcwd())
+        good_output = test.set_data_path(getcwd())
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.assertEqual(test.get_data_path(),getcwd())
+
+        bad_output = test.set_data_path([])
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = test.set_data_path('not/absolute')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testGetSetAdminPath(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
         self.assertEqual(test.get_admin_path(),join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
-        test.set_admin_path(getcwd())
+        good_output = test.set_admin_path(getcwd())
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.assertEqual(test.get_admin_path(),getcwd())
+
+        bad_output = test.set_admin_path([])
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = test.set_admin_path('not/absolute')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testGetSetExistsOnDisk(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
         self.assertEqual(test.get_exists_on_disk(),False)
-        test.set_exists_on_disk(True)
+        good_output = test.set_exists_on_disk(True)
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.assertEqual(test.get_exists_on_disk(),True)
+
+        bad_output = test.set_exists_on_disk('yeah')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 1)
+        self.assertEqual(len(bad_output.get_requests()), 0)
 
     def testValidate(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
         test.spawn()
-        self.assertEqual(test.validate()[0],True)
+        self.assertEqual(test.validate().get_status(),True)
 
         remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','fileConversions.txt'))
         remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','record.json'))
         rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','data'))
+        self.assertEqual(test.validate().get_status(),False)
+        self.assertEqual(len(test.validate().get_errors()),1)
         rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin'))
         rmdir(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000'))
         rmdir(join(getcwd(),'abcdefghijklm','TESTEAD'))
@@ -360,7 +562,42 @@ class TestStagingDirectory(unittest.TestCase):
     def testIngest(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
         test.spawn()
-        test.ingest(join(getcwd(),'1234567890123/testFiles/'), prefix='folder')
+        good_output = test.ingest(join(getcwd(),'1234567890123/testFiles/'), prefix='folder')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
+
+        bad_output = test.ingest([])
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = test.ingest('/doesnt/exist/anywhere/1232140389094/')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = test.ingest(join(getcwd(),'1234567890123/testFiles'), prefix='folder')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = test.ingest(join(getcwd(),'1234567890123/testFiles/'), prefix='folder', rehash=True)
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 1)
+        self.assertEqual(len(bad_output.get_requests()), 0)
+
+        bad_output = test.ingest(join(getcwd(),'1234567890123','testFiles','0.rand'))
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = test.ingest(join(getcwd(),'1234567890123/testFiles/'),
+                                  prefix='folder', containingFolder='folder1')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 1)
+        self.assertEqual(len(bad_output.get_requests()), 0)
+
 
         remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1','fixityFromOrigin.txt'))
         remove(join(getcwd(),'abcdefghijklm','TESTEAD','0000-000','admin','folder1','fixityOnDisk.txt'))
@@ -382,7 +619,7 @@ class TestStagingDirectory(unittest.TestCase):
 
     def testAudit(self):
         test = StagingDirectory(getcwd(),'abcdefghijklm','TESTEAD','0000-000')
-        self.assertFalse(test.audit()[0])
+        self.assertFalse(test.audit().get_status())
 
 
 class testAccessionDirectory(unittest.TestCase):
@@ -398,9 +635,12 @@ class testAccessionDirectory(unittest.TestCase):
         self.assertTrue(self.testAccessionDirectory)
 
     def testAddGetItem(self):
-        self.testAccessionDirectory.add_item(
+        good_output = self.testAccessionDirectory.add_item(
             AccessionItem(getcwd()+'/1234567890123/testFiles/0.rand', getcwd())
         )
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
 
         self.assertEqual(self.testAccessionDirectory.get_items(),
                          [AccessionItem(
@@ -423,11 +663,29 @@ class testAccessionDirectory(unittest.TestCase):
                          ]
                          )
 
+        bad_output = self.testAccessionDirectory.add_item([])
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+        self.assertEqual(self.testAccessionDirectory.get_items(),
+                         [
+                             AccessionItem(getcwd() +
+                                           '/1234567890123/testFiles/0.rand',
+                                           getcwd()),
+                             AccessionItem(getcwd() +
+                                           '/1234567890123/testFiles/1.txt',
+                                           getcwd())
+                         ]
+                         )
+
     def testSetGetFindAccession(self):
         self.assertEqual(self.testAccessionDirectory.get_accession(),
                          '1234567890123'
                          )
-        self.testAccessionDirectory.set_accession('0987654321098')
+        good_output = self.testAccessionDirectory.set_accession('0987654321098')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.assertEqual(self.testAccessionDirectory.get_accession(),
                          '0987654321098'
                          )
@@ -438,15 +696,38 @@ class testAccessionDirectory(unittest.TestCase):
                          '1234567890123'
                          )
 
+        bad_output = self.testAccessionDirectory.set_accession([])
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.testAccessionDirectory.set_accession('1')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
     def testGetSetRoot(self):
         self.assertEqual(self.testAccessionDirectory.get_root_path(),
                          getcwd()
                          )
 
-        self.testAccessionDirectory.set_root_path('/new/test/root')
+        good_output = self.testAccessionDirectory.set_root_path('/new/test/root')
+        self.assertTrue(good_output.get_status())
+        self.assertEqual(len(good_output.get_errors()), 0)
+        self.assertEqual(len(good_output.get_requests()), 0)
         self.assertEqual(self.testAccessionDirectory.get_root_path(),
                          '/new/test/root'
                          )
+
+        bad_output = self.testAccessionDirectory.set_root_path([])
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
+
+        bad_output = self.testAccessionDirectory.set_root_path('../not/abs')
+        self.assertFalse(bad_output.get_status())
+        self.assertEqual(len(bad_output.get_errors()), 0)
+        self.assertEqual(len(bad_output.get_requests()), 1)
 
     def testWalkDirectoryPickingFiles(self):
         i = AccessionItem(getcwd() + '/1234567890123/testFiles/0.rand',
@@ -458,7 +739,7 @@ class testAccessionDirectory(unittest.TestCase):
         l = AccessionItem(getcwd() + '/1234567890123/testFiles/testDir/2.csv',
                           getcwd())
         matches = 0
-        for x in self.testAccessionDirectory.walk_directory_picking_files():
+        for x in self.testAccessionDirectory._walk_directory_picking_files():
             self.assertTrue(x.find_md5_hash() in [i.find_md5_hash(),
                                                   j.find_md5_hash(),
                                                   k.find_md5_hash(),

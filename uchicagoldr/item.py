@@ -1,10 +1,23 @@
 from collections import namedtuple
 from hashlib import md5, sha256
 from magic import from_file
-from os import access, stat, R_OK
-from os.path import exists, join, relpath, splitext, basename, isabs, abspath
+from os import access, stat, R_OK, walk, mkdir, rmdir, chown
+from pwd import getpwnam
+from grp import getgrnam
+from os.path import exists, join, relpath, splitext, basename, isabs, abspath, \
+    dirname, isdir
 from mimetypes import guess_type
 from re import compile as re_compile
+from shutil import move
+from re import match
+
+from uchicagoldr.error import LDRNonFatal, LDRFatal
+from uchicagoldr.output import Output
+from uchicagoldr.request import ProvideNewFilePath, ProvideReadability, \
+    ProvideNewRoot, ProvideNewArk, ProvideFileSize, ProvideMD5, \
+    ProvideSHA256, ProvideFileExtension, ProvideMimetype, \
+    ProvideCanonicalFilePath, ProvideDestinationDirectory, ProvideUserName, \
+    ProvideGroupName
 
 
 class Item(object):
@@ -15,7 +28,7 @@ class Item(object):
     def __init__(self, path):
         assert(isabs(path))
         self.filepath = path
-        self.set_readability(self.test_readability())
+        self.set_readability(self.find_readability())
 
     def __repr__(self):
         return self.get_file_path()
@@ -25,15 +38,42 @@ class Item(object):
             other.get_file_path()
         return eq
 
-    def test_readability(self):
+    def _output_self_true(self):
+        output = Output('item', status=True)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def _output_self_false(self, requests=[], errors=[]):
+        output = Output('item', status=False)
+        for r in requests:
+            output.add_request(r)
+        for e in errors:
+            output.add_error(e)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def output(self):
+        return self._output_self_true()
+
+    def find_readability(self):
         if access(self.filepath, R_OK):
             return True
         else:
             return False
 
     def set_readability(self, readable_notice):
-        assert(isinstance(readable_notice, bool))
-        self.can_read = readable_notice
+        try:
+            if not isinstance(readable_notice, bool):
+                fte = LDRFatal("The readability value can not be set to a "
+                               "non-boolean value.")
+                r = ProvideReadability(fte)
+                return self._output_self_false(requests=[r])
+            self.can_read = readable_notice
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def read_file(self):
         assert(self.can_read)
@@ -73,10 +113,39 @@ class Item(object):
         return hash.hexdigest()
 
     def set_md5(self, hash_value):
-        self.md5 = hash_value
+        try:
+            if not isinstance(hash_value, str):
+                fte = LDRFatal("The provided value for set md5 is " +
+                               "not a string.")
+                r = ProvideMD5(fte)
+                return self._output_self_false(requests=[r])
+            if not match("^[a-zA-Z\d]{32}$", hash_value):
+                fte = LDRFatal("The provided string is not a valid " +
+                               "md5 hash hex digest.")
+                r = ProvideMD5(fte)
+                return self._output_self_false(requests=[r])
+            self.md5 = hash_value
+            return self._output_self_true()
+        except Exception as e:
+            print(e)
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def set_sha256(self, hash_value):
-        self.sha256 = hash_value
+        try:
+            if not isinstance(hash_value, str):
+                fte = LDRFatal("The provided value for set sha256 is " +
+                               "not a string.")
+                r = ProvideSHA256(fte)
+                return self._output_self_false(requests=[r])
+            if not match("^[a-zA-Z\d]{64}$", hash_value):
+                fte = LDRFatal("The provided string is not a valid " +
+                               "sha256 hash hex digest.")
+                r = ProvideSHA256(fte)
+                return self._output_self_false(requests=[r])
+            self.sha256 = hash_value
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_md5(self):
         return self.md5
@@ -88,8 +157,17 @@ class Item(object):
         return self.filepath
 
     def set_file_path(self, new_file_path):
-        assert(isabs(new_file_path))
-        self.filepath = abspath(new_file_path)
+        try:
+            if not isabs(new_file_path):
+                fte = LDRFatal("The item filepath must be an absolute path.")
+                r = ProvideNewFilePath(fte)
+                return self._output_self_false(requests=[r])
+            else:
+                self.filepath = abspath(new_file_path)
+                return self._output_self_true()
+        except Exception as e:
+            err = LDRFatal(e)
+            return self._output_self_false(errors=[err])
 
     def find_file_name(self):
         return basename(self.filepath)
@@ -101,7 +179,20 @@ class Item(object):
         return splitext(self.find_file_name())[1]
 
     def set_file_extension(self, value):
-        self.file_extension = value
+        try:
+            if not isinstance(value, str):
+                fte = LDRFatal("Argument passed to set file extension " +
+                               "was not a string")
+                r = ProvideFileExtension(fte)
+                return self._output_self_false(requests=[r])
+            if not match(".*\..*", value):
+                fte = LDRFatal("Invalid file extension specified.")
+                r = ProvideFileExtension(fte)
+                return self._output_self_false(requests=[r])
+            self.file_extension = value
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_file_extension(self):
         return self.file_extension
@@ -110,10 +201,16 @@ class Item(object):
         return stat(self.filepath).st_size
 
     def set_file_size(self, size_info):
-        if isinstance(size_info, int):
+        try:
+            if not isinstance(size_info, int):
+                fte = LDRNonFatal(
+                    "The file size must be specified as an integer.")
+                r = ProvideFileSize(fte)
+                return self._output_self_false(requests=[r])
             self.file_size = size_info
-        else:
-            raise ValueError("You did not pass an integer.")
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_file_size(self):
         return self.file_size
@@ -143,7 +240,15 @@ class Item(object):
         return mimetype
 
     def set_file_mime_type(self, mimetype_value):
-        self.mimetype = mimetype_value
+        try:
+            if not isinstance(mimetype_value, str):
+                fte = LDRFatal("An invalid mimetype was specified.")
+                r = ProvideMimetype(fte)
+                return self._output_self_false(requests=[r])
+            self.mimetype = mimetype_value
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_file_mime_type(self):
         return self.mimetype
@@ -181,12 +286,39 @@ class AccessionItem(Item):
             other.get_root_path() and self.get_accession() == \
             other.get_accession()
 
+    def _output_self_true(self):
+        output = Output('accessionitem', status=True)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
+    def _output_self_false(self, requests=[], errors=[]):
+        output = Output('accessionitem', status=False)
+        for r in requests:
+            output.add_request(r)
+        for e in errors:
+            output.add_error(e)
+        if not output.add_data(self):
+            raise ValueError
+        return output
+
     def get_root_path(self):
         return self.root_path
 
     def set_root_path(self, new_root_path):
-        assert(isabs(new_root_path))
-        self.root_path = abspath(new_root_path)
+        try:
+            if not isinstance(new_root_path, str):
+                fte = LDRFatal("The root path specified was not a string.")
+                r = ProvideNewRoot(fte)
+                return self._output_self_false(requests=[r])
+            if not isabs(new_root_path):
+                fte = LDRNonFatal("The root path specified was not absolute.")
+                r = ProvideNewRoot(fte)
+                return self._output_self_false(requests=[r])
+            self.root_path = abspath(new_root_path)
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def find_canonical_filepath(self):
         assert self.accession
@@ -195,7 +327,15 @@ class AccessionItem(Item):
         return relpath(self.filepath, join(self.root_path, self.accession))
 
     def set_canonical_filepath(self, canonical_path):
-        self.canonical_filepath = canonical_path
+        try:
+            if not isinstance(canonical_path, str):
+                fte = LDRFatal("The specified canonical path was invalid.")
+                r = ProvideCanonicalFilePath(fte)
+                return self._output_self_false(requests=[r])
+            self.canonical_filepath = canonical_path
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_canonical_filepath(self):
         return self.canonical_filepath
@@ -206,10 +346,19 @@ class AccessionItem(Item):
         return accession
 
     def set_accession(self, identifier):
-        if re_compile('^\w{13}$').match(identifier):
+        try:
+            if not isinstance(identifier, str):
+                fte = LDRFatal("The ARK specified was not a string.")
+                r = ProvideNewArk(fte)
+                return self._output_self_false(requests=[r])
+            if not re_compile('^\w{13}$').match(identifier):
+                fte = LDRNonFatal("The ARK specified was invalid.")
+                r = ProvideNewArk(fte)
+                return self._output_self_false(requests=[r])
             self.accession = identifier
-        else:
-            raise ValueError("You did not pass a valid noid")
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
 
     def get_accession(self):
         return self.accession
@@ -221,45 +370,77 @@ class AccessionItem(Item):
         return True
 
     def set_destination_path(self, new_root_directory):
-        path_sans_root = relpath(self.filepath, self.root_path)
-        destination_full_path = join(new_root_directory, path_sans_root)
-        self.destination = destination_full_path
-        return True
-    
+        try:
+            if not isabs(new_root_directory):
+                fte = LDRFatal("The provided destination path is not " +
+                               "absolute")
+                r = ProvideDestinationDirectory(fte)
+                return self._output_self_false(requests=[r])
+            if not exists(new_root_directory):
+                fte = LDRFatal("The provided destination path does not " +
+                               "exist.")
+                r = ProvideDestinationDirectory(fte)
+                return self._output_self_false(requests=[r])
+            if not isdir(new_root_directory):
+                fte = LDRFatal("The provided destination path is not " +
+                               "a directory.")
+                r = ProvideDestinationDirectory(fte)
+                return self._output_self_false(requests=[r])
+            path_sans_root = relpath(self.filepath, self.root_path)
+            destination_full_path = join(new_root_directory, path_sans_root)
+            self.destination = destination_full_path
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
+
     def move_into_new_location(self):
         try:
             move(self.filepath, self.destination)
-            return (True,None)
+            return self._output_self_true()
         except Exception as e:
-            error = e
-            return (False,e)
-        
+            error = LDRFatal(e)
+            return self._output_self_false(errors=[error])
+
     def copy_source_directory_tree_to_destination(self):
-        destination_directories = dirname(self.destination).split('/')
-        directory_tree = ""
-        for f in destination_directories:
-            directory_tree = join(directory_tree,f)
-            if not exists(directory_tree):
-                try:
-                    mkdir(directory_tree,0o740)
-                except Exception as e:
-                    return (False,e)
-        return (True,None)
-    
+        try:
+            destination_directories = dirname(self.destination).split('/')
+            directory_tree = ""
+            for f in destination_directories:
+                directory_tree = join(directory_tree, f)
+                if not exists(directory_tree):
+                    try:
+                        mkdir(directory_tree, 0o740)
+                    except Exception as e:
+                        error = LDRFatal(e)
+                        return self._output_self_false(errors=[error])
+            return self._output_self_true()
+        except Exception as e:
+            return self._output_self_false(errors=[LDRFatal(e)])
+
     def clean_out_source_directory_tree(self):
         directory_tree = dirname(self.filepath)
         for src_dir, dirs, files in walk(directory_tree):
             try:
                 rmdir(src_dir)
-                return (True,None)
+                return self._output_self_true()
             except Exception as e:
-                return (False,e)
-    
+                error = LDRFatal(e)
+                return self._output_self_false(errors=[error])
+
     def set_destination_ownership(self, user_name, group_name):
-        uid = getpwnam(user_name).pw_uid
-        gid = getgrnam(group_name).gr_gid
         try:
+            if not isinstance(user_name, str):
+                fte = LDRFatal("The specified user name was invalid.")
+                r = ProvideUserName(fte)
+                return self._output_self_false(requests=[r])
+            if not isinstance(group_name, str):
+                fte = LDRFatal("The specified group name was invalid.")
+                r = ProvideGroupName(fte)
+                return self.output_self_false(requests=[r])
+            uid = getpwnam(user_name).pw_uid
+            gid = getgrnam(group_name).gr_gid
             chown(self.destination, uid, gid)
-            return (True,None)
+            return self._output_self_true()
         except Exception as e:
-            return (False,e)
+            error = LDRFatal(e)
+            return self._output_self_false(errors=[error])
