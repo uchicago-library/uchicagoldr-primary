@@ -197,7 +197,23 @@ class Stager(FileProcessor):
             and len(self.find_all_files()) == self.numfiles
 
     def explain_validation_result(self):
-        return NotImplemented
+        if len(self.find_matching_subdirectories('admin')) == 1:
+            
+        if len(self.find_matching_subdirectories('data')) == 1:
+
+        if len(self.find_matching_subdirectories(self.eadnum)) == 1:
+            
+        if len(self.find_matching_subdirectories(self.arkid)) == 1:
+            
+        if len(self.find_matching_subdirectories(self.accnum)) == 1:
+
+        if len(self.find_matching_files('fixityFromOrigin.txt')) == 1:
+
+        if len(self.find_matching_files('fixityOnDisk.txt')) == 1:
+
+        if len(self.find_matching_subdirectories(self.prefix)) == self.numfolders:
+
+        if len(self.find_all_files()) == self.numfiles:
         
     def validate_files(self):
         fixity_log_data = open(self.find_matching_files('fixityOnDisk.txt')[0], 'r').readlines() \
