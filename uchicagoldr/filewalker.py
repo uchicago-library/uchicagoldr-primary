@@ -8,7 +8,10 @@ class FileWalker(object):
 
     def __iter__(self):
         return self.items
-        
+
+    def get_directory(self):
+        return self.directory
+    
     def walk_directory(self, filter_pattern = None,
                         directory = None):
         from os import listdir, walk
