@@ -1,3 +1,4 @@
+from collections import namedtuple
 from hashlib import md5, sha256
 from os import stat
 from os.path import abspath, exists, isdir, isfile, join
@@ -9,7 +10,8 @@ class LeafData(object):
     """
     attributes: filepath, filesize, filemimetype, filechecksum
 
-    methods: dervie_
+    methods: get_filepath, get_filesize, get_mimetype, get_checksum_options,
+    get_checksum
     """
 
     def __init__(self, filepath):
@@ -82,6 +84,11 @@ class LeafData(object):
         return self.filepath 
             
 class FileWalkTree(object):
+    """
+    attributes: tree_root, expanded_node_list
+
+    methods: add_node, remove_node, get_all_nodes, get_files, find_string_in_a_node_tag
+    """
     tree_root = None
     expanded_node_list = None
     def __init_(self):
@@ -121,13 +128,32 @@ class FileWalkTree(object):
         else:
             return False
         return True
+
+    def get_files(self):
+        return self.tree_root.leaves()
+
+    def is_it_a_subdirectory(self, n):
+        return not n.is_leaf()
+
+    def does_node_match_string(iself, n, id_string):
+        return n.identifier == id_string
+    
+    def find_string_in_a_node_tag(self, n, a_string):
+        if isinstance(n, Node):
+            return a_string in n.tag
+        else:
+            raise TypeError("must pass an object of type treelib.Node to the first parameter")
     
     def __repr__(self):
         self.tree_root.show()
         return ""
 
 class FileProcessor(object):
+    """
+    attributes: filewalker, tree
 
+    methods: explain_nodes, find_matching_files_regex, find_matching_files, find_matching_subdirectories, get_tree, validate, validate_files, explain_validation_results
+    """
     def __init__(self, directory):
         self.filewalker = FileWalker(directory)
         self.tree = FileWalkTree()
@@ -135,23 +161,35 @@ class FileProcessor(object):
         for n in self.filewalker:
             self.tree.add_node(n)
 
-    def find_all_files(self):
-        return [x for x in self.tree.tree_root.all_nodes() if x.is_leaf()]
+    def explain_nodes(self, a_list):
+        return [namedtuple("node_explained", "id data")(n.identifier, n)
+                for n in a_list]
         
-    def find_matching_files_regex(self, regex):
+    def pattern_matching_files_regex(self, regex):
         matches = [x for x in self.get_tree().get_all_nodes() if \
                    re_compile(regex).search(x.tag) and x.is_leaf()]
             
-    def find_matching_files(self, val_string):
-        matches = [x for x in self.get_tree().get_all_nodes() if \
-                   val_string in x.tag and x.is_leaf()]
+    def string_searching_files(self, val_string):
+        matches =  [x for x in self.get_tree().get_files() if
+                    self.get_tree().find_string_in_a_node_tag(x, val_string)]
         return matches
+    
+    def string_searching_subdirectories(self, val_string):
+        matches = [x for x in self.get_tree().get_all_nodes() if
+                   self.get_tree().is_it_a_subdirectory(x)]
         
-    def find_matching_subdirectories(self, val_string):
-        matches = [x for x in self.get_tree().get_all_nodes() if \
-                   val_string in x.tag and not x.is_leaf()]
+        matches = [x for x in matches if self.get_tree(). \
+                   find_string_in_a_node_tag(x, val_string)]
         return matches        
 
+    def find_matching_node(self, val_string):
+        matches = [x for x in self.get_tree().get_all_nodes() if self.get_tree().does_node_match_string(x, val_string)]
+        if len(matches) > 1:
+            raise ValueError("too many matches for that identifier")
+        elif len(matches) == 0:
+            return False
+        return matches[0]
+            
     def get_tree(self):
         return self.tree
 
@@ -165,13 +203,13 @@ class FileProcessor(object):
         return NotImplemented
     
 class Stager(FileProcessor):
-    arkid = None
-    accnum = None
-    prefix = None
-    numfolders = None
-    numfiles = None
-    source_directory_root = None
-    archive_directory = None
+
+    """
+    attributes: arkid, accnum, prefix, numfolders, numfiles, source_directory_root, archive_directory
+
+    methods: validate, explain_validation_results, validate_files, ingest
+    """
+
     
     def __init__(self, directory, eadnum, arkid, accnum, prefix,
                  numfolders, numfiles, source_root, archive_directory):
@@ -198,22 +236,23 @@ class Stager(FileProcessor):
 
     def explain_validation_result(self):
         if len(self.find_matching_subdirectories('admin')) == 1:
-            
+            pass
         if len(self.find_matching_subdirectories('data')) == 1:
-
+            pass
         if len(self.find_matching_subdirectories(self.eadnum)) == 1:
-            
+            pass
         if len(self.find_matching_subdirectories(self.arkid)) == 1:
-            
+            pass
         if len(self.find_matching_subdirectories(self.accnum)) == 1:
-
+            pass
         if len(self.find_matching_files('fixityFromOrigin.txt')) == 1:
-
+            pass
         if len(self.find_matching_files('fixityOnDisk.txt')) == 1:
-
+            pass
         if len(self.find_matching_subdirectories(self.prefix)) == self.numfolders:
-
+            pass
         if len(self.find_all_files()) == self.numfiles:
+            pass
         
     def validate_files(self):
         fixity_log_data = open(self.find_matching_files('fixityOnDisk.txt')[0], 'r').readlines() \
