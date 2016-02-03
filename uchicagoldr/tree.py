@@ -6,29 +6,48 @@ from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
 
 class LeafData(object):
-    filepath = None
-    filesize = None
-    filemimetype = None
-    filehchecksum = None
+    """
+    attributes: filepath, filesize, filemimetype, filechecksum
+
+    methods: dervie_
+    """
 
     def __init__(self, filepath):
-        print(exists(filepath))
-        print(filepath)
         if not exists(filepath):
             raise IOError("{} directory must exist on disk.".format(filepath))
         if filepath[0] != '/':
             self.filepath = abspath(filepath)
         else:
             self.filepath = filepath
-        self.derive_filesize()
-        self.derive_filemimetype()
-        self.derive_checksums()
-        
-    def derive_filesize(self):
+        self._derive_filesize()
+        self._derive_filemimetype()
+        self._derive_checksums()
+
+    def get_filepath(self):
+        return self.filepath
+
+    def get_filesize(self):
+        return self.filesize
+
+    def get_mimetype(self):
+        return self.filemimetype
+
+    def get_checksum_options(self):
+        options = [key.split('checksum_')[1] for key in self.__dict__.keys() \
+         if 'checksum' in key]
+        return options
+
+    def get_checksum(self, a_string):
+        if getattr(self, "checksum_{}".format(a_string), None):
+            return getattr(self, "checksum_{}".format(a_string), None)
+        else:
+            return False
+    
+    def _derive_filesize(self):
         from os import stat
         self.filesize = stat(self.filepath).st_size
 
-    def derive_filemimetype(self):
+    def _derive_filemimetype(self):
         try:
             mimetype = guess_type(self.filepath)
         except Exception as e:
@@ -39,7 +58,7 @@ class LeafData(object):
             mimetype = None
         self.filemimetype = mimetype
 
-    def derive_checksums(self):
+    def _derive_checksums(self):
         blocksize = 65536
         sha_hash = sha256()
         md5_hash = md5()
@@ -56,16 +75,19 @@ class LeafData(object):
             md5_hash.update(buf2)
             buf2 = file_run2.read(blocksize)
         file_run2.close()
-        self.md5 = md5_hash.hexdigest()
-        self.sha256 = sha_hash.hexdigest()
-        
+        self.checksum_md5 = md5_hash.hexdigest()
+        self.checksum_sha256 = sha_hash.hexdigest()
+
+    def __repr__(self):
+        return self.filepath 
             
 class FileWalkTree(object):
     tree_root = None
-
+    expanded_node_list = None
     def __init_(self):
         self.tree_root = None
-
+        self.expanded_node_list = None
+        
     def add_node(self, value):
         value_parts = value.split('/')[1:]
         if not self.tree_root:
@@ -73,11 +95,7 @@ class FileWalkTree(object):
             self.tree_root.create_node(value_parts[0],join('/',value_parts[0])) 
         parent = self.tree_root.root
         for position,value_part in enumerate(value_parts[1:]):
-            print((position,len(value_parts[1:]),value_part))
-
             if position + 1 == len(value_parts[1:]):
-                print("Testing {}".format(join(parent, value_part)))
-                print(parent)
                 data = LeafData(join(parent, value_part))
                 self.tree_root.create_node(value_part, join(parent,value_part), parent=parent,data=data)
                 break
@@ -91,11 +109,22 @@ class FileWalkTree(object):
 
     def remove_node(self, value):
         self.tree_root.remove_node(value)
-        return 0
+        return ""
+
+    def get_all_nodes(self):
+        self._expand_node_list()
+        return self.expanded_node_list
+
+    def _expand_node_list(self):
+        if not self.expanded_node_list:
+            self.expanded_node_list = self.tree_root.all_nodes()
+        else:
+            return False
+        return True
     
     def __repr__(self):
         self.tree_root.show()
-        return 0
+        return ""
 
 class FileProcessor(object):
 
@@ -110,23 +139,29 @@ class FileProcessor(object):
         return [x for x in self.tree.tree_root.all_nodes() if x.is_leaf()]
         
     def find_matching_files_regex(self, regex):
-        matches = [x for x in self.tree.tree_root.all_nodes() if \
+        matches = [x for x in self.get_tree().get_all_nodes() if \
                    re_compile(regex).search(x.tag) and x.is_leaf()]
             
     def find_matching_files(self, val_string):
-        matches = [x for x in self.tree.tree_root.all_nodes() if \
+        matches = [x for x in self.get_tree().get_all_nodes() if \
                    val_string in x.tag and x.is_leaf()]
         return matches
         
     def find_matching_subdirectories(self, val_string):
-        matches = [x for x in self.tree.tree_root.all_nodes() if \
+        matches = [x for x in self.get_tree().get_all_nodes() if \
                    val_string in x.tag and not x.is_leaf()]
         return matches        
 
-    def validate():
+    def get_tree(self):
+        return self.tree
+
+    def validate(self):
         return NotImplemented
 
-    def validate_files():
+    def validate_files(self):
+        return NotImplemented
+
+    def explain_validation_result(self):
         return NotImplemented
     
 class Stager(FileProcessor):
@@ -160,7 +195,10 @@ class Stager(FileProcessor):
             and len(self.find_matching_files('fixityOnDisk.txt')) == 1 \
             and len(self.find_matching_subdirectories(self.prefix)) == self.numfolders \
             and len(self.find_all_files()) == self.numfiles
-    
+
+    def explain_validation_result(self):
+        return NotImplemented
+        
     def validate_files(self):
         fixity_log_data = open(self.find_matching_files('fixityOnDisk.txt')[0], 'r').readlines() \
                           if self.find_matching_files('fixityOnDisk.txt') \
