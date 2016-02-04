@@ -134,7 +134,7 @@ class FileWalkTree(object):
 
     def is_it_a_subdirectory(self, n):
         return not n.is_leaf()
-
+    
     def does_node_match_string(iself, n, id_string):
         return n.identifier == id_string
     
@@ -143,7 +143,30 @@ class FileWalkTree(object):
             return a_string in n.tag
         else:
             raise TypeError("must pass an object of type treelib.Node to the first parameter")
-    
+
+    def trace_ancestry_of_a_node(self, a_node):
+        ancestry = []
+        while self.tree_root.parent(a_node.identifier):
+            ancestry.append(self.tree_root.parent(a_node.identifier))
+            a_node = self.tree_root.parent(a_node.identifier)
+        output = [n for n in reversed(ancestry)]
+        return output
+        
+    def locate_node_starting_from_root(self, val_string, output_string = "",
+                                       current = None):
+        if not current:
+            current = self.tree_root.root
+        children = self.tree_root.children(current)
+        for child in children:
+            if child.tag != val_string:
+                output_string = join(output_string, child.tag)
+                self.locate_node_starting_from_root(val_string,
+                                                    output_string = output_string,
+                                                    current  = child)
+            else:
+                break
+        return output_string
+            
     def __repr__(self):
         self.tree_root.show()
         return ""
@@ -224,6 +247,7 @@ class Stager(FileProcessor):
         self.destination_root = archive_directory
         
     def validate(self):
+
         return len(self.find_matching_subdirectories('admin')) == 1 \
             and len(self.find_matching_subdirectories('data')) == 1 \
             and len(self.find_matching_subdirectories(self.eadnum)) == 1 \
