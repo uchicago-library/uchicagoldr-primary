@@ -15,6 +15,7 @@ class LeafData(object):
     """
 
     def __init__(self, filepath):
+        print(filepath)
         if not exists(filepath):
             raise IOError("{} directory must exist on disk.".format(filepath))
         if filepath[0] != '/':
@@ -95,15 +96,26 @@ class FileWalkTree(object):
         self.tree_root = None
         self.expanded_node_list = None
         
-    def add_node(self, value):
-        value_parts = value.split('/')[1:]
+    def add_node(self, value, irrelevant_parts = None):
+        print("hi={}".format(irrelevant_parts))
+        if not irrelevant_parts:
+            value_parts = value.split('/')[1:]
+        else:
+            value_parts = value.split(irrelevant_parts)[1].split('/')
         if not self.tree_root:
             self.tree_root = Tree()
             self.tree_root.create_node(value_parts[0],join('/',value_parts[0])) 
         parent = self.tree_root.root
         for position,value_part in enumerate(value_parts[1:]):
             if position + 1 == len(value_parts[1:]):
-                data = LeafData(join(parent, value_part))
+                if irrelevant_parts:
+                    print("me again={}".format(irrelevant_parts))
+                    print(join(irrelevant_parts, parent, value_part))
+                    print(type(irrelevant_parts))
+                    print("alas={}".format(irrelevant_parts+join(parent, value_part)))
+                    data =  LeafData(irrelevant_parts+join(parent, value_part))
+                else:
+                    data = LeafData(join(parent, value_part))
                 self.tree_root.create_node(value_part, join(parent,value_part), parent=parent,data=data)
                 break
             
@@ -145,28 +157,16 @@ class FileWalkTree(object):
             raise TypeError("must pass an object of type treelib.Node to the first parameter")
 
     def trace_ancestry_of_a_node(self, a_node):
-        ancestry = []
+        ancestry = [a_node]
         while self.tree_root.parent(a_node.identifier):
             ancestry.append(self.tree_root.parent(a_node.identifier))
             a_node = self.tree_root.parent(a_node.identifier)
         output = [n for n in reversed(ancestry)]
         return output
-        
-    def locate_node_starting_from_root(self, val_string, output_string = "",
-                                       current = None):
-        if not current:
-            current = self.tree_root.root
-        children = self.tree_root.children(current)
-        for child in children:
-            if child.tag != val_string:
-                output_string = join(output_string, child.tag)
-                self.locate_node_starting_from_root(val_string,
-                                                    output_string = output_string,
-                                                    current  = child)
-            else:
-                break
-        return output_string
-            
+
+    def find_depth_of_a_node(self, a_node):
+        return self.tree_root.depth(a_node)
+    
     def __repr__(self):
         self.tree_root.show()
         return ""
@@ -177,12 +177,12 @@ class FileProcessor(object):
 
     methods: explain_nodes, find_matching_files_regex, find_matching_files, find_matching_subdirectories, get_tree, validate, validate_files, explain_validation_results
     """
-    def __init__(self, directory):
+    def __init__(self, directory, source_root, irrelevant_part = None):
         self.filewalker = FileWalker(directory)
         self.tree = FileWalkTree()
 
         for n in self.filewalker:
-            self.tree.add_node(n)
+            self.tree.add_node(n, irrelevant_parts = irrelevant_part)
 
     def explain_nodes(self, a_list):
         return [namedtuple("node_explained", "id data")(n.identifier, n)
@@ -204,6 +204,12 @@ class FileProcessor(object):
         matches = [x for x in matches if self.get_tree(). \
                    find_string_in_a_node_tag(x, val_string)]
         return matches        
+
+    def find_subdirectory_at_particular_level_down(self, val_string, level):
+        level = int(level)
+        potential_matches = self.string_searching_subdirectories(val_string)
+        actual_matches = [x for x in potential_matches if self.get_tree().find_depth_of_a_node(x) == level]
+        return actual_matches
 
     def find_matching_node(self, val_string):
         matches = [x for x in self.get_tree().get_all_nodes() if self.get_tree().does_node_match_string(x, val_string)]
@@ -232,11 +238,11 @@ class Stager(FileProcessor):
 
     methods: validate, explain_validation_results, validate_files, ingest
     """
-
+    
     
     def __init__(self, directory, eadnum, arkid, accnum, prefix,
                  numfolders, numfiles, source_root, archive_directory):
-        FileProcessor.__init__(self, directory)
+        FileProcessor.__init__(self, directory, source_root, irrelevant_part = join(source_root, arkid, eadnum, accnum))
         self.eadnum = eadnum
         self.arkid = arkid
         self.accnum = accnum
@@ -247,16 +253,21 @@ class Stager(FileProcessor):
         self.destination_root = archive_directory
         
     def validate(self):
-
-        return len(self.find_matching_subdirectories('admin')) == 1 \
-            and len(self.find_matching_subdirectories('data')) == 1 \
-            and len(self.find_matching_subdirectories(self.eadnum)) == 1 \
-            and len(self.find_matching_subdirectories(self.arkid)) == 1 \
-            and len(self.find_matching_subdirectories(self.accnum)) == 1 \
-            and len(self.find_matching_files('fixityFromOrigin.txt')) == 1 \
-            and len(self.find_matching_files('fixityOnDisk.txt')) == 1 \
-            and len(self.find_matching_subdirectories(self.prefix)) == self.numfolders \
-            and len(self.find_all_files()) == self.numfiles
+        print(self.get_tree())
+        admin_node = self.find_subdirectory_at_particular_level_down('admin',1)
+        data_node = self.find_subdirectory_at_particular_level_down('data', 1)
+        print(admin_node)
+        print(data_node)
+        
+        # return len(self.find_matching_subdirectories('admin')) == 1 \
+        #     and len(self.find_matching_subdirectories('data')) == 1 \
+        #     and len(self.find_matching_subdirectories(self.eadnum)) == 1 \
+        #     and len(self.find_matching_subdirectories(self.arkid)) == 1 \
+        #     and len(self.find_matching_subdirectories(self.accnum)) == 1 \
+        #     and len(self.find_matching_files('fixityFromOrigin.txt')) == 1 \
+        #     and len(self.find_matching_files('fixityOnDisk.txt')) == 1 \
+        #     and len(self.find_matching_subdirectories(self.prefix)) == self.numfolders \
+        #     and len(self.find_all_files()) == self.numfiles
 
     def explain_validation_result(self):
         if len(self.find_matching_subdirectories('admin')) == 1:
