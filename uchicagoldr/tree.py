@@ -256,8 +256,16 @@ class Stager(FileProcessor):
         print(self.get_tree())
         admin_node = self.find_subdirectory_at_particular_level_down('admin',1)
         data_node = self.find_subdirectory_at_particular_level_down('data', 1)
-        print(admin_node)
-        print(data_node)
+
+        if admin_node and data_node:
+            subdirs_in_admin = self.get_tree().find_contents_of_a_subdirectory(admin_node.pop())
+            subdirs_in_data = self.get_Tree().find_contents_of_a_subdirectory(data_node.pop())
+            if len(subdirs_in_data) == len(subdirs_in_admin) == self.numfolders:
+                find_fixity_files_in_admin = [x for x in subdirs_in_admin if self.get_tree().is_file_in_subdirectory(x, 'fixityOnDisk.presform') and self.get_tree().is_file_in_subdirectory(x, 'fixityFromMedia.presform') and self.get_tree().is_file_in_subdirectory(x, 'mediaInfo.presform') and self.get_tree().is_file_in_subdirectory(x, 'rsyncFromMedia.presform')]
+                if len(x.get_tree().get_files()) == self.numfiles:
+                    return True
+        return False
+
         
         # return len(self.find_matching_subdirectories('admin')) == 1 \
         #     and len(self.find_matching_subdirectories('data')) == 1 \
