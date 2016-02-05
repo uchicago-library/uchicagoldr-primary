@@ -146,6 +146,22 @@ class FileWalkTree(object):
 
     def is_it_a_subdirectory(self, n):
         return not n.is_leaf()
+
+    def is_file_in_subdirectory(self, n, file_string):
+        matches = [x for x in self.tree.get_node(n).fpointer if file_string in n.identifier]
+        if matches:
+            return True
+        return False
+
+    def find_file_contents_of_a_subdirectory(self, n, all_files=[]):
+        matches = [x for x in self.tree.get_node(n).fpointer if self.tree.get_node(x).is_leaf()]
+        for x in self.tree.get_node(n).fpointer:
+            current = self.tree.get_node(x)
+            if current.is_leaf():
+                all_files.append(current)
+            if not current.is_leaf():
+                self.find_file_contents_of_a_subdirectory(x, all_files=all_files)
+        return all_matches
     
     def does_node_match_string(iself, n, id_string):
         return n.identifier == id_string
@@ -265,18 +281,7 @@ class Stager(FileProcessor):
                 if len(x.get_tree().get_files()) == self.numfiles:
                     return True
         return False
-
-        
-        # return len(self.find_matching_subdirectories('admin')) == 1 \
-        #     and len(self.find_matching_subdirectories('data')) == 1 \
-        #     and len(self.find_matching_subdirectories(self.eadnum)) == 1 \
-        #     and len(self.find_matching_subdirectories(self.arkid)) == 1 \
-        #     and len(self.find_matching_subdirectories(self.accnum)) == 1 \
-        #     and len(self.find_matching_files('fixityFromOrigin.txt')) == 1 \
-        #     and len(self.find_matching_files('fixityOnDisk.txt')) == 1 \
-        #     and len(self.find_matching_subdirectories(self.prefix)) == self.numfolders \
-        #     and len(self.find_all_files()) == self.numfiles
-
+    
     def explain_validation_result(self):
         if len(self.find_matching_subdirectories('admin')) == 1:
             pass
