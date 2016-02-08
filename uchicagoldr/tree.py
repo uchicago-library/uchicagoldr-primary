@@ -269,7 +269,6 @@ class Stager(FileProcessor):
         self.destination_root = archive_directory
         
     def validate(self):
-        print(self.get_tree())
         admin_node = self.find_subdirectory_at_particular_level_down('admin',1)
         data_node = self.find_subdirectory_at_particular_level_down('data', 1)
 
@@ -283,25 +282,24 @@ class Stager(FileProcessor):
         return False
     
     def explain_validation_result(self):
-        if len(self.find_matching_subdirectories('admin')) == 1:
-            pass
-        if len(self.find_matching_subdirectories('data')) == 1:
-            pass
-        if len(self.find_matching_subdirectories(self.eadnum)) == 1:
-            pass
-        if len(self.find_matching_subdirectories(self.arkid)) == 1:
-            pass
-        if len(self.find_matching_subdirectories(self.accnum)) == 1:
-            pass
-        if len(self.find_matching_files('fixityFromOrigin.txt')) == 1:
-            pass
-        if len(self.find_matching_files('fixityOnDisk.txt')) == 1:
-            pass
-        if len(self.find_matching_subdirectories(self.prefix)) == self.numfolders:
-            pass
-        if len(self.find_all_files()) == self.numfiles:
-            pass
-        
+        admin_node = self.find_subdirectory_at_particular_level_down('admin',1)
+        data_node = self.find_subdirectory_at_particular_level_down('data', 1)
+        if not admin_node:
+            return namedtuple("ldrerror","category message")("fatal","missing \"admin\" folder in correct position in this directory")
+        elif not data_node:
+            return namedtuple("ldrerror","category message")("fatal","missing 
+\"data\" folder in correct position in this directory")
+        if admin_node and data_node:
+            subdirs_in_admin = self.get_tree().find_contents_of_a_subdirectory(admin_node.pop())
+            subdirs_in_data = self.get_Tree().find_contents_of_a_subdirectory(data_node.pop())
+            if len(subdirs_in_data) != len(subdirs_in_admin):
+                return namedtuple("lderrro","category message")("fatal","subdirectories of data and admin are not equal in number")
+            find_fixity_files_in_admin = [x for x in subdirs_in_admin if not self.get_tree().is_file_in_subdirectory(x, 'fixityOnDisk.presform') or not self.get_tree().is_file_in_subdirectory(x, 'fixityFromMedia.presform') or not self.get_tree().is_file_in_subdirectory(x, 'mediaInfo.presform') or not self.get_tree().is_file_in_subdirectory(x, 'rsyncFromMedia.presform')]
+            if find_fixity_files_in_admin:
+                return namedtuple("ldererror", "category message")("fatal", "the following foldesr in admin did not have a complete set of fixity files: {}".format(','.join(x)))
+        if len(x.get_tree().get_files()) != self.numfiles:
+            return namedtuple("ldrerror", "category message")("fatal","There were {} files found in the directory, but you said there were supposed to be {} files".format(str(len(x.get_tree().get_files())),str(self.numfiles)))
+            
     def validate_files(self):
         fixity_log_data = open(self.find_matching_files('fixityOnDisk.txt')[0], 'r').readlines() \
                           if self.find_matching_files('fixityOnDisk.txt') \
