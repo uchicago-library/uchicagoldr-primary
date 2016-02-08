@@ -49,7 +49,6 @@ def main():
         else:
             # get an explanation of the validation errors
             s.explain_validation_results()
-            
         return 0
     except KeyboardInterrupt:
         return 131

@@ -293,13 +293,14 @@ class Stager(FileProcessor):
             subdirs_in_admin = self.get_tree().find_contents_of_a_subdirectory(admin_node.pop())
             subdirs_in_data = self.get_Tree().find_contents_of_a_subdirectory(data_node.pop())
             if len(subdirs_in_data) != len(subdirs_in_admin):
-                return namedtuple("lderrro","category message")("fatal","subdirectories of data and admin are not equal in number")
+                return namedtuple("lderrror","category message")("fatal","subdirectories of data and admin are not equal in number")
             find_fixity_files_in_admin = [x for x in subdirs_in_admin if not self.get_tree().is_file_in_subdirectory(x, 'fixityOnDisk.presform') or not self.get_tree().is_file_in_subdirectory(x, 'fixityFromMedia.presform') or not self.get_tree().is_file_in_subdirectory(x, 'mediaInfo.presform') or not self.get_tree().is_file_in_subdirectory(x, 'rsyncFromMedia.presform')]
             if find_fixity_files_in_admin:
                 return namedtuple("ldererror", "category message")("fatal", "the following foldesr in admin did not have a complete set of fixity files: {}".format(','.join(x)))
         if len(x.get_tree().get_files()) != self.numfiles:
             return namedtuple("ldrerror", "category message")("fatal","There were {} files found in the directory, but you said there were supposed to be {} files".format(str(len(x.get_tree().get_files())),str(self.numfiles)))
-            
+        return True
+    
     def validate_files(self):
         fixity_log_data = open(self.find_matching_files('fixityOnDisk.txt')[0], 'r').readlines() \
                           if self.find_matching_files('fixityOnDisk.txt') \
@@ -319,7 +320,7 @@ class Stager(FileProcessor):
                                   " in staging directory")
         return True
 
-    def ingest(self):
+    def ingest(self, flag=False):
         if self.validate():
             files_to_ingest = (n for n in self.find_all_files())
             for n in files_to_ingest:
@@ -335,5 +336,8 @@ class Stager(FileProcessor):
                 if destination_md5 == md5_checksum:
                     pass
                 else:
-                    raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
+                    if flag:
+                        pass
+                    else:
+                        raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
                                   " and source checksum {}".format(md5_checksum)) 
