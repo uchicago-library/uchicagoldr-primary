@@ -15,7 +15,6 @@ class LeafData(object):
     """
 
     def __init__(self, filepath):
-        print(filepath)
         if not exists(filepath):
             raise IOError("{} directory must exist on disk.".format(filepath))
         if filepath[0] != '/':
@@ -83,52 +82,23 @@ class LeafData(object):
 
     def __repr__(self):
         return self.filepath 
-            
-class FileWalkTree(object):
-    """
-    attributes: tree_root, expanded_node_list
 
-    methods: add_node, remove_node, get_all_nodes, get_files, find_string_in_a_node_tag
-    """
-    tree_root = None
-    expanded_node_list = None
-    def __init_(self):
+class WalkTree(object):
+    def __init__(self):
         self.tree_root = None
         self.expanded_node_list = None
-        
-    def add_node(self, value, irrelevant_parts = None):
-        print("hi={}".format(irrelevant_parts))
-        if not irrelevant_parts:
-            value_parts = value.split('/')[1:]
-        else:
-            value_parts = value.split(irrelevant_parts)[1].split('/')
+
+    def add_node(self, value, sep="/"):
+        value_parts = value.split(sep)[1:]
         if not self.tree_root:
             self.tree_root = Tree()
             self.tree_root.create_node(value_parts[0],join('/',value_parts[0])) 
         parent = self.tree_root.root
-        for position,value_part in enumerate(value_parts[1:]):
-            if position + 1 == len(value_parts[1:]):
-                if irrelevant_parts:
-                    print("me again={}".format(irrelevant_parts))
-                    print(join(irrelevant_parts, parent, value_part))
-                    print(type(irrelevant_parts))
-                    print("alas={}".format(irrelevant_parts+join(parent, value_part)))
-                    data =  LeafData(irrelevant_parts+join(parent, value_part))
-                else:
-                    data = LeafData(join(parent, value_part))
-                self.tree_root.create_node(value_part, join(parent,value_part), parent=parent,data=data)
-                break
-            
-            elif self.tree_root.get_node(join(parent,value_part)):
-                pass
-
-            else:
-                self.tree_root.create_node(value_part, join(parent,value_part), parent=parent)             
-            parent = join(parent, value_part)
+        for position, value_part in enumerate(value_parts)[1:]:
+            self.tree_root.create_node(value_part, join(parent, value_part), parent=parent)
 
     def remove_node(self, value):
         self.tree_root.remove_node(value)
-        return ""
 
     def get_all_nodes(self):
         self._expand_node_list()
@@ -141,6 +111,44 @@ class FileWalkTree(object):
             return False
         return True
 
+            
+class FileWalkTree(WalkTree):
+    """
+    attributes: tree_root, expanded_node_list
+
+    methods: add_node, remove_node, get_all_nodes, get_files, find_string_in_a_node_tag
+    """
+    tree_root = None
+    expanded_node_list = None
+    def __init_(self):
+        self.tree_root = None
+        self.expanded_node_list = None
+        
+    def add_node(self, value, irrelevant_parts = None):
+        if not irrelevant_parts:
+            value_parts = value.split('/')[1:]
+        else:
+            value_parts = value.split(irrelevant_parts)[1].split('/')
+        if not self.tree_root:
+            self.tree_root = Tree()
+            self.tree_root.create_node(value_parts[0],join('/',value_parts[0])) 
+        parent = self.tree_root.root
+        for position,value_part in enumerate(value_parts[1:]):
+            if position + 1 == len(value_parts[1:]):
+                if irrelevant_parts:
+                    data =  LeafData(irrelevant_parts+join(parent, value_part))
+                else:
+                    data = LeafData(join(parent, value_part))
+                self.tree_root.create_node(value_part, join(parent,value_part), parent=parent,data=data)
+                break
+            
+            elif self.tree_root.get_node(join(parent,value_part)):
+                pass
+
+            else:
+                self.tree_root.create_node(value_part, join(parent,value_part), parent=parent)             
+            parent = join(parent, value_part)
+            
     def get_files(self):
         return self.tree_root.leaves()
 
@@ -148,13 +156,17 @@ class FileWalkTree(object):
         return not n.is_leaf()
 
     def is_file_in_subdirectory(self, n, file_string):
-        matches = [x for x in self.tree.get_node(n).fpointer if file_string in n.identifier]
+        print(n)
+        matches = [x for x in self.tree_root.get_node(n).fpointer \
+                   if file_string in n.identifier]
         if matches:
             return True
         return False
 
     def find_file_contents_of_a_subdirectory(self, n, all_files=[]):
-        matches = [x for x in self.tree.get_node(n).fpointer if self.tree.get_node(x).is_leaf()]
+        matches = [x for x in self.tree.get_node(n).fpointer \
+                   if self.tree.get_node(x).is_leaf()]
+        
         for x in self.tree.get_node(n).fpointer:
             current = self.tree.get_node(x)
             if current.is_leaf():
@@ -200,6 +212,11 @@ class FileProcessor(object):
         for n in self.filewalker:
             self.tree.add_node(n, irrelevant_parts = irrelevant_part)
 
+    def find_directories_in_a_directory(self, a_node):
+        current_level = a_node
+        subdirectories = [self.find_matching_node(x) for x in current_level.fpointer if not self.find_matching_node(x).is_leaf()]
+        return subdirectories
+        
     def explain_nodes(self, a_list):
         return [namedtuple("node_explained", "id data")(n.identifier, n)
                 for n in a_list]
@@ -234,6 +251,12 @@ class FileProcessor(object):
         elif len(matches) == 0:
             return False
         return matches[0]
+
+    def find_file_in_a_subdirectory(self, a_node, file_name_string):
+        node = self.find_matching_node(a_node.identifier)
+        if len([x for x in node.fpointer if file_name_string in x]) == 1:
+            return True
+        return False
             
     def get_tree(self):
         return self.tree
@@ -256,12 +279,9 @@ class Stager(FileProcessor):
     """
     
     
-    def __init__(self, directory, eadnum, arkid, accnum, prefix,
-                 numfolders, numfiles, source_root, archive_directory):
-        FileProcessor.__init__(self, directory, source_root, irrelevant_part = join(source_root, arkid, eadnum, accnum))
-        self.eadnum = eadnum
-        self.arkid = arkid
-        self.accnum = accnum
+    def __init__(self, directory, prefix, numfolders, numfiles,
+                 source_root, archive_directory):
+        FileProcessor.__init__(self, directory, source_root, irrelevant_part = source_root)
         self.prefix = prefix
         self.numfolders = numfolders
         self.numfiles = numfiles
@@ -269,36 +289,47 @@ class Stager(FileProcessor):
         self.destination_root = archive_directory
         
     def validate(self):
-        admin_node = self.find_subdirectory_at_particular_level_down('admin',1)
-        data_node = self.find_subdirectory_at_particular_level_down('data', 1)
-
+        admin_node = self.find_subdirectory_at_particular_level_down('admin',3)
+        data_node = self.find_subdirectory_at_particular_level_down('data', 3)
+        
         if admin_node and data_node:
-            subdirs_in_admin = self.get_tree().find_contents_of_a_subdirectory(admin_node.pop())
-            subdirs_in_data = self.get_Tree().find_contents_of_a_subdirectory(data_node.pop())
+            subdirs_in_admin = self.find_directories_in_a_directory(admin_node.pop())
+            subdirs_in_data = self.find_directories_in_a_directory(data_node.pop())
             if len(subdirs_in_data) == len(subdirs_in_admin) == self.numfolders:
-                find_fixity_files_in_admin = [x for x in subdirs_in_admin if self.get_tree().is_file_in_subdirectory(x, 'fixityOnDisk.presform') and self.get_tree().is_file_in_subdirectory(x, 'fixityFromMedia.presform') and self.get_tree().is_file_in_subdirectory(x, 'mediaInfo.presform') and self.get_tree().is_file_in_subdirectory(x, 'rsyncFromMedia.presform')]
-                if len(x.get_tree().get_files()) == self.numfiles:
-                    return True
+                validate = True          
+                for x in subdirs_in_admin:
+                    find_fixity_files_in_admin = [x for x in subdirs_in_admin if 
+                        self.find_file_in_a_subdirectory(x, 'fixityFromMedia.presform') and
+                        self.find_file_in_a_subdirectory(x, 'fixityOnDisk.presform') and
+                        self.find_file_in_a_subdirectory(x, 'rsyncFromMedia.presform')
+                   ] 
+                    if find_fixity_files_in_admin:
+                        if len(subdirs_in_admin) == len(subdirs_in_data) == self.numfolders:
+                            if self.numfiles == len(self.get_tree().get_files()):
+                                return True
         return False
     
     def explain_validation_result(self):
-        admin_node = self.find_subdirectory_at_particular_level_down('admin',1)
-        data_node = self.find_subdirectory_at_particular_level_down('data', 1)
+        admin_node = self.find_subdirectory_at_particular_level_down('admin',3)
+        data_node = self.find_subdirectory_at_particular_level_down('data', 3)
         if not admin_node:
             return namedtuple("ldrerror","category message")("fatal","missing \"admin\" folder in correct position in this directory")
         elif not data_node:
-            return namedtuple("ldrerror","category message")("fatal","missing 
-\"data\" folder in correct position in this directory")
+            return namedtuple("ldrerror","category message")("fatal","missing \"data\" folder in correct position in this directory")
         if admin_node and data_node:
-            subdirs_in_admin = self.get_tree().find_contents_of_a_subdirectory(admin_node.pop())
-            subdirs_in_data = self.get_Tree().find_contents_of_a_subdirectory(data_node.pop())
+            subdirs_in_admin = self.find_directories_in_a_directory(admin_node.pop())
+            subdirs_in_data = self.find_directories_in_a_directory(data_node.pop())
             if len(subdirs_in_data) != len(subdirs_in_admin):
                 return namedtuple("lderrror","category message")("fatal","subdirectories of data and admin are not equal in number")
-            find_fixity_files_in_admin = [x for x in subdirs_in_admin if not self.get_tree().is_file_in_subdirectory(x, 'fixityOnDisk.presform') or not self.get_tree().is_file_in_subdirectory(x, 'fixityFromMedia.presform') or not self.get_tree().is_file_in_subdirectory(x, 'mediaInfo.presform') or not self.get_tree().is_file_in_subdirectory(x, 'rsyncFromMedia.presform')]
+            find_fixity_files_in_admin = [x for x in subdirs_in_admin if
+                                          not self.find_file_in_a_subdirectory(x, 'fixityOnDisk.presform') or
+                                          not self.find_file_in_a_subdirectory(x, 'fixityFromMedia.presform') or
+                                          not self.find_file_in_a_subdirectory(x, 'mediaInfo.presform') or
+                                          not self.find_file_in_a_subdirectory(x, 'rsyncFromMedia.presform')]
             if find_fixity_files_in_admin:
-                return namedtuple("ldererror", "category message")("fatal", "the following foldesr in admin did not have a complete set of fixity files: {}".format(','.join(x)))
-        if len(x.get_tree().get_files()) != self.numfiles:
-            return namedtuple("ldrerror", "category message")("fatal","There were {} files found in the directory, but you said there were supposed to be {} files".format(str(len(x.get_tree().get_files())),str(self.numfiles)))
+                return namedtuple("ldererror", "category message")("fatal", "the following foldesr in admin did not have a complete set of fixity files: {}".format(','.join(find_fixity_files_in_admin)))
+        if len(self.get_tree().get_files()) != self.numfiles:
+            return namedtuple("ldrerror", "category message")("fatal","There were {} files found in the directory, but you said there were supposed to be {} files".format(str(len(self.get_tree().get_files())),str(self.numfiles)))
         return True
     
     def validate_files(self):
@@ -316,7 +347,7 @@ class Stager(FileProcessor):
                     pass
                 else:
                     raise IOError("{} had checksum {}".format(x.identifier, fixity_log_checksum) + \
-                                  " in fixityOnDisk.txt file and checksum {}".format(x.data.md5) + \
+                                   " in fixityOnDisk.txt file and checksum {}".format(x.data.md5) + \
                                   " in staging directory")
         return True
 
@@ -341,3 +372,5 @@ class Stager(FileProcessor):
                     else:
                         raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
                                   " and source checksum {}".format(md5_checksum)) 
+        else:
+            return self.explain_validation_results()
