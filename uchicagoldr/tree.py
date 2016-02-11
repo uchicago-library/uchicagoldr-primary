@@ -1,9 +1,10 @@
 from collections import namedtuple
 from hashlib import md5, sha256
-from os import mkdir, stat
+from os import chown, mkdir, stat
 from os.path import abspath, dirname, exists, isdir, isfile, join, relpath
 from magic import from_file
 from shutil import copyfile
+from sys import stderr
 from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
 from uchicagoldr.moveableitem import MoveableItem
@@ -295,7 +296,7 @@ class Stager(FileProcessor):
     
     
     def __init__(self, directory, prefix, numfolders, numfiles,
-                 source_root, archive_directory):
+                 source_root, archive_directory, group_id, user_id):
 
         FileProcessor.__init__(self, directory, source_root, irrelevant_part = source_root)
         self.prefix = prefix
@@ -303,6 +304,8 @@ class Stager(FileProcessor):
         self.numfiles = numfiles
         self.source_root = source_root
         self.destination_root = archive_directory
+        self.destination_group = group_id
+        self.destination_owner = user_id
         
     def validate(self):
         admin_node = self.find_subdirectory_at_particular_level_down('admin',3)
@@ -391,6 +394,10 @@ class Stager(FileProcessor):
                                         relpath(n.data.filepath, self.source_root))
                 copy_source_directory_tree_to_destination(destination_file)
                 copyfile(source_file, destination_file)
+                try:
+                    chown(destination_file, self.destination_owner, self.destination_group)
+                except Exception as e:
+                    stderr.write(e)
                 destination_md5 = self.get_checksum(destination_file)
                 if not destination_md5 == md5_checksum:
                     if flag:
