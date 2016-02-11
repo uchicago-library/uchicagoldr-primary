@@ -1,7 +1,7 @@
 
 from argparse import Action, ArgumentParser
 from os import _exit
-from os.path import exists
+from os.path import exists, join, relpath
 from sys import stderr, stdout
 from uchicagoldr.tree import Stager
 
@@ -39,8 +39,12 @@ def main():
         is_it_valid = s.validate()
         if is_it_valid:
             s.ingest()
+            destination_directory = join(args.destination_root,
+                                         relpath(args.directory, args.source_root))
+            stdout.write("{} has been moved into {}\n".format(args.directory, destination_directory))
         else:
-            print(s.explain_validation_result())
+            problem = s.explain_validation_result()
+            stderr.write("{}: {}\n".format(problem.category, problem.message))
         return 0
     except KeyboardInterrupt:
         return 131

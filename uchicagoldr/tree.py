@@ -392,13 +392,12 @@ class Stager(FileProcessor):
                 copy_source_directory_tree_to_destination(destination_file)
                 copyfile(source_file, destination_file)
                 destination_md5 = self.get_checksum(destination_file)
-                if destination_md5 == md5_checksum:
-                    print(n.data.filepath)
-                else:
+                if not destination_md5 == md5_checksum:
                     if flag:
                         pass
                     else:
                         raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
                                   " and source checksum {}".format(md5_checksum)) 
         else:
-            return self.explain_validation_result()
+            problem = self.explain_validation_result()
+            stderr.write("{}: {}\n".format(problem.category, problem.message))
