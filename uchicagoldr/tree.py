@@ -1,11 +1,12 @@
 from collections import namedtuple
 from hashlib import md5, sha256
-from os import stat
-from os.path import abspath, exists, isdir, isfile, join, relpath
+from os import mkdir, stat
+from os.path import abspath, dirname, exists, isdir, isfile, join, relpath
 from magic import from_file
 from shutil import copyfile
 from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
+from uchicagoldr.moveableitem import MoveableItem
 
 class LeafData(object):
     """
@@ -80,7 +81,6 @@ class LeafData(object):
         file_run2.close()
         self.checksum_md5 = md5_hash.hexdigest()
         self.checksum_sha256 = sha_hash.hexdigest()
-
     def __repr__(self):
         return self.filepath 
 
@@ -260,9 +260,9 @@ class FileProcessor(object):
         blocksize = 65536
         md5_hash = md5()        
         file_run = open(filepath, 'rb')
-        buf = file_run1.read(blocksize)
-        while len(buf1) > 0:
-            md5_hash.update(buf2)
+        buf = file_run.read(blocksize)
+        while len(buf) > 0:
+            md5_hash.update(buf)
             buf = file_run.read(blocksize)
         file_run.close()
         return md5_hash.hexdigest()
@@ -368,6 +368,17 @@ class Stager(FileProcessor):
         return True
 
     def ingest(self, flag=False):
+        def copy_source_directory_tree_to_destination(filepath):
+            destination_directories = dirname(filepath).split('/')
+            if filepath[0] == '/':
+                directory_tree = "/"
+            else:
+                directory_tree = ""
+            for directory_part in destination_directories:
+                directory_tree = join(directory_tree, directory_part)
+                if not exists(directory_tree):
+                    mkdir(directory_tree, 0o750)
+                    
         if self.validate():
             files_to_ingest = (n for n in self.find_all_files())
             for n in files_to_ingest:
@@ -378,16 +389,16 @@ class Stager(FileProcessor):
                 file_mimetype = n.data.filemimetype
                 destination_file = join(self.destination_root,
                                         relpath(n.data.filepath, self.source_root))
-                print(destination_file)
+                copy_source_directory_tree_to_destination(destination_file)
                 copyfile(source_file, destination_file)
-                # destination_md5 = self.get_checksum(destination_file)
-                # if destination_md5 == md5_checksum:
-                #     print(n.filepath)
-                # else:
-                #     if flag:
-                #         pass
-                #     else:
-                #         raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
-                #                   " and source checksum {}".format(md5_checksum)) 
+                destination_md5 = self.get_checksum(destination_file)
+                if destination_md5 == md5_checksum:
+                    print(n.data.filepath)
+                else:
+                    if flag:
+                        pass
+                    else:
+                        raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
+                                  " and source checksum {}".format(md5_checksum)) 
         else:
-            return self.explain_validation_results()
+            return self.explain_validation_result()

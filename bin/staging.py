@@ -34,14 +34,13 @@ def main():
     parser.add_argument("source_root",help="Enter the root of the source directory")
     parser.add_argument("destination_root",help="Enter the root fo the destination directory")
     args = parser.parse_args()
-    
     try:
         s = Stager(args.directory, args.prefix, args.numfolders, args.numfiles, args.source_root, args.destination_root)
         is_it_valid = s.validate()
         if is_it_valid:
             s.ingest()
         else:
-            s.explain_validation_results()
+            print(s.explain_validation_result())
         return 0
     except KeyboardInterrupt:
         return 131
