@@ -1,8 +1,9 @@
 from collections import namedtuple
 from hashlib import md5, sha256
 from os import stat
-from os.path import abspath, exists, isdir, isfile, join
+from os.path import abspath, exists, isdir, isfile, join, relpath
 from magic import from_file
+from shutil import copyfile
 from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
 
@@ -212,6 +213,9 @@ class FileProcessor(object):
         for n in self.filewalker:
             self.tree.add_node(n, irrelevant_parts = irrelevant_part)
 
+    def find_all_files(self):
+        return self.get_tree().get_files()
+            
     def find_directories_in_a_directory(self, a_node):
         current_level = a_node
         subdirectories = [self.find_matching_node(x) for x in current_level.fpointer if not self.find_matching_node(x).is_leaf()]
@@ -252,6 +256,17 @@ class FileProcessor(object):
             return False
         return matches[0]
 
+    def get_checksum(self, filepath):
+        blocksize = 65536
+        md5_hash = md5()        
+        file_run = open(filepath, 'rb')
+        buf = file_run1.read(blocksize)
+        while len(buf1) > 0:
+            md5_hash.update(buf2)
+            buf = file_run.read(blocksize)
+        file_run.close()
+        return md5_hash.hexdigest()
+    
     def find_file_in_a_subdirectory(self, a_node, file_name_string):
         node = self.find_matching_node(a_node.identifier)
         if len([x for x in node.fpointer if file_name_string in x]) == 1:
@@ -281,6 +296,7 @@ class Stager(FileProcessor):
     
     def __init__(self, directory, prefix, numfolders, numfiles,
                  source_root, archive_directory):
+
         FileProcessor.__init__(self, directory, source_root, irrelevant_part = source_root)
         self.prefix = prefix
         self.numfolders = numfolders
@@ -356,21 +372,22 @@ class Stager(FileProcessor):
             files_to_ingest = (n for n in self.find_all_files())
             for n in files_to_ingest:
                 source_file = n.data.filepath
-                md5_checksum = n.data.md5
-                sha256_checksum = n.data.sha256
+                md5_checksum = n.data.checksum_md5
+                sha256_checksum = n.data.checksum_sha256
                 file_size = n.data.filesize
                 file_mimetype = n.data.filemimetype
                 destination_file = join(self.destination_root,
                                         relpath(n.data.filepath, self.source_root))
-                shutil.copyfile(source_file, destination_file)
-                destination_md5 = self.get_checksum(destination_file)
-                if destination_md5 == md5_checksum:
-                    pass
-                else:
-                    if flag:
-                        pass
-                    else:
-                        raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
-                                  " and source checksum {}".format(md5_checksum)) 
+                print(destination_file)
+                copyfile(source_file, destination_file)
+                # destination_md5 = self.get_checksum(destination_file)
+                # if destination_md5 == md5_checksum:
+                #     print(n.filepath)
+                # else:
+                #     if flag:
+                #         pass
+                #     else:
+                #         raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
+                #                   " and source checksum {}".format(md5_checksum)) 
         else:
             return self.explain_validation_results()
