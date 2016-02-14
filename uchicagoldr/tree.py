@@ -273,7 +273,10 @@ class FileProcessor(object):
         if len([x for x in node.fpointer if file_name_string in x]) == 1:
             return True
         return False
-            
+
+    def find_files_in_a_node(self, a_node):
+        return a_node.leaves()
+        
     def get_tree(self):
         return self.tree
 
@@ -285,7 +288,66 @@ class FileProcessor(object):
 
     def explain_validation_result(self):
         return NotImplemented
-    
+
+class Originator(FileProcessor):
+    def __init__(self, directory, source_root, archive_directory):
+        FileProcessor.__init__(self, directory, source_root, numfiles)
+        self.destination = archive_directory
+        self.numfiles = numfiles
+        
+    def validate(self):
+        numfilesfound = len(self.get_tree().get_files())
+        if numfilesfound == self.numfiles:
+            return True
+        else:
+            return False
+
+    def explain_validation_results(self):
+        if len(self.get_tree().get_files()) != self.numfiles:
+            return namedtuple("ldrerror","category message")("fatal", "You said there were {} files, but {} files were found. This is a mismatch: please correct and try again.".format(str(self.numfiles),str(len(self.get_tree().get_files()))))
+        else:
+            return True
+
+    def ingest(self):
+        def copy_source_directory_tree_to_destination(filepath):
+            destination_directories = dirname(filepath).split('/')
+            if filepath[0] == '/':
+                directory_tree = "/"
+            else:
+                directory_tree = ""
+            for directory_part in destination_directories:
+                directory_tree = join(directory_tree, directory_part)
+                if not exists(directory_tree):
+                    mkdir(directory_tree, 0o750)
+                            
+        if self.validate():
+            files_to_ingest = (n for n in self.find_all_files())
+            for n in files_to_ingest:
+                source_file = n.data.filepath
+                md5_checksum = n.data.checksum_md5
+                sha256_checksum = n.data.checksum_sha256
+                file_size = n.data.filesize
+                file_mimetype = n.data.filemimetype
+                destination_file = join(self.destination_root,
+                                        relpath(n.data.filepath, self.source_root))
+                copy_source_directory_tree_to_destination(destination_file)
+                copyfile(source_file, destination_file)
+                try:
+                    chown(destination_file, self.destination_owner, self.destination_group)
+                except Exception as e:
+                    stderr.write("{}\n".format(str(e)))
+                destination_md5 = self.get_checksum(destination_file)
+                if not destination_md5 == md5_checksum:
+                    if flag:
+                        pass
+                    else:
+                        raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
+                                      " and source checksum {}".format(md5_checksum)) 
+        else:
+            problem = self.explain_validation_result()
+            stderr.write("{}: {}\n".format(problem.category, problem.message))
+        
+        
 class Stager(FileProcessor):
 
     """
@@ -346,7 +408,7 @@ class Stager(FileProcessor):
                                           not self.find_file_in_a_subdirectory(x, 'mediaInfo.presform') or
                                           not self.find_file_in_a_subdirectory(x, 'rsyncFromMedia.presform')]
             if find_fixity_files_in_admin:
-                return namedtuple("ldererror", "category message")("fatal", "the following foldesr in admin did not have a complete set of fixity files: {}".format(','.join(find_fixity_files_in_admin)))
+                return namedtuple("ldererror", "category message")("fatal", "the following foldesr in admin did not have a complete set of fixity files: {}".format(','.join([x.identifier for x in find_fixity_files_in_admin])))
         if len(self.get_tree().get_files()) != self.numfiles:
             return namedtuple("ldrerror", "category message")("fatal","There were {} files found in the directory, but you said there were supposed to be {} files".format(str(len(self.get_tree().get_files())),str(self.numfiles)))
         return True
@@ -384,6 +446,9 @@ class Stager(FileProcessor):
                     
         if self.validate():
             files_to_ingest = (n for n in self.find_all_files())
+
+            admin_node_leaves = self.get_tree().tree_root.subtree(self.find_matching_node('/admin'))
+            data_node_leaves = self.get_tree().tree_root.subtree(self.find_matching_node('/data'))
             for n in files_to_ingest:
                 source_file = n.data.filepath
                 md5_checksum = n.data.checksum_md5
@@ -397,14 +462,14 @@ class Stager(FileProcessor):
                 try:
                     chown(destination_file, self.destination_owner, self.destination_group)
                 except Exception as e:
-                    stderr.write(e)
+                    stderr.write("{}\n".format(str(e)))
                 destination_md5 = self.get_checksum(destination_file)
                 if not destination_md5 == md5_checksum:
                     if flag:
                         pass
                     else:
                         raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
-                                  " and source checksum {}".format(md5_checksum)) 
+                                      " and source checksum {}".format(md5_checksum)) 
         else:
             problem = self.explain_validation_result()
             stderr.write("{}: {}\n".format(problem.category, problem.message))
