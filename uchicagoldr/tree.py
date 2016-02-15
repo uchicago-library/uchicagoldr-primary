@@ -3,6 +3,7 @@ from hashlib import md5, sha256
 from os import chown, mkdir, stat
 from os.path import abspath, dirname, exists, isdir, isfile, join, relpath
 from magic import from_file
+from pwd import getpwnam
 from shutil import copyfile
 from sys import stderr
 from treelib import Tree, Node
@@ -319,7 +320,7 @@ class Stager(FileProcessor):
             for directory_part in destination_directories:
                 directory_tree = join(directory_tree, directory_part)
                 if not exists(directory_tree):
-                    mkdir(directory_tree, 0o750)
+                    mkdir(directory_tree, 0o740)
                             
         if self.validate():
             files_to_ingest = (n for n in self.find_all_files())
@@ -355,9 +356,7 @@ class Archiver(FileProcessor):
     attributes: arkid, accnum, prefix, numfolders, numfiles, source_directory_root, archive_directory
 
     methods: validate, explain_validation_results, validate_files, ingest
-    """
-    
-    
+    """    
     def __init__(self, directory, prefix, numfolders, numfiles,
                  source_root, archive_directory, group_id, user_id):
 
@@ -373,7 +372,7 @@ class Archiver(FileProcessor):
     def validate(self):
         admin_node = self.find_subdirectory_at_particular_level_down('admin',3)
         data_node = self.find_subdirectory_at_particular_level_down('data', 3)
-        
+
         if admin_node and data_node:
             subdirs_in_admin = self.find_directories_in_a_directory(admin_node.pop())
             subdirs_in_data = self.find_directories_in_a_directory(data_node.pop())
@@ -447,9 +446,6 @@ class Archiver(FileProcessor):
                     
         if self.validate():
             files_to_ingest = (n for n in self.find_all_files())
-
-            admin_node_leaves = self.get_tree().tree_root.subtree(self.find_matching_node('/admin'))
-            data_node_leaves = self.get_tree().tree_root.subtree(self.find_matching_node('/data'))
             for n in files_to_ingest:
                 source_file = n.data.filepath
                 md5_checksum = n.data.checksum_md5
@@ -474,3 +470,4 @@ class Archiver(FileProcessor):
         else:
             problem = self.explain_validation_result()
             stderr.write("{}: {}\n".format(problem.category, problem.message))
+

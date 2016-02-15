@@ -6,7 +6,7 @@ from os import _exit, getgid
 from os.path import exists, join, relpath
 from pwd import getpwnam
 from sys import stderr, stdout
-from uchicagoldr.tree import Stager
+from uchicagoldr.tree import Archiver
 
 __author__ = "Tyler Danstrom"
 __email__ = "tdanstrom@uchicago.edu"
@@ -47,15 +47,16 @@ def main():
     user_id = getpwnam(args.user).pw_uid
     try:
         archiver = Archiver(args.directory, args.prefix, args.numfolders, args.numfiles, args.source_root, args.destination_root, group_id, user_id)
+        print(archiver.get_tree())
         is_it_valid = archiver.validate()
         if is_it_valid:
-            archiver.ingest()
-            destination_directory = join(args.destination_root,
-                                         relpath(args.directory, args.source_root))
-            stdout.write("{} has been moved into {}\n".format(args.directory, destination_directory, group_id, user_id))
+             archiver.ingest()
+             destination_directory = join(args.destination_root,
+                                          relpath(args.directory, args.source_root))
+             stdout.write("{} has been moved into {}\n".format(args.directory, destination_directory, group_id, user_id))
         else:
-            problem = archiver.explain_validation_result()
-            stderr.write("{}: {}\n".format(problem.category, problem.message))
+             problem = archiver.explain_validation_result()
+             stderr.write("{}: {}\n".format(problem.category, problem.message))
         return 0
     except KeyboardInterrupt:
         return 131

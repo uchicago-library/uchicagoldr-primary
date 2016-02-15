@@ -1,10 +1,7 @@
 
 from argparse import Action, ArgumentParser
-from getpass import getuser
-from grp import getgrnam
-from os import _exit, getgid
+from os import _exit
 from os.path import exists, join, relpath
-from pwd import getpwnam
 from sys import stderr, stdout
 from uchicagoldr.tree import Stager
 
