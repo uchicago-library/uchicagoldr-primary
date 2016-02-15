@@ -289,10 +289,11 @@ class FileProcessor(object):
     def explain_validation_result(self):
         return NotImplemented
 
-class Originator(FileProcessor):
-    def __init__(self, directory, source_root, archive_directory):
-        FileProcessor.__init__(self, directory, source_root, numfiles)
-        self.destination = archive_directory
+class Stager(FileProcessor):
+    def __init__(self, directory, numfiles, source_root, archive_directory):
+        FileProcessor.__init__(self, directory, source_root)
+        self.destination_root = archive_directory
+        self.source_root = source_root
         self.numfiles = numfiles
         
     def validate(self):
@@ -332,10 +333,10 @@ class Originator(FileProcessor):
                                         relpath(n.data.filepath, self.source_root))
                 copy_source_directory_tree_to_destination(destination_file)
                 copyfile(source_file, destination_file)
-                try:
-                    chown(destination_file, self.destination_owner, self.destination_group)
-                except Exception as e:
-                    stderr.write("{}\n".format(str(e)))
+                # try:
+                #     chown(destination_file, self.destination_owner, self.destination_group)
+                # except Exception as e:
+                #     stderr.write("{}\n".format(str(e)))
                 destination_md5 = self.get_checksum(destination_file)
                 if not destination_md5 == md5_checksum:
                     if flag:
@@ -348,7 +349,7 @@ class Originator(FileProcessor):
             stderr.write("{}: {}\n".format(problem.category, problem.message))
         
         
-class Stager(FileProcessor):
+class Archiver(FileProcessor):
 
     """
     attributes: arkid, accnum, prefix, numfolders, numfiles, source_directory_root, archive_directory
