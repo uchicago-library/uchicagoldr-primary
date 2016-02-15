@@ -471,3 +471,61 @@ class Archiver(FileProcessor):
             problem = self.explain_validation_result()
             stderr.write("{}: {}\n".format(problem.category, problem.message))
 
+class NewArchiver(FileProcessor):
+    def __init__(self, directory, prefix, numfolders, numfiles,
+                 source_root, archive_directory, group_id, user_id):
+
+        FileProcessor.__init__(self, directory, source_root, irrelevant_part = source_root)
+        self.prefix = prefix
+        self.numfolders = numfolders
+        self.numfiles = numfiles
+        self.source_root = source_root
+        self.destination_root = archive_directory
+        self.destination_group = group_id
+        self.destination_owner = user_id
+
+    def validate(self):
+        admin_node = self.find_subdirectory_at_particular_level_down('admin',3)
+        data_node = self.find_subdirectory_at_particular_level_down('data', 3)
+
+        valid_admin = False
+        for n in admin_node:
+            current= admin_node.pop()
+            subdirs_in_current = self.find_directories_in_a_directory(current)
+            if len(subdirs_in_current) == self.numfolders:
+                valid_admin = True
+                
+                premis_records = [x for x in subdirs_in_current if self.find_files_in_a_subdirectory(x, '*.premis.xml')]
+                for premis_record in premis_records:
+                    print(premis_record)
+                    
+        valid_data = False
+        for n in data_node:
+            current = data_node.pop()
+            subdirs_in_current = self.find_directories_in_a_directory(current)
+            if len(subdirs_in_current) == self.numfolders:
+                valid_data = True
+    
+        return NotImplemented
+
+    def explain_validation_results(self):
+        admin_node = self.find_subdirectory_at_particular_level_down('admin', 3)
+        data_node = self.find_subdirectory_at_particular_level_down('data', 3)
+        if not admin_node:
+            return namedtuple("ldrerror","category message")("fatal","missing \"admin\" folder in correct position in this directory")            
+        elif not data_node:
+            return namedtuple("ldrerror","category message")("fatal","missing \"data\" folder in correct position in this directory")
+        if admin_node and data_node:
+            subdirs_in_admin = self.find_directories_in_a_directory(admin_node.pop())
+            subdirs_in_data = self.find_directories_in_a_directory(data_node.pop())
+            if len(subdirs_in_data) != len(subdirs_in_admin):
+                return namedtuple("lderrror","category message")("fatal","subdirectories of data and admin are not equal in number")
+            
+        return NotImplemented
+    
+    def ingest(self):
+        if self.validate():
+            return "good to ingest"
+        else:
+            self.explain_validation_results()
+            return "it's invalid and here's why"
