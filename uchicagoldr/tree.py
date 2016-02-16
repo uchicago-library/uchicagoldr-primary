@@ -1,4 +1,5 @@
 from collections import namedtuple
+from csv import writer, QUOTE_ALL
 from hashlib import md5, sha256
 from os import chown, mkdir, stat
 from os.path import abspath, dirname, exists, isdir, isfile, join, relpath
@@ -9,6 +10,7 @@ from sys import stderr
 from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
 from uchicagoldr.moveableitem import MoveableItem
+
 
 class LeafData(object):
     """
@@ -26,28 +28,12 @@ class LeafData(object):
         else:
             self.filepath = filepath
         self._derive_filesize()
-        self._derive_filemimetype()
-        self._derive_checksums()
 
     def get_filepath(self):
         return self.filepath
 
     def get_filesize(self):
         return self.filesize
-
-    def get_mimetype(self):
-        return self.filemimetype
-
-    def get_checksum_options(self):
-        options = [key.split('checksum_')[1] for key in self.__dict__.keys() \
-         if 'checksum' in key]
-        return options
-
-    def get_checksum(self, a_string):
-        if getattr(self, "checksum_{}".format(a_string), None):
-            return getattr(self, "checksum_{}".format(a_string), None)
-        else:
-            return False
     
     def _derive_filesize(self):
         from os import stat
@@ -64,25 +50,6 @@ class LeafData(object):
             mimetype = None
         self.filemimetype = mimetype
 
-    def _derive_checksums(self):
-        blocksize = 65536
-        sha_hash = sha256()
-        md5_hash = md5()
-        
-        file_run1 = open(self.filepath, 'rb')
-        buf1 = file_run1.read(blocksize)
-        while len(buf1) > 0:
-            sha_hash.update(buf1)
-            buf1 = file_run1.read(blocksize)
-        file_run1.close()
-        file_run2 = open(self.filepath, 'rb')
-        buf2 = file_run2.read(blocksize)
-        while len(buf2) > 0:
-            md5_hash.update(buf2)
-            buf2 = file_run2.read(blocksize)
-        file_run2.close()
-        self.checksum_md5 = md5_hash.hexdigest()
-        self.checksum_sha256 = sha_hash.hexdigest()
     def __repr__(self):
         return self.filepath 
 
@@ -310,7 +277,8 @@ class Stager(FileProcessor):
         else:
             return True
 
-    def ingest(self):
+    def ingest(self, ignore_mismatched_checksums = False,
+               resume_partially_completed_run = False):
         def copy_source_directory_tree_to_destination(filepath):
             destination_directories = dirname(filepath).split('/')
             if filepath[0] == '/':
@@ -323,23 +291,38 @@ class Stager(FileProcessor):
                     mkdir(directory_tree, 0o740)
                             
         if self.validate():
-            files_to_ingest = (n for n in self.find_all_files())
+
+            if not exists(join(destination_directory,'data')) and \
+               not exists(join(destination_directory, 'admin')):
+                data_dir = join(destination_directory, 'data')
+                admin_dir = join(destination_directory, 'admin')
+                current_data_dir = join(data_dir, prefix+'1')
+                current_admin_dir = join(admin_dir, prefix+'1')
+                sorted_data_prefixes = []
+                sorted_admin_prefixes = []
+            else:
+                data_prefixes = listdir(join(destination_directory,'data'))
+                admin_prefixes = listdir(join(destination_directory, 'admin'))
+                sorted_data_prefixes = sorted(data_disks)
+                sorted_admin_prefixes = sorted(admin_prefixes)
+            if resume_from_partially_completed_run:
+                loc_partial_manifest = join(destination_directory, 'admin', sorted_admin_prefixes[-1])
+                partial_manifest_lines = open(join(loc_partial_manifest, 'manifest.csv'),'r').readlines()
+                manifest_lines = [x.split(',')[0] for x in partial_manifest_lines]
+                files_in_tree = [n.data.filepath for n in self.find_all_files()]
+                files_to_ingest = ([x for x in files_in_tree if x not in manifest_lines])
+            else:
+                files_to_ingest = (n.data.filepath for n in self.find_all_files())
             for n in files_to_ingest:
                 source_file = n.data.filepath
-                md5_checksum = n.data.checksum_md5
-                sha256_checksum = n.data.checksum_sha256
-                file_size = n.data.filesize
-                file_mimetype = n.data.filemimetype
                 destination_file = join(self.destination_root,
                                         relpath(n.data.filepath, self.source_root))
                 copy_source_directory_tree_to_destination(destination_file)
                 copyfile(source_file, destination_file)
-                # try:
-                #     chown(destination_file, self.destination_owner, self.destination_group)
-                # except Exception as e:
-                #     stderr.write("{}\n".format(str(e)))
+                
                 destination_md5 = self.get_checksum(destination_file)
-                if not destination_md5 == md5_checksum:
+                source_md5 = self.get_checksum(source_file)
+                if not destination_md5 == source_md5:
                     if flag:
                         pass
                     else:
@@ -462,11 +445,20 @@ class Archiver(FileProcessor):
                     stderr.write("{}\n".format(str(e)))
                 destination_md5 = self.get_checksum(destination_file)
                 if not destination_md5 == md5_checksum:
+                    manifestfile = open(join(destination_file, 'manifest.csv','a'))
+                    manifestwriter = writer(manifestfile, delimiter=",",quoting=QUOTE_ALL)
+                    manifestwriter.writerow([destination_file, destination_md5, source_md5, 'N', 'Y'])
+                    manifestfile.close()                    
                     if flag:
                         pass
                     else:
                         raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
-                                      " and source checksum {}".format(md5_checksum)) 
+                                      " and source checksum {}".format(md5_checksum))
+                else:
+                    manifestfile = open(join(destination_file, 'manifest.csv','a'))
+                    manifestwriter = writer(manifestfile, delimiter=",",quoting=QUOTE_ALL)
+                    manifestwriter.writerow([destination_file, destination_md5, source_md5, 'Y', 'Y'])
+                    manifestfile.close()
         else:
             problem = self.explain_validation_result()
             stderr.write("{}: {}\n".format(problem.category, problem.message))
@@ -520,7 +512,7 @@ class NewArchiver(FileProcessor):
             subdirs_in_data = self.find_directories_in_a_directory(data_node.pop())
             if len(subdirs_in_data) != len(subdirs_in_admin):
                 return namedtuple("lderrror","category message")("fatal","subdirectories of data and admin are not equal in number")
-            
+
         return NotImplemented
     
     def ingest(self):
