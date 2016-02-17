@@ -1,16 +1,16 @@
 from collections import namedtuple
 from csv import writer, QUOTE_ALL
 from hashlib import md5, sha256
-from os import chown, mkdir, stat
+from os import _exit, chown, listdir, mkdir, stat
 from os.path import abspath, dirname, exists, isdir, isfile, join, relpath
 from magic import from_file
 from pwd import getpwnam
 from shutil import copyfile
-from sys import stderr
+from sys import stdout, stderr
 from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
 from uchicagoldr.moveableitem import MoveableItem
-
+from datetime import datetime
 
 class LeafData(object):
     """
@@ -258,12 +258,14 @@ class FileProcessor(object):
         return NotImplemented
 
 class Stager(FileProcessor):
-    def __init__(self, directory, numfiles, source_root, archive_directory):
+    def __init__(self, directory, numfiles, stage_identifier, prefix, source_root, archive_directory):
         FileProcessor.__init__(self, directory, source_root)
         self.destination_root = archive_directory
         self.source_root = source_root
         self.numfiles = numfiles
-        
+        self.prefix = prefix
+        self.staging_id = stage_identifier
+
     def validate(self):
         numfilesfound = len(self.get_tree().get_files())
         if numfilesfound == self.numfiles:
@@ -277,8 +279,101 @@ class Stager(FileProcessor):
         else:
             return True
 
+    def new_staging_directory(self):
+        stage_id = self.staging_id
+        return join(self.destination_root, stage_id)
+
+    def new_staging_data_directory(self, stageID):
+        return join(self.destination_root, stageID, 'data')
+
+    def new_staging_admin_directory(self, stageID):
+        return join(self.destination_root, stageID, 'admin')
+
+    def new_staging_data_with_prefix(self, stageID):
+        data_directories = sorted(listdir(join(self.destination_root, stageID, 'data')))
+        last_number = len(data_directories)
+        new_number = str(last_number + 1)
+        return join(self.destination_root, stageID, 'data', self.prefix+new_number)
+
+    def new_staging_admin_with_prefix(self, stageID):
+        admin_directories = sorted(listdir(join(self.destination_root, stageID, 'admin')))
+        last_number = len(admin_directories)
+        new_number = str(last_number + 1)
+        return join(self.destination_root, stageID, 'admin', self.prefix+new_number)        
+    
+    def make_a_directory(self, directory_string):
+        if not exists(directory_string):
+            try:
+                mkdir(directory_string, 0o740)
+                return "done"
+            except IOError:
+                return "invalid"
+        else:
+            return "already" 
+
+    def select_manifest_file(self, admin_directory):
+        manifest_file = join(admin_directory, 'manifest.txt')
+        if exists(manifest_file):
+            pass
+        else:
+            opened_file = open(manifest_file, 'w')
+            opened_file.write("filepath\torigin(md5)\tstaging(md5)\torigin==staging\twas moved\n")
+            opened_file.close()
+            
+        return manifest_file
+        
+    def setup_fresh_staging_environment(self):
+        staging_directory = self.new_staging_directory()
+        stageID = staging_directory.split('/')[-1]
+        staging_data = self.new_staging_data_directory(stageID)
+        staging_admin = self.new_staging_admin_directory(stageID)
+
+        self.make_a_directory(staging_directory)
+        self.make_a_directory(staging_data)
+        self.make_a_directory(staging_admin)
+        current_data_dir = self.new_staging_data_with_prefix(stageID)
+        current_admin_dir = self.new_staging_admin_with_prefix(stageID)        
+        self.make_a_directory(current_data_dir)
+        self.make_a_directory(current_admin_dir)
+        manifestwriter = self.select_manifest_file(current_admin_dir)
+        return (current_data_dir, current_admin_dir, manifestwriter)
+
+    def add_to_a_staging_environment(self):
+        staging_directory = join(self.destination_root, self.staging_id)
+        stageID = self.staging_id
+        past_data_dirs = sorted(listdir(join(staging_directory, 'data')))
+        last_data_dir_number = past_data_dirs[-1].split(self.prefix)[1]
+        new_data_dir_number = int(last_data_dir_number) + 1
+        new_data_dir_with_prefix = self.prefix+str(new_data_dir_number)
+        current_data_dir = join(staging_directory, 'data', new_data_dir_with_prefix)
+        current_admin_dir = join(staging_directory, 'admin', new_data_dir_with_prefix)
+        self.make_a_directory(current_data_dir)
+        self.make_a_directory(current_admin_dir)
+        manifestwriter = self.select_manifest_file(current_admin_dir)
+        return (current_data_dir, current_admin_dir, manifestwriter)
+
+    def pickup_half_completed_staging_run(self):
+        staging_directory = join(self.destination_root, self.staging_id)
+        past_data_dirs = sorted(listdir(join(staging_directory, 'data')))
+        last_data_dir_number = self.prefix + str(past_data_dirs[-1].split(self.prefix)[1])
+        current_data_dir = join(staging_directory, 'data', last_data_dir_number)
+        current_admin_dir = join(staging_directory, 'admin', last_data_dir_number)
+        manifestwriter = self.select_manifest_file(current_admin_dir)
+        return (current_data_dir, current_admin_dir, manifestwriter)
+
+
+    def get_files_to_ingest(self, admin_dir):
+        files = self.find_all_files()
+        manifestfile = open(join(admin_dir, 'manifest.txt'),'r')
+        manifestlines = manifestfile.readlines()
+        manifestfiles = [x.split('\t') for x in manifestlines]
+        manifestfiles = [x[0] for x in manifestfiles]
+        new_files_to_ingest = [x for x in files if relpath(x.data.filepath, self.source_root) not in manifestfiles]
+        return new_files_to_ingest
+        
     def ingest(self, ignore_mismatched_checksums = False,
                resume_partially_completed_run = False):
+        
         def copy_source_directory_tree_to_destination(filepath):
             destination_directories = dirname(filepath).split('/')
             if filepath[0] == '/':
@@ -289,48 +384,54 @@ class Stager(FileProcessor):
                 directory_tree = join(directory_tree, directory_part)
                 if not exists(directory_tree):
                     mkdir(directory_tree, 0o740)
-                            
-        if self.validate():
 
-            if not exists(join(destination_directory,'data')) and \
-               not exists(join(destination_directory, 'admin')):
-                data_dir = join(destination_directory, 'data')
-                admin_dir = join(destination_directory, 'admin')
-                current_data_dir = join(data_dir, prefix+'1')
-                current_admin_dir = join(admin_dir, prefix+'1')
-                sorted_data_prefixes = []
-                sorted_admin_prefixes = []
+        if self.validate():
+            if not exists(join(self.destination_root, self.staging_id)):
+                current_data_directory, current_admin_directory, manifestwriter = \
+                self.setup_fresh_staging_environment()
+                files_to_ingest = self.get_files_to_ingest(current_admin_directory)
+            elif resume_partially_completed_run:
+                current_data_directory, current_admin_directory, manifestwriter = \
+                self.pickup_half_completed_staging_run()
+                files_to_ingest = self.get_files_to_ingest(current_admin_directory)
             else:
-                data_prefixes = listdir(join(destination_directory,'data'))
-                admin_prefixes = listdir(join(destination_directory, 'admin'))
-                sorted_data_prefixes = sorted(data_disks)
-                sorted_admin_prefixes = sorted(admin_prefixes)
-            if resume_from_partially_completed_run:
-                loc_partial_manifest = join(destination_directory, 'admin', sorted_admin_prefixes[-1])
-                partial_manifest_lines = open(join(loc_partial_manifest, 'manifest.csv'),'r').readlines()
-                manifest_lines = [x.split(',')[0] for x in partial_manifest_lines]
-                files_in_tree = [n.data.filepath for n in self.find_all_files()]
-                files_to_ingest = ([x for x in files_in_tree if x not in manifest_lines])
-            else:
-                files_to_ingest = (n.data.filepath for n in self.find_all_files())
-            for n in files_to_ingest:
-                source_file = n.data.filepath
-                destination_file = join(self.destination_root,
-                                        relpath(n.data.filepath, self.source_root))
-                copy_source_directory_tree_to_destination(destination_file)
-                copyfile(source_file, destination_file)
-                
-                destination_md5 = self.get_checksum(destination_file)
-                source_md5 = self.get_checksum(source_file)
-                if not destination_md5 == source_md5:
-                    if flag:
-                        pass
-                    else:
-                        raise IOError("{} destination file had checksum {}".format(destination_file, destination_checksum) + \
-                                      " and source checksum {}".format(md5_checksum)) 
+                current_data_directory, current_admin_directory, manifestwriter = \
+                self.add_to_a_staging_environment()
+                files_to_ingest = self.get_files_to_ingest(current_admin_directory)
         else:
             problem = self.explain_validation_result()
             stderr.write("{}: {}\n".format(problem.category, problem.message))
+            _exit(2)
+
+        for n in files_to_ingest:
+            a_record_in_manifest = []
+            source_file = n.data.filepath
+            destination_file = join(current_data_directory,
+                                    relpath(n.data.filepath, self.source_root))
+            copy_source_directory_tree_to_destination(destination_file)
+            copyfile(source_file, destination_file)
+            try:
+                destination_md5 = self.get_checksum(destination_file)
+                source_md5 = self.get_checksum(source_file)
+                if destination_md5 == source_md5:
+                    a_record_in_manifest.extend([relpath(n.data.filepath, self.source_root),
+                                                source_md5, destination_md5, 'Y', 'Y'])
+
+                else:
+                    a_record_in_manifest.extend([relpath(n.data.filpath, self.source_root),
+                                                 source_md5, destination_md5, 'N', 'Y'])
+                    if ignore_mismatched_checksums:
+                        pass
+                    else:
+                        raise IOError("{} destination file had checksum {}". \
+                                      format(destination_file, destination_md5) + \
+                                      " and source checksum {}".format(source_md5))   
+            except:
+                a_record_in_manifest.extend(['null','null','null','Y'])
+            opened_file = open(manifestwriter, 'a')
+            opened_file.write('\t'.join(a_record_in_manifest)+'\n')
+            opened_file.close()
+        
         
         
 class Archiver(FileProcessor):
