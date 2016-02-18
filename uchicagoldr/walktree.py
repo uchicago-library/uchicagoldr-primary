@@ -1,3 +1,6 @@
+
+from treelib import Tree, Node
+
 class LeafData(object):
     """
     attributes: filepath, filesize, filemimetype, filechecksum

@@ -44,7 +44,7 @@ class FileProcessor(object):
     def pattern_matching_files_regex(self, regex):
         matches = [x for x in self.get_tree().get_all_nodes() if \
                    re_compile(regex).search(x.tag) and x.is_leaf()]
-	return matches
+        return matches
         
     def string_searching_files(self, val_string):
         matches =  [x for x in self.get_tree().get_files() if
