@@ -257,6 +257,21 @@ class FileProcessor(object):
     def explain_validation_result(self):
         return NotImplemented
 
+class DataTransferObject(object):
+    def __init__(self, filep, source_checksum, destination_checksum, completed, uncorrupted):
+        self.filepath = filep
+        self.source = source_checksum
+        self.destination = destination_checksum
+        self.moved = completed
+        self.uncorrupted = uncorrupted
+
+    def write_to_manifest(self, manifestfile):
+        opened = open(manifestfile, 'a')
+        opened.write("{}\t{}\t{}\t{}\t{}\n".format(self.filepath, self.source,
+                                                   self.destination, self.moved,
+                                                   self.uncorrupted))
+        opened.close()
+        
 class Stager(FileProcessor):
     def __init__(self, directory, numfiles, stage_identifier, prefix, source_root, archive_directory):
         FileProcessor.__init__(self, directory, source_root)
@@ -370,7 +385,14 @@ class Stager(FileProcessor):
         manifestfiles = [x[0] for x in manifestfiles]
         new_files_to_ingest = [x for x in files if relpath(x.data.filepath, self.source_root) not in manifestfiles]
         return new_files_to_ingest
-        
+
+    def compare_source_to_origin(source, destination):
+        destination_md5 = self.get_checksum(destination_file)
+        source_md5 = self.get_checksum(source_file)
+        if destination_md5 == source_md5:
+            return True
+        return False
+
     def ingest(self, ignore_mismatched_checksums = False,
                resume_partially_completed_run = False):
         
@@ -404,22 +426,22 @@ class Stager(FileProcessor):
             _exit(2)
 
         for n in files_to_ingest:
-            a_record_in_manifest = []
             source_file = n.data.filepath
             destination_file = join(current_data_directory,
                                     relpath(n.data.filepath, self.source_root))
+            
             copy_source_directory_tree_to_destination(destination_file)
             copyfile(source_file, destination_file)
+            manifest_filepath = relpath(n.data.filepath, self.source_root)
             try:
                 destination_md5 = self.get_checksum(destination_file)
                 source_md5 = self.get_checksum(source_file)
                 if destination_md5 == source_md5:
-                    a_record_in_manifest.extend([relpath(n.data.filepath, self.source_root),
-                                                source_md5, destination_md5, 'Y', 'Y'])
-
+                    data_object = DataTransferObject(manifest_filepath,
+                                              source_md5, destination_md5,'Y','Y')
                 else:
-                    a_record_in_manifest.extend([relpath(n.data.filpath, self.source_root),
-                                                 source_md5, destination_md5, 'N', 'Y'])
+                    data_object = DataTransferObject(manifest_filepath,
+                                              source_md5, destination_md5, 'N','Y')
                     if ignore_mismatched_checksums:
                         pass
                     else:
@@ -427,11 +449,8 @@ class Stager(FileProcessor):
                                       format(destination_file, destination_md5) + \
                                       " and source checksum {}".format(source_md5))   
             except:
-                a_record_in_manifest.extend(['null','null','null','Y'])
-            opened_file = open(manifestwriter, 'a')
-            opened_file.write('\t'.join(a_record_in_manifest)+'\n')
-            opened_file.close()
-        
+                data_object = DataTransferObject(manifest_filepath,"null","null","null","Y")
+            data_object.write_to_manifest(manifestwriter)
         
         
 class Archiver(FileProcessor):
