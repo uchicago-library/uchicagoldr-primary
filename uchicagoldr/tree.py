@@ -17,11 +17,18 @@ from datetime import datetime
 # === classes for moving files from one location to another ===
 
 """
-1. ** FileProcessor ** is a super class. It shouldn't be called directly from application code. 
-2. ** Stager ** is a sub-class of FileProcessor and it is meant to be called in application code that is intended to move a directory structure from an origin source into the ldr staging location. 
-3. ** Archiver ** is a sub-class of FileProcessor. It should be called in an application that is tasked with moving a directory structure out of staging and into 
-4. ** DataTransferObject ** is a class meant to hold data about files that can be written to a file on disk.
-5. ** NewArchiver ** is a sub-class of FileProcessor. It should be used in applications that are meant to move directories in staging that have premis records for every object in the directory.
+1. ** FileProcessor ** is a super class. It shouldn't be called directly from application 
+code. 
+2. ** Stager ** is a sub-class of FileProcessor and it is meant to be called in application
+ code that is intended to move a directory structure from an origin source into the ldr 
+staging location. 
+3. ** Archiver ** is a sub-class of FileProcessor. It should be called in an application 
+that is tasked with moving a directory structure out of staging and into 
+4. ** DataTransferObject ** is a class meant to hold data about files that can be written 
+to a file on disk.
+5. ** NewArchiver ** is a sub-class of FileProcessor. It should be used in applications that
+are meant to move directories in staging that have premis records for every object in the 
+directory.
 
 """
 
@@ -32,16 +39,22 @@ class FileProcessor(object):
     2. tree is an instance of FileWalker tree
 
     == Args ==
-    1. directory is the directory that needs to be walked and all the file contents retrieved.
-    2. source_root is a string representing the base of the origin file path that should not be copied to the destination.
+    1. directory is the directory that needs to be walked and all the file contents 
+    retrieved.
+    2. source_root is a string representing the base of the origin file path that should 
+    not be copied to the destination.
 
     == KWArgs ==
-    1. irrelevant part is an optional argument to init a FileProcessor that will start a tree with the substring of a string after the value of this kwarg.
+    1. irrelevant part is an optional argument to init a FileProcessor that will start a 
+    tree with the substring of a string after the value of this kwarg.
     
     """
     def __init__(self, directory, source_root, irrelevant_part = None):
         """
-        This initializes the FileProcessor with a call to the FileWalker that passes the directory and creates a generator of a walk of the directory structure. A FileWalkTree also gets created and the tree is populated with the directory structure of the filewalker contents with files at the leaves.
+        This initializes the FileProcessor with a call to the FileWalker that passes the 
+        directory and creates a generator of a walk of the directory structure. A 
+        FileWalkTree also gets created and the tree is populated with the directory 
+        structure of the filewalker contents with files at the leaves.
         """
         self.filewalker = FileWalker(directory)
         self.tree = FileWalkTree()
@@ -60,7 +73,8 @@ class FileProcessor(object):
         == Parameter ==
         1. a_node : a treelib.Node object
 
-        This function takes a treelib.Node object, locates that node in the tree and returns all branches of that node that are not leaves.
+        This function takes a treelib.Node object, locates that node in the tree and 
+        returns all branches of that node that are not leaves.
         """
         current_level = a_node
         subdirectories = [self.find_matching_node(x) for x in current_level.fpointer if not self.find_matching_node(x).is_leaf()]
@@ -71,7 +85,8 @@ class FileProcessor(object):
         == Parameter ==
         1. regex : a string representing a valid regular expression
 
-        This function finds all leaves in the tree that have a tag that matches the regular expression entered.
+        This function finds all leaves in the tree that have a tag that matches the regular
+        expression entered.
         """
         matches = [x for x in self.get_tree().get_all_nodes() if \
                    re_compile(regex).search(x.tag) and x.is_leaf()]
@@ -82,8 +97,8 @@ class FileProcessor(object):
         == Parameter ==
         1. val_string : a literal string
 
-        This function finds all leaves in the tree that contain the literal string in the tag name.
-
+        This function finds all leaves in the tree that contain the literal string in the 
+        tag name.
         """
         matches =  [x for x in self.get_tree().get_files() if
                     self.get_tree().find_string_in_a_node_tag(x, val_string)]
@@ -94,7 +109,8 @@ class FileProcessor(object):
         == Parameters ==
         1. val_string: a literal string
 
-        This function finds all nodes that are not leaves with the literal string in the tag name.
+        This function finds all nodes that are not leaves with the literal string in the 
+        tag name.
         """
         matches = [x for x in self.get_tree().get_all_nodes() if
                    self.get_tree().is_it_a_subdirectory(x)]
@@ -109,7 +125,8 @@ class FileProcessor(object):
         1. val_string : a literal string
         2. level : integer
 
-        This function finds all nodse that are not leaves matching a literal string at a particular depth level entered.
+        This function finds all nodse that are not leaves matching a literal string at a 
+        particular depth level entered.
         """
         level = int(level)
         potential_matches = self.string_searching_subdirectories(val_string)
@@ -121,7 +138,9 @@ class FileProcessor(object):
         == Parameters ==
         1. val_string : literal string
 
-        This function returns either a single node that matches a specific identifier or False if there are no nodes with that identifier or a ValueError if the programmer has returned multiple tress with the same identifier.
+        This function returns either a single node that matches a specific identifier or 
+        False if there are no nodes with that identifier or a ValueError if the 
+        programmer has returned multiple tress with the same identifier.
         """
         matches = [x for x in self.get_tree().get_all_nodes() if self.get_tree().does_node_match_string(x, val_string)]
         if len(matches) > 1:
@@ -153,7 +172,8 @@ class FileProcessor(object):
         1. a_node : a treelib.Node object
         2. file_name_string : a literal string
 
-        This function returns True/False whether a leaf with the literal string in the node identifier is below the node entered.
+        This function returns True/False whether a leaf with the literal string in the 
+        node identifier is below the node entered.
         """
         node = self.find_matching_node(a_node.identifier)
         if len([x for x in node.fpointer if file_name_string in x]) == 1:
@@ -168,19 +188,22 @@ class FileProcessor(object):
 
     def validate(self):
         """
-        This method is left not implemented on FileProcessor. It must be defined forall subclasses.
+        This method is left not implemented on FileProcessor. It must be defined for all 
+        subclasses.
         """
         return NotImplemented
 
     def validate_files(self):
         """
-        This method is left not implemented on FileProcessor. It must be defined forall subclasses.
+        This method is left not implemented on FileProcessor. It must be defined for all 
+        subclasses.
         """
         return NotImplemented
 
     def explain_validation_result(self):
         """
-        This method is left not implemented on FileProcessor. It must be defined forall subclasses.
+        This method is left not implemented on FileProcessor. It must be defined for all 
+        subclasses.
         """
         return NotImplemented
 
@@ -203,10 +226,11 @@ class DataTransferObject(object):
     def write_to_manifest(self, manifestfile):
         """
         == Parameters ==
-        1. manifestfile : a string representring a valid file path on disk of a text file that can be modified.
+        1. manifestfile : a string representring a valid file path on disk of a text 
+        file that can be modified.
 
-        This function takes a string of a filepath on disk and writes the contents of the DataTransferObject instance attributes to that file.
-
+        This function takes a string of a filepath on disk and writes the contents of 
+        the DataTransferObject instance attributes to that file.
         """
         opened = open(manifestfile, 'a')
         opened.write("{}\t{}\t{}\t{}\t{}\n".format(self.filepath, self.source,
@@ -215,7 +239,28 @@ class DataTransferObject(object):
         opened.close()
         
 class Stager(FileProcessor):
+    """
+    == Attributes ==
+    1. destination_root is the location that the Stager is supposed to move the origin 
+       files to
+    2. source_root is the base of the origin location of the files that need to be moved
+    3. numfiles is the number of files in the origin location.
+    4. prefix is a free-form string for a particular run that is part of a given staging 
+    directory.
+    5. staging_id is a free-form identifier for a staging directory. It is possible to 
+       have multiple runs in a single staging location.
+    
+    """
     def __init__(self, directory, numfiles, stage_identifier, prefix, source_root, archive_directory):
+        """
+        == Parameters == 
+        1. directory : literal string
+        2. numfiles : integer
+        3. staging_identifier : literal string
+        4. prefix : literal string
+        5. source_root : literal string
+        6. archive_directory : literal string
+        """
         FileProcessor.__init__(self, directory, source_root)
         self.destination_root = archive_directory
         self.source_root = source_root
@@ -224,6 +269,11 @@ class Stager(FileProcessor):
         self.staging_id = stage_identifier
 
     def validate(self):
+        """
+        This is the validator function implemented for Stager class. This function 
+        checks that the same number of files were found as was reported. If 
+        the numbers are equal it returns true; if the numbers aren't equal it returns False.
+        """
         numfilesfound = len(self.get_tree().get_files())
         if numfilesfound == self.numfiles:
             return True
@@ -231,34 +281,70 @@ class Stager(FileProcessor):
             return False
 
     def explain_validation_results(self):
+        """
+        This is the explain validation results function implemented for Stager class. This 
+        function returns a namedtuple object with a category and a message explaining 
+        that the number of files found was not equal to the number reported.
+        """
         if len(self.get_tree().get_files()) != self.numfiles:
             return namedtuple("ldrerror","category message")("fatal", "You said there were {} files, but {} files were found. This is a mismatch: please correct and try again.".format(str(self.numfiles),str(len(self.get_tree().get_files()))))
         else:
             return True
 
     def new_staging_directory(self):
+        """
+        This function returns a string joining the destination_root with the staging 
+id attribute values.
+        """
         stage_id = self.staging_id
         return join(self.destination_root, stage_id)
 
     def new_staging_data_directory(self, stageID):
+        """
+        This function returns a string joining the destination root, the staging id 
+        and the string 'data'.
+        """
         return join(self.destination_root, stageID, 'data')
 
     def new_staging_admin_directory(self, stageID):
+        """
+        This function returns a string joining the destination root, the staging id 
+        and the string 'admin'.
+        """        
         return join(self.destination_root, stageID, 'admin')
 
     def new_staging_data_with_prefix(self, stageID):
+        """
+        This function returns a string joining the destination root, the staging id, 
+        the string 'data' and a string consisting of the prefix and the number one.
+        """                
         data_directories = sorted(listdir(join(self.destination_root, stageID, 'data')))
         last_number = len(data_directories)
         new_number = str(last_number + 1)
         return join(self.destination_root, stageID, 'data', self.prefix+new_number)
 
     def new_staging_admin_with_prefix(self, stageID):
+        """
+        This function returns a string joining the destination root, 
+        the staging id, the string 'admin' and a string consisting of the 
+        prefix and the number one.
+        """                        
         admin_directories = sorted(listdir(join(self.destination_root, stageID, 'admin')))
         last_number = len(admin_directories)
         new_number = str(last_number + 1)
         return join(self.destination_root, stageID, 'admin', self.prefix+new_number)        
     
     def make_a_directory(self, directory_string):
+        """
+        == Parameters ==
+        1. directory_string : literal string
+
+        This function tries to create directory with a path delineated by the literal 
+        string. Before doing this, it checks if the directory already exists and returns 
+        the string "already" if it finds it. Otherwise, it returns the string "done" if the 
+        directory gets created or the string "invalid" if the system is unable to 
+        create the new directory.
+        """
         if not exists(directory_string):
             try:
                 mkdir(directory_string, 0o740)
@@ -269,6 +355,16 @@ class Stager(FileProcessor):
             return "already" 
 
     def select_manifest_file(self, admin_directory):
+        """
+        == Parameters == 
+        1. admin_directory : literal string
+
+        This function tries to find a manifest.txt file in the literal string on disk. 
+        If it doesn't find it, it creates a new manifest.txt file with the required headers 
+        for the field that will be in that file . If it does find the file, it does 
+        nothing. Finally, the function returns a string representing the path to a 
+        manifest.txt file.
+        """
         manifest_file = join(admin_directory, 'manifest.txt')
         if exists(manifest_file):
             pass
@@ -280,6 +376,11 @@ class Stager(FileProcessor):
         return manifest_file
         
     def setup_fresh_staging_environment(self):
+        """
+        This function builds a new staging directory with all required subdirectories, and 
+        a first prefix directory in 'data' and 'admin' with a manifest.txt file in the first 'admin/prefix' directory. It returns a tuple containing a string representing the current data directory, a string representing the current admin directory and a string representing the manifest.xt file.
+
+        """
         staging_directory = self.new_staging_directory()
         stageID = staging_directory.split('/')[-1]
         staging_data = self.new_staging_data_directory(stageID)
@@ -296,6 +397,12 @@ class Stager(FileProcessor):
         return (current_data_dir, current_admin_dir, manifestwriter)
 
     def add_to_a_staging_environment(self):
+        """
+        This function will create a new prefix directory in the 'admin' and 'data' 
+        directory for a new run in a previously built staging environment. It returns 
+        the newest data directory and the newest admin directory and the newest 
+        manifest.txt as a 3 tuple containing strings.
+        """
         staging_directory = join(self.destination_root, self.staging_id)
         stageID = self.staging_id
         past_data_dirs = sorted(listdir(join(staging_directory, 'data')))
@@ -310,6 +417,9 @@ class Stager(FileProcessor):
         return (current_data_dir, current_admin_dir, manifestwriter)
 
     def pickup_half_completed_staging_run(self):
+        """
+        
+        """
         staging_directory = join(self.destination_root, self.staging_id)
         past_data_dirs = sorted(listdir(join(staging_directory, 'data')))
         last_data_dir_number = self.prefix + str(past_data_dirs[-1].split(self.prefix)[1])
@@ -320,6 +430,15 @@ class Stager(FileProcessor):
 
 
     def get_files_to_ingest(self, admin_dir):
+        """
+        == Parameters ==
+        1. admin_dir : literal string
+
+        This function checks the admin directory specified for the manifest.txt file, 
+        reads the files added to that manifest already and finally finds the difference 
+        between files already transferred from origin and all files in the origin. Finally,
+        it returns a list of files that still need to be copied from origin.
+        """
         files = self.find_all_files()
         manifestfile = open(join(admin_dir, 'manifest.txt'),'r')
         manifestlines = manifestfile.readlines()
@@ -328,17 +447,29 @@ class Stager(FileProcessor):
         new_files_to_ingest = [x for x in files if relpath(x.data.filepath, self.source_root) not in manifestfiles]
         return new_files_to_ingest
 
-    def compare_source_to_origin(source, destination):
-        destination_md5 = self.get_checksum(destination_file)
-        source_md5 = self.get_checksum(source_file)
-        if destination_md5 == source_md5:
-            return True
-        return False
-
     def ingest(self, ignore_mismatched_checksums = False,
                resume_partially_completed_run = False):
+        """
+        == Parameters ==
+        1. ignore_mismatched_checksums : boolean
+        2. resume_partially_completed_run : boolean
+
+        This function is the implementation of ingest() for the Stager class. This 
+        function first checks if the Stager is valid, and if it is it will either create 
+        a new staging directory and copy origin files to the staging location or create 
+        a new prefix folder and copy files. It will also write the source and origin 
+        md5 checksums with the relative file path to the manifest.txt
+        """
         
         def copy_source_directory_tree_to_destination(filepath):
+            """
+            == Parameter ==
+            1. filepath : literal string
+
+            This function takes a literal string and chops off the filename portion
+            and recreate the directory structure of origin file in the destination 
+            location.
+            """
             destination_directories = dirname(filepath).split('/')
             if filepath[0] == '/':
                 directory_tree = "/"
@@ -397,9 +528,14 @@ class Stager(FileProcessor):
 class Archiver(FileProcessor):
 
     """
-    attributes: arkid, accnum, prefix, numfolders, numfiles, source_directory_root, archive_directory
-
-    methods: validate, explain_validation_results, validate_files, ingest
+    == Attributes ==
+    1. prefix is a free-form string for describing a particular run in directory that needs to be archived
+    2. numfolders is an integer representing the total number of runs represented in the driectory being archived
+    3. numfiles is an integer representing the total number of files in the directory being archived
+    4. source_root is the base of the origin of the files being archived
+    5. destination_root is the base of the location to which the directory being archived should be moved
+    6. destination_group is a name of a group that the archived files should belong
+    7. destination_owner is the name of the user who sould own the archived files
     """    
     def __init__(self, directory, prefix, numfolders, numfiles,
                  source_root, archive_directory, group_id, user_id):
@@ -414,6 +550,7 @@ class Archiver(FileProcessor):
         self.destination_owner = user_id
         
     def validate(self):
+
         admin_node = self.find_subdirectory_at_particular_level_down('admin',3)
         data_node = self.find_subdirectory_at_particular_level_down('data', 3)
 
