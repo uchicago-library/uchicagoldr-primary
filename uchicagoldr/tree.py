@@ -14,15 +14,35 @@ from uchicagoldr.walktree import FileWalkTree
 from datetime import datetime
 
 
-# === classes for 
+# === classes for moving files from one location to another ===
+
+"""
+1. ** FileProcessor ** is a super class. It shouldn't be called directly from application code. 
+2. ** Stager ** is a sub-class of FileProcessor and it is meant to be called in application code that is intended to move a directory structure from an origin source into the ldr staging location. 
+3. ** Archiver ** is a sub-class of FileProcessor. It should be called in an application that is tasked with moving a directory structure out of staging and into 
+4. ** DataTransferObject ** is a class meant to hold data about files that can be written to a file on disk.
+5. ** NewArchiver ** is a sub-class of FileProcessor. It should be used in applications that are meant to move directories in staging that have premis records for every object in the directory.
+
+"""
 
 class FileProcessor(object):
     """
-    attributes: filewalker, tree
+    == attributes ==
+    1. filewalker is an instance of FileWalker
+    2. tree is an instance of FileWalker tree
 
-    methods: explain_nodes, find_matching_files_regex, find_matching_files, find_matching_subdirectories, get_tree, validate, validate_files, explain_validation_results
+    == Args ==
+    1. directory is the directory that needs to be walked and all the file contents retrieved.
+    2. source_root is a string representing the base of the origin file path that should not be copied to the destination.
+
+    == KWArgs ==
+    1. irrelevant part is an optional argument to init a FileProcessor that will start a tree with the substring of a string after the value of this kwarg.
+    
     """
     def __init__(self, directory, source_root, irrelevant_part = None):
+        """
+        This initializes the FileProcessor with a call to the FileWalker that passes the directory and creates a generator of a walk of the directory structure. A FileWalkTree also gets created and the tree is populated with the directory structure of the filewalker contents with files at the leaves.
+        """
         self.filewalker = FileWalker(directory)
         self.tree = FileWalkTree()
 
@@ -30,28 +50,52 @@ class FileProcessor(object):
             self.tree.add_node(n, irrelevant_parts = irrelevant_part)
 
     def find_all_files(self):
+        """
+        This function returns a list of all leaves in the filewalktree.
+        """
         return self.get_tree().get_files()
             
     def find_directories_in_a_directory(self, a_node):
+        """
+        == Parameter ==
+        1. a_node : a treelib.Node object
+
+        This function takes a treelib.Node object, locates that node in the tree and returns all branches of that node that are not leaves.
+        """
         current_level = a_node
         subdirectories = [self.find_matching_node(x) for x in current_level.fpointer if not self.find_matching_node(x).is_leaf()]
         return subdirectories
         
-    def explain_nodes(self, a_list):
-        return [namedtuple("node_explained", "id data")(n.identifier, n)
-                for n in a_list]
-        
     def pattern_matching_files_regex(self, regex):
+        """
+        == Parameter ==
+        1. regex : a string representing a valid regular expression
+
+        This function finds all leaves in the tree that have a tag that matches the regular expression entered.
+        """
         matches = [x for x in self.get_tree().get_all_nodes() if \
                    re_compile(regex).search(x.tag) and x.is_leaf()]
         return matches
         
     def string_searching_files(self, val_string):
+        """
+        == Parameter ==
+        1. val_string : a literal string
+
+        This function finds all leaves in the tree that contain the literal string in the tag name.
+
+        """
         matches =  [x for x in self.get_tree().get_files() if
                     self.get_tree().find_string_in_a_node_tag(x, val_string)]
         return matches
     
     def string_searching_subdirectories(self, val_string):
+        """
+        == Parameters ==
+        1. val_string: a literal string
+
+        This function finds all nodes that are not leaves with the literal string in the tag name.
+        """
         matches = [x for x in self.get_tree().get_all_nodes() if
                    self.get_tree().is_it_a_subdirectory(x)]
         
@@ -60,12 +104,25 @@ class FileProcessor(object):
         return matches        
 
     def find_subdirectory_at_particular_level_down(self, val_string, level):
+        """
+        == Parameters == 
+        1. val_string : a literal string
+        2. level : integer
+
+        This function finds all nodse that are not leaves matching a literal string at a particular depth level entered.
+        """
         level = int(level)
         potential_matches = self.string_searching_subdirectories(val_string)
         actual_matches = [x for x in potential_matches if self.get_tree().find_depth_of_a_node(x) == level]
         return actual_matches
 
     def find_matching_node(self, val_string):
+        """
+        == Parameters ==
+        1. val_string : literal string
+
+        This function returns either a single node that matches a specific identifier or False if there are no nodes with that identifier or a ValueError if the programmer has returned multiple tress with the same identifier.
+        """
         matches = [x for x in self.get_tree().get_all_nodes() if self.get_tree().does_node_match_string(x, val_string)]
         if len(matches) > 1:
             raise ValueError("too many matches for that identifier")
@@ -74,6 +131,12 @@ class FileProcessor(object):
         return matches[0]
 
     def get_checksum(self, filepath):
+        """
+        == Parameters ==
+        1. filepath : a string representing the absolute path to a file on-disk.
+
+        This function takes a file path and returns an md5 checksum for that file.
+        """
         blocksize = 65536
         md5_hash = md5()        
         file_run = open(filepath, 'rb')
@@ -85,27 +148,51 @@ class FileProcessor(object):
         return md5_hash.hexdigest()
     
     def find_file_in_a_subdirectory(self, a_node, file_name_string):
+        """
+        == Parameters == 
+        1. a_node : a treelib.Node object
+        2. file_name_string : a literal string
+
+        This function returns True/False whether a leaf with the literal string in the node identifier is below the node entered.
+        """
         node = self.find_matching_node(a_node.identifier)
         if len([x for x in node.fpointer if file_name_string in x]) == 1:
             return True
         return False
-
-    def find_files_in_a_node(self, a_node):
-        return a_node.leaves()
         
     def get_tree(self):
+        """
+        This function returns the value of the tree attribute.
+        """
         return self.tree
 
     def validate(self):
+        """
+        This method is left not implemented on FileProcessor. It must be defined forall subclasses.
+        """
         return NotImplemented
 
     def validate_files(self):
+        """
+        This method is left not implemented on FileProcessor. It must be defined forall subclasses.
+        """
         return NotImplemented
 
     def explain_validation_result(self):
+        """
+        This method is left not implemented on FileProcessor. It must be defined forall subclasses.
+        """
         return NotImplemented
 
 class DataTransferObject(object):
+    """
+    == Attributes ==
+    1. filepath should be a string representing a file path
+    2. source should be a hexdigest string
+    3. destination should be a hexdigest string
+    4. moved  should be the letter 'Y' or 'N'
+    5. uncorrupted should be the letter 'Y' or 'N'
+    """
     def __init__(self, filep, source_checksum, destination_checksum, completed, uncorrupted):
         self.filepath = filep
         self.source = source_checksum
@@ -114,6 +201,13 @@ class DataTransferObject(object):
         self.uncorrupted = uncorrupted
 
     def write_to_manifest(self, manifestfile):
+        """
+        == Parameters ==
+        1. manifestfile : a string representring a valid file path on disk of a text file that can be modified.
+
+        This function takes a string of a filepath on disk and writes the contents of the DataTransferObject instance attributes to that file.
+
+        """
         opened = open(manifestfile, 'a')
         opened.write("{}\t{}\t{}\t{}\t{}\n".format(self.filepath, self.source,
                                                    self.destination, self.moved,
