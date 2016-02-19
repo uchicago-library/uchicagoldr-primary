@@ -15,4 +15,4 @@ setup(
         "Operating System :: Unix",
         "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-    install_requires = [])
+    install_requires = ['treelib'])
