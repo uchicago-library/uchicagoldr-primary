@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from collections import namedtuple
 from csv import writer, QUOTE_ALL
 from hashlib import md5, sha256
@@ -8,9 +7,7 @@ from magic import from_file
 from pwd import getpwnam
 from shutil import copyfile
 from sys import stdout, stderr
-=======
 from os.path import join, exists
->>>>>>> 84167bd552e2e78fe7220db6ad51fc645e34356f
 from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
 from uchicagoldr.moveableitem import MoveableItem
@@ -20,6 +17,7 @@ from datetime import datetime
 class LeafData(object):
     """
     == Attributes == 
+
     1. filepath
     2. filesize
 
@@ -73,6 +71,15 @@ class LeafData(object):
         return self.filepath 
 
 class WalkTree(object):
+    """
+    == Attributes ===
+
+    1. tree_root : treelib.Tree
+    2. expanded_node_list : list containing 1 or more treelib.Node
+
+    This 
+    """
+    
     def __init__(self):
         self.tree_root = None
         self.expanded_node_list = None
@@ -104,6 +111,7 @@ class WalkTree(object):
 class FileWalkTree(WalkTree):
     """
     == Attributes ==
+
     1.  tree_root is the root of the tree 
     2. expanded_node_list is a flat list of every node in the tree
     """
@@ -119,9 +127,11 @@ class FileWalkTree(WalkTree):
     def add_node(self, value, irrelevant_parts = None):
         """
         == Args ==
+
         1. value : literal string
 
         == KWArgs ==
+
         1. irrelevant_parts : literal string
 
         This function takes a string and builds a tree out of that literal string. If the irrelevant_parts string is included, the tree is build out of the value_parts minues the irrelelvant_parts string.
@@ -158,7 +168,8 @@ class FileWalkTree(WalkTree):
 
     def is_it_a_subdirectory(self, n):
         """
-        == Paramters ==
+        == Args ==
+
         1. n : treelib.Node
 
         This function checks if a node n is a leaf and returns a boolean value.
@@ -168,6 +179,7 @@ class FileWalkTree(WalkTree):
     def is_file_in_subdirectory(self, n, file_string):
         """
         == Args ==
+
         1. n : treelib.Node
         2. file_string : literal string
         
@@ -183,9 +195,11 @@ class FileWalkTree(WalkTree):
     def find_file_contents_of_a_subdirectory(self, n, all_files=[]):
         """
         == Args ==
+
         1. n : treelib.Node
 
         == KWArgs ==
+
         1. all_files : list
 
         This function returns a list of leaves below the node.
@@ -204,7 +218,8 @@ class FileWalkTree(WalkTree):
     
     def does_node_match_string(iself, n, id_string):
         """
-        == Parameters ==
+        == Args ==
+
         1. n : treelib.Node
         2. id_string : literal string
 
@@ -214,7 +229,8 @@ class FileWalkTree(WalkTree):
     
     def find_string_in_a_node_tag(self, n, a_string):
         """
-        == Parameters == 
+        == Args == 
+
         1. n : treelib.Node
         2. a_string: literal_string
 
@@ -229,7 +245,8 @@ class FileWalkTree(WalkTree):
 
     def trace_ancestry_of_a_node(self, a_node):
         """
-        == Parameters ==
+        == Args ==
+
         1. a_node : treelib.Node
 
         This function returns a list of identifiers tracing the given node to the root from
@@ -244,7 +261,8 @@ class FileWalkTree(WalkTree):
 
     def find_depth_of_a_node(self, a_node):
         """
-        == Parameters ==
+        == Args ==
+
         1. a_node : treelib.Node
 
         This function returns the depth level for a particular node as an integer.

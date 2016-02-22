@@ -82,7 +82,8 @@ class FileProcessor(object):
         
     def pattern_matching_files_regex(self, regex):
         """
-        == Parameter ==
+        == Args ==
+
         1. regex : a string representing a valid regular expression
 
         This function finds all leaves in the tree that have a tag that matches the regular
@@ -94,7 +95,8 @@ class FileProcessor(object):
         
     def string_searching_files(self, val_string):
         """
-        == Parameter ==
+        == Args ==
+
         1. val_string : a literal string
 
         This function finds all leaves in the tree that contain the literal string in the 
@@ -107,6 +109,7 @@ class FileProcessor(object):
     def string_searching_subdirectories(self, val_string):
         """
         == Parameters ==
+
         1. val_string: a literal string
 
         This function finds all nodes that are not leaves with the literal string in the 
@@ -121,7 +124,7 @@ class FileProcessor(object):
 
     def find_subdirectory_at_particular_level_down(self, val_string, level):
         """
-        == Parameters == 
+        == Args == 
         1. val_string : a literal string
         2. level : integer
 
@@ -168,7 +171,7 @@ class FileProcessor(object):
     
     def find_file_in_a_subdirectory(self, a_node, file_name_string):
         """
-        == Parameters == 
+        == Args == 
         1. a_node : a treelib.Node object
         2. file_name_string : a literal string
 
@@ -253,7 +256,7 @@ class Stager(FileProcessor):
     """
     def __init__(self, directory, numfiles, stage_identifier, prefix, source_root, archive_directory):
         """
-        == Parameters == 
+        == Args == 
         1. directory : literal string
         2. numfiles : integer
         3. staging_identifier : literal string
@@ -336,7 +339,8 @@ id attribute values.
     
     def make_a_directory(self, directory_string):
         """
-        == Parameters ==
+        == Args ==
+
         1. directory_string : literal string
 
         This function tries to create directory with a path delineated by the literal 
@@ -356,7 +360,8 @@ id attribute values.
 
     def select_manifest_file(self, admin_directory):
         """
-        == Parameters == 
+        == Args == 
+
         1. admin_directory : literal string
 
         This function tries to find a manifest.txt file in the literal string on disk. 
@@ -431,7 +436,8 @@ id attribute values.
 
     def get_files_to_ingest(self, admin_dir):
         """
-        == Parameters ==
+        == Args ==
+
         1. admin_dir : literal string
 
         This function checks the admin directory specified for the manifest.txt file, 
@@ -450,7 +456,8 @@ id attribute values.
     def ingest(self, ignore_mismatched_checksums = False,
                resume_partially_completed_run = False):
         """
-        == Parameters ==
+        == Args ==
+
         1. ignore_mismatched_checksums : boolean
         2. resume_partially_completed_run : boolean
 
@@ -463,7 +470,8 @@ id attribute values.
         
         def copy_source_directory_tree_to_destination(filepath):
             """
-            == Parameter ==
+            == Args ==
+
             1. filepath : literal string
 
             This function takes a literal string and chops off the filename portion
@@ -529,6 +537,7 @@ class Archiver(FileProcessor):
 
     """
     == Attributes ==
+
     1. prefix is a free-form string for describing a particular run in directory that needs to be archived
     2. numfolders is an integer representing the total number of runs represented in the driectory being archived
     3. numfiles is an integer representing the total number of files in the directory being archived

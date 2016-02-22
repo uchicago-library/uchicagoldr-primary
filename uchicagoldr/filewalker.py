@@ -1,6 +1,7 @@
 class FileWalker(object):
     """
     == Attributes ==
+
     1. items is an iterable containing all files found in a directory
     2. directory is a string representing a valid directory path on-disk
     """
@@ -10,7 +11,8 @@ class FileWalker(object):
 
     def __init__(self, directory_path, filter_pattern = None):
         """
-        == Parameters ==
+        == Args ==
+
         1. directory_path : literal string
         2. filter_pattern : regular expression
 
@@ -35,6 +37,7 @@ class FileWalker(object):
                         directory = None):
         """
         == KWArgs ==
+
         1. filter_pattern : regular expression
         2. directory : literal string
 
