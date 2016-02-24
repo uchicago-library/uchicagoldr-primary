@@ -1,0 +1,302 @@
+from json import dumps
+from re import search
+
+
+class HierarchicalRecord(object):
+    def __init__(self):
+        self.data = {}
+
+    def __repr__(self):
+        return dumps(self.data)
+
+    def __str__(self):
+        return dumps(self.data, indent=4)
+
+    def __eq__(self, other):
+        return isinstance(other, HierarchicalRecord) and \
+            self.get_data() == other.get_data()
+
+    def __iter__(self):
+        for x in self.get_data():
+            yield x
+
+    def __getitem__(self, key):
+        if key[-1].isnumeric():
+            return self.get_value(key)
+        else:
+            return self.get_field(key)
+
+    def __setitem__(self, key, value):
+        if key[-1].isnumeric():
+            self.set_value(key, value)
+        else:
+            self.set_field(key, value)
+
+    def __delitem__(self, key):
+        if key[-1].isnumeric():
+            self.remove_value(key)
+        else:
+            self.remove_field(key)
+
+    def _dotted_to_list(self, dotted_string):
+        return dotted_string.split(".")
+
+    def _list_to_dotted(self, in_list):
+        for x in in_list:
+            if "." in x:
+                raise ValueError("'.' is a protected character in " +
+                                 "record configuration key names.")
+        return ".".join(in_list)
+
+    def _no_leaf_index(self, keyList):
+        if keyList[len(keyList)-1][-1].isnumeric():
+            raise ValueError('Operations on fields can not ' +
+                             'accept an index at the leaf')
+
+    def _split_path_strings(self, in_str):
+        new_key_index = None
+        new_key_index_str = search(r'\d+$', in_str)
+        if new_key_index_str:
+            new_key_index = new_key_index_str.group()
+        if new_key_index:
+            new_key_str = in_str.rstrip(new_key_index)
+            new_key_index = int(new_key_index)
+        else:
+            new_key_str = in_str
+            new_key_index = None
+        return new_key_str, new_key_index
+
+    def _get_value_from_key_list(self, keyList, start=None):
+        if start is None:
+            start = self.get_data()
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if len(keyList) == 1:
+            return start[new_key_str][new_key_index]
+        else:
+            return self._get_value_from_key_list(keyList[1:],
+                                                 start=start[new_key_str][new_key_index])
+
+    def _get_field_from_key_list(self, keyList, start=None):
+        if start is None:
+            start = self.get_data()
+        self._no_leaf_index(keyList)
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if len(keyList) == 1:
+            return start[new_key_str]
+        else:
+            return self._get_field_from_key_list(keyList[1:],
+                                                 start=start[new_key_str][new_key_index])
+    def _del_value_from_key_list(self, keyList, start=None):
+        if start is None:
+            start = self.get_data()
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if len(keyList) == 1:
+            del start[new_key_str][new_key_index]
+        else:
+            self._del_field_from_key_list(keyList[1:],
+                                          start=start[new_key_str][new_key_index])
+
+    def _del_field_from_key_list(self, keyList, start=None):
+        if start is None:
+            start = self.get_data()
+        self._no_leaf_index(keyList)
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if len(keyList) == 1:
+            del start[new_key_str]
+        else:
+            self._del_field_from_key_list(keyList[1:],
+                                          start=start[new_key_str][new_key_index])
+
+    def _set_value_from_key_list(self, keyList, new_value, start=None):
+        if start is None:
+            start = self.get_data()
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if len(keyList) == 1:
+            start[new_key_str][new_key_index] = new_value
+        else:
+            self._set_value_from_key_list(keyList[1:], new_value,
+                                          start=start[new_key_str][new_key_index])
+
+    def _set_field_from_key_list(self, keyList, new_value, start=None):
+        if start is None:
+            start = self.get_data()
+        self._no_leaf_index(keyList)
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if len(keyList) == 1:
+            start[new_key_str] = new_value
+        else:
+            self._set_field_from_key_list(keyList[1:], new_value,
+                                          start=start[new_key_str][new_key_index])
+    def _edit_value_from_key_list(self, keyList, new_value, start=None):
+        if start is None:
+            start = self.get_data()
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if len(keyList) == 1:
+            start[new_key_str][new_key_index] = new_value
+        else:
+            self._edit_value_from_key_list(keyList[1:], new_value,
+                                           start=start[new_key_str][new_key_index])
+
+    def _init_field_from_key_list(self, keyList, start=None):
+        if start is None:
+            start = self.get_data()
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if new_key_str not in start:
+            start[new_key_str] = [""]
+        if new_key_index:
+            while len(start[new_key_str]) < new_key_index+1:
+                start[new_key_str].append("")
+        if len(keyList) > 1:
+            if start[new_key_str][new_key_index] == "":
+                start[new_key_str][new_key_index] = {}
+            self._init_field_from_key_list(keyList[1:],
+                                           start=start[new_key_str][new_key_index])
+
+    def _add_to_field_from_key_list(self, keyList, new_value, start=None):
+        if start is None:
+            start = self.get_data()
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if len(keyList) == 1:
+            start[new_key_str].append(new_value)
+        else:
+            self._add_to_field_from_key_list(keyList[1:], new_value,
+                                             start=start[new_key_str][new_key_index])
+
+    def _check_if_value_exists(self, keyList, start=None):
+        if start is None:
+            start = self.get_data()
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if new_key_str not in start:
+            return False
+        if new_key_index > len(start[new_key_str])-1:
+            return False
+        if len(keyList) == 1:
+            return True
+        else:
+            return self._check_if_value_exists(keyList[1:],
+                                               start=start[new_key_str][new_key_index])
+
+    def _check_if_field_exists(self, keyList, start=None):
+        if start is None:
+            start = self.get_data()
+        new_key_str, new_key_index = self._split_path_strings(keyList[0])
+        if new_key_str not in start:
+            return False
+        if len(keyList) > 1:
+            if new_key_index > len(start[new_key_str])-1:
+                return False
+        if len(keyList) == 1:
+            return True
+        else:
+            return self._check_if_field_exists(keyList[1:],
+                                               start=start[new_key_str][new_key_index])
+    def set_data(self, data):
+        if not isinstance(data, dict):
+            raise ValueError
+        self.data = data
+
+    def get_data(self):
+        return self.data
+
+    def set_value(self, key, value):
+        if isinstance(key, str):
+            key = self._dotted_to_list(key)
+        if not isinstance(key, list):
+            raise ValueError()
+        if not isinstance(value, list):
+            if not self._check_if_field_exists(key):
+                self._init_field_from_key_list(key)
+            self._set_value_from_key_list(key, value)
+        else:
+            if not self._check_if_field_exists(key):
+                self._init_field_from_key_list(key)
+            if len(value) > 1:
+                self._no_leaf_index(key)
+                self._set_value_from_key_list(key, value[0])
+                for x in value[1:]:
+                    self._add_to_field_from_key_list(key, x)
+            else:
+                self._set_value_from_key_list(key, value[0])
+
+    def get_value(self, key):
+        if isinstance(key, str):
+            key = self._dotted_to_list(key)
+        if not isinstance(key, list):
+            raise ValueError()
+        return self._get_value_from_key_list(key)
+
+    def set_field(self, key, value):
+        if isinstance(key, str):
+            key = self._dotted_to_list(key)
+        if not isinstance(key, list):
+            raise ValueError()
+        if not self._check_if_field_exists(key):
+            self._init_field_from_key_list(key)
+        self._set_field_from_key_list(key, value)
+
+    def get_field(self, key):
+        if isinstance(key, str):
+            key = self._dotted_to_list(key)
+        if not isinstance(key, list):
+            raise ValueError()
+        return self._get_field_from_key_list(key)
+
+    def add_to_field(self, key, value):
+        if isinstance(key, str):
+            key = self._dotted_to_list(key)
+        if not isinstance(key, list):
+            raise ValueError()
+        if self._check_if_field_exists(key):
+            self._add_to_field_from_key_list(key, value)
+        else:
+            raise ValueError('field does not exist')
+
+    def remove_value(self, key):
+        if isinstance(key, str):
+            key = self._dotted_to_list(key)
+        if not isinstance(key, list):
+            raise ValueError()
+        if self._check_if_field_exists(key):
+            self._del_value_from_key_list(key)
+
+    def remove_field(self, key):
+        if isinstance(key, str):
+            key = self._dotted_to_list(key)
+        if not isinstance(key, list):
+            raise ValueError()
+        if self._check_if_field_exists(key):
+            self._del_field_from_key_list(key)
+
+    def get_leaves(self, start=None, init_path=None):
+        result = []
+        if start is None:
+            start = self.get_data()
+        for x in start:
+            for i,y in enumerate(start[x]):
+                if init_path is None:
+                    path = x + str(i)
+                else:
+                    path = ".".join([init_path,x+str(i)])
+                if not isinstance(y, dict):
+                    result.append((path, y))
+                else:
+                    result = result + self.get_leaves(start=y, init_path=path)
+        return result
+
+    def keys(self, start=None, init_path=None):
+        result = []
+        if start is None:
+            start = self.get_data()
+        for x in start:
+            for i,y in enumerate(start[x]):
+                if init_path is None:
+                    path = x +str(i)
+                else:
+                    path = ".".join([init_path,x+str(i)])
+                result.append(path)
+                if isinstance(y, dict):
+                    result = result + self.keys(start=y, init_path=path)
+        return result
+
+    def values(self):
+        return [x[1] for x in self.get_leaves()]
