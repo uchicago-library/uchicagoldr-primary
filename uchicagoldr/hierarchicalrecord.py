@@ -49,9 +49,17 @@ class HierarchicalRecord(object):
         return ".".join(in_list)
 
     def _no_leaf_index(self, keyList):
+        for x in keyList[:-1]:
+            if not x[-1].isnumeric():
+                raise ValueError("A portion of your path ({}) lacks an index".format(x))
         if keyList[len(keyList)-1][-1].isnumeric():
             raise ValueError('Operations on fields can not ' +
                              'accept an index at the leaf')
+
+    def _reqs_indices(self, keyList):
+        for x in keyList:
+            if not x[-1].isnumeric():
+                raise ValueError("A portion of your path ({}) lacks an index".format(x))
 
     def _split_path_strings(self, in_str):
         new_key_index = None
@@ -69,6 +77,7 @@ class HierarchicalRecord(object):
     def _get_value_from_key_list(self, keyList, start=None):
         if start is None:
             start = self.get_data()
+        self._reqs_indices(keyList)
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if len(keyList) == 1:
             return start[new_key_str][new_key_index]
@@ -86,14 +95,16 @@ class HierarchicalRecord(object):
         else:
             return self._get_field_from_key_list(keyList[1:],
                                                  start=start[new_key_str][new_key_index])
+
     def _del_value_from_key_list(self, keyList, start=None):
         if start is None:
             start = self.get_data()
+        self._reqs_indices(keyList)
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if len(keyList) == 1:
             del start[new_key_str][new_key_index]
         else:
-            self._del_field_from_key_list(keyList[1:],
+            self._del_value_from_key_list(keyList[1:],
                                           start=start[new_key_str][new_key_index])
 
     def _del_field_from_key_list(self, keyList, start=None):
@@ -110,6 +121,7 @@ class HierarchicalRecord(object):
     def _set_value_from_key_list(self, keyList, new_value, start=None):
         if start is None:
             start = self.get_data()
+        self._reqs_indices(keyList)
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if len(keyList) == 1:
             start[new_key_str][new_key_index] = new_value
@@ -127,9 +139,11 @@ class HierarchicalRecord(object):
         else:
             self._set_field_from_key_list(keyList[1:], new_value,
                                           start=start[new_key_str][new_key_index])
+
     def _edit_value_from_key_list(self, keyList, new_value, start=None):
         if start is None:
             start = self.get_data()
+        self._reqs_indices(keyList)
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if len(keyList) == 1:
             start[new_key_str][new_key_index] = new_value
@@ -142,12 +156,12 @@ class HierarchicalRecord(object):
             start = self.get_data()
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if new_key_str not in start:
-            start[new_key_str] = [""]
+            start[new_key_str] = [None]
         if new_key_index:
             while len(start[new_key_str]) < new_key_index+1:
-                start[new_key_str].append("")
+                start[new_key_str].append(None)
         if len(keyList) > 1:
-            if start[new_key_str][new_key_index] == "":
+            if start[new_key_str][new_key_index] == None:
                 start[new_key_str][new_key_index] = {}
             self._init_field_from_key_list(keyList[1:],
                                            start=start[new_key_str][new_key_index])
@@ -155,6 +169,7 @@ class HierarchicalRecord(object):
     def _add_to_field_from_key_list(self, keyList, new_value, start=None):
         if start is None:
             start = self.get_data()
+        self._reqs_indices(keyList)
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if len(keyList) == 1:
             start[new_key_str].append(new_value)
@@ -165,6 +180,7 @@ class HierarchicalRecord(object):
     def _check_if_value_exists(self, keyList, start=None):
         if start is None:
             start = self.get_data()
+        self._reqs_indices(keyList)
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if new_key_str not in start:
             return False
@@ -179,6 +195,7 @@ class HierarchicalRecord(object):
     def _check_if_field_exists(self, keyList, start=None):
         if start is None:
             start = self.get_data()
+        self._no_leaf_index(keyList)
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if new_key_str not in start:
             return False
@@ -190,6 +207,7 @@ class HierarchicalRecord(object):
         else:
             return self._check_if_field_exists(keyList[1:],
                                                start=start[new_key_str][new_key_index])
+
     def set_data(self, data):
         if not isinstance(data, dict):
             raise ValueError
@@ -203,26 +221,17 @@ class HierarchicalRecord(object):
             key = self._dotted_to_list(key)
         if not isinstance(key, list):
             raise ValueError()
-        if not isinstance(value, list):
-            if not self._check_if_field_exists(key):
-                self._init_field_from_key_list(key)
-            self._set_value_from_key_list(key, value)
-        else:
-            if not self._check_if_field_exists(key):
-                self._init_field_from_key_list(key)
-            if len(value) > 1:
-                self._no_leaf_index(key)
-                self._set_value_from_key_list(key, value[0])
-                for x in value[1:]:
-                    self._add_to_field_from_key_list(key, x)
-            else:
-                self._set_value_from_key_list(key, value[0])
+        self._reqs_indices(key)
+        if not self._check_if_value_exists(key):
+            self._init_field_from_key_list(key)
+        self._set_value_from_key_list(key, value)
 
     def get_value(self, key):
         if isinstance(key, str):
             key = self._dotted_to_list(key)
         if not isinstance(key, list):
             raise ValueError()
+        self._reqs_indices(key)
         return self._get_value_from_key_list(key)
 
     def set_field(self, key, value):
@@ -230,6 +239,7 @@ class HierarchicalRecord(object):
             key = self._dotted_to_list(key)
         if not isinstance(key, list):
             raise ValueError()
+        self._no_leaf_index(key)
         if not self._check_if_field_exists(key):
             self._init_field_from_key_list(key)
         self._set_field_from_key_list(key, value)
@@ -239,6 +249,7 @@ class HierarchicalRecord(object):
             key = self._dotted_to_list(key)
         if not isinstance(key, list):
             raise ValueError()
+        self._no_leaf_index(key)
         return self._get_field_from_key_list(key)
 
     def add_to_field(self, key, value):
@@ -246,6 +257,7 @@ class HierarchicalRecord(object):
             key = self._dotted_to_list(key)
         if not isinstance(key, list):
             raise ValueError()
+        self._no_leaf_index(key)
         if self._check_if_field_exists(key):
             self._add_to_field_from_key_list(key, value)
         else:
@@ -256,7 +268,8 @@ class HierarchicalRecord(object):
             key = self._dotted_to_list(key)
         if not isinstance(key, list):
             raise ValueError()
-        if self._check_if_field_exists(key):
+        self._reqs_indices(key)
+        if self._check_if_value_exists(key):
             self._del_value_from_key_list(key)
 
     def remove_field(self, key):
@@ -264,6 +277,7 @@ class HierarchicalRecord(object):
             key = self._dotted_to_list(key)
         if not isinstance(key, list):
             raise ValueError()
+        self._no_leaf_index(key)
         if self._check_if_field_exists(key):
             self._del_field_from_key_list(key)
 
@@ -272,11 +286,11 @@ class HierarchicalRecord(object):
         if start is None:
             start = self.get_data()
         for x in start:
-            for i,y in enumerate(start[x]):
+            for i, y in enumerate(start[x]):
                 if init_path is None:
                     path = x + str(i)
                 else:
-                    path = ".".join([init_path,x+str(i)])
+                    path = ".".join([init_path, x + str(i)])
                 if not isinstance(y, dict):
                     result.append((path, y))
                 else:
@@ -288,11 +302,11 @@ class HierarchicalRecord(object):
         if start is None:
             start = self.get_data()
         for x in start:
-            for i,y in enumerate(start[x]):
+            for i, y in enumerate(start[x]):
                 if init_path is None:
-                    path = x +str(i)
+                    path = x + str(i)
                 else:
-                    path = ".".join([init_path,x+str(i)])
+                    path = ".".join([init_path, x + str(i)])
                 result.append(path)
                 if isinstance(y, dict):
                     result = result + self.keys(start=y, init_path=path)
