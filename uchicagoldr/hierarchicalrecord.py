@@ -7,7 +7,7 @@ class HierarchicalRecord(object):
         self.data = {}
 
     def __repr__(self):
-        return dumps(self.data)
+        return str(self.data)
 
     def __str__(self):
         return dumps(self.data, indent=4)
@@ -281,7 +281,7 @@ class HierarchicalRecord(object):
         if self._check_if_field_exists(key):
             self._del_field_from_key_list(key)
 
-    def get_leaves(self, start=None, init_path=None):
+    def leaves(self, start=None, init_path=None):
         result = []
         if start is None:
             start = self.get_data()
@@ -294,7 +294,7 @@ class HierarchicalRecord(object):
                 if not isinstance(y, dict):
                     result.append((path, y))
                 else:
-                    result = result + self.get_leaves(start=y, init_path=path)
+                    result = result + self.leaves(start=y, init_path=path)
         return result
 
     def keys(self, start=None, init_path=None):
@@ -313,4 +313,7 @@ class HierarchicalRecord(object):
         return result
 
     def values(self):
-        return [x[1] for x in self.get_leaves()]
+        result = []
+        for x in self.keys():
+            result.append(self[x])
+        return result

@@ -1,12 +1,31 @@
 from csv import DictReader
-from re import match, finditer
+from re import match, subn
 from hierarchicalrecord import HierarchicalRecord
 
 
 class AccessionRecorder(object):
     def __init__(self, record=None, conf=None):
-        self.set_record(record)
-        self.set_conf(conf)
+        if record:
+            self.set_record(record)
+        else:
+            self.record = None
+        if conf:
+            self.set_conf(conf)
+        else:
+            self.conf = None
+
+    def _generalize_keys(self, key):
+        result = subn("\d*$", "", key)[0]
+        result = subn("\d*\.", ".", result)[0]
+        return result
+
+    def _gather_applicable_values(self, field_name):
+        result = []
+        for x in self.get_record().keys():
+            comp = self._generalize_keys(x)
+            if comp == field_name:
+                result.append(self.get_record()[x])
+        return result
 
     def set_record(self, record):
         if record is None:
@@ -30,21 +49,40 @@ class AccessionRecorder(object):
 
     def validate_record(self, strict=True):
         if self.get_record() is None:
-            raise AttributeError("There is no record associated with this instance!")
+            raise AttributeError("There is no record associated " +
+                                 "with this instance!")
         if self.get_conf() is None:
-            raise AttributeError("This is no conf associated with this instance!")
+            raise AttributeError("This is no conf associated " +
+                                 "with this instance!")
         for x in self.get_conf().get_data():
             field_name = x['Field Name']
             value_type = x['Value Type']
             obligation = x['Obligation']
             cardinality = x['Cardinality']
             validation = x['Validation']
+            nested = False
+            if "." in field_name:
+                nested = True
             applicable_values = self._gather_applicable_values(field_name)
             if obligation == 'r':
-                if len(nodes_applicable) == 0:
-                    return (False, "A required node is not present")
+                if nested is False:
+                    if len(applicable_values) == 0:
+                        return (False, "A required node is not present\n" +
+                                "Node: {}".format(field_name))
+                else:
+                    parent_key = ".".join(field_name.split(".")[:-1])
+                    leaf_key = field_name.split(".")[-1]
+                    for y in self._gather_applicable_values(parent_key):
+                        if leaf_key not in y:
+                            return (False, "A required node is not present.")
+            if len(applicable_values) > 0:
+                its_there = True
+            else:
+                its_there = False
+            if its_there is False:
+                continue
             if cardinality != 'n':
-                if len(nodes_applicable) != int(cardinality):
+                if len(applicable_values) != int(cardinality):
                     return (False, "A nodes cardinality is incorrect.")
             if value_type:
                 allowed_types = [('str', str),
@@ -55,26 +93,22 @@ class AccessionRecorder(object):
                 for x in allowed_types:
                     if x[0] == value_type:
                         type_comp = x[1]
-                for node in nodes_applicable:
-                    for field in node:
-                        if not isinstance(node[field], type_comp):
-                            return (False, "A node contains an illegal data type.")
+                for value in applicable_values:
+                    if not isinstance(value, type_comp):
+                        return (False, "A node contains an illegal data type.")
             if validation:
-                for node in nodes_applicable:
-                    for field in node:
-                        if not match(validation, str(node[field])):
-                            return (False, "A node does not validate against its regex.")
-            return (True, None)
-
-    def _gather_applicable_values(self, field_name):
-        result = []
-        for x in record.keys():
-            comp = x[:-1]
-            dot_count = len([x for x in comp if x == "."])
-            dot_indices = [m.start() for m in finditer('\.', x)]
-            comp = "".join([y for i,y in enumerate(comp) if i not in dot_indices])
-
-
+                for value in applicable_values:
+                    if not match(validation, value):
+                        wrong_key = None
+                        for n in self.get_record().keys():
+                            if self.get_record()[n] == value:
+                                wrong_key = n
+                        return (False, "A node does not validate " +
+                                "against its regex.\n" +
+                                "Node: {}\n".format(wrong_key) +
+                                "Value: {}\n".format(value) +
+                                "Pattern: {}".format(validation))
+        return (True, None)
 
 
 class AccessionRecordConfig(object):
