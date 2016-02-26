@@ -169,7 +169,7 @@ class HierarchicalRecord(object):
     def _add_to_field_from_key_list(self, keyList, new_value, start=None):
         if start is None:
             start = self.get_data()
-        self._reqs_indices(keyList)
+        self._no_leaf_index(keyList)
         new_key_str, new_key_index = self._split_path_strings(keyList[0])
         if len(keyList) == 1:
             start[new_key_str].append(new_value)
@@ -252,7 +252,7 @@ class HierarchicalRecord(object):
         self._no_leaf_index(key)
         return self._get_field_from_key_list(key)
 
-    def add_to_field(self, key, value):
+    def add_to_field(self, key, value, create_if_necessary=True):
         if isinstance(key, str):
             key = self._dotted_to_list(key)
         if not isinstance(key, list):
@@ -261,7 +261,11 @@ class HierarchicalRecord(object):
         if self._check_if_field_exists(key):
             self._add_to_field_from_key_list(key, value)
         else:
-            raise ValueError('field does not exist')
+            if not create_if_necessary:
+                raise ValueError('field does not exist')
+            else:
+                key[-1] = key[-1]+"0"
+                self.set_value(key, value)
 
     def remove_value(self, key):
         if isinstance(key, str):
