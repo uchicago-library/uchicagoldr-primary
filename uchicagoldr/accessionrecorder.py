@@ -1,6 +1,6 @@
 from csv import DictReader
 from re import match, subn
-from hierarchicalrecord import HierarchicalRecord
+from uchicagoldr.hierarchicalrecord import HierarchicalRecord
 
 
 class AccessionRecorder(object):
@@ -30,6 +30,7 @@ class AccessionRecorder(object):
     def set_record(self, record):
         if record is None:
             self.record = None
+            return
         if not isinstance(record, HierarchicalRecord):
             raise ValueError
         self.record = record
@@ -40,6 +41,7 @@ class AccessionRecorder(object):
     def set_conf(self, conf):
         if conf is None:
             self.conf = None
+            return
         if not isinstance(conf, AccessionRecordConfig):
             raise ValueError
         self.conf = conf
@@ -54,6 +56,13 @@ class AccessionRecorder(object):
         if self.get_conf() is None:
             raise AttributeError("This is no conf associated " +
                                  "with this instance!")
+        if strict is True:
+            field_names = [x['Field Name'] for x in self.get_conf().get_data()]
+            for key in self.get_record().keys():
+                if self._generalize_keys(key) not in field_names:
+                    return (False, "A key which appears in the record " +
+                            "does not appear in the validation config.\n" +
+                            "Key: {}".format(key))
         for x in self.get_conf().get_data():
             field_name = x['Field Name']
             value_type = x['Value Type']
@@ -110,6 +119,95 @@ class AccessionRecorder(object):
                                 "Pattern: {}".format(validation))
         return (True, None)
 
+    def generate_minimal_record(self):
+        if self.get_record() is not None:
+            raise AttributeError("There is already a record associated " +
+                                 "with this instance!")
+        if self.get_conf() is None:
+            raise AttributeError("This is no conf associated " +
+                                 "with this instance!")
+        self.set_record(HierarchicalRecord())
+        for x in self.get_conf().get_data():
+            field_name = x['Field Name']
+            value_type = x['Value Type']
+            obligation = x['Obligation']
+            cardinality = x['Cardinality']
+            nested = False
+            if "." in field_name:
+                nested = True
+            allowed_types = [('str', 'default_string'),
+                                ('dict', {}),
+                                ('int', 0),
+                                ('bool', False),
+                                ('float', float(0))]
+            dummy_value = None
+            for x in allowed_types:
+                if value_type == x[0]:
+                    dummy_value = x[1]
+
+            if obligation != "r":
+                continue
+
+            if cardinality != "n":
+                if not nested:
+                    for y in range(int(cardinality)):
+                        self.get_record()[field_name+str(y)] = dummy_value
+                else:
+                    parent_key = ".".join(field_name.split(".")[:-1])
+                    leaf_key = field_name.split(".")[-1]
+                    num_parents = len(self._gather_applicable_values(parent_key))
+                    for y in range(num_parents):
+                        for z in range(int(cardinality)):
+                            self.get_record()[parent_key+str(y)+"."+leaf_key+str(z)] = dummy_value
+            else:
+                if not nested:
+                    self.get_record()[field_name+"0"] = dummy_value
+                else:
+                    parent_key = ".".join(field_name.split(".")[:-1])
+                    leaf_key = field_name.split(".")[-1]
+                    num_parents = len(self._gather_applicable_values(parent_key))
+                    for y in range(num_parents):
+                            self.get_record()[parent_key+str(y)+"."+leaf_key+"0"] = dummy_value
+
+    def generate_full_record(self):
+        if self.get_record() is not None:
+            raise AttributeError("There is already a record associated " +
+                                 "with this instance!")
+        if self.get_conf() is None:
+            raise AttributeError("This is no conf associated " +
+                                 "with this instance!")
+        self.set_record(HierarchicalRecord())
+        for x in self.get_conf().get_data():
+            field_name = x['Field Name']
+            value_type = x['Value Type']
+            obligation = x['Obligation']
+            cardinality = x['Cardinality']
+            nested = False
+            if "." in field_name:
+                nested = True
+            allowed_types = [('str', 'default_string'),
+                                ('dict', {}),
+                                ('int', 0),
+                                ('bool', False),
+                                ('float', float(0))]
+            dummy_value = None
+            for x in allowed_types:
+                if value_type == x[0]:
+                    dummy_value = x[1]
+
+            if cardinality == 'n':
+                cardinality = '2'
+
+            if not nested:
+                for y in range(int(cardinality)):
+                    self.get_record()[field_name+str(y)] = dummy_value
+            else:
+                parent_key = ".".join(field_name.split(".")[:-1])
+                leaf_key = field_name.split(".")[-1]
+                num_parents = len(self._gather_applicable_values(parent_key))
+                for y in range(num_parents):
+                    for z in range(int(cardinality)):
+                        self.get_record()[parent_key+str(y)+"."+leaf_key+str(z)] = dummy_value
 
 class AccessionRecordConfig(object):
     def __init__(self, filepath):
