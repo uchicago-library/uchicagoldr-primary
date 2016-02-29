@@ -618,7 +618,8 @@ class Archiver(FileProcessor):
                 if fixity_log_checksum == x.data.md5:
                     pass
                 else:
-                    raise IOError("{} had checksum {}".format(x.identifier, fixity_log_checksum) + \
+                    raise IOError("{} had checksum {}".format(x.identifier,
+                                                              fixity_log_checksum) + \
                                    " in fixityOnDisk.txt file and checksum {}".format(x.data.md5) + \
                                   " in staging directory")
         return True
@@ -740,18 +741,19 @@ class Pruner(FileProcessor):
     def validate(self):
         for n in self.pattern_inputs:
             current_n = re_compile(n)            
-
             if len(self.pattern_matching_files_regex(current_n)) == 0:
                 return False
         return True
     
-    def explain_validation_results(self):
+    def explain_validation_result(self):
         for n in self.pattern_inputs:
             current_n = re_compile(n)
             if len(self.pattern_matching_files_regex(current_n)):
                 return namedtuple("problem" "category message") \
-                    ("fatal","The pattern {} does not match any files in the directory.".format(n))
-        return True
+                    ("fatal",
+                     "The pattern {} does not match any files in the directory.".format(n))
+        return namedtuple("problem", "category message") \
+            ("non-fatal", "something something")
 
     def ingest(self):
         count = 0 

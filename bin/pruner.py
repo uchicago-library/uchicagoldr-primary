@@ -35,29 +35,19 @@ def main():
                         "file names that can be deleted from the staging directory",
                         action='store',nargs="*")
     args = parser.parse_args()
-    print(args)
     try:
         p = Pruner(args.directory, args.source_root, args.patterns)
         is_it_valid = p.validate()
         if is_it_valid:
 
             numfiles_deleted = p.ingest()
-            stdout.write("{} have been removed from {}\n".format(str(num_files_deleted), args.directory))
+            stdout.write("{} have been removed from {}\n".format(str(num_files_deleted),
+                                                                 args.directory))
         else:
+
+
             problem = p.explain_validation_result()
             stderr.write("{}: {}\n".format(problem.category, problem.message))
-    # try:
-    #     s = Stager(args.directory, args.numfiles, args.stage_id,
-    #                args.prefix, args.source_root, args.destination_root)
-    #     is_it_valid = s.validate()
-    #     if is_it_valid:
-    #         s.ingest(resume_partially_completed_run = args.resume)
-    #         destination_directory = join(args.destination_root,
-    #                                      relpath(args.directory, args.source_root))
-    #         stdout.write("{} has been moved into {}\n".format(args.directory, destination_directory))
-    #     else:
-    #         problem = s.explain_validation_result()
-    #         stderr.write("{}: {}\n".format(problem.category, problem.message))
         return 0
     except KeyboardInterrupt:
         return 131
