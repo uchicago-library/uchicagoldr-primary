@@ -10,7 +10,7 @@ from sys import stdout, stderr
 from os.path import join, exists
 from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
-from uchicagoldr.moveableitem import MoveableItem
+#from uchicagoldr.moveableitem import MoveableItem
 from datetime import datetime
 
 

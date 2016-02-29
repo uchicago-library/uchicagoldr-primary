@@ -4,15 +4,16 @@ from hashlib import md5, sha256
 from os import _exit, chown, listdir, mkdir, stat
 from os.path import abspath, dirname, exists, isdir, isfile, join, relpath
 from magic import from_file
+from os import remove
 from pwd import getpwnam
 from shutil import copyfile
 from sys import stdout, stderr
 from treelib import Tree, Node
 from uchicagoldr.filewalker import FileWalker
-from uchicagoldr.moveableitem import MoveableItem
+#from uchicagoldr.moveableitem import MoveableItem
 from uchicagoldr.walktree import FileWalkTree
 from datetime import datetime
-
+from re import compile as re_compile
 
 # === classes for moving files from one location to another ===
 
@@ -728,3 +729,36 @@ class NewArchiver(FileProcessor):
         else:
             self.explain_validation_results()
             return "it's invalid and here's why"
+
+class Pruner(FileProcessor):
+    pattern_inputs = []
+    patterns_compiled = []
+    def __init__(self, directory, source_root, patterns):
+        FileProcessor.__init__(self, directory, source_root, irrelevant_part = source_root)
+        self.pattern_inputs = patterns
+
+    def validate(self):
+        for n in self.pattern_inputs:
+            current_n = re_compile(n)            
+
+            if len(self.pattern_matching_files_regex(current_n)) == 0:
+                return False
+        return True
+    
+    def explain_validation_results(self):
+        for n in self.pattern_inputs:
+            current_n = re_compile(n)
+            if len(self.pattern_matching_files_regex(current_n)):
+                return namedtuple("problem" "category message") \
+                    ("fatal","The pattern {} does not match any files in the directory.".format(n))
+        return True
+
+    def ingest(self):
+        count = 0 
+        for n in self.pattern_inputs:
+            current_n = re_compile(n)
+            matches = self.pattern_matching_files_regex(current_n)
+            for m in matches:
+                os.remove(m.data.filepath)
+                count += 1
+        return count
