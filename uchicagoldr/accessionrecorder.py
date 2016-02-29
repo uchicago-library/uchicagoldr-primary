@@ -83,7 +83,8 @@ class AccessionRecorder(object):
                     leaf_key = field_name.split(".")[-1]
                     for y in self._gather_applicable_values(parent_key):
                         if leaf_key not in y:
-                            return (False, "A required node is not present.")
+                            return (False, "A required node is not present\n" +
+                                    "Node: {}".format(field_name))
             if len(applicable_values) > 0:
                 its_there = True
             else:
@@ -92,7 +93,10 @@ class AccessionRecorder(object):
                 continue
             if cardinality != 'n':
                 if len(applicable_values) != int(cardinality):
-                    return (False, "A nodes cardinality is incorrect.")
+                    return (False, "A nodes cardinality is incorrect.\n" +
+                            "Node: {}\n".format(field_name) +
+                            "Observed Cardinality: {}\n".format(str(len(applicable_values))) +
+                            "Specificed Cardinality: {}".format(cardinality))
             if value_type:
                 allowed_types = [('str', str),
                                  ('dict', dict),
@@ -104,17 +108,16 @@ class AccessionRecorder(object):
                         type_comp = x[1]
                 for value in applicable_values:
                     if not isinstance(value, type_comp):
-                        return (False, "A node contains an illegal data type.")
+                        return (False, "A node contains an illegal data type.\n" +
+                                "Node: {}\n".format(field_name) +
+                                "Observed Data Type: {}\n".format(str(type(value))) +
+                                "Specified Data Type: {}".format(value_type))
             if validation:
                 for value in applicable_values:
-                    if not match(validation, value):
-                        wrong_key = None
-                        for n in self.get_record().keys():
-                            if self.get_record()[n] == value:
-                                wrong_key = n
+                    if not match(validation, str(value)):
                         return (False, "A node does not validate " +
                                 "against its regex.\n" +
-                                "Node: {}\n".format(wrong_key) +
+                                "Node: {}\n".format(field_name) +
                                 "Value: {}\n".format(value) +
                                 "Pattern: {}".format(validation))
         return (True, None)
@@ -136,10 +139,10 @@ class AccessionRecorder(object):
             if "." in field_name:
                 nested = True
             allowed_types = [('str', 'default_string'),
-                                ('dict', {}),
-                                ('int', 0),
-                                ('bool', False),
-                                ('float', float(0))]
+                             ('dict', {}),
+                             ('int', 0),
+                             ('bool', False),
+                             ('float', float(0))]
             dummy_value = None
             for x in allowed_types:
                 if value_type == x[0]:
@@ -155,19 +158,23 @@ class AccessionRecorder(object):
                 else:
                     parent_key = ".".join(field_name.split(".")[:-1])
                     leaf_key = field_name.split(".")[-1]
-                    num_parents = len(self._gather_applicable_values(parent_key))
+                    num_parents = len(
+                        self._gather_applicable_values(parent_key))
                     for y in range(num_parents):
                         for z in range(int(cardinality)):
-                            self.get_record()[parent_key+str(y)+"."+leaf_key+str(z)] = dummy_value
+                            self.get_record()[parent_key+str(y) + "." +
+                                              leaf_key+str(z)] = dummy_value
             else:
                 if not nested:
                     self.get_record()[field_name+"0"] = dummy_value
                 else:
                     parent_key = ".".join(field_name.split(".")[:-1])
                     leaf_key = field_name.split(".")[-1]
-                    num_parents = len(self._gather_applicable_values(parent_key))
+                    num_parents = len(
+                        self._gather_applicable_values(parent_key))
                     for y in range(num_parents):
-                            self.get_record()[parent_key+str(y)+"."+leaf_key+"0"] = dummy_value
+                            self.get_record()[parent_key+str(y) + "." +
+                                              leaf_key+"0"] = dummy_value
 
     def generate_full_record(self):
         if self.get_record() is not None:
@@ -208,6 +215,18 @@ class AccessionRecorder(object):
                 for y in range(num_parents):
                     for z in range(int(cardinality)):
                         self.get_record()[parent_key+str(y)+"."+leaf_key+str(z)] = dummy_value
+
+    def populate_from_csv(self, filepath):
+        with open(filepath, 'r') as f:
+            reader = DictReader(f)
+            for row in reader:
+                value = row['value']
+                if value == "True":
+                    value = True
+                if value == "False":
+                    value = False
+                self.get_record()[row['key']] = value
+
 
 class AccessionRecordConfig(object):
     def __init__(self, filepath):
