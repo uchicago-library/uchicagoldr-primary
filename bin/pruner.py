@@ -39,13 +39,10 @@ def main():
         p = Pruner(args.directory, args.source_root, args.patterns)
         is_it_valid = p.validate()
         if is_it_valid:
-
             numfiles_deleted = p.ingest()
             stdout.write("{} have been removed from {}\n".format(str(num_files_deleted),
                                                                  args.directory))
         else:
-
-
             problem = p.explain_validation_result()
             stderr.write("{}: {}\n".format(problem.category, problem.message))
         return 0

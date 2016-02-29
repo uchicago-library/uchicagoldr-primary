@@ -284,7 +284,7 @@ class Stager(FileProcessor):
         else:
             return False
 
-    def explain_validation_results(self):
+    def explain_validation_result(self):
         """
         This is the explain validation results function implemented for Stager class. This 
         function returns a namedtuple object with a category and a message explaining 
