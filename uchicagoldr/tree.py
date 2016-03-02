@@ -407,15 +407,19 @@ id attribute values.
 
     def add_to_a_staging_environment(self):
         """
-        This function will create a new prefix directory in the 'admin' and 'data' 
-        directory for a new run in a previously built staging environment. It returns 
-        the newest data directory and the newest admin directory and the newest 
+        This function will create a new prefix directory in the 'admin' and 'data'
+        directory for a new run in a previously built staging environment. It returns
+        the newest data directory and the newest admin directory and the newest
         manifest.txt as a 3 tuple containing strings.
         """
         staging_directory = join(self.destination_root, self.staging_id)
         stageID = self.staging_id
         past_data_dirs = sorted(listdir(join(staging_directory, 'data')))
-        last_data_dir_number = past_data_dirs[-1].split(self.prefix)[1]
+        prefix_data_dirs = [x for x in past_data_dirs if split(x)[1][:-1] == self.prefix]
+        if prefix_data_dirs:
+            last_data_dir_number = split(prefix_data_dirs[-1])[1].split(self.prefix)[1]
+        else:
+            last_data_dir_number = "0"
         new_data_dir_number = int(last_data_dir_number) + 1
         new_data_dir_with_prefix = self.prefix+str(new_data_dir_number)
         current_data_dir = join(staging_directory, 'data', new_data_dir_with_prefix)
