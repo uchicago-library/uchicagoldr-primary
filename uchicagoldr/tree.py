@@ -2,7 +2,7 @@ from collections import namedtuple
 from csv import writer, QUOTE_ALL
 from hashlib import md5, sha256
 from os import _exit, chown, listdir, mkdir, stat
-from os.path import abspath, dirname, exists, isdir, isfile, join, relpath
+from os.path import abspath, dirname, exists, isdir, isfile, join, relpath, split
 from magic import from_file
 from os import remove
 from pwd import getpwnam
