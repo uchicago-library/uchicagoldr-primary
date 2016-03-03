@@ -1,6 +1,6 @@
 from csv import DictReader
 from re import match, subn
-from uchicagoldr.hierarchicalrecord import HierarchicalRecord
+from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
 
 class AccessionRecorder(object):
