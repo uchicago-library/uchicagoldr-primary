@@ -17,8 +17,7 @@ class PremisCreator(FileProcessor):
                              "a data subdir")
         self.data_root = join(directory, 'data')
         self.admin_root = join(directory, 'admin')
-        FileProcessor.__init__(self, directory, source_root, irrelevant_part)
-        # get all the entries from data
+        FileProcessor.__init__(self, self.data_root, source_root, irrelevant_part)
         for x in self.find_all_files():
             file_path = x.identifier
             record = self.make_record(file_path)
@@ -43,12 +42,14 @@ class PremisCreator(FileProcessor):
 
     def _detect_mime(self, file_path):
         try:
-            return from_file(self.filepath, mime=True)
+            magic_num = from_file(file_path, mime=True).decode()
         except:
-            try:
-                return guess_type(self.filepath)[0]
-            except:
-                return "undetected"
+            magic_num = None
+        try:
+            guess = guess_type(file_path)[0]
+        except:
+            guess = None
+        return magic_num, guess
 
     def _sane_hash(self, hasher, file_path, block_size=65536):
         hash_result = hasher()
@@ -83,8 +84,11 @@ class PremisCreator(FileProcessor):
     def _make_objectCharacteristics(self, file_path):
         fixity1, fixity2 = self._make_fixity(file_path)
         size = str(getsize(file_path))
-        format = self._make_format(file_path)
-        objChar = ObjectCharacteristics(format)
+        formats = self._make_format(file_path)
+        objChar = ObjectCharacteristics(formats[0])
+        if len(formats) > 1:
+            for x in formats[1:]:
+                objChar.add_format(x)
         objChar.set_fixity(fixity1)
         objChar.add_fixity(fixity2)
         objChar.set_size(size)
@@ -104,7 +108,26 @@ class PremisCreator(FileProcessor):
         return md5_fixity, sha256_fixity
 
     def _make_format(self, file_path):
-        formatDesignation = FormatDesignation(self._detect_mime(file_path))
+        magic_num, guess  = self._detect_mime(file_path)
+        formats = []
+        if magic_num:
+            premis_magic_format_desig = FormatDesignation(magic_num)
+            premis_magic_format = Format(formatDesignation=premis_magic_format_desig)
+            premis_magic_format.set_formatNote('from magic number (python3 magic.from_file)')
+            formats.append(premis_magic_format)
+        if guess:
+            premis_guess_format_desig = FormatDesignation(guess)
+            premis_guess_format = Format(formatDesignation=premis_guess_format_desig)
+            premis_guess_format.set_formatNote('from file extension (python3 mimetypes.guess_type)')
+            formats.append(premis_guess_format)
+        if len(formats) == 0:
+            premis_unknown_format_desig = FormatDesignation('undetected')
+            premis_unknown_format = Format(formatDesignation=premis_unknown_format_desig)
+            premis_unknown_format.set_formatNote('format detection failed by python3 magic.from_file and mimetypes.guess_type')
+            formats.append(premis_unknown_format)
+        else:
+            return formats
+
         return formatDesignation
 
     def _make_contentLocation(self, file_path):
