@@ -17,12 +17,21 @@ class PremisCreator(FileProcessor):
                              "a data subdir")
         self.data_root = join(directory, 'data')
         self.admin_root = join(directory, 'admin')
+        self.premis_records = []
         FileProcessor.__init__(self, self.data_root, source_root, irrelevant_part)
+
+    def build_records(self):
+        record_tuples = []
         for x in self.find_all_files():
             file_path = x.identifier
             record = self.make_record(file_path)
             record_file_path = self.determine_record_location(file_path)
-            self.write_record_to_disk(record, record_file_path)
+            record_tuples.append((record, record_file_path))
+        self.premis_records = record_tuples
+
+    def write_records(self):
+        for x in self.premis_records:
+            self.write_record_to_disk(x[0], x[1])
 
     def make_record(self, file_path):
         obj = self._make_object(file_path)
