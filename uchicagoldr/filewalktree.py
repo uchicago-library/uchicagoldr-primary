@@ -1,3 +1,9 @@
+from treelib import Tree, Node
+from os.path import join
+
+from uchicagoldr.walktree import WalkTree
+
+
 class FileWalkTree(WalkTree):
     """
     == Attributes ==
@@ -26,21 +32,27 @@ class FileWalkTree(WalkTree):
 
         This function takes a string and builds a tree out of that literal string. If the irrelevant_parts string is included, the tree is build out of the value_parts minues the irrelelvant_parts string.
         """
-        if not irrelevant_parts:
-            value_parts = value.split('/')[1:]
-        else:
-            value_parts = value.split(irrelevant_parts)[1].split('/')
+
+        if irrelevant_parts:
+            value = value.split(irrelevant_parts)[1]
+        if value[0] == '/':
+            value = value[1:]
+        value_parts = value.split('/')
+#        if not irrelevant_parts:
+#            value_parts = value.split('/')[1:]
+#        else:
+#            value_parts = value.split(irrelevant_parts)[1].split('/')
         if not self.tree_root:
             self.tree_root = Tree()
             self.tree_root.create_node(value_parts[0],join('/',value_parts[0]))
         parent = self.tree_root.root
         for position, value_part in enumerate(value_parts[1:]):
             if position + 1 == len(value_parts[1:]):
-                if irrelevant_parts:
-                    data =  LeafData(irrelevant_parts+join(parent, value_part))
-                else:
-                    data = LeafData(join(parent, value_part))
-                self.tree_root.create_node(value_part, join(parent,value_part), parent=parent,data=data)
+#                if irrelevant_parts:
+#                    data =  LeafData(irrelevant_parts+join(parent, value_part))
+#                else:
+#                    data = LeafData(join(parent, value_part))
+                self.tree_root.create_node(value_part, join(parent,value_part), parent=parent)#,data=data)
                 break
 
             elif self.tree_root.get_node(join(parent,value_part)):

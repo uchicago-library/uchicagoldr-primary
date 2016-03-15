@@ -5,9 +5,9 @@ class WalkTree(object):
     1. tree_root : treelib.Tree
     2. expanded_node_list : list containing 1 or more treelib.Node
 
-    This 
+    This
     """
-    
+
     def __init__(self):
         self.tree_root = None
         self.expanded_node_list = None
@@ -16,7 +16,7 @@ class WalkTree(object):
         value_parts = value.split(sep)[1:]
         if not self.tree_root:
             self.tree_root = Tree()
-            self.tree_root.create_node(value_parts[0],join('/',value_parts[0])) 
+            self.tree_root.create_node(value_parts[0],join('/',value_parts[0]))
         parent = self.tree_root.root
         for position, value_part in enumerate(value_parts)[1:]:
             self.tree_root.create_node(value_part, join(parent, value_part), parent=parent)

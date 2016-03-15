@@ -1,3 +1,9 @@
+from re import compile as re_compile
+from hashlib import md5
+
+from uchicagoldr.filewalker import FileWalker
+from uchicagoldr.filewalktree import FileWalkTree
+
 class FileProcessor(object):
     """
     == attributes ==
@@ -7,15 +13,13 @@ class FileProcessor(object):
     == Args ==
     1. directory is the directory that needs to be walked and all the file contents
     retrieved.
-    2. source_root is a string representing the base of the origin file path that should
-    not be copied to the destination.
 
     == KWArgs ==
     1. irrelevant part is an optional argument to init a FileProcessor that will start a
     tree with the substring of a string after the value of this kwarg.
 
     """
-    def __init__(self, directory, source_root, irrelevant_part = None):
+    def __init__(self, directory, irrelevant_part = None):
         """
         This initializes the FileProcessor with a call to the FileWalker that passes the
         directory and creates a generator of a walk of the directory structure. A
@@ -149,7 +153,7 @@ class FileProcessor(object):
             return True
         return False
 
-    def find_files_in_a_subdirectory(a_node_name):
+    def find_files_in_a_subdirectory(self, a_node_name):
         return [x for x in self.find_matching_node(a_node_name).fpointer if x.is_leaf()]
 
     def get_tree(self):
