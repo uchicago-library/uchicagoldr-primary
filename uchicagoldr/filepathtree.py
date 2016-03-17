@@ -4,7 +4,7 @@ from uchicagoldr.filewalker import FileWalker
 from uchicagoldr.rootedpath import RootedPath
 
 class FilePathTree(object):
-    def __init__(self, path=None, filter_pattern=None):
+    def __init__(self, path=None, filter_pattern=None, leaf_dirs=False):
         self.tree = Tree()
         if path:
             if not (isinstance(path, str) or isinstance(path, RootedPath)):
@@ -12,7 +12,7 @@ class FilePathTree(object):
             if isinstance(path, str):
                 if not isabs(path):
                     raise ValueError()
-            fw = FileWalker(path, filter_pattern=filter_pattern)
+            fw = FileWalker(path, filter_pattern=filter_pattern, inc_dirs=leaf_dirs)
             for i, path in enumerate(fw):
                 self.add_node(path)
 
@@ -58,4 +58,3 @@ class FilePathTree(object):
             if x.identifier == path:
                 return self.find_depth_of_a_node(x)
         return None
-

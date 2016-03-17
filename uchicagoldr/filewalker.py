@@ -15,7 +15,7 @@ class FileWalker(object):
     items = []
     directory = None
 
-    def __init__(self, directory_path, filter_pattern = None):
+    def __init__(self, directory_path, filter_pattern=None, inc_dirs=False):
         """
         == Args ==
 
@@ -25,7 +25,7 @@ class FileWalker(object):
         This class gets initialized with a directory path literal string and immediately defines the item attribute with the genexp of walking the directory for all files contained inside that directory path.
         """
         self.directory = directory_path
-        self.items = self.walk_directory(filter_pattern = filter_pattern)
+        self.items = self.walk_directory(filter_pattern=filter_pattern, inc_dirs=inc_dirs)
 
     def __iter__(self):
         """
@@ -39,18 +39,18 @@ class FileWalker(object):
         """
         return self.directory
 
-    def walk_directory(self, directory=None, filter_pattern=None):
+    def walk_directory(self, directory=None, filter_pattern=None, inc_dirs=False):
         if directory is None:
             directory = self.get_directory()
 
         if isinstance(directory, str):
-            return self._walk_abs_directory(directory, filter_pattern)
+            return self._walk_abs_directory(directory, filter_pattern, inc_dirs)
         elif isinstance(directory, RootedPath):
-            return self._walk_rooted_directory(directory, filter_pattern)
+            return self._walk_rooted_directory(directory, filter_pattern, inc_dirs)
         else:
             raise ValueError('dir not a str or RootedPath')
 
-    def _walk_rooted_directory(self, directory, filter_pattern):
+    def _walk_rooted_directory(self, directory, filter_pattern, inc_dirs):
         flat_list = listdir(directory.fullpath)
         while flat_list:
             node = flat_list.pop()
@@ -63,10 +63,12 @@ class FileWalker(object):
             elif isdir(fullpath):
                 for child in listdir(fullpath):
                     flat_list.append(join(fullpath, child))
+                if inc_dirs:
+                    yield relpath(fullpath, directory.root)
             else:
                 raise ValueError('not a file or a dir')
 
-    def _walk_abs_directory(self, directory, filter_pattern):
+    def _walk_abs_directory(self, directory, filter_pattern, inc_dirs):
         """
         == KWArgs ==
 
@@ -90,5 +92,7 @@ class FileWalker(object):
             elif isdir(fullpath):
                 for child in listdir(fullpath):
                     flat_list.append(join(fullpath, child))
+                if inc_dirs:
+                    yield fullpath
             else:
                 raise ValueError('not a file or a dir')
