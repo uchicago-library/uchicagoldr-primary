@@ -16,6 +16,13 @@ class FilePathTree(object):
             for i, path in enumerate(fw):
                 self.add_node(path)
 
+    def __repr__(self):
+        return str(self.tree.show())
+
+    def __iter__(self):
+        for x in self.tree.all_nodes():
+            yield x.identifier
+
     def _init_tree(self, path):
         if path[0] == '/':
             self.tree.create_node("/", "/")
@@ -33,3 +40,22 @@ class FilePathTree(object):
         if not self.tree.get_node(parent_path):
             self.add_node(parent_path)
         self.tree.create_node(leaf, join(parent_path, leaf), parent=parent_path)
+
+    def get_file_paths(self):
+        return [x.identifier for x in self.get_file_nodes()]
+
+    def get_file_names(self):
+        return [x.tag for x in self.get_file_nodes()]
+
+    def get_file_nodes(self):
+        return self.tree.leaves()
+
+    def find_depth_of_a_node(self, node):
+        return self.tree.depth(node)
+
+    def find_depth_of_a_path(self, path):
+        for x in self.tree.all_nodes():
+            if x.identifier == path:
+                return self.find_depth_of_a_node(x)
+        return None
+
