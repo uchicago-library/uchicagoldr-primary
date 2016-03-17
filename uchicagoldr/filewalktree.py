@@ -1,5 +1,6 @@
 from treelib import Tree, Node
-from os.path import join
+from os.path import join, relpath
+from copy import copy
 
 from uchicagoldr.walktree import WalkTree
 
@@ -38,21 +39,13 @@ class FileWalkTree(WalkTree):
         if value[0] == '/':
             value = value[1:]
         value_parts = value.split('/')
-#        if not irrelevant_parts:
-#            value_parts = value.split('/')[1:]
-#        else:
-#            value_parts = value.split(irrelevant_parts)[1].split('/')
         if not self.tree_root:
             self.tree_root = Tree()
             self.tree_root.create_node(value_parts[0],join('/',value_parts[0]))
         parent = self.tree_root.root
         for position, value_part in enumerate(value_parts[1:]):
             if position + 1 == len(value_parts[1:]):
-#                if irrelevant_parts:
-#                    data =  LeafData(irrelevant_parts+join(parent, value_part))
-#                else:
-#                    data = LeafData(join(parent, value_part))
-                self.tree_root.create_node(value_part, join(parent,value_part), parent=parent)#,data=data)
+                self.tree_root.create_node(value_part, join(parent,value_part), parent=parent)
                 break
 
             elif self.tree_root.get_node(join(parent,value_part)):
