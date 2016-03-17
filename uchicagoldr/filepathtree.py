@@ -1,7 +1,8 @@
 from os.path import join, split, isabs
-from treelib import Tree, Node
+from treelib import Tree
 from uchicagoldr.filewalker import FileWalker
 from uchicagoldr.rootedpath import RootedPath
+
 
 class FilePathTree(object):
     def __init__(self, path=None, filter_pattern=None, leaf_dirs=False):
@@ -12,7 +13,9 @@ class FilePathTree(object):
             if isinstance(path, str):
                 if not isabs(path):
                     raise ValueError()
-            fw = FileWalker(path, filter_pattern=filter_pattern, inc_dirs=leaf_dirs)
+            fw = FileWalker(path,
+                            filter_pattern=filter_pattern,
+                            inc_dirs=leaf_dirs)
             for i, path in enumerate(fw):
                 self.add_node(path)
 
@@ -41,14 +44,23 @@ class FilePathTree(object):
             self.add_node(parent_path)
         self.tree.create_node(leaf, join(parent_path, leaf), parent=parent_path)
 
-    def get_file_paths(self):
+    def get_paths(self):
         return [x.identifier for x in self.get_file_nodes()]
 
-    def get_file_names(self):
+    def get_nodes(self):
+        return self.tree.all_nodes()
+
+    def get_names(self):
         return [x.tag for x in self.get_file_nodes()]
 
-    def get_file_nodes(self):
+    def get_leaf_nodes(self):
         return self.tree.leaves()
+
+    def get_leaf_paths(self):
+        return [x.identifier for x in self.get_leaves()]
+
+    def get_leaf_names(self):
+        return [x.tag for x in self.get_leaves()]
 
     def find_depth_of_a_node(self, node):
         return self.tree.depth(node)
@@ -58,3 +70,18 @@ class FilePathTree(object):
             if x.identifier == path:
                 return self.find_depth_of_a_node(x)
         return None
+
+    def trace_ancestry_of_a_node(self, node):
+        ancestry = [node]
+        cur_node = node
+        while self.tree.parent(cur_node.identifier):
+            ancestry.append(self.tree.parent(cur_node.identifier))
+            cur_node = self.tree.parent(cur_node.identifier)
+        output = [n for n in reversed(ancestry)]
+        return output
+
+    def search_node_tags(self, q):
+        return [x for x in self.get_nodes() if q in x.tag]
+
+    def search_node_identifiers(self, q):
+        return [x for x in self.get_nodes() if q in x.identifier]
