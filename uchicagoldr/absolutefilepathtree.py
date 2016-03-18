@@ -5,6 +5,7 @@ from mimetypes import guess_type
 from magic import from_file
 
 from uchicagoldr.filepathtree import FilePathTree
+from uchicagoldr.convenience import sane_hash
 
 class AbsoluteFilePathTree(FilePathTree):
     def __init__(self, path=None, filter_pattern=None, leaf_dirs=False):
@@ -15,8 +16,6 @@ class AbsoluteFilePathTree(FilePathTree):
         FilePathTree.__init__(self, path=path, filter_pattern=filter_pattern, leaf_dirs=leaf_dirs)
         self.cache = namedtuple('Cache', ['shas', 'md5s', 'ext_mimes', 'magic_mimes', 'file_sizes', 'total_size'])
 
-    def _hash(self, hasher, filepath):
-        pass
 
     def add_node(self, path):
         if not isabs(path):
@@ -60,7 +59,7 @@ class AbsoluteFilePathTree(FilePathTree):
     def find_shas(self):
         shas_dict = {}
         for x in self.get_files():
-            shas_dict[x] = self._hash(sha256, x)
+            shas_dict[x] = sane_hash('sha256', x)
         self.cache['shas'] = shas_dict
 
     def get_shas(self):
@@ -71,7 +70,7 @@ class AbsoluteFilePathTree(FilePathTree):
     def find_md5s(self):
         md5s_dict = {}
         for x in self.get_files():
-            md5s_dict[x] = self._hash(md5, x)
+            md5s_dict[x] = sane_hash('md5', x)
         self.cache['md5s'] = md5s_dict
 
     def get_md5s(self):
