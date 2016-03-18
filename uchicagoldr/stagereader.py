@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import join, split
 from re import sub
 from re import compile as re_compile
 
@@ -55,6 +55,62 @@ class StageReader(object):
         self.accession_record_paths = [x.identifier for x in self.accession_record_nodes]
         self.accession_record_fullpaths = [join(self.root_fullpath, x) for x in self.accession_record_paths]
 
+        self.data_prefix_nodes = [self.fpt.tree.get_node(x) for x in self.data_node.fpointer]
+        self.data_prefix_paths = [x.identifier for x in self.data_prefix_nodes]
+        self.data_prefix_fullpaths = [join(self.root_fullpath, x) for x in self.data_prefix_paths]
+
+        self.admin_prefix_nodes = [self.fpt.tree.get_node(x) for x in self.admin_node.fpointer if
+                                   (
+                                       x != self.notes_node.identifier and
+                                       x != self.legal_node.identifier and
+                                       x != self.accession_records_node.identifier
+                                   )
+                                   ]
+        self.admin_prefix_paths = [x.identifier for x in self.admin_prefix_nodes]
+        self.admin_prefix_fullpaths = [join(self.root_fullpath, x) for x in self.admin_prefix_paths]
+
+        self.prefix_nodes = self.data_prefix_nodes + self.admin_prefix_nodes
+        self.prefix_paths = self.data_prefix_paths + self.admin_prefix_paths
+        self.prefix_fullpaths = self.data_prefix_fullpaths + self.admin_prefix_fullpaths
+
+        self.prefixes = set([split(x)[1] for x in self.prefix_paths])
+        self.prefix_root_strs = set([sub(self.re_trailing_numbers, '', x) for x in self.prefixes])
+
+        self.manifest_nodes = None
+        self.manifest_paths = None
+        self.manifest_fullpaths = None
+
+        self.premis_dir_nodes = None
+        self.premis_dir_paths = None
+        self.premis_dir_fullpaths = None
+
+        self.premis_nodes = None
+        self.premis_paths = None
+        self.premis_fullpaths = None
+
+        self.data_nodes = None
+        self.data_paths = None
+        self.data_fullpaths = None
+
+        self.origin_data_nodes = None
+        self.origin_data_paths = None
+        self.origin_data_fullpaths = None
+
+        self.fits_data_nodes = None
+        self.fits_data_paths = None
+        self.fits_data_fullpaths = None
+
+        self.converted_data_nodes = None
+        self.converted_data_paths = None
+        self.converted_data_fullpaths = None
+
+        self.prefix_pair_nodes = None
+        self.prefix_pair_paths = None
+        self.prefix_pair_fullpaths = None
+
+        self.file_suites_nodes = None
+        self.file_suites_paths = None
+        self.file_suites_fullpaths = None
 
         print('Root:',self.root_fullpath)
         print('Stage ID:',self.stage_id_path)
@@ -81,3 +137,23 @@ class StageReader(object):
         print('accession_record_fullpaths:')
         for x in self.accession_record_fullpaths:
             print('\t'+x)
+        print('data_prefix_paths:')
+        for x in self.data_prefix_paths:
+            print('\t'+x)
+        print('data_prefix_fullpaths:')
+        for x in self.data_prefix_fullpaths:
+            print('\t'+x)
+        print('admin_prefix_paths:')
+        for x in self.admin_prefix_paths:
+            print('\t'+x)
+        print('prefixes:')
+        for x in self.prefixes:
+            print('\t'+x)
+
+    def get_manifest_node_from_prefix(self, prefix):
+        ids = []
+        for x in self.admin_prefix_nodes:
+            for y in x.fpointer:
+                if self.fpt.tree.get_node(y).tag == 'manifest.txt':
+                    ids.append(y)
+        return [self.fpt.tree.get_node(x) for x in ids]
