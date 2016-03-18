@@ -81,7 +81,37 @@ class FilePathTree(object):
         return output
 
     def search_node_tags(self, q):
-        return [x for x in self.get_nodes() if q in x.tag]
+        return [x for x in self.get_nodes() if q == x.tag]
 
     def search_node_identifiers(self, q):
-        return [x for x in self.get_nodes() if q in x.identifier]
+        return [x for x in self.get_nodes() if q == x.identifier]
+
+    def is_node_in_node(self, n, containing_n):
+        if n.identifier in containing_n.fpointer:
+            return True
+        return False
+
+    def does_node_match_string(self, n, id_string):
+        return n.identifier == id_string
+
+    def find_string_in_node_tag(self, n, a_string):
+        return a_string in n.tag
+
+    def find_string_in_node_identifier(self, n, a string):
+        return a_string in n.identifier
+
+    def find_nodes_in_node(self, n, all_nodes=[], recursive=False):
+        all_nodes = all_nodes + n.fpointer
+        if recursive:
+            for x in n.fpointer:
+                if not x.is_leaf():
+                    self.find_nodes_in_node(x, all_nodes=all_nodes, recursive=recursive)
+        return all_nodes
+
+    def find_leaves_in_node(self, n, all_leaves, recursive=False):
+        all_leaves = all_leaves + [x for x in n.fpointer if x.is_leaf()]
+        if recursive:
+            for x in n.fpointer:
+                if not x.is_leaf():
+                    self.find_leaves_in_node(x, all_leaves=all_leaves, recursive=recursive)
+        return all_leaves
