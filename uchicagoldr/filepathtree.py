@@ -97,7 +97,7 @@ class FilePathTree(object):
     def find_string_in_node_tag(self, n, a_string):
         return a_string in n.tag
 
-    def find_string_in_node_identifier(self, n, a string):
+    def find_string_in_node_identifier(self, n, a_string):
         return a_string in n.identifier
 
     def find_nodes_in_node(self, n, all_nodes=[], recursive=False):
