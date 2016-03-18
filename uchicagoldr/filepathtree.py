@@ -115,3 +115,8 @@ class FilePathTree(object):
                 if not x.is_leaf():
                     self.find_leaves_in_node(x, all_leaves=all_leaves, recursive=recursive)
         return all_leaves
+
+    def find_tag_at_depth(self, tag, depth):
+        potential_matches = [x for x in self.search_node_tags(tag)]
+        matches = [x for x in potential_matches if self.find_depth_of_a_node(x) == depth]
+        return matches
