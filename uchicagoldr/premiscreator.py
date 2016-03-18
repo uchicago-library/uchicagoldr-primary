@@ -288,7 +288,6 @@ class PremisCreator(FileProcessor):
             formats.append(premis_unknown_format)
         return formats
 
-
     def _make_contentLocation(self, file_path):
         """
         make a new contentLocation node for a file
