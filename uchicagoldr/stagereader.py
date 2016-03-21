@@ -1,6 +1,7 @@
 from os.path import join, split
 from re import sub
 from re import compile as re_compile
+from itertools import chain
 
 from uchicagoldr.filepathtree import FilePathTree
 from uchicagoldr.rootedpath import RootedPath
@@ -90,10 +91,12 @@ class StageReader(object):
         self.admin_prefix_fullpaths = (join(self.root_fullpath, x) for x in
                                        self.admin_prefix_paths)
 
-        self.prefix_nodes = self.data_prefix_nodes + self.admin_prefix_nodes
-        self.prefix_paths = self.data_prefix_paths + self.admin_prefix_paths
-        self.prefix_fullpaths = self.data_prefix_fullpaths + \
-            self.admin_prefix_fullpaths
+        self.prefix_nodes = chain(self.data_prefix_nodes,
+                                  self.admin_prefix_nodes)
+        self.prefix_paths = chain(self.data_prefix_paths,
+                                  self.admin_prefix_paths)
+        self.prefix_fullpaths = chain(self.data_prefix_fullpaths,
+                                      self.admin_prefix_fullpaths)
 
         self.prefixes = set((split(x)[1] for x in self.prefix_paths))
         self.prefix_root_strs = set(
