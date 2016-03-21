@@ -9,6 +9,8 @@ from uchicagoldr.rootedpath import RootedPath
 class StageReader(object):
 
     re_trailing_numbers = re_compile('[0-9]+$')
+    re_trailing_fits = re_compile('.fits.xml$')
+    re_trailing_premis = re_compile('.premis.xml$')
 
     def __init__(self, rootedpath):
         if not isinstance(rootedpath, RootedPath):
@@ -35,62 +37,62 @@ class StageReader(object):
         self.notes_path = self.notes_node.identifier
         self.notes_fullpath = join(self.root_fullpath, self.notes_path)
 
-        self.note_nodes = [self.fpt.tree.get_node(x) for x in self.notes_node.fpointer]
-        self.note_paths = [x.identifier for x in self.note_nodes]
-        self.note_fullpaths = [join(self.root_fullpath, x) for x in self.note_paths]
+        self.note_nodes = (self.fpt.tree.get_node(x) for x in self.notes_node.fpointer)
+        self.note_paths = (x.identifier for x in self.note_nodes)
+        self.note_fullpaths = (join(self.root_fullpath, x) for x in self.note_paths)
 
         self.legal_node = self.fpt.tree.get_node(join(self.admin_path, 'legal'))
         self.legal_path = self.legal_node.identifier
         self.legal_fullpath = join(self.root_fullpath, self.legal_path)
 
-        self.legal_nodes = [self.fpt.tree.get_node(x) for x in self.legal_node.fpointer]
-        self.legal_paths = [x.identifier for x in self.legal_nodes]
-        self.legal_fullpaths = [join(self.root_fullpath, x) for x in self.legal_paths]
+        self.legal_nodes = (self.fpt.tree.get_node(x) for x in self.legal_node.fpointer)
+        self.legal_paths = (x.identifier for x in self.legal_nodes)
+        self.legal_fullpaths = (join(self.root_fullpath, x) for x in self.legal_paths)
 
         self.accession_records_node = self.fpt.tree.get_node(join(self.admin_path, 'accession_records'))
         self.accession_records_path = self.accession_records_node.identifier
         self.accession_records_fullpath = join(self.root_fullpath, self.accession_records_path)
 
-        self.accession_record_nodes = [self.fpt.tree.get_node(x) for x in self.accession_records_node.fpointer]
-        self.accession_record_paths = [x.identifier for x in self.accession_record_nodes]
-        self.accession_record_fullpaths = [join(self.root_fullpath, x) for x in self.accession_record_paths]
+        self.accession_record_nodes = (self.fpt.tree.get_node(x) for x in self.accession_records_node.fpointer)
+        self.accession_record_paths = (x.identifier for x in self.accession_record_nodes)
+        self.accession_record_fullpaths = (join(self.root_fullpath, x) for x in self.accession_record_paths)
 
-        self.data_prefix_nodes = [self.fpt.tree.get_node(x) for x in self.data_node.fpointer]
-        self.data_prefix_paths = [x.identifier for x in self.data_prefix_nodes]
-        self.data_prefix_fullpaths = [join(self.root_fullpath, x) for x in self.data_prefix_paths]
+        self.data_prefix_nodes = (self.fpt.tree.get_node(x) for x in self.data_node.fpointer)
+        self.data_prefix_paths = (x.identifier for x in self.data_prefix_nodes)
+        self.data_prefix_fullpaths = (join(self.root_fullpath, x) for x in self.data_prefix_paths)
 
-        self.admin_prefix_nodes = [self.fpt.tree.get_node(x) for x in self.admin_node.fpointer if
+        self.admin_prefix_nodes = (self.fpt.tree.get_node(x) for x in self.admin_node.fpointer if
                                    (
                                        x != self.notes_node.identifier and
                                        x != self.legal_node.identifier and
                                        x != self.accession_records_node.identifier
                                    )
-                                   ]
-        self.admin_prefix_paths = [x.identifier for x in self.admin_prefix_nodes]
-        self.admin_prefix_fullpaths = [join(self.root_fullpath, x) for x in self.admin_prefix_paths]
+                                   )
+        self.admin_prefix_paths = (x.identifier for x in self.admin_prefix_nodes)
+        self.admin_prefix_fullpaths = (join(self.root_fullpath, x) for x in self.admin_prefix_paths)
 
         self.prefix_nodes = self.data_prefix_nodes + self.admin_prefix_nodes
         self.prefix_paths = self.data_prefix_paths + self.admin_prefix_paths
         self.prefix_fullpaths = self.data_prefix_fullpaths + self.admin_prefix_fullpaths
 
-        self.prefixes = set([split(x)[1] for x in self.prefix_paths])
-        self.prefix_root_strs = set([sub(self.re_trailing_numbers, '', x) for x in self.prefixes])
+        self.prefixes = set((split(x)[1] for x in self.prefix_paths))
+        self.prefix_root_strs = set((sub(self.re_trailing_numbers, '', x) for x in self.prefixes))
 
-        self.manifest_nodes = None
-        self.manifest_paths = None
-        self.manifest_fullpaths = None
+        self.manifest_nodes = self.get_manifest_node_from_prefix()
+        self.manifest_paths = (x.identifier for x in self.manifest_nodes)
+        self.manifest_fullpaths = (join(self.root_fullpath, x) for x in self.manifest_paths)
 
-        self.premis_dir_nodes = None
-        self.premis_dir_paths = None
-        self.premis_dir_fullpaths = None
+        self.premis_dir_nodes = self.get_premis_dir_node_from_prefix()
+        self.premis_dir_paths = (x.identifier for x in self.premis_dir_nodes)
+        self.premis_dir_fullpaths = (join(self.root_fullpath, x) for x in self.premis_dir_paths)
 
-        self.premis_nodes = None
-        self.premis_paths = None
-        self.premis_fullpaths = None
+        self.premis_nodes = (self.fpt.tree.subtree(x).leaves() for x in self.premis_dir_nodes)
+        self.premis_paths = (x.identifier for x in self.premis_nodes)
+        self.premis_fullpaths = (join(self.root_fullpath, x) for x in self.premis_paths)
 
-        self.data_nodes = None
-        self.data_paths = None
-        self.data_fullpaths = None
+        self.data_nodes = (x for x in self.fpt.tree.subtree(self.data_node).all_nodes())
+        self.data_paths = (x.identifier for x in self.data_nodes)
+        self.data_fullpaths = (join(self.root_fullpath, x) for x in self.data_paths)
 
         self.origin_data_nodes = None
         self.origin_data_paths = None
@@ -150,10 +152,24 @@ class StageReader(object):
         for x in self.prefixes:
             print('\t'+x)
 
-    def get_manifest_node_from_prefix(self, prefix):
+    def get_manifest_node_from_prefix(self, prefix=None):
         ids = []
         for x in self.admin_prefix_nodes:
+            if prefix is not None:
+                if x.tag is not prefix:
+                    continue
             for y in x.fpointer:
                 if self.fpt.tree.get_node(y).tag == 'manifest.txt':
                     ids.append(y)
-        return [self.fpt.tree.get_node(x) for x in ids]
+        return (self.fpt.tree.get_node(x) for x in ids)
+
+    def get_premis_node_from_prefix(self, prefix=None):
+        ids = []
+        for x in self.admin_prefix_nodes:
+            if prefix is not None:
+                if x.tag is not prefix:
+                    continue
+            for y in x.fpointer:
+                if self.gpt.tree.get_node(y).tag == 'PREMIS':
+                    ids.append(y)
+        return (self.fpt.tree.get_node(x) for x in ids)
