@@ -120,7 +120,7 @@ class StageReader(object):
                                  self.premis_paths)
 
         self.data_nodes = (x for x in
-                           self.fpt.tree.subtree(self.data_node).all_nodes())
+                           self.fpt.tree.subtree(self.data_node.identifier).all_nodes())
         self.data_paths = (x.identifier for x in self.data_nodes)
         self.data_fullpaths = (join(self.root_fullpath, x) for x in
                                self.data_paths)
@@ -203,7 +203,7 @@ class StageReader(object):
                     ids.append(y)
         return (self.fpt.tree.get_node(x) for x in ids)
 
-    def get_premis_node_from_prefix(self, prefix=None):
+    def get_premis_dir_node_from_prefix(self, prefix=None):
         ids = []
         for x in self.admin_prefix_nodes:
             if prefix is not None:
