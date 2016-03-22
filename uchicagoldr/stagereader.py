@@ -210,6 +210,36 @@ class StageReader(object):
                 if x.tag is not prefix:
                     continue
             for y in x.fpointer:
-                if self.gpt.tree.get_node(y).tag == 'PREMIS':
+                if self.fpt.tree.get_node(y).tag == 'PREMIS':
                     ids.append(y)
         return (self.fpt.tree.get_node(x) for x in ids)
+
+    def get_fits_from_orig_node(self, n):
+        pass
+
+    def get_fits_from_orig_path(self, p):
+        for x in self.fpt.all_nodes():
+            if x.identifier == p:
+                n = x
+                break
+        return self.get_fits_from_orig_node(n).identifier
+
+    def get_presform_from_orig_node(self, n):
+        pass
+
+    def get_presform_from_orig_path(self, p):
+        for x in self.fpt.all_nodes():
+            if x.identifier == p:
+                n = x
+                break
+        return self.get_presform_from_orig_node(n).identifier
+
+    def get_premis_from_orig_node(self, n):
+        pass
+
+    def get_premis_from_orig_path(self, p):
+        for x in self.fpt.all_nodes():
+            if x.identifier == p:
+                n = x
+                break
+        return self.get_premis_from_orig_node(n).identifier
