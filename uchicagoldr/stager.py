@@ -1,32 +1,21 @@
-class Stager(FileProcessor):
-    """
-    == Attributes ==
-    1. destination_root is the location that the Stager is supposed to move the origin
-       files to
-    2. source_root is the base of the origin location of the files that need to be moved
-    3. numfiles is the number of files in the origin location.
-    4. prefix is a free-form string for a particular run that is part of a given staging
-    directory.
-    5. staging_id is a free-form identifier for a staging directory. It is possible to
-       have multiple runs in a single staging location.
+from uchicagoldr.rootedpath import RootedPath
+from uchicagoldr.absolutefilepathtree import AbsoluteFilePathTree
+from os.path import exists, normpath, split
 
-    """
-    def __init__(self, directory, numfiles, stage_identifier, prefix, source_root, archive_directory):
-        """
-        == Args ==
-        1. directory : literal string
-        2. numfiles : integer
-        3. staging_identifier : literal string
-        4. prefix : literal string
-        5. source_root : literal string
-        6. archive_directory : literal string
-        """
-        FileProcessor.__init__(self, directory, source_root)
-        self.destination_root = archive_directory
+class Stager(object):
+    """description of class"""
+
+    def __init__(self, rooted_path, numfiles, stage_identifier, prefix, source_root, archive_directory):
+        if not isinstance(rooted_path, RootedPath):
+            raise ValueError("Must instantiate a stager with a RootedPath")
+        else:
+            pass
+        self.tree = AbsoluteFilePathTree(path=rooted_path, leaf_dirs=True)
+        self.archive_directory = archive_directory
         self.source_root = source_root
-        self.numfiles = numfiles
         self.prefix = prefix
-        self.staging_id = stage_identifier
+        self.stage_identifier = stage_identifier
+        self.numfiles = numfiles
 
     def validate(self):
         """
@@ -34,7 +23,8 @@ class Stager(FileProcessor):
         checks that the same number of files were found as was reported. If
         the numbers are equal it returns true; if the numbers aren't equal it returns False.
         """
-        numfilesfound = len(self.get_tree().get_files())
+        leaves = self.tree.get_files()
+        numfilesfound = len(leaves)
         if numfilesfound == self.numfiles:
             return True
         else:
@@ -46,7 +36,7 @@ class Stager(FileProcessor):
         function returns a namedtuple object with a category and a message explaining
         that the number of files found was not equal to the number reported.
         """
-        if len(self.get_tree().get_files()) != self.numfiles:
+        if len(self.tree.get_files()) != self.numfiles:
             return namedtuple("ldrerror","category message")("fatal", "You said there were {} files, but {} files were found. This is a mismatch: please correct and try again.".format(str(self.numfiles),str(len(self.get_tree().get_files()))))
         else:
             return True
@@ -206,12 +196,12 @@ id attribute values.
         between files already transferred from origin and all files in the origin. Finally,
         it returns a list of files that still need to be copied from origin.
         """
-        files = self.find_all_files()
+        files = self.tree.get_files()
         manifestfile = open(join(admin_dir, 'manifest.txt'),'r')
         manifestlines = manifestfile.readlines()
         manifestfiles = [x.split('\t') for x in manifestlines]
         manifestfiles = [x[0] for x in manifestfiles]
-        new_files_to_ingest = [x for x in files if relpath(x.data.filepath, self.source_root) not in manifestfiles]
+        new_files_to_ingest = [x for x in files if relpath(x, self.source_root) not in manifestfiles]
         return new_files_to_ingest
 
     def ingest(self, ignore_mismatched_checksums = False,
