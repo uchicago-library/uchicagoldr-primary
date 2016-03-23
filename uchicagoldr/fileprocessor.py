@@ -1,7 +1,7 @@
 """
 The FileProcessor class should be used
 """
-from typing import Callable
+from typing import Generic
 from uchicagoldr.absolutefilepathtree import AbsoluteFilePathTree
 
 
@@ -40,6 +40,10 @@ class FileProcessor(object):
         self.tree = AbsoluteFilePathTree(path)
         self.files = None
 
+    def get_snapshot_of_a_tree(self):
+        """a function to return the tree
+        """
+        return self.tree.return_tree()
 
     def calculate_checksums(self) -> None:
         """find checksums (md5 and sha256) for the files in self.files
@@ -65,7 +69,7 @@ class FileProcessor(object):
 
 
     def _locate_path_in_a_dict(self, a_dict: dict, type_str: str) -> None:
-        def define_attribute_in_file(current_object: Callable(self.FileDataObject),
+        def define_attribute_in_file(current_object: Generic(self.FileDataObject),
                                      value: str):
             """function to set a value on a matched FileDataObject
             """
@@ -77,6 +81,10 @@ class FileProcessor(object):
             define_attribute_in_file(a_file, value)
             return value
 
+    def snapshot_tree(self):
+        """a function to treturn a copy of the tree data
+        """
+        return self.tree.return_tree()
 
     def _find_files(self) -> list:
         """find files that need to be processed
