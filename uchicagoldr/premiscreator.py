@@ -3,7 +3,6 @@ from os import makedirs
 from hashlib import md5, sha256
 from magic import from_file
 from mimetypes import guess_type
-from re import sub
 from uuid import uuid1
 from uchicagoldr.tree import FileProcessor
 from pypremis.lib import PremisRecord
@@ -22,26 +21,11 @@ tuples are (PremisRecord instance, proposed write path)
 """
 
 class PremisCreator(FileProcessor):
-    def __init__(self, directory, source_root, irrelevant_part=None):
-        """
-        Instantiate a new PremisCreator instance.
-
-        __Args__
-
-        1. directory (str): The path to the staging dir
-        2. source_root (str): The root path of the staging dir
-
-        __KWArgs__
-        * irrelevant_part (str): Any portion of the path between the root
-        and the staging dir
-        """
-        if not isdir(join(directory, 'data')):
-            raise ValueError("The specified directory does not have " +
-                             "a data subdir")
-        self.data_root = join(directory, 'data')
-        self.admin_root = join(directory, 'admin')
-        self.premis_records = []
-        FileProcessor.__init__(self, self.data_root, source_root, irrelevant_part)
+    def __init__(self, directory, root=None, overwrite=False):
+        FileProcessor.__init__(self, directory)
+        stage_path = RootedPath(directory, root=root)
+        self.stageread = StageReader(stage_path)
+        self.depth_offset = None
 
     def build_records(self):
         """
@@ -49,11 +33,16 @@ class PremisCreator(FileProcessor):
         a premis record instance and a proposed filepath for writing to.
         """
         record_tuples = []
-        for x in self.find_all_files():
-            file_path = x.identifier
-            record = self.make_record(file_path)
-            record_file_path = self.determine_record_location(file_path)
-            record_tuples.append((record, record_file_path))
+        for x in self.stageread.file_suites_paths:
+            if x.premis and not overwrite:
+                continue
+            else:
+                full_file_path = join(self.stageread.root_fullpath, x.original)
+                rel_file_path = RootedPath(full_file_path, self.stageread.data_fullpath)
+                prefix = self.stagereader.get_containing_prefix_string_from_path(x.original)
+                record_file_path = join(self.stageread.get_premis_dir_path_from_prefix(prefix), rel_file_path.path)
+                record = self.make_record(full_file_path)
+                record_tuples.append((record, record_file_path))
         self.premis_records = record_tuples
 
     def write_records(self):
@@ -91,11 +80,6 @@ class PremisCreator(FileProcessor):
 
         1. (str): The proposed file path to write to
         """
-        origin_path = sub('^'+self.data_root+"/", '', file_path)
-        prefix = origin_path.split("/")[0]
-        origin_path = sub('^'+prefix+"/", '', origin_path)
-        path = join(self.admin_root, prefix, 'PREMIS', origin_path+'.premis.xml')
-        return path
 
     def write_record_to_disk(self, record, file_path):
         """

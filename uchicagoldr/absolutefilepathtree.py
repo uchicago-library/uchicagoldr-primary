@@ -21,7 +21,6 @@ class AbsoluteFilePathTree(FilePathTree):
 
         FilePathTree.__init__(self, path=path, filter_pattern=filter_pattern, leaf_dirs=leaf_dirs)
 
-
     def add_node(self, path):
         if not isabs(path):
             raise ValueError()
