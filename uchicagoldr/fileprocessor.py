@@ -1,8 +1,9 @@
 """
 The FileProcessor class should be used
 """
-
+from typing import Callable
 from uchicagoldr.absolutefilepathtree import AbsoluteFilePathTree
+
 
 class FileProcessor(object):
     """FileProcessor abstract class
@@ -64,7 +65,7 @@ class FileProcessor(object):
 
 
     def _locate_path_in_a_dict(self, a_dict: dict, type_str: str) -> None:
-        def define_attribute_in_file(current_object,
+        def define_attribute_in_file(current_object: Callable(self.FileDataObject),
                                      value: str):
             """function to set a value on a matched FileDataObject
             """
