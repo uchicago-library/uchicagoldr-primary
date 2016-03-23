@@ -6,7 +6,7 @@ instance of the Stager class is valid or not.
 from treelib import Tree
 
 
-class StagerValidator(object):
+class StagerValidator(Validator):
     """The StagerValidator is a class that will test whether the given tree view
     of a potential stageable directory can be staged.
     """

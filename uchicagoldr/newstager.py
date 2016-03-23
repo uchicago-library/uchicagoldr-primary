@@ -7,6 +7,8 @@ from typing import NamedTuple
 from treelib import Tree
 from uchicagoldr.fileprocessor import FileProcessor
 from uchicagoldr.rolevalidatorfactory import RoleValidatorFactory
+from uchicagoldr.validator import Validator
+
 
 class NewStager(object):
     """NewStager is a concrete class intended to be used in application code.
@@ -44,3 +46,31 @@ class NewStager(object):
         result = self.validator.verbose_test(self._get_snapshot_of_tree())
         return namedtuple("problem", "category message")("fatal", result)
 
+    def get_processor(self):
+        """method to get the value in the processor member
+        """
+        return self._processor
+
+
+    def set_processor(self):
+        """method to type check setting the value of the processor data member
+        """
+        if isinstance(self._processor, FileProcessor) != True:
+            raise ValueError("processor data member must have a value " + \
+                             "that is an instance of the FileProcessor class")
+
+
+    def get_validator(self):
+        """method to get the value of the validator data member
+        """
+        return self.validator
+
+    def set_validator(self):
+        """method to to type check setting the value of the validator data member
+        """
+        if isinstance(self.validator, Validator) != True:
+            raise ValueError("validator data member must have a vlaue " + \
+                             "that is an instance of the Validator class")
+
+    _processor = property(get_processor, set_processor)
+    validator = property(get_validator, set_validator)
