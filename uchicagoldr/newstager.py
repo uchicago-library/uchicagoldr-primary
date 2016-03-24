@@ -23,7 +23,7 @@ class NewStager(object):
         rolevalidatordata = namedtuple("info", "data")(dict(((member,
                                                               getattr(data,
                                                                       member))\
-                                                             for member in data.fields)))
+                                                             for member in data._fields)))
         info = namedtuple("info", "data")(rolevalidatordata)
         self.validator = RoleValidatorFactory('stager').build(info)
 
@@ -49,15 +49,16 @@ class NewStager(object):
     def get_processor(self):
         """method to get the value in the processor member
         """
-        return self._processor
+        return "this is a private data member"
 
 
-    def set_processor(self):
+    def set_processor(self, value):
         """method to type check setting the value of the processor data member
         """
-        if isinstance(self._processor, FileProcessor) != True:
+        if isinstance(value, FileProcessor) != True:
             raise ValueError("processor data member must have a value " + \
                              "that is an instance of the FileProcessor class")
+        self._processor = value
 
 
     def get_validator(self):
@@ -65,12 +66,14 @@ class NewStager(object):
         """
         return self.validator
 
-    def set_validator(self):
+    def set_validator(self, value):
         """method to to type check setting the value of the validator data member
         """
-        if isinstance(self.validator, Validator) != True:
+        if isinstance(value, Validator) != True:
             raise ValueError("validator data member must have a vlaue " + \
                              "that is an instance of the Validator class")
+        self.validator = value
+
 
     _processor = property(get_processor, set_processor)
     validator = property(get_validator, set_validator)

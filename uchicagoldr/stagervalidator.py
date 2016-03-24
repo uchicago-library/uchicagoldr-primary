@@ -4,7 +4,7 @@ instance of the Stager class is valid or not.
 """
 
 from treelib import Tree
-
+from uchicagoldr.validator import Validator
 
 class StagerValidator(Validator):
     """The StagerValidator is a class that will test whether the given tree view
