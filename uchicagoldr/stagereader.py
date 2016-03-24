@@ -129,7 +129,8 @@ class StageReader(object):
 
         self.premis_nodes = []
         for x in self.premis_dir_nodes:
-            self.premis_nodes = self.premis_nodes + self.fpt.tree.subtree(x.identifier).leaves()
+            self.premis_nodes = self.premis_nodes + \
+                self.fpt.tree.subtree(x.identifier).leaves()
         for x in self.premis_dir_nodes:
             if x in self.premis_nodes:
                 del self.premis_nodes[self.premis_nodes.index(x)]
@@ -138,7 +139,8 @@ class StageReader(object):
                                  self.premis_paths]
 
         self.data_nodes = [x for x in
-                           self.fpt.tree.subtree(self.data_node.identifier).all_nodes()]
+                           self.fpt.tree.subtree(
+                               self.data_node.identifier).all_nodes()]
         del self.data_nodes[self.data_nodes.index(self.data_node)]
         for x in self.data_prefix_nodes:
             del self.data_nodes[self.data_nodes.index(x)]
@@ -165,8 +167,10 @@ class StageReader(object):
 
         self.converted_data_nodes = [x for x in self.data_nodes if
                                      self.re_trailing_presform.search(x.identifier)]
-        self.converted_data_paths = [x.identifier for x in self.converted_data_nodes]
-        self.converted_data_fullpaths = [join(self.root_fullpath, x) for x in self.converted_data_paths]
+        self.converted_data_paths = [x.identifier for x in
+                                     self.converted_data_nodes]
+        self.converted_data_fullpaths = [join(self.root_fullpath, x) for x in
+                                         self.converted_data_paths]
 
         self.prefix_pair_nodes = []
         for x in self.data_prefix_nodes:
@@ -183,8 +187,6 @@ class StageReader(object):
         self.file_suites_nodes = []
         for x in self.data_nodes:
             self.file_suites_nodes.append(self.build_file_suite_from_node(x))
-        for x in self.file_suites_nodes:
-            print(x)
         self.file_suites_paths = []
         for x in self.file_suites_nodes:
             pathfs = FileSuite()
@@ -195,7 +197,7 @@ class StageReader(object):
             self.file_suites_paths.append(pathfs)
         self.file_suites_fullpaths = None
 
-    def build_file_suite_from_node(self, n, recurse=True):
+    def build_file_suite_from_node(self, n, recurse=False):
         fs = FileSuite()
         fs.original = n
         premis = self.get_premis_from_orig_node(n)
@@ -226,7 +228,6 @@ class StageReader(object):
             fs.fits = fs.fits + nextfs.fits
             fs.presforms = fs.presforms + nextfs.presforms
         return fs
-
 
     def get_manifest_node_from_prefix(self, prefix=None):
         ids = []
@@ -266,7 +267,6 @@ class StageReader(object):
             return node
 
     def hypothesize_fits_from_orig_node(self, n):
-        orig_id = n.identifier
         fits_id = n.identifier + '.fits.xml'
         return fits_id
 
@@ -300,8 +300,9 @@ class StageReader(object):
     def hypothesize_premis_from_orig_node(self, n):
         orig_id = n.identifier
         prefix = self.get_containing_prefix_string_from_path(orig_id)
-        rel_path = RootedPath(orig_id, root=self.data_path)
-        premis_id = join(self.admin_path, prefix, 'PREMIS', rel_path.path + '.premis.xml')
+        rel_path = RootedPath(orig_id, root=self.get_containing_prefix_dir_node_from_node(n).identifier)
+        premis_id = join(self.admin_path, prefix, 'PREMIS',
+                         rel_path.path + '.premis.xml')
         return premis_id
 
     def get_containing_prefix_dir_node_from_node(self, n):

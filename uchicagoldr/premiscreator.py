@@ -4,7 +4,8 @@ from hashlib import md5, sha256
 from magic import from_file
 from mimetypes import guess_type
 from uuid import uuid1
-from uchicagoldr.tree import FileProcessor
+from uchicagoldr.rootedpath import RootedPath
+from uchicagoldr.stagereader import StageReader
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
@@ -20,29 +21,31 @@ __Attribs__
 tuples are (PremisRecord instance, proposed write path)
 """
 
-class PremisCreator(FileProcessor):
+class PremisCreator(object):
     def __init__(self, directory, root=None, overwrite=False):
-        FileProcessor.__init__(self, directory)
         stage_path = RootedPath(directory, root=root)
-        self.stageread = StageReader(stage_path)
-        self.depth_offset = None
+        self.stagereader = StageReader(stage_path)
 
-    def build_records(self):
+    def build_records(self, overwrite=False, not_for_fits=True, not_for_premis=True):
         """
         populate the self.premis_records array with tuples containing
         a premis record instance and a proposed filepath for writing to.
         """
         record_tuples = []
-        for x in self.stageread.file_suites_paths:
+        for x in self.stagereader.file_suites_paths:
             if x.premis and not overwrite:
                 continue
-            else:
-                full_file_path = join(self.stageread.root_fullpath, x.original)
-                rel_file_path = RootedPath(full_file_path, self.stageread.data_fullpath)
-                prefix = self.stagereader.get_containing_prefix_string_from_path(x.original)
-                record_file_path = join(self.stageread.get_premis_dir_path_from_prefix(prefix), rel_file_path.path)
-                record = self.make_record(full_file_path)
-                record_tuples.append((record, record_file_path))
+            if not_for_fits and StageReader.re_trailing_fits.search(x.original):
+                continue
+            if not_for_premis and StageReader.re_trailing_premis.search(x.original):
+                continue
+
+            rel_file_path = x.original
+            rel_record_file_path = self.stagereader.hypothesize_premis_from_orig_node(self.stagereader.fpt.tree.get_node(x.original))
+            full_file_path = join(self.stagereader.root_fullpath, rel_file_path)
+            record_file_path = join(self.stagereader.root_fullpath, rel_record_file_path)
+            record = self.make_record(full_file_path)
+            record_tuples.append((record, record_file_path))
         self.premis_records = record_tuples
 
     def write_records(self):

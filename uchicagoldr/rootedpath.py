@@ -12,4 +12,4 @@ class RootedPath(object):
             raise ValueError('The root is not a subset of the path\n' +
                              'Path: {}\n'.format(path) +
                              'Root: {}'.format(root))
-        self.path = relpath(path, root)
+        self.path = relpath(path, start=self.root)
