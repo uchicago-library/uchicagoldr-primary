@@ -31,7 +31,7 @@ class FileProcessor(object):
                                                            a_file_path))])
                       for a_file_path in self._find_files()]
         self.validator = RoleValidatorFactory(validation_type).build(validation_data)
-        self.validation = self.validate_input()
+        self.validation = _self.validate_input()
         self.destination = DestinationFactory(directory_info.kind).build()
 
 
@@ -48,6 +48,9 @@ class FileProcessor(object):
 
 
     def _get_processor_info_needed(self):
+        """A method to retrieve the kind of information that the validator in
+        question requires and to retrieve that information
+        """
         needed_info = validator.what_info_is_needed()
         extra_info = {}
         for key,value in needed_info.items():
@@ -58,22 +61,30 @@ class FileProcessor(object):
         return extra_info
 
 
-    def validate_input(self):
+    def _validate_input(self):
+        """A method to return True/False whether the input to the fileprocessor is true
+        """
         addl_info = self._get_processor_info_needed()
         return validator.test(addl_info)
 
 
     def is_it_valid(self):
+        """A method to return the result of validating the input
+        """
         return self.validation
 
 
     def explain_validaiton_result(self):
+        """A method to get an explanation for the validity/invalidity of the input
+        """
         addl_info = self._get_processor_info_needed()
         category, answer = validator.verbose_test(addl_info)
         return namedtuple("answer", "category message")(category, answer)
 
 
     def move(self):
+        """A method to move files from source to destination
+        """
         if self.validation:
             self.destination.create()
             for n_item in self.tree.all_nodes():
