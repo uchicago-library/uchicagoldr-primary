@@ -12,24 +12,35 @@ class StagerValidator(Validator):
     """
     def __init__(self, necessary_info):
         self.data = necessary_info
+        self.rules = [lambda x: x == necesary_info.numfiles]
 
-
-    def test(self, snapshot: Tree) -> bool:
+    def _is_required_info_present(self) -> bool:
+        """A method to check if the validator has all the information it needs 
+        to make its decision
+        """
+        if not getattr(self.data.numfiles, None) and getattr(self.data.numfilesfound, None):
+            raise ValueError("missing required information to validate this directory")
+        return True
+        
+    def test(self, processor_info: dict) -> bool:
         """A function to test whether the given input is a valid directory to be staged.
         """
-        number_of_files_found = len(snapshot.get_files())
-        return bool(number_of_files_found == self.data.numfiles)
+        _is_required_info_present()
+        numfilesfound = processor_info.get('numfilesfound')
+        return self.data.numfiles == numfilesfound
 
+    def get_info_needed(self):
+        return ['numfilesfound':int]
 
-    def verbose_test(self, snapshot: Tree) -> str:
+    def verbose_test(self, processor_info: dict) -> str:
         """A function to test whether the given input is a valid directory and return
         an explanation of success/fail
         """
-        number_of_files_found = len(snapshot.get_files())
-        if number_of_files_found != self.data.numfiles:
-            return "There were {} files actually found,".format(number_of_files_found) +\
-                "but you said there should be {} files".format(self.data.numfiles)
+        _is_required_info_present(self)
+        numfilesfound = processor_info.get('numfilesfound')
+        if self.data.numfiles != numfilesfound:
+            return ("fatal", "There were {} files actually found,".format(number_of_files_found) +\
+                "but you said there should be {} files".format(self.data.numfiles))
         else:
-            return "You said there were {}".format(self.data.numfiles) + \
-                " files and there really were that number"
-
+            return ("info", "You said there were {}".format(self.data.numfiles) + \
+                " files and there really were that number")
