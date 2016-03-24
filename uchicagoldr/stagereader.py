@@ -9,9 +9,17 @@ from uchicagoldr.rootedpath import RootedPath
 class FileSuite(object):
     def __init__(self):
         self.original = None
-        self.premis = None
-        self.fits = None
+        self.premis = []
+        self.fits = []
         self.presforms = []
+
+    def __repr__(self):
+        selfdict = {}
+        selfdict['original'] = self.original
+        selfdict['premis'] = self.premis
+        selfdict['fits'] = self.fits
+        selfdict['presforms'] = self.presforms
+        return str(selfdict)
 
 
 class StageReader(object):
@@ -175,16 +183,50 @@ class StageReader(object):
         self.file_suites_nodes = []
         for x in self.data_nodes:
             self.file_suites_nodes.append(self.build_file_suite_from_node(x))
-        self.file_suites_paths = None
+        for x in self.file_suites_nodes:
+            print(x)
+        self.file_suites_paths = []
+        for x in self.file_suites_nodes:
+            pathfs = FileSuite()
+            pathfs.original = x.original.identifier
+            pathfs.premis = [y.identifier for y in x.premis]
+            pathfs.fits = [y.identifier for y in x.fits]
+            pathfs.presforms = [y.identifier for y in x.presforms]
+            self.file_suites_paths.append(pathfs)
         self.file_suites_fullpaths = None
 
-    def build_file_suite_from_node(self, n):
+    def build_file_suite_from_node(self, n, recurse=True):
         fs = FileSuite()
         fs.original = n
-        fs.premis = self.get_premis_from_orig_node(n)
-        fs.fits = self.get_fits_from_orig_node(n)
-        fs.presforms = self.get_presform_from_orig_node(n)
+        premis = self.get_premis_from_orig_node(n)
+        if premis:
+            fs.premis.append(premis)
+        fits = self.get_fits_from_orig_node(n)
+        if fits:
+            fs.fits.append(fits)
+        presforms = self.get_presform_from_orig_node(n)
+        for x in presforms:
+            if x:
+                fs.presforms.append(x)
+        if recurse is False:
+            return fs
+        for x in fs.premis:
+            nextfs = self.build_file_suite_from_node(x, recurse=recurse)
+            fs.premis = fs.premis + nextfs.premis
+            fs.fits = fs.fits + nextfs.fits
+            fs.presforms = fs.presforms + nextfs.presforms
+        for x in fs.fits:
+            nextfs = self.build_file_suite_from_node(x, recurse=recurse)
+            fs.premis = fs.premis + nextfs.premis
+            fs.fits = fs.fits + nextfs.fits
+            fs.presforms = fs.presforms + nextfs.presforms
+        for x in fs.presforms:
+            nextfs = self.build_file_suite_from_node(x, recurse=recurse)
+            fs.premis = fs.premis + nextfs.premis
+            fs.fits = fs.fits + nextfs.fits
+            fs.presforms = fs.presforms + nextfs.presforms
         return fs
+
 
     def get_manifest_node_from_prefix(self, prefix=None):
         ids = []
@@ -218,7 +260,15 @@ class StageReader(object):
                 return join(x.identifier, 'PREMIS')
 
     def get_fits_from_orig_node(self, n):
-        pass
+        fits_id = self.hypothesize_fits_from_orig_node(n)
+        node = self.fpt.tree.get_node(fits_id)
+        if node:
+            return node
+
+    def hypothesize_fits_from_orig_node(self, n):
+        orig_id = n.identifier
+        fits_id = n.identifier + '.fits.xml'
+        return fits_id
 
     def get_fits_from_orig_path(self, p):
         n = self.ftp.tree.get_node(p)
@@ -239,7 +289,9 @@ class StageReader(object):
 
     def get_premis_from_orig_node(self, n):
         premis_id = self.hypothesize_premis_from_orig_node(n)
-        return self.fpt.tree.get_node(premis_id)
+        node = self.fpt.tree.get_node(premis_id)
+        if node:
+            return node
 
     def get_premis_from_orig_path(self, p):
         n = self.ftp.tree.get_node(p)
@@ -249,7 +301,7 @@ class StageReader(object):
         orig_id = n.identifier
         prefix = self.get_containing_prefix_string_from_path(orig_id)
         rel_path = RootedPath(orig_id, root=self.data_path)
-        premis_id = join(self.admin_path, prefix, 'PREMIS', rel_path.path)
+        premis_id = join(self.admin_path, prefix, 'PREMIS', rel_path.path + '.premis.xml')
         return premis_id
 
     def get_containing_prefix_dir_node_from_node(self, n):
