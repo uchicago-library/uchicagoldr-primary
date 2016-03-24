@@ -1,4 +1,4 @@
-from os.path import split, getsize, isdir, join
+from os.path import split, getsize, isdir, join, exists
 from os import makedirs
 from hashlib import md5, sha256
 from magic import from_file
@@ -41,9 +41,13 @@ class PremisCreator(object):
                 continue
 
             rel_file_path = x.original
-            rel_record_file_path = self.stagereader.hypothesize_premis_from_orig_node(self.stagereader.fpt.tree.get_node(x.original))
             full_file_path = join(self.stagereader.root_fullpath, rel_file_path)
+            if isdir(full_file_path):
+                continue
+            rel_record_file_path = self.stagereader.hypothesize_premis_from_orig_node(self.stagereader.fpt.tree.get_node(x.original))
             record_file_path = join(self.stagereader.root_fullpath, rel_record_file_path)
+            if exists(record_file_path) and not overwrite:
+                continue
             record = self.make_record(full_file_path)
             record_tuples.append((record, record_file_path))
         self.premis_records = record_tuples
