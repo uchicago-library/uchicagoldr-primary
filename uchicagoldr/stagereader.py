@@ -195,7 +195,14 @@ class StageReader(object):
             pathfs.fits = [y.identifier for y in x.fits]
             pathfs.presforms = [y.identifier for y in x.presforms]
             self.file_suites_paths.append(pathfs)
-        self.file_suites_fullpaths = None
+        self.file_suites_fullpaths = []
+        for x in self.file_suites_paths:
+            fullpathfs = FileSuite()
+            fullpathfs.original = join(self.root_fullpath, x.original)
+            fullpathfs.premis = [join(self.root_fullpath, y) for y in x.premis]
+            fullpathfs.fits = [join(self.root_fullpath, y) for y in x.fits]
+            fullpathfs.presforms = [join(self.root_fullpath, y) for y in x.presforms]
+            self.file_suites_fullpaths.append(fullpathfs)
 
     def build_file_suite_from_node(self, n, recurse=False):
         fs = FileSuite()

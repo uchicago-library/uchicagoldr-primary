@@ -1,5 +1,5 @@
 import argparse
-from os.path import isdir, split, join
+from os.path import isdir, split, join, abspath
 from os import makedirs
 from uchicagoldr.premisobjectrecordcreator import PremisObjectRecordCreator
 from uchicagoldr.rootedpath import RootedPath
@@ -45,7 +45,8 @@ def main():
     )
 
     parser.add_argument(
-        '--batch_size',
+        '--batch-size',
+        type=int,
         default=0,
         help='The maximum batch to store before writing into the staging ' +
         'environment. Set to 0 for no maximum batch size.'
@@ -75,11 +76,16 @@ def main():
         'Defaults to False.'
     )
 
-    args = parser.parse_args
+    args = parser.parse_args()
 
     # Begin app code
-    stagereader = build_stage_reader(args.path, args.root)
-    file_suites = stagereader.file_suites_fullpaths
+    path = abspath(args.path)
+    if args.root:
+        root = abspath(args.root)
+    else:
+        root = args.root
+    stagereader = build_stage_reader(path, root)
+    file_suites = stagereader.file_suites_paths
 
     records = []
 
@@ -92,7 +98,7 @@ def main():
                 StageReader.re_trailing_premis.search(x.original):
             continue
 
-        record = build_record(x.original)
+        record = build_record(join(stagereader.root_fullpath, x.original))
         path = join(stagereader.root_fullpath,
                     stagereader.hypothesize_premis_from_orig_node(
                         stagereader.fpt.tree.get_node(x.original)
