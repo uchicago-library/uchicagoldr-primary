@@ -1,5 +1,5 @@
 
-from uchicagoldrconfig.LDRConfiguration import LDRConfiguration
+from uchicagoldr.ldrconfiguration import LDRConfiguration
 
 def get_valid_types():
    config = LDRConfiguration()
