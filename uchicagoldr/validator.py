@@ -1,49 +1,30 @@
 """An abstract class for validators
 """
-class Validator(object):
+class Validator:
     """The Validator class should be used as the base class for all role validators
     """
-    def __init__(self, order):
-        self.order = order
-        self.result = None
-        self.explanation = "not applicable"
-
-    def test(self):
+    def test(self, info: dict) -> bool:
         """A method for testing whether a given input passes the test for a role validator
         """
-        self.result = False
+        raise NotImplementedError()
 
-    def verbose_test(self) -> str:
+
+    def verbose_test(self, info: dict) -> str:
         """A method for testing whether a given input passes the validation test
         and to return a string explaining what went wrong
         """
-        self.explanation = "not implemented"
+        raise NotImplementedError()
 
 
-    def get_result(self):
-        """method to get the value of the result data member
+    def get_info_needed(self) -> dict:
+        """A method for returning the information that needs to be derived from the input
+        in order to complete validation.
         """
-        return self.result
+        raise NotImplementedError()
 
-    def set_result(self, value):
-        """method to set a value of the data member result
+
+    def is_required_info_present(self) -> bool:
+        """A method for checking if the information required in order to complete
+        validation has been calculated.
         """
-        if not isinstance(value, bool):
-            raise ValueError("result can only be True or False")
-        self.result = value
-
-    def get_explanation(self):
-        """method to get the value of the data member explanation
-        """
-        return self.explanation
-
-    def set_explanation(self, value):
-        """method to set the value of the data member explanation
-        """
-        if not isinstance(value, str):
-            raise ValueError("expalantion must be a string")
-        self.explanation = value
-
-    result = property(get_result, set_result)
-    explanation = property(get_explanation, set_explanation)
-
+        raise NotImplementedError()
