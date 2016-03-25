@@ -7,8 +7,7 @@ from uchicagoldr.directorycreator import DirectoryCreator
 from uchicagoldr.group import Group
 
 class StagingDirectoryCreator(DirectoryCreator):
-    """The StagingDirectoryCreator class is meant to create a valid staging directory
-    and copy files from origin into the new staging directory
+    """The StagingDirectoryCreator class is meant to create a valid staging directory and copy files from origin into the new staging directory
     """
     def __init__(self, info, group_name: str):
         self.destination_root = info.dest_root
@@ -76,7 +75,7 @@ class StagingDirectoryCreator(DirectoryCreator):
         return True
 
 
-    def take_file(self, a_file) -> bool:
+    def take_location(self, a_file) -> bool:
         """A method for copying a file from a source location into the
         new staging directory
 
@@ -116,10 +115,19 @@ class StagingDirectoryCreator(DirectoryCreator):
             """
             pass
 
-
-        filepath_to_care_about = relpath(a_file, self.source_root)
-        new_full_file_path = join(self.destination_root,
-                                  filepath_to_care_about)
-        copy_source_directory_tree(new_full_filepath)
-        copyfile(a_file, new_full_file_path)
+        if getattr(a_file, 'type', None):
+            item_type = a_file.type
+        else:
+            raise ValueError("invalid object passed to take_location(). object must have a 'type' attribute")
+        if item_type == 'directory':
+            filepath_to_care_about = relpath(a_file, self.source_root)
+            new_full_file_path = join(self.destination_root,
+                                      filepath_to_care_about)
+            copy_source_directory_tree(new_full_filepath)
+            copyfile(a_file, new_full_file_path)
+        elif item_type == 'file':
+            pass
+        else:
+            raise ValueError("passed wrong type of object passed to take_a_location: object must be either type=directory or type=filepath")
+        
         return filepath_to_care_about

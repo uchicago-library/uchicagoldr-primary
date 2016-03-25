@@ -23,13 +23,14 @@ class FileProcessor(object):
                             [('numfiles', int)])):
         self.tree = AbsoluteFilePathTree(path)
         self.files = [namedtuple("filedataobject",
-                                 "path mimetype size checksums")\
+                                 "path mimetype size checksums type")\
                       (a_file_path, Magic(mime=True).from_file(a_file_path),
                        stat(a_file_path).st_size,
                        [namedtuple("checksum",
                                    "type value")('md5',
                                                  sane_hash('md5',
-                                                           a_file_path))])
+                                                           a_file_path))],
+                       'file')
                       for a_file_path in self._find_files()]
         self.validator = RoleValidatorFactory(validation_type).build(validation_data)
         self.validation = self.validate_input()
@@ -87,8 +88,13 @@ class FileProcessor(object):
         """A method to move files from source to destination
         """
         if self.validation:
+            nodes = self.tree.get_nodes()
+            directory_nodes = [namedtuple("filepath", "type path")("directory",x)
+                                          for x in self.files if x.path not in nodes]
             self.destination.create()
-            for n_item in self.tree.get_nodes():
-                self.destination.take_file(n_item)
+            for n_directory in directory_nodes:
+                self.destination.take_location(n_item)
+            for n_file in self.files:
+                self.destination.take_location(n_item)
         else:
             return self.explain_validation_result()
