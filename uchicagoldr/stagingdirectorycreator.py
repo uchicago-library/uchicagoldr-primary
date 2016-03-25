@@ -108,26 +108,42 @@ class StagingDirectoryCreator(DirectoryCreator):
                 self.make_a_directory(directory_tree)
 
 
-        def append_to_manifest(self) -> str:
+        def append_to_manifest(self, relative_filepath: str, md5_hash: str,
+                               run_directory: str) -> bool:
             """A method to find and append run info to a manifest file
 
             :rtype str
             """
-            pass
+            manifest_directory = join(self.destination_root, self.staging_id,
+                                      'admin', run_directory)
+            manifest_file = join(manifest_directory, 'manifest.txt')
+            if exists(manifest_file):
+                opened_file = open(manifest_file, 'a')
+            else:
+                opened_file = open(manifest_file, 'w')
+            manifest_string_line = "{}\t{}".format(md5_hash,
+                                                   relative_filepath)
+            opened_file.close()
+            return True
+
 
         if getattr(a_file, 'type', None):
             item_type = a_file.type
         else:
-            raise ValueError("invalid object passed to take_location(). object must have a 'type' attribute")
+            raise ValueError("invalid object passed to take_location()." +\
+                             "object must have a 'type' attribute")
+        filepath_to_care_about = relpath(a_file, self.source_root)
+        run_directory = select_run_directory(join(self.destination_root, 'data'))
+        new_full_file_path = join(self.destination_root, self.staging_id,
+                                  'data', run_directory, filepath_to_care_about)        
         if item_type == 'directory':
-            filepath_to_care_about = relpath(a_file, self.source_root)
-            new_full_file_path = join(self.destination_root,
-                                      filepath_to_care_about)
             copy_source_directory_tree(new_full_filepath)
-            copyfile(a_file, new_full_file_path)
         elif item_type == 'file':
-            pass
+            copyfile(join(self.source_root, filepath_to_care_about),
+                     new_full_file_path)
+            append_to_manifest(filepath_to_care_about, a_file.md5, run_directory)
         else:
-            raise ValueError("passed wrong type of object passed to take_a_location: object must be either type=directory or type=filepath")
-        
+            raise ValueError("passed wrong type of object passed " +\
+                             " to take_a_location: object must be either " +\
+                             " type=directory or type=filepath")
         return filepath_to_care_about

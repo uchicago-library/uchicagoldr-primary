@@ -10,7 +10,7 @@ class DirectoryCreator:
         """
         raise NotImplementedError()
 
-    def take_file(self, a_file) -> None:
+    def take_location(self, a_file) -> None:
         """A method meant to copy a file from source to the new directory
         """
         raise NotImplementedError()
