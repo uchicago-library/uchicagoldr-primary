@@ -122,4 +122,4 @@ class StagingDirectoryCreator(DirectoryCreator):
                                   filepath_to_care_about)
         copy_source_directory_tree(new_full_filepath)
         copyfile(a_file, new_full_file_path)
-        return fielpath_to_care_about
+        return filepath_to_care_about
