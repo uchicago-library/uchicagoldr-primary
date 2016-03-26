@@ -1,24 +1,38 @@
 """The StagingDirectoryCreator class should only be called in the
 DirectoryCreatorFactory
 """
-from os import mkdir
-from os.path import exists, join
+from os import listdir, mkdir
+from os.path import dirname, exists, join, relpath
+from shutil import copyfile
 from uchicagoldr.directorycreator import DirectoryCreator
 from uchicagoldr.group import Group
 
+
 class StagingDirectoryCreator(DirectoryCreator):
-    """The StagingDirectoryCreator class is meant to create a valid staging directory and copy files from origin into the new staging directory
+    """The StagingDirectoryCreator class is meant to create a valid staging
+    directory and copy files from origin into the new staging directory
     """
-    def __init__(self, info, group_name: str):
+    def __init__(self, info, group_name: str, resume=False):
         self.destination_root = info.dest_root
         self.source_root = info.source_root
         self.stage_id = info.staging_id
         self.prefix = info.prefix
         self.group = Group(group_name)
+        if not resume:
+            self.current_run = self.prefix + '1'
+        else:
+            try:
+                listdir(join(self.destination_root, self.stage_id, 'data'))[-1]
+            except IndexError:
+                raise ValueError("you are trying to resume a staging " +\
+                                 " directory creation but there doesn't " +\
+                                 "appear to be a prior run in 'data' directory")
+            self.current_run = self.prefix + '2'
 
 
     def make_a_directory(self, directory_string: str):
-        """A method to make a directory on-disk and raise a ValueError if unable to do so
+        """A method to make a directory on-disk and raise a ValueError if
+        unable to do so
 
         __Args__
 
@@ -26,11 +40,11 @@ class StagingDirectoryCreator(DirectoryCreator):
 
         :rtype None
 
-        This function tries to create directory with a path delineated by the literal
-        string. Before doing this, it checks if the directory already exists and returns
-        the string "already" if it finds it. Otherwise, it returns the string "done" if 
-        the directory gets created or the string "invalid" if the system is unable to
-        create the new directory.
+        This function tries to create directory with a path delineated by the
+        literal string. Before doing this, it checks if the directory already exists
+        and returns the string "already" if it finds it. Otherwise, it returns the
+        string "done" if the directory gets created or the string "invalid" if
+        the system is unable to create the new directory.
         """
         if not exists(directory_string):
             mkdir(directory_string, 0o740)
@@ -47,7 +61,7 @@ class StagingDirectoryCreator(DirectoryCreator):
         def make_directory(directory_name):
             """A method to try to make a directory and raise a ValueError if
             unable to create the directory.
-            
+
             __Args__
             :param directory_name: str
 
@@ -80,12 +94,12 @@ class StagingDirectoryCreator(DirectoryCreator):
         new staging directory
 
         __Args__
-        
+
         :param a_file: str
 
         :rtype bool
         """
-        def copy_source_directory_tree_to_destination(filepath) -> str:
+        def copy_source_directory_tree(filepath) -> str:
             """A method to build out a directory tree on-disk
 
             __Args__
@@ -108,14 +122,13 @@ class StagingDirectoryCreator(DirectoryCreator):
                 self.make_a_directory(directory_tree)
 
 
-        def append_to_manifest(self, relative_filepath: str, md5_hash: str,
-                               run_directory: str) -> bool:
+        def append_to_manifest(self, relative_filepath: str, md5_hash: str) -> bool:
             """A method to find and append run info to a manifest file
 
             :rtype str
             """
             manifest_directory = join(self.destination_root, self.staging_id,
-                                      'admin', run_directory)
+                                      'admin', self.current_run)
             manifest_file = join(manifest_directory, 'manifest.txt')
             if exists(manifest_file):
                 opened_file = open(manifest_file, 'a')
@@ -123,6 +136,7 @@ class StagingDirectoryCreator(DirectoryCreator):
                 opened_file = open(manifest_file, 'w')
             manifest_string_line = "{}\t{}".format(md5_hash,
                                                    relative_filepath)
+            opened_file.write(manifest_string_line)
             opened_file.close()
             return True
 
@@ -133,15 +147,14 @@ class StagingDirectoryCreator(DirectoryCreator):
             raise ValueError("invalid object passed to take_location()." +\
                              "object must have a 'type' attribute")
         filepath_to_care_about = relpath(a_file, self.source_root)
-        run_directory = select_run_directory(join(self.destination_root, 'data'))
-        new_full_file_path = join(self.destination_root, self.staging_id,
-                                  'data', run_directory, filepath_to_care_about)        
+        new_full_file_path = join(self.destination_root, self.stage_id,
+                                  'data', self.current_run, filepath_to_care_about)
         if item_type == 'directory':
-            copy_source_directory_tree(new_full_filepath)
+            copy_source_directory_tree(new_full_file_path)
         elif item_type == 'file':
             copyfile(join(self.source_root, filepath_to_care_about),
                      new_full_file_path)
-            append_to_manifest(filepath_to_care_about, a_file.md5, run_directory)
+            append_to_manifest(filepath_to_care_about, a_file.md5, self.current_run)
         else:
             raise ValueError("passed wrong type of object passed " +\
                              " to take_a_location: object must be either " +\
