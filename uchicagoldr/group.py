@@ -11,8 +11,7 @@ class Group(object):
     only instantiate if the group name exists on the system
     """
     def __init__(self, name):
-        self.group_id = self.get_group_id(name)
-
+        self.group_id = self.get_group_id(name).gr_gid
 
     def get_group_id(self, g_name) -> str:
         """A method to get the id of a group name

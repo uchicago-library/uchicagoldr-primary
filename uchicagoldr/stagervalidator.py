@@ -16,7 +16,10 @@ class StagerValidator(Validator):
         """A method to check if the validator has all the information it needs
         to make its decision
         """
-        if not getattr(self.data.numfiles, None) and getattr(self.data.numfilesfound, None):
+        if not getattr(self.data,
+                       'numfiles', None) and\
+        not getattr(self.data,
+                    'numfilesfound', None):
             return False
         return True
 

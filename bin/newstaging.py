@@ -1,0 +1,14 @@
+from collections import namedtuple
+from uchicagoldr.fileprocessor import FileProcessor
+
+if __name__ == "__main__":
+    fp = FileProcessor("/media/repo/repository/tr/1cb381hv0gxsx",
+                       "staging",
+                       namedtuple("DirectoryInfo", "src_root dest_root kind staging_id prefix group_name")\
+                       ("/media/repo/repository/tr","/home/tdanstrom/temporary",
+                        "staging","foo","dir", "tdanstrom"),
+                       namedtuple("Rules", "numfiles")\
+                       (32))
+
+    print(fp.move())
+    

@@ -14,7 +14,7 @@ class RoleValidatorFactory(object):
         """A series of conditionals to determine (based on the initialized order 
         data member on the class) what type of validator instance to return.
         """
-        if self.order == 'stager':
+        if self.order == 'staging':
             if not data:
                 raise ValueError("to create an instance of this class extra information is required")
             return StagerValidator(data)

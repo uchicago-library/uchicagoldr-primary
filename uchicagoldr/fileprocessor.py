@@ -3,6 +3,7 @@ The FileProcessor class should be used
 """
 from collections import namedtuple
 from os import stat
+from os.path import join
 from typing import NamedTuple
 from magic import Magic
 from uchicagoldr.absolutefilepathtree import AbsoluteFilePathTree
@@ -21,6 +22,7 @@ class FileProcessor(object):
                  validation_data:\
                  NamedTuple('Rules',
                             [('numfiles', int)])):
+        self.path = path
         self.tree = AbsoluteFilePathTree(path)
         self.files = [namedtuple("filedataobject",
                                  "path mimetype size checksums type")\
@@ -70,12 +72,6 @@ class FileProcessor(object):
         return self.validator.test(addl_info)
 
 
-    def is_it_valid(self):
-        """A method to return the result of validating the input
-        """
-        return self.validation
-
-
     def explain_validation_result(self):
         """A method to get an explanation for the validity/invalidity of the input
         """
@@ -89,12 +85,17 @@ class FileProcessor(object):
         """
         if self.validation:
             nodes = self.tree.get_nodes()
-            directory_nodes = [namedtuple("filepath", "type path")("directory",x)
-                                          for x in self.files if x.path not in nodes]
+            directory_nodes = [namedtuple("filepath", "type path")("directory", x)
+                               for x in self.files if x.path not in nodes]
+            file_nodes = [namedtuple("filepath", "type path")("file", x)
+                          for x in self.files]
             self.destination.create()
             for n_directory in directory_nodes:
-                self.destination.take_location(n_item)
-            for n_file in self.files:
-                self.destination.take_location(n_item)
+                self.destination.take_location(n_directory)
+            for n_file in file_nodes:
+                self.destination.take_location(n_file)
+            return "{} has been moved to {}".format(self.path,
+                                                    join(self.destination.destination_root,
+                                                         self.destination.stage_id))
         else:
             return self.explain_validation_result()
