@@ -1,6 +1,7 @@
 import argparse
 from os.path import abspath, isdir
 from uchicagoldr.filewalker import FileWalker
+from uchicagoldr.premisextensionnodes import Restriction
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
@@ -32,19 +33,20 @@ def build_rights_extension_node(restriction_code, restriction_reason=None,
     return rights_extension
 
 
-def build_restriction_node(restriction_code, active, restriction_reason=None,
-                           donor_stipulation=None, linkingAgentIds=None):
-    restriction_node = ExtensionNode()
-    restriction_node.set_field('restrictionCode', restriction_code)
-    restriction_node.set_field('active', str(active))
+def build_restriction_node(restriction_code, active=True,
+                           restriction_reason=None, donor_stipulation=None,
+                           linkingAgentIds=None):
+    restrictionNode = Restriction(restriction_code, active)
     if restriction_reason:
-        restriction_node.set_field('restrictionReason', restriction_reason)
+        for x in restriction_reason:
+            restrictionNode.add_restrictionReason(x)
     if donor_stipulation:
-        restriction_node.set_field('donor_stipulation', donor_stipulation)
+        for x in donor_stipulation:
+            restrictionNode.add_donorStipulation(x)
     if linkingAgentIds:
         for x in linkingAgentIds:
-            restriction_node.add_to_field('linkingAgentIds', x)
-    return restriction_node
+            restrictionNode.add_linkingAgentIdentifier(x)
+    return restrictionNode
 
 
 def main():
@@ -60,16 +62,20 @@ def main():
     )
     parser.add_argument(
         'restriction',
+        # choices = somecontrolledvocabhere,
+        # https://docs.python.org/3/library/argparse.html#choices
         help='Specify the restriction code to apply to all ' +
         'found PREMIS records.'
     )
     parser.add_argument(
         '--reason',
         default=None,
+        action='append',
         help='Specify the reason for applying the restriction'
     )
     parser.add_argument(
         '--donor-stipulation',
+        action='append',
         default=None,
         help='Specify a donor stipulation'
     )
