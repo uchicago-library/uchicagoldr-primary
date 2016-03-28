@@ -19,7 +19,6 @@ class LDRConfiguration(object):
                 raise ValueError('No config file exists in the ' +
                                  'specified directory')
         else:
-#            cfg_file = expanduser(join("~/.config/ldr/ldr.ini"))
             foundOne = False
             checkedDirs = []
             for directory in BaseDirectory.load_config_paths('ldr'):
