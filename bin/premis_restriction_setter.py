@@ -7,6 +7,17 @@ from pypremis.nodes import *
 
 
 def gather_records(path):
+    """
+    gather all .premis.xml files from a path
+
+    __Args__
+
+    1. path (str): the path to a dir to search for premis records
+
+    __Returns__
+    * (list): A list of tuples formatted as:
+        (PremisRecord instance, path)
+    """
     records = []
     if isdir(path):
         for x in FileWalker(path, filter_pattern="^.*\.premis.xml$"):
@@ -57,7 +68,7 @@ def main():
 
     parser.add_argument(
         'path',
-        help='Specify a path to a premis record, or a path to search for '+
+        help='Specify a path to a premis record, or a path to search for ' +
         'premis records, all of which will be acted upon.'
     )
     parser.add_argument(
@@ -95,10 +106,10 @@ def main():
                 rights_extension = rights.get_rightsExtension(0)
                 rights_extension.add_to_field('Restriction',
                                               build_restriction_node(
-                                              args.restriction,
-                                              True,
-                                              args.reason,
-                                              args.donor_stipulation
+                                                  args.restriction,
+                                                  True,
+                                                  args.reason,
+                                                  args.donor_stipulation
                                               ))
             except KeyError:
                 rights.add_rightsExtension(build_rights_extension_node(
@@ -109,9 +120,9 @@ def main():
                 ))
         else:
             rights = Rights(rightsExtension=build_rights_extension_node(
-            args.restriction,
-            args.reason,
-            args.donor_stipulation
+                args.restriction,
+                args.reason,
+                args.donor_stipulation
             ))
             record.add_rights(rights)
         record.write_to_file(rec_path)

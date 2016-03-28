@@ -7,6 +7,14 @@ from uchicagoldr.stagereader import StageReader
 
 
 def write_records(records):
+    """
+    write a stack of records to disk
+
+    __Args__
+
+    1. records (list): A list of tuples formatted as:
+        (PremisRecord instance, filepath)
+    """
     while records:
         x = records.pop()
         target_path = x[1]
@@ -17,10 +25,34 @@ def write_records(records):
 
 
 def build_record(path):
+    """
+    build a populated LDR premis record from a file on disk
+
+    __Args__
+
+    1. path (str): an abspath to a file to build a record for
+
+    __Returns__
+
+    * (PremisRecord): the built PREMIS record
+    """
     return PremisObjectRecordCreator(path).get_record()
 
 
 def build_stage_reader(path, root):
+    """
+    build a stage reader from a path
+
+    __Args__
+
+    1. path (str): the fullpath to a staging dir
+    2. root(str): the rootpath for the staging dir
+        - the arg parser handles setting root to None if left blank
+
+    __Returns__
+
+    * (StageReader): The built StageReader for the path
+    """
     rooted_path = RootedPath(path, root=root)
     stage_reader = StageReader(rooted_path)
     return stage_reader

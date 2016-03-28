@@ -6,8 +6,26 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 from uchicagoldr.convenience import sane_hash
 
+
 class PremisObjectRecordCreator(object):
+    """
+    This class is meant to automate the construction of standard minimal
+    LDR object PREMIS records from some input file.
+
+    __Attributes__
+
+    1. file_path (str): The abspath to a file for which a record will be created
+    2. record (PremisRecord): The associated PREMIS record instance, which
+    will contain one object entry populated with the files information.
+    """
     def __init__(self, path):
+        """
+        initialize an LDR PREMIS object record.
+
+        __Args__
+
+        1. path (str): the abspath to a file to create a record for
+        """
         self.file_path = path
         self.record = self.make_record(self.file_path)
 
@@ -138,22 +156,35 @@ class PremisObjectRecordCreator(object):
 
         1. (list): a list of format nodes
         """
-        magic_num, guess  = self._detect_mime(file_path)
+        magic_num, guess = self._detect_mime(file_path)
         formats = []
         if magic_num:
             premis_magic_format_desig = FormatDesignation(magic_num)
-            premis_magic_format = Format(formatDesignation=premis_magic_format_desig)
-            premis_magic_format.set_formatNote('from magic number (python3 magic.from_file)')
+            premis_magic_format = Format(
+                formatDesignation=premis_magic_format_desig
+            )
+            premis_magic_format.set_formatNote(
+                'from magic number (python3 magic.from_file)'
+            )
             formats.append(premis_magic_format)
         if guess:
             premis_guess_format_desig = FormatDesignation(guess)
-            premis_guess_format = Format(formatDesignation=premis_guess_format_desig)
-            premis_guess_format.set_formatNote('from file extension (python3 mimetypes.guess_type)')
+            premis_guess_format = Format(
+                formatDesignation=premis_guess_format_desig
+            )
+            premis_guess_format.set_formatNote(
+                'from file extension (python3 mimetypes.guess_type)'
+            )
             formats.append(premis_guess_format)
         if len(formats) == 0:
             premis_unknown_format_desig = FormatDesignation('undetected')
-            premis_unknown_format = Format(formatDesignation=premis_unknown_format_desig)
-            premis_unknown_format.set_formatNote('format detection failed by python3 magic.from_file and mimetypes.guess_type')
+            premis_unknown_format = Format(
+                formatDesignation=premis_unknown_format_desig
+            )
+            premis_unknown_format.set_formatNote(
+                'format detection failed by python3 magic.from_file ' +
+                'and mimetypes.guess_type'
+            )
             formats.append(premis_unknown_format)
         return formats
 
