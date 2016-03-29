@@ -133,7 +133,7 @@ class FilePathTree(object):
 
         * (list): A list of all the leaf paths (strs) in the tree
         """
-        return [x.identifier for x in self.get_leaves()]
+        return [x.identifier for x in self.get_leaf_nodes()]
 
     def get_leaf_names(self):
         """
