@@ -6,6 +6,7 @@ from os.path import dirname, exists, join, relpath
 from shutil import copyfile
 from uchicagoldr.directorycreator import DirectoryCreator
 from uchicagoldr.group import Group
+from uchicagoldr.stagingrun import StagingRun
 from sys import stdout
 
 
@@ -13,23 +14,18 @@ class StagingDirectoryCreator(DirectoryCreator):
     """The StagingDirectoryCreator class is meant to create a valid staging
     directory and copy files from origin into the new staging directory
     """
-    def __init__(self, info, resume=False):
+    def __init__(self, info):
         self.destination_root = info.dest_root
         self.source_root = info.src_root
         self.stage_id = info.staging_id
         self.prefix = info.prefix
         self.group = Group(info.group_name)
-        if not resume:
-            self.current_run = self.prefix + '1'
+        if info.resume:
+            self.current_run = self.prefix + str(info.resume)
         else:
-            try:
-                listdir(join(self.destination_root, self.stage_id, 'data'))[-1]
-            except IndexError:
-                raise ValueError("you are trying to resume a staging " +\
-                                 " directory creation but there doesn't " +\
-                                 "appear to be a prior run in 'data' directory")
-            self.current_run = self.prefix + count
-
+            self.current_run = StagingRun(self.prefix, self.stage_id,
+                                          self.destination_root).get_current_run()
+        print(self.current_run)
 
     def make_a_directory(self, directory_string: str):
         """A method to make a directory on-disk and raise a ValueError if
@@ -131,7 +127,7 @@ class StagingDirectoryCreator(DirectoryCreator):
             manifest_directory = join(self.destination_root, self.stage_id,
                                       'admin', self.current_run)
             manifest_file = join(manifest_directory, 'manifest.txt')
-            print(manifest_file)
+
             if not exists(manifest_directory):
                 self.make_a_directory(manifest_directory)
             if exists(manifest_file):
@@ -141,7 +137,6 @@ class StagingDirectoryCreator(DirectoryCreator):
 
             manifest_string_line = "{}\t{}\n".format(md5_hash,
                                                      relative_filepath)
-            print(manifest_string_line)
             opened_file.write(manifest_string_line)
             opened_file.close()
             return True
@@ -162,7 +157,6 @@ class StagingDirectoryCreator(DirectoryCreator):
             source = join(self.source_root, filepath_to_care_about)
             copyfile(join(self.source_root, filepath_to_care_about),
                      new_full_file_path)
-            print(a_file)
             append_to_manifest(filepath_to_care_about, a_file.path.checksums[0].value)
         else:
             raise ValueError("passed wrong type of object passed " +\
