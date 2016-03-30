@@ -4,6 +4,7 @@ from os.path import join, split, exists, \
 from os import makedirs
 from xdg import BaseDirectory
 from configparser import ConfigParser
+from uchicagoldr.convenience import retrieve_resource_str
 
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
@@ -69,9 +70,14 @@ def create_prompt(path, dir_or_file):
         if i:
             if dir_or_file == 'dir':
                 makedirs(path)
+                return True
             elif dir_or_file == 'file':
-                makedirs(split(path)[0])
-                open(split(path)[1], 'w').close()
+                try:
+                    makedirs(split(path)[0])
+                except FileExistsError:
+                    pass
+                open(path, 'w').close()
+                return True
             else:
                 raise AssertionError()
         else:
@@ -79,10 +85,6 @@ def create_prompt(path, dir_or_file):
     else:
         print("{} already exists, and has not been clobbered.".format(path))
         return True
-
-
-def populate_conf_dir(conf_dir):
-    pass
 
 
 def first_conf_dir_setup():
@@ -97,6 +99,23 @@ def first_conf_dir_setup():
 
     print('Your configuration directory is located at: {}'.format(conf_dir))
     return conf_dir
+
+
+def first_conf_file_setup(conf_dir):
+    conf_file_suggest = join(conf_dir, 'ldr.ini')
+    conf_file = PathCLIInput(
+        'Primary config file location', default=conf_file_suggest
+    ).get_input()
+    conf_created = create_prompt(conf_file, 'file')
+    if not conf_created:
+        print('You have chosen not to create a configuration file. System ' +
+              'defaults will be used.')
+        return None
+    print("Populating config with template...")
+    default_conf = retrieve_resource_str('configs/ldr.ini')
+    with open(conf_file, 'w') as f:
+        for line in default_conf.split('\n'):
+            f.write("#"+line+'\n')
 
 
 def main():
@@ -134,7 +153,7 @@ def main():
           'values in the global config. The global config is located ' +
           'inside of the python package. Changing them there and ' +
           'recompiling the package will set global defaults.')
-    conf_file = first_conf_file()
+    conf_file = first_conf_file_setup(conf_dir)
 
 if __name__ == '__main__':
     main()
