@@ -7,8 +7,13 @@ setup(
     author_email = ["balsamo@uchicago.edu","tdanstrom@uchicago.edu"],
     packages = ['uchicagoldr'],
     data_files = [
-        ('uchicagoldr/configs', ['configs/ldr.ini']),
-        ('uchicagoldr/controlledvocabs', ['controlledvocabs/restrictions.json'])
+        ('configs', ['configs/ldr.ini']),
+        ('controlledvocabs', [
+            'controlledvocabs/filepaths_fits.json',
+            'controlledvocabs/filepaths_premis.json',
+            'controlledvocabs/filepaths_presform.json',
+            'controlledvocabs/restriction_codes.json'
+        ])
     ],
     description = "A set of classes required for the uchicago ldr",
     keywords = ["uchicago","repository","file-level","processing"],

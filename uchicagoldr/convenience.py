@@ -1,7 +1,5 @@
-from uchicagoldr.ldrconfiguration import LDRConfiguration
-
-
 def get_valid_types():
+    from uchicagoldr.ldrconfiguration import LDRConfiguration
     config = LDRConfiguration()
     types = config.get_a_config_data_value('outputinformation', 'valid_types')
     a_list = types.split(',')
@@ -43,3 +41,24 @@ def sane_hash(hash_algo, file_path, block_size=65536):
                 break
             hash_result.update(data)
     return str(hash_result.hexdigest())
+
+
+def retrieve_resource_filepath(resource_path):
+    from pkg_resources import Requirement, resource_filename
+    return resource_filename(Requirement.parse('uchicagoldr'), resource_path)
+
+def retrieve_resource_str(resource_path):
+    from pkg_resources import Requirement, resource_filename
+    x = None
+    with open(retrieve_resource_filepath(resource_path), 'r') as f:
+        x = f.read()
+    return x
+
+def retrieve_controlled_vocabulary(vocab_name, built=True):
+    from pkg_resources import Requirement, resource_filename
+    from controlledvocab.lib import ControlledVocabFromJson
+    fname = retrieve_resource_filepath('controlledvocabs/'+vocab_name+'.json')
+    cv = ControlledVocabFromJson(fname)
+    if built:
+        cv = cv.build()
+    return cv
