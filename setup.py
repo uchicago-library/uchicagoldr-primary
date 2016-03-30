@@ -6,6 +6,13 @@ setup(
     author = "Brian Balsamo,Tyler Danstrom",
     author_email = ["balsamo@uchicago.edu","tdanstrom@uchicago.edu"],
     packages = ['uchicagoldr'],
+    description = "A set of classes required for the uchicago ldr",
+    keywords = ["uchicago","repository","file-level","processing"],
+    entry_points = {
+        'console_scripts':[
+            'uchicagoldr-postinstall = uchicagoldr.post_install:main'
+        ]
+    },
     data_files = [
         ('configs', ['configs/ldr.ini']),
         ('controlledvocabs', [
@@ -15,8 +22,6 @@ setup(
             'controlledvocabs/restriction_codes.json'
         ])
     ],
-    description = "A set of classes required for the uchicago ldr",
-    keywords = ["uchicago","repository","file-level","processing"],
     classifiers = [
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
