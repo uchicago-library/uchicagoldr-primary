@@ -38,8 +38,13 @@ def sane_hash(hash_algo, file_path, block_size=65536):
     hash_result = hasher()
     with open(file_path, 'rb') as f:
         while True:
-            data = f.read(block_size)
-            if not data:
-                break
-            hash_result.update(data)
+           try:
+              data = f.read(block_size)
+           except OSError as e:
+              stderr.write("{} could not be read\n".format(file_path))
+              stderr.write(e)
+              Stderr.write("\n")
+           if not data:
+              break
+           hash_result.update(data)
     return str(hash_result.hexdigest())

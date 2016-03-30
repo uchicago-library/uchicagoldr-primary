@@ -1,7 +1,8 @@
-from os.path import isabs, isfile, isdir, split, getsize
+from os.path import isabs, isfile, isdir, exists, split, getsize
 from mimetypes import guess_type
 from magic import from_file
-
+from treelib import Tree
+from typing import Generic
 from uchicagoldr.filepathtree import FilePathTree
 from uchicagoldr.convenience import sane_hash
 
@@ -31,6 +32,11 @@ class AbsoluteFilePathTree(FilePathTree):
 
         FilePathTree.__init__(self, path=path, filter_pattern=filter_pattern,
                               leaf_dirs=leaf_dirs)
+
+    def return_tree(self) -> Generic(Tree):
+        """a method to return the tree as-is
+        """
+        return self.tree
 
     def add_node(self, path):
         """
