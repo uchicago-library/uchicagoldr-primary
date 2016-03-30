@@ -25,21 +25,22 @@ class FileProcessor(object):
                             [('numfiles', int)])):
         self.path = path
         self.tree = AbsoluteFilePathTree(path)
-        if not getattr(info, 'resume', None):
-            self.files = [namedtuple("filedataobject",
-                                     "path mimetype size checksums type")\
-                          (a_file_path, Magic(mime=True).from_file(a_file_path),
-                           stat(a_file_path).st_size,
-                           [namedtuple("checksum",
-                                       "type value")('md5',
-                                                     sane_hash('md5',
-                                                               a_file_path))],
-                           'file')
-                          for a_file_path in self._find_files()]
-        else:
-            for a_file_path in self._find_files():
-                files = listdir(info.dest_root, info.stage_id, 'data',
-                                info.prefix+str(info.resume))
+        self.files = FileLister(self._find_files()).filter_files(getattr(info, 'resume', None)
+        # if not getattr(info, 'resume', None):
+        #     self.files = [namedtuple("filedataobject",
+        #                              "path mimetype size checksums type")\
+        #                   (a_file_path, Magic(mime=True).from_file(a_file_path),
+        #                    stat(a_file_path).st_size,
+        #                    [namedtuple("checksum",
+        #                                "type value")('md5',
+        #                                              sane_hash('md5',
+        #                                                        a_file_path))],
+        #                    'file')
+        #                   for a_file_path in self._find_files()]
+        # else:
+        #     for a_file_path in self._find_files():
+        #         files = listdir(info.dest_root, info.stage_id, 'data',
+        #                         info.prefix+str(info.resume))
 
         self.validator = RoleValidatorFactory(validation_type).build(validation_data)
         self.validation = self.validate_input()
