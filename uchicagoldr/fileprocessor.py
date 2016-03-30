@@ -10,6 +10,7 @@ from uchicagoldr.absolutefilepathtree import AbsoluteFilePathTree
 from uchicagoldr.rolevalidatorfactory import RoleValidatorFactory
 from uchicagoldr.convenience import sane_hash
 from uchicagoldr.destinationfactory import DestinationFactory
+from uchicagoldr.filelister import FileLister
 
 class FileProcessor(object):
     """A class for processing files from one stage of the archiving process to the next
@@ -18,17 +19,29 @@ class FileProcessor(object):
                  directory_data:\
                  NamedTuple("DirectoryInfo",
                             [('prefix', str), ('src_root', str), ('kind', str),
-                             ('group_name', str), ('resume', int), ('dest_root', str),
-                             ('stage_id', str)]),
+                             ('group_name', str), ('resume', int),
+                             ('dest_root', str), ('directory_id', str),
+                             ('directory_type', str)]),
                  validation_data:\
                  NamedTuple('Rules',
                             [('numfiles', int)])):
         self.path = path
         self.tree = AbsoluteFilePathTree(path)
-        self.files = FileLister(self._find_files()).filter_files(info)
+
+        self.files = self._find_files()
+        self.relevant_files = [namedtuple("filedataobject", "path mimetype size" +\
+                                          " checksums type")\
+                               (a_file_path, Magic(mime=True).from_file(a_file_path),
+                                stat(a_file_path).st_size,
+                                [nametuple("checksum", "type", "value")\
+                                 ("md5", sane_hash(a_file_path))],
+                                'file') for a_file_path in self._find_files()
+                               for a_file_path in FileLister(self._find_files()).\
+                               filter_files(directory_data)
+        ]
         self.validator = RoleValidatorFactory(validation_type).build(validation_data)
         self.validation = self.validate_input()
-        self.destination = DestinationFactory(directory_data.kind).build(directory_data)
+        self.destination = DestinationFactory(directory_data.directory_type).build(directory_data)
 
 
     def get_snapshot_of_a_tree(self):
@@ -78,9 +91,10 @@ class FileProcessor(object):
         if self.validation:
             nodes = self.tree.get_nodes()
             directory_nodes = [namedtuple("filepath", "type path")("directory", x)
-                               for x in self.files if x.path not in nodes]
+                               for x in self.relevant_files if x.path not in nodes]
             file_nodes = [namedtuple("filepath", "type path")("file", x)
-                          for x in self.files]
+                          for x in self.relevant_files]
+            
             self.destination.create()
             for n_directory in directory_nodes:
                 self.destination.take_location(n_directory)

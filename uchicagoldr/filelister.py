@@ -19,12 +19,13 @@ class FileLister(object):
         """A method for evluating the type of directory being managed and modify the
         data attribute with the correct file list.
         """
-        directory_root = getattr(info, 'destination_root', None)
+        directory_root = getattr(info, 'dest_root', None)
         directory_id = getattr(info, 'directory_id', None)
         directory_type = getattr(info, 'directory_type', None)
         directory = join(directory_root, directory_id)
         if directory_type == 'staging':
             self.data = self.staging_resume_filter(directory, info.prefix, info.resume)
+            return self.data
         else:
             raise ValueError("invalid directory type")
 
@@ -34,7 +35,7 @@ class FileLister(object):
         partially completed staging run.
         """
         previous_runs = [join(directory, 'data', x)
-                         for x in listdir(directory)]
+                         for x in listdir(join(directory, 'data'))]
         if len(previous_runs) == 0:
             raise ValueError("Cannot find anything in in the directory specified")
         else:
@@ -42,9 +43,20 @@ class FileLister(object):
             resume_dir = [x for x in previous_runs
                           if x.endswith(dir_to_care_about)]
             if len(resume_dir) == 0:
-                raise ValueError("Could not find the resumption token you specified")
+                raise ValueError("Could not find the resumption token {}".format(resume) +\
+                                 " that you specified")
             else:
-                tree = AbsoluteFilePathTree(join(directory, 'data', resume_dir[-1]))
-                finished_files = tree.get_files()
-                unfinished_files = [x for x in self.data if x not in finished_files]
-                self.data = unfinished_files
+                tree = AbsoluteFilePathTree(join(directory, 'data',
+                                                 resume_dir[-1]))
+
+                split_string = join(directory, 'data', str(prefix+str(resume)))
+                finished_files = [x.split(split_string)[1] for x in tree.get_files()]
+                done = []
+                for a_file in self.data:
+                    for a_potential_match in finished_files:
+                        if a_potential_match in a_file:
+                            done.append(a_file)
+                            break
+                newdata = [x for x in self.data if x not in done]
+                return newdata
+
