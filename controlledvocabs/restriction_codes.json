@@ -1,0 +1,25 @@
+{
+    "check_patterns": "True",
+    "child_vocabs": [],
+    "check_children": "False",
+    "name": "restriction_codes",
+    "case_sensitive": "True",
+    "edit_before_build": "False",
+    "contains": [
+        "O", 
+        "OU", 
+        "R-DA", 
+        "R-30", 
+        "R-50", 
+        "R-80", 
+        "R-X", 
+        "R-P30", 
+        "R-S"
+        ],
+    "patterns": [
+        "^DR-[0-9]+$",
+        "^OO-[0-9]{2}/[0-9]{2}/[0-9]{4}$",
+        "^R-[0-9]+D$",
+        "^MR-.+$"
+        ]
+}
