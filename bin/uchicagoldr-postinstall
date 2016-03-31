@@ -123,10 +123,15 @@ def main():
     parser = ArgumentParser(description="this is the initial configuration " +
                             "script for the University of Chicago " +
                             "Library Digital Repository Tool Suite.")
+    parser.add_argument('-x', '--x',
+                        action='store_true',
+                        default=False)
 
     args = parser.parse_args()
 
     # app code
+    if args.x:
+        print("0000000000000000000000000000000000000")
     print('Welcome to the University of Chicago Library Digital ' +
           'Repository Tool Suite configuration wizard.')
     print('This configuration wizard will walk you through creating ' +

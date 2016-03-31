@@ -8,11 +8,7 @@ setup(
     packages = ['uchicagoldr'],
     description = "A set of classes required for the uchicago ldr",
     keywords = ["uchicago","repository","file-level","processing"],
-    entry_points = {
-        'console_scripts':[
-            'uchicagoldr-postinstall = uchicagoldr.post_install:main'
-        ]
-    },
+    scripts = ['bin/uchicagoldr-postinstall'],
     data_files = [
         ('configs', ['configs/ldr.ini']),
         ('controlledvocabs', [
