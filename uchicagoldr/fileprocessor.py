@@ -26,13 +26,11 @@ class FileProcessor(object):
         self.tree = AbsoluteFilePathTree(path)
 
         self.files = self._find_files()
-        self.relevant_files = [namedtuple("filedataobject", "path mimetype size" +\
-                                          " checksums type")\
+        self.relevant_files = [namedtuple("filedataobject", "path mimetype size checksums type")
                                (a_file_path, Magic(mime=True).from_file(a_file_path),
                                 stat(a_file_path).st_size,
-                                [nametuple("checksum", "type", "value")\
-                                 ("md5", sane_hash(a_file_path))],
-                                'file') for a_file_path in self._find_files()
+                                [namedtuple('checksum', "type value")('md5',sane_hash('md5',a_file_path))],
+                                'file')
                                for a_file_path in FileLister(self._find_files()).\
                                filter_files(directory_data)
         ]
