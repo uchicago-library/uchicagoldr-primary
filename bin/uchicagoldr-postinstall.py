@@ -2,9 +2,11 @@ from argparse import ArgumentParser
 from os.path import join, split, exists, \
     expanduser, expandvars, normpath, realpath
 from os import makedirs
+from shutil import copyfile
 from xdg import BaseDirectory
 from configparser import ConfigParser
-from uchicagoldr.convenience import retrieve_resource_str
+from uchicagoldr.convenience import retrieve_resource_str, \
+    retrieve_resource_filepath
 
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
@@ -111,11 +113,80 @@ def first_conf_file_setup(conf_dir):
         print('You have chosen not to create a configuration file. System ' +
               'defaults will be used.')
         return None
-    print("Populating config with template...")
-    default_conf = retrieve_resource_str('configs/ldr.ini')
-    with open(conf_file, 'w') as f:
-        for line in default_conf.split('\n'):
-            f.write("#"+line+'\n')
+    if len(open(conf_file, 'r').read()) == 0:
+        print("Populating config with template...")
+        default_conf = retrieve_resource_str('configs/ldr.ini')
+        with open(conf_file, 'w') as f:
+            for line in default_conf.split('\n'):
+                f.write("#"+line+'\n')
+        return conf_file
+    else:
+        print("Your conf file appears to already contain data. It is not " +
+              "being overwritten.")
+        return conf_file
+
+
+def migrate_cvs(conf_dir):
+    print('The UChicago LDR utilizes several built-in controlled ' +
+          'vocabularies. You may edit these vocabularies (or create ' +
+          'new vocabularies) in order to change how certain tools behave.')
+    if YNCLIInput('Would you like to copy user-editable versions of these ' +
+                  'vocabularies to a location?', default='y').get_input():
+        vocabs_list = ['controlledvocabs/filepaths_fits.json',
+                       'controlledvocabs/filepaths_premis.json',
+                       'controlledvocabs/filepaths_presform.json',
+                       'controlledvocabs/restriction_codes.json']
+        cv_path = PathCLIInput('Please specify a directory to copy the ' +
+                               'controlled vocabulary files to',
+                               default=join(conf_dir, 'controlledvocabs')).get_input()
+        cv_path_created = create_prompt(cv_path, 'dir')
+        if cv_path_created:
+            for x in vocabs_list:
+                f_exists = exists(join(cv_path, split(x)[1]))
+                if f_exists:
+                    f_hasdata = len(open(join(cv_path, split(x)[1]), 'r').read()) > 0
+                else:
+                    f_hasdata = False
+                if f_hasdata:
+                    print("{} exists ".format(join(cv_path, split(x)[1])) +
+                          "and contains data, it is not being clobbered.")
+                else:
+                    copyfile(retrieve_resource_filepath(x), join(cv_path, split(x)[1]))
+        return cv_path
+    else:
+        print('Controlled vocabularies not copied - builtin vocabularies ' +
+              'will be utilized unless otherwise specified in the config.')
+        return None
+
+
+def migrate_records(conf_dir):
+    print('The Uchicago LDR utilizes several built-in record configurations ' +
+          'to control record layouts. You may edit these configurations ' +
+          '(or create new ones) in order to change how certain tools behave.')
+    if YNCLIInput('Would you like to copy user-editable versions of these ' +
+                  'configurations to a location?', default='y').get_input():
+        configs_list = ['record_configs/AccessionRecordFields.csv']
+        rc_path = PathCLIInput('Please specify a directory to copy the ' +
+                               'record configuration files to',
+                               default=join(conf_dir, 'record_configs')).get_input()
+        rc_path_created = create_prompt(rc_path, 'dir')
+        if rc_path_created:
+            for x in configs_list:
+                f_exists = exists(join(rc_path, split(x)[1]))
+                if f_exists:
+                    f_hasdata = len(open(join(rc_path, split(x)[1]), 'r').read()) > 0
+                else:
+                    f_hasdata = False
+                if f_hasdata:
+                    print("{} exists ".format(join(rc_path, split(x)[1])) +
+                          "and contains data, it is not being clobbered.")
+                else:
+                    copyfile(retrieve_resource_filepath(x), join(rc_path, split(x)[1]))
+        return rc_path
+    else:
+        print('Record Configurations not copied - builtin vocabularies ' +
+              'will be utilized unless otherwise specified in the config.')
+        return None
 
 
 def main():
@@ -123,15 +194,10 @@ def main():
     parser = ArgumentParser(description="this is the initial configuration " +
                             "script for the University of Chicago " +
                             "Library Digital Repository Tool Suite.")
-    parser.add_argument('-x', '--x',
-                        action='store_true',
-                        default=False)
 
     args = parser.parse_args()
 
     # app code
-    if args.x:
-        print("0000000000000000000000000000000000000")
     print('Welcome to the University of Chicago Library Digital ' +
           'Repository Tool Suite configuration wizard.')
     print('This configuration wizard will walk you through creating ' +
@@ -159,6 +225,23 @@ def main():
           'inside of the python package. Changing them there and ' +
           'recompiling the package will set global defaults.')
     conf_file = first_conf_file_setup(conf_dir)
+    print()
+    print('We will now determine the location for user editable controlled ' +
+          'vocabularies, if any')
+    cvs_dir = migrate_cvs(conf_dir)
+    print()
+    print('We will now determine the location for the user editable record ' +
+          'configuration files, if any')
+    records_dir = migrate_records(conf_dir)
+
+    print('This completes the configuration of the UChicago LDR Toolchain.')
+    print('Please set the appropriate locations in your config file')
+    for x in [(conf_dir, 'conf_dir'), (conf_file, 'conf_file'),
+              (cvs_dir,'controlled_vocabs_dir'), (records_dir, 'records_dir')]:
+        if not x[0]:
+            continue
+        else:
+            print("{}: {}".format(x[1], x[0]))
 
 if __name__ == '__main__':
     main()

@@ -15,6 +15,9 @@ setup(
             'controlledvocabs/filepaths_premis.json',
             'controlledvocabs/filepaths_presform.json',
             'controlledvocabs/restriction_codes.json'
+        ]),
+        ('record_configs',[
+            'record_configs/AccessionRecordFields.csv'
         ])
     ],
     classifiers = [
