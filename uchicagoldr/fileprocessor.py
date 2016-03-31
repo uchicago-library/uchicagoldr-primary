@@ -21,10 +21,7 @@ class FileProcessor(object):
                             [('prefix', str), ('src_root', str), ('kind', str),
                              ('group_name', str), ('resume', int),
                              ('dest_root', str), ('directory_id', str),
-                             ('directory_type', str)]),
-                 validation_data:\
-                 NamedTuple('Rules',
-                            [('numfiles', int)])):
+                             ('directory_type', str)])):
         self.path = path
         self.tree = AbsoluteFilePathTree(path)
 
@@ -39,15 +36,9 @@ class FileProcessor(object):
                                for a_file_path in FileLister(self._find_files()).\
                                filter_files(directory_data)
         ]
-        self.validator = RoleValidatorFactory(validation_type).build(validation_data)
+        self.validator = RoleValidatorFactory(validation_type).build(directory_data)
         self.validation = self.validate_input()
         self.destination = DestinationFactory(directory_data.directory_type).build(directory_data)
-
-
-    def get_snapshot_of_a_tree(self):
-        """a function to return the tree
-        """
-        return self.tree
 
 
     def _find_files(self) -> list:
