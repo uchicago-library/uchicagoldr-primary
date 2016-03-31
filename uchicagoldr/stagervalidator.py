@@ -28,7 +28,7 @@ class StagerValidator(Validator):
         """
         self.is_required_info_present()
         numfilesfound = processor_info.get('numfilesfound')
-        return self.data.numfiles == numfilesfound
+        return self.data.validation.get('numfiles') == numfilesfound
 
     def get_info_needed(self):
         return {'numfilesfound':int}
@@ -40,9 +40,9 @@ class StagerValidator(Validator):
         """
         self.is_required_info_present(self)
         number_of_files_found = processor_info.get('numfilesfound')
-        if self.data.numfiles != number_of_files_found:
+        if self.data.validation.get('numfiles') != number_of_files_found:
             return ("fatal", "There were {} files actually found,".format(number_of_files_found) +\
-                "but you said there should be {} files".format(self.data.numfiles))
+                "but you said there should be {} files".format(self.data.validation.get('numfiles')))
         else:
-            return ("info", "You said there were {}".format(self.data.numfiles) + \
+            return ("info", "You said there were {}".format(self.data.validation.get('numfiles')) + \
                 " files and there really were that number")

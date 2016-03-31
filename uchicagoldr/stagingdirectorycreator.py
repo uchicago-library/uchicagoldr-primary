@@ -20,11 +20,11 @@ class StagingDirectoryCreator(DirectoryCreator):
         self.stage_id = info.directory_id
         self.prefix = info.prefix
         self.group = Group(info.group_name)
-        if info.resume:
-            self.current_run = self.prefix + str(info.resume)
-        else:
-            self.current_run = StagingRun(self.prefix, self.stage_id,
-                                          self.destination_root).get_current_run()
+        self.resume = info.resume
+        self.current_run = StagingRun(self.prefix, self.stage_id,
+                                      self.destination_root, self.resume).\
+                                      get_current_run()
+
 
     def make_a_directory(self, directory_string: str):
         """A method to make a directory on-disk and raise a ValueError if

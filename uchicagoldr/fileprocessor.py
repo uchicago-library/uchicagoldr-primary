@@ -21,33 +21,22 @@ class FileProcessor(object):
                             [('prefix', str), ('src_root', str), ('kind', str),
                              ('group_name', str), ('resume', int),
                              ('dest_root', str), ('directory_id', str),
-                             ('directory_type', str)]),
-                 validation_data:\
-                 NamedTuple('Rules',
-                            [('numfiles', int)])):
+                             ('directory_type', str)])):
         self.path = path
         self.tree = AbsoluteFilePathTree(path)
 
         self.files = self._find_files()
-        self.relevant_files = [namedtuple("filedataobject", "path mimetype size" +\
-                                          " checksums type")\
+        self.relevant_files = [namedtuple("filedataobject", "path mimetype size checksums type")
                                (a_file_path, Magic(mime=True).from_file(a_file_path),
                                 stat(a_file_path).st_size,
-                                [nametuple("checksum", "type", "value")\
-                                 ("md5", sane_hash(a_file_path))],
-                                'file') for a_file_path in self._find_files()
+                                [namedtuple('checksum', "type value")('md5',sane_hash('md5',a_file_path))],
+                                'file')
                                for a_file_path in FileLister(self._find_files()).\
                                filter_files(directory_data)
         ]
-        self.validator = RoleValidatorFactory(validation_type).build(validation_data)
+        self.validator = RoleValidatorFactory(validation_type).build(directory_data)
         self.validation = self.validate_input()
         self.destination = DestinationFactory(directory_data.directory_type).build(directory_data)
-
-
-    def get_snapshot_of_a_tree(self):
-        """a function to return the tree
-        """
-        return self.tree
 
 
     def _find_files(self) -> list:
