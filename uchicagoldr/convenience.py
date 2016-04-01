@@ -47,15 +47,15 @@ def retrieve_resource_filepath(resource_path):
     from pkg_resources import Requirement, resource_filename
     return resource_filename(Requirement.parse('uchicagoldr'), resource_path)
 
+
 def retrieve_resource_str(resource_path):
-    from pkg_resources import Requirement, resource_filename
     x = None
     with open(retrieve_resource_filepath(resource_path), 'r') as f:
         x = f.read()
     return x
 
+
 def retrieve_controlled_vocabulary(vocab_name, built=True):
-    from pkg_resources import Requirement, resource_filename
     from controlledvocab.lib import ControlledVocabFromJson
     fname = retrieve_resource_filepath('controlledvocabs/'+vocab_name+'.json')
     cv = ControlledVocabFromJson(fname)

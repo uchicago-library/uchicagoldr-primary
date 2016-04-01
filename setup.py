@@ -1,13 +1,35 @@
 from setuptools import setup
+from setuptools import find_packages
+
+def readme():
+    with open('README.md', 'r') as f:
+        return f.read()
 
 setup(
     name = 'uchicagoldr',
     version = '1.0.0',
-    author = "Brian Balsamo,Tyler Danstrom",
-    author_email = ["balsamo@uchicago.edu","tdanstrom@uchicago.edu"],
-    packages = ['uchicagoldr'],
+    author = "Brian Balsamo, Tyler Danstrom",
+    author_email = "balsamo@uchicago.edu, tdanstrom@uchicago.edu",
+    packages = find_packages(
+        exclude = [
+            "build",
+            "bin",
+            "configs",
+            "controlledvocabs",
+            "dist",
+            "docs",
+            "record_configs",
+            "tests",
+            "uchicagoldr.egg-info"
+        ]
+    ),
     description = "A set of classes required for the uchicago ldr",
+    long_description=readme(),
     keywords = ["uchicago","repository","file-level","processing"],
+    package_data = {
+        '': ["*.md"]
+    },
+    include_package_data=True,
     data_files = [
         ('configs', ['configs/ldr.ini']),
         ('controlledvocabs', [
