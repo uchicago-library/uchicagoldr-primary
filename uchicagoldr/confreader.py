@@ -71,7 +71,6 @@ class ConfReader(object):
             with open(x, 'r') as f:
                 subparser.read_file(f)
             subparsers.append(subparser)
-#        subparsers = [ConfigParser().read_file(open(x, 'r')) for x in paths]
 
         # Build our master parser
         self.parser = self.mux_parsers(subparsers)
