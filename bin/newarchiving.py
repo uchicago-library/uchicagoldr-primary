@@ -1,11 +1,11 @@
 
 from argparse import ArgumentParser
-from collection import namedtuple
-from uchicagoldr.fileporocessor import FileProcessor
+from collections import namedtuple
+from uchicagoldr.fileprocessor import FileProcessor
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("directory", type=str, action'store')
+    parser.add_argument("directory", type=str, action='store')
     parser.add_argument("source_root", type=str, action='store')
     parser.add_argument("destination_root", type=int, action='store')
     parser.add_argument("numfiles", type=int, action='store')
