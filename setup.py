@@ -23,7 +23,7 @@ setup(
             "uchicagoldr.egg-info"
         ]
     ),
-    description = "A set of classes required for the uchicago ldr",
+    description = "A suite of tools for working with digital repositories",
     long_description=readme(),
     keywords = ["uchicago","repository","file-level","processing"],
     package_data = {
