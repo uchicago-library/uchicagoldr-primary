@@ -90,13 +90,11 @@ class ConfReader(object):
         * parser (ConfigParser): A parser containing the final values
         """
         parser = ConfigParser()
-        print(ordered_subparsers)
         # Reverse the list, so when we clobber values we end up with the most
         # preferrential one
         for subparser in reversed(ordered_subparsers):
             for section in subparser.sections():
                 for option in subparser.options(section):
-                    print("{}: {}".format(section, option))
                     if not parser.has_section(section):
                         parser.add_section(section)
                     parser[section][option] = subparser.get(section, option, raw=True)
