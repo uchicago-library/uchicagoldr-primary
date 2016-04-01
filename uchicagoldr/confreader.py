@@ -3,19 +3,36 @@ from os.path import join, isfile
 from xdg import BaseDirectory
 from convenience import retrieve_resource_filepath
 
-"""
-This class is meant to read three potential config locations
-1) A manually specified one
-2) The default
-3) The builtin
-and provide a master parser of their output ordered by preference.
-It allows the user to specify what fallbacks can be used.
-"""
-
 
 class ConfReader(object):
+    """
+    This class is meant to read three potential config locations
+    1) A manually specified one
+    2) The default
+    3) The builtin
+    and provide a master parser of their output ordered by preference.
+    It allows the user to specify what fallbacks can be used.
+
+    The majority of its methods are simple passthroughs to ConfigParser
+
+    __Attribs__
+
+    * self.parser (ConfigParser): The internal parser
+    """
     def __init__(self, config_directory=None, config_file=None,
                  and_default=True, and_builtin=True):
+        """
+        Build a new ConfReader
+
+        __KWArgs__
+
+        * config_directory (str): A path to a manually specified config dir
+        * config_file (str): The filename of a primary conf in that dir
+        defaults to "ldr.ini"
+        * and_default (bool): Whether or not to check/use the default
+        conf location
+        * and_builtin (bool): Whether or not to check/use the builtin conf
+        """
         # Assume if the user didn't enter a filename they used the default
         if config_file is None:
             config_file = 'ldr.ini'
@@ -48,36 +65,160 @@ class ConfReader(object):
         paths = [x for x in paths if isfile(x)]
 
         # Build a parser from each one
-        subparsers = [ConfigParser().read(x) for x in paths]
+        subparsers = []
+        for x in paths:
+            subparser = ConfigParser()
+            with open(x, 'r') as f:
+                subparser.read_file(f)
+            subparsers.append(subparser)
+#        subparsers = [ConfigParser().read_file(open(x, 'r')) for x in paths]
 
         # Build our master parser
         self.parser = self.mux_parsers(subparsers)
 
     def mux_parsers(self, ordered_subparsers):
+        """
+        mux together a list of parsers, ordered from most preferred to least
+
+        __Args__
+
+        1) ordered_subparsers (list): The other parsers, ordered from
+        most preferred to least
+
+        __Returns__
+
+        * parser (ConfigParser): A parser containing the final values
+        """
         parser = ConfigParser()
+        print(ordered_subparsers)
         # Reverse the list, so when we clobber values we end up with the most
         # preferrential one
         for subparser in reversed(ordered_subparsers):
-            for section in subparser:
-                for value in section:
-                    parser[section][value] = subparser[section][value]
+            for section in subparser.sections():
+                for option in subparser.options(section):
+                    print("{}: {}".format(section, option))
+                    if not parser.has_section(section):
+                        parser.add_section(section)
+                    parser[section][option] = subparser.get(section, option, raw=True)
+
         return parser
 
-    def get_conf_value(self, key, section=None):
-        if section:
-            return self.parser[section][key]
-        else:
-            potentials = []
-            for section in self.parser:
-                if key in self.parser[section]:
-                    potentials.append(self.parser[section][key])
-            if len(potentials) < 1:
-                raise KeyError(
-                    "{} does not appear in any section!".format(key)
-                )
-            elif len(potentials) > 1:
-                raise KeyError(
-                    "{} appears in multiple sections, specify one!".format(key)
-                )
-            else:
-                return potentials[0]
+    def get(self, *args, **kwargs):
+        """
+        see ConfigParser.get
+        """
+        return self.parser.get(*args, **kwargs)
+
+    def getint(self, *args, **kwargs):
+        """
+        see ConfigParser.getint
+        """
+        return self.parser.getint(*args, **kwargs)
+
+    def getfloat(self, *args, **kwargs):
+        """
+        see ConfigParser.getfloat
+        """
+        return self.parser.getfloat(*args, **kwargs)
+
+    def getboolean(self, *args, **kwargs):
+        """
+        see ConfigParser.getbool
+        """
+        return self.parser.getbool(*args, **kwargs)
+
+    def defaults(self):
+        """
+        see ConfigParser.defaults
+        """
+        return self.parser.defaults()
+
+    def sections(self):
+        """
+        see ConfigParser.sections
+        """
+        return self.parser.sections()
+
+    def add_section(self, *args):
+        """
+        see ConfigParser.add_section
+        """
+        return self.parser.add_section(*args)
+
+    def has_section(self, *args):
+        """
+        see ConfigParser.has_section
+        """
+        return self.parser.has_section(*args)
+
+    def options(self, *args):
+        """
+        see ConfigParser.options
+        """
+        return self.parser.options(*args)
+
+    def read(self, *args, **kwargs):
+        """
+        see ConfigParser.read
+        """
+        return self.parser.read(*args, **kwargs)
+
+    def read_file(self, *args, **kwargs):
+        """
+        see ConfigParser.read_file
+        """
+        return self.parser.read_file(*args, **kwargs)
+
+    def read_string(self, *args, **kwargs):
+        """
+        see ConfigParser.read_string
+        """
+        return self.parser.read_string(*args, **kwargs)
+
+    def read_dict(self, *args, **kwargs):
+        """
+        see ConfigParser.read_dict
+        """
+        return self.parser.read_dict(*args, **kwargs)
+
+    def items(self, *args, **kwargs):
+        """
+        see ConfigParser.items
+        """
+        return self.parser.items(*args, **kwargs)
+
+    def set(self, *args):
+        """
+        see ConfigParser.set
+        """
+        return self.parser.set(*args)
+
+    def write(self, *args, **kwargs):
+        """
+        see ConfigParser.write
+        """
+        return self.parser.write(*args, **kwargs)
+
+    def remove_option(self, *args):
+        """
+        see ConfigParser.remove_option
+        """
+        return self.parser.remove_option(*args)
+
+    def remove_section(self, *args):
+        """
+        see ConfigParser.remove_section
+        """
+        return self.parser.remove_sectin(*args)
+
+    def optionxform(self, *args):
+        """
+        see ConfigParser.optionxform
+        """
+        return self.parser.optionxform(*args)
+
+    def readfp(self, *args, **kwargs):
+        """
+        see ConfigParser.readfp
+        """
+        return self.parser.readfp(*args, **kwargs)
