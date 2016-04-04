@@ -30,27 +30,33 @@ class TestApp(CLIApp):
             default=False,
             help='An example flag added to this application.'
         )
+
         # Gather all of our args
         args = parser.parse_args()
 
         # Begin app code
         if args.example and args.verbose == 0:
-            print('the example flag is present')
+            self.stdoutp('the example flag is present')
 
         elif args.example and args.verbose == 1:
-            print('Hello, the example flag and a verbose are present.')
+            self.stdoutp('Hello, the example flag and a verbose are present.')
 
         elif args.example and args.verbose == 2:
-            print('HELLO, THE EXAMPLE FLAG AND TWO verbose ' +
+            self.stdoutp('HELLO, THE EXAMPLE FLAG AND TWO verbose ' +
                   'FLAGS ARE PRESENT.')
 
-        elif args.example and args.verbose == 3:
-            print('HELLO, THE EXAMPLE FLAG AND TWO verbose ' +
+        elif args.example and args.verbose >= 3:
+            self.stdoutp('HELLO, THE EXAMPLE FLAG AND TWO verbose ' +
                   'FLAGS ARE PRESENT.')
             for x in [self.__author__, self.__email__, self.__company__,
                       self.__publication__, self.__version__]:
-                print(x)
-            print("Your conf dir is: {}".format(str(args.conf_dir)))
-            print("Your conf file is: {}".format(str(args.conf_file)))
+                self.stdoutp(x)
+            self.stdoutp("Your conf dir is: {}".format(str(args.conf_dir)))
+            self.stdoutp("Your conf file is: {}".format(str(args.conf_file)))
         else:
-            print('This command had no flags passed to it.')
+            if len(vars(args)) == 0:
+                self.stdoutp('This command had no flags passed to it.')
+            else:
+                self.stdoutp('This command doesnt print anything ' +
+                             'when you pass those flags... except ' +
+                             'for this.')
