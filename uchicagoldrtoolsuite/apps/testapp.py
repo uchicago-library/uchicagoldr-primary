@@ -46,7 +46,7 @@ class TestApp(CLIApp):
                   'FLAGS ARE PRESENT.')
 
         elif args.example and args.verbose >= 3:
-            self.stdoutp('HELLO, THE EXAMPLE FLAG AND TWO verbose ' +
+            self.stdoutp('HELLO, THE EXAMPLE FLAG AND THREE OR MORE verbose ' +
                   'FLAGS ARE PRESENT.')
             for x in [self.__author__, self.__email__, self.__company__,
                       self.__publication__, self.__version__]:
