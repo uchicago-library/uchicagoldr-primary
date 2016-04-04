@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from sys import stdout, stderr
 from os.path import isabs, join, isdir, isfile, exists
-from uchicagoldrtoolsuite.apps.app import App
+from uchicagoldrtoolsuite.apps.internals.app import App
 
 
 class CLIApp(App):
