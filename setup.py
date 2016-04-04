@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 setup(
-    name = 'uchicagoldr',
+    name = 'uchicagoldrtoolsuite',
     version = '1.0.0',
     author = "Brian Balsamo, Tyler Danstrom",
     author_email = "balsamo@uchicago.edu, tdanstrom@uchicago.edu",
