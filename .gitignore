@@ -13,3 +13,6 @@ bin/*~
 *~
 env/*
 .DS_Store
+*.egg-info/
+*.swp
+dist/

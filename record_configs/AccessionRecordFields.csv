@@ -1,0 +1,14 @@
+Field Name,Value Type,Obligation,Cardinality,Validation,Children Required
+Accession Number,str,r,1,^\d{4}-\d{3}$,0
+Organization Name,str,r,1,".{1,}",0
+Summary,str,r,1,".{1,}",0
+Collection Title,str,r,1,".{1,}",0
+EADID,str,r,1,".{1,}",0
+Rights,str,r,n,".{1,}",0
+Restrictions,str,r,n,^R-|^r-|^OU,0
+Restriction Comments,str,o,n,,0
+Origin,str,o,1,,0
+Access,bool,r,1,^True$|^False$,0
+Discover,bool,r,1,^True$|^False$,0
+Administrative Comments,str,o,n,,0
+Access Description,str,o,n,,0

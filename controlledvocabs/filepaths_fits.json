@@ -1,0 +1,12 @@
+{
+    "check_patterns": "True",
+    "child_vocabs": [],
+    "check_children": "False",
+    "name": "fits_filepaths",
+    "case_sensitive": "False",
+    "edit_before_build": "False",
+    "contains": [],
+    "patterns": [
+        ".*\.fits\.xml$"
+    ]
+}
