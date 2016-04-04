@@ -1,3 +1,5 @@
+from fileprocessor import FileProcessor
+
 class Pruner(FileProcessor):
     pattern_inputs = []
     patterns_compiled = []

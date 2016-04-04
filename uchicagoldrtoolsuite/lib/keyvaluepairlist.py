@@ -1,6 +1,6 @@
 from collections.abc import MutableSequence
 
-from uchicagoldrtoolsuite.lib.keyvaluepair import KeyValuePair
+from keyvaluepair import KeyValuePair
 
 
 class KeyValuePairList(MutableSequence):

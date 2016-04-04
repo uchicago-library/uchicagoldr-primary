@@ -1,7 +1,7 @@
 from os.path import join, split, isabs
 from treelib import Tree
-from uchicagoldrtoolsuite.lib.filewalker import FileWalker
-from uchicagoldrtoolsuite.lib.rootedpath import RootedPath
+from filewalker import FileWalker
+from rootedpath import RootedPath
 
 
 class FilePathTree(object):

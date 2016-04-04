@@ -6,11 +6,11 @@ from os import stat
 from os.path import join
 from typing import NamedTuple
 from magic import Magic
-from uchicagoldrtoolsuite.lib.absolutefilepathtree import AbsoluteFilePathTree
-from uchicagoldrtoolsuite.lib.rolevalidatorfactory import RoleValidatorFactory
-from uchicagoldrtoolsuite.lib.convenience import sane_hash
-from uchicagoldrtoolsuite.lib.destinationfactory import DestinationFactory
-from uchicagoldrtoolsuite.lib.filelister import FileLister
+from absolutefilepathtree import AbsoluteFilePathTree
+from rolevalidatorfactory import RoleValidatorFactory
+from convenience import sane_hash
+from destinationfactory import DestinationFactory
+from filelister import FileLister
 
 class FileProcessor(object):
     """A class for processing files from one stage of the archiving process to the next

@@ -2,7 +2,7 @@
 right type of directory creator
 """
 
-from uchicagoldrtoolsuite.lib.stagingdirectorycreator import StagingDirectoryCreator
+from internals.stagingdirectorycreator import StagingDirectoryCreator
 
 class DestinationFactory(object):
     """A factory class for creating particular directory creator objects

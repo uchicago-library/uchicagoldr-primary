@@ -2,7 +2,7 @@
 The RoleValidatorFactory shold be used to instantiate a validator for a given role's input
 """
 from typing import NamedTuple
-from uchicagoldrtoolsuite.lib.internals.stagervalidator import StagerValidator
+from stagervalidator import StagerValidator
 
 class RoleValidatorFactory(object):
     """The RoleValidatorFactory builds validators for every role's input

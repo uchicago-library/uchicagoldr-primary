@@ -1,3 +1,6 @@
+
+from fileprocessor import FileProcessor
+
 class NewArchiver(FileProcessor):
     def __init__(self, directory, prefix, numfolders, numfiles,
                  source_root, archive_directory, group_id, user_id):
