@@ -22,7 +22,7 @@ class ConfReader(object):
     def __init__(self, config_directory=None, config_file=None,
                  and_default=True, and_builtin=True):
         """
-        Build a new ConfReader
+        Build a new ConfReader to read values from
 
         __KWArgs__
 
@@ -74,6 +74,30 @@ class ConfReader(object):
 
         # Build our master parser
         self.parser = self.mux_parsers(subparsers)
+
+    def __getitem__(self, key):
+        return self.parser.__getitem__(key)
+
+    def __setitem__(self, key, value):
+        return self.parser__setitem__(key, value)
+
+    def __missing__(self, key):
+        return self.parser.__missing__(key)
+
+    def __delitem__(self, key):
+        return self.parser.__delitem__(key)
+
+    def __len__(self):
+        return self.parser.__len__()
+
+    def __iter__(self):
+        return self.parser.__iter__()
+
+    def __reversed__(self):
+        return self.parser.__reversed__()
+
+    def __contains__(self, item):
+        return self.parser.__contains__(item)
 
     def mux_parsers(self, ordered_subparsers):
         """
