@@ -1,5 +1,5 @@
 def get_valid_types():
-    from uchicagoldr.ldrconfiguration import LDRConfiguration
+    from uchicagoldrtoolsuite.configuration import LDRConfiguration
     config = LDRConfiguration()
     types = config.get_a_config_data_value('outputinformation', 'valid_types')
     a_list = types.split(',')

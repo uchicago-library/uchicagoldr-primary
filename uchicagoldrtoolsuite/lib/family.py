@@ -6,9 +6,9 @@ from json import dump as json_dump
 from json import dumps as json_dumps
 from json import loads as json_loads
 
-from uchicagoldr.filepointer import FilePointer
-from uchicagoldr.keyvaluepair import KeyValuePair
-from uchicagoldr.keyvaluepairlist import KeyValuePairList
+from uchicagoldrtoolsuite.lib.filepointer import FilePointer
+from uchicagoldrtoolsuite.lib.keyvaluepair import KeyValuePair
+from uchicagoldrtoolsuite.lib.keyvaluepairlist import KeyValuePairList
 
 
 def load_family_from_dir(uuid, dir):

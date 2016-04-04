@@ -2,7 +2,7 @@ from os import listdir
 from os.path import isdir, isfile, join, relpath
 from re import compile as re_compile
 
-from uchicagoldr.rootedpath import RootedPath
+from uchicagoldrtoolsuite.lib.rootedpath import RootedPath
 
 class FileWalker(object):
     """

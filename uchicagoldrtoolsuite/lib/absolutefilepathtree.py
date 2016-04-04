@@ -3,8 +3,8 @@ from mimetypes import guess_type
 from magic import from_file
 from treelib import Tree
 from typing import Generic
-from uchicagoldr.filepathtree import FilePathTree
-from uchicagoldr.convenience import sane_hash
+from uchicagoldr.libs.filepathtree import FilePathTree
+from uchicagoldr.libs.convenience import sane_hash
 
 
 class AbsoluteFilePathTree(FilePathTree):

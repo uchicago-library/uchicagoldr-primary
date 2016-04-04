@@ -1,7 +1,7 @@
 class KeyValuePair(object):
 
     def __init__(self, key, value=""):
-        from uchicagoldr.keyvaluepairlist import KeyValuePairList
+        from uchicagoldrtoolsuite.lib.keyvaluepairlist import KeyValuePairList
 
         if not isinstance(key, str):
             raise TypeError

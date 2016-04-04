@@ -3,7 +3,7 @@
 
 from os import listdir
 from os.path import exists, join
-from uchicagoldr.absolutefilepathtree import AbsoluteFilePathTree
+from uchicagoldrtoolsuite.lib.absolutefilepathtree import AbsoluteFilePathTree
 
 
 class FileLister(object):
