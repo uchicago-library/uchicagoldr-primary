@@ -25,6 +25,11 @@ setup(
     ),
     description = "A suite of tools for working with digital repositories",
     long_description=readme(),
+    entry_points = {
+        'console_scripts':[
+            'ldrexample = uchicagoldrtoolsuite.apps.testapp:launch'
+        ]
+    },
     keywords = ["uchicago","repository","file-level","processing"],
     package_data = {
         '': ["*.md"]
