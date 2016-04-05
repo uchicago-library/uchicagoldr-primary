@@ -27,7 +27,6 @@ class CLIApp(App):
     """
     def __init__(self, __author__=None, __email__=None, __company__=None,
                  __copyright__=None, __publication__=None, __version__=None):
-        self.spawn_parser()
         App.__init__(
             self,
             __author__=__author__,

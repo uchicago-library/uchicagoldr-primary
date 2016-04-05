@@ -7,7 +7,7 @@ def readme():
 
 setup(
     name = 'uchicagoldrtoolsuite',
-    version = '1.0.0',
+    version = '0.0.1dev',
     author = "Brian Balsamo, Tyler Danstrom",
     author_email = "balsamo@uchicago.edu, tdanstrom@uchicago.edu",
     packages = find_packages(
@@ -27,7 +27,10 @@ setup(
     long_description=readme(),
     entry_points = {
         'console_scripts':[
-            'ldrexample = uchicagoldrtoolsuite.apps.testapp:launch'
+            'ldrstage = uchicagoldrtoolsuite.apps.stager:launch',
+            'ldrprune = uchicagoldrtoolsuite.apps.pruner:launch'
+            'ldrcreatepremis = uchicagoldrtoolsuite.apps.premiscreator:launch',
+            'ldrsetrestriction = uchicagoldrtoolsuite.apps.premisrestrictionsetter:launch'
         ]
     },
     keywords = ["uchicago","repository","file-level","processing"],
