@@ -7,7 +7,7 @@ def readme():
 
 setup(
     name = 'uchicagoldrtoolsuite',
-    version = '1.0.0',
+    version = '0.0.1dev',
     author = "Brian Balsamo, Tyler Danstrom",
     author_email = "balsamo@uchicago.edu, tdanstrom@uchicago.edu",
     packages = find_packages(
@@ -25,6 +25,17 @@ setup(
     ),
     description = "A suite of tools for working with digital repositories",
     long_description=readme(),
+    entry_points = {
+        'console_scripts':[
+            'ldrstage = uchicagoldrtoolsuite.apps.stager:launch',
+            'ldrprune = uchicagoldrtoolsuite.apps.pruner:launch'
+            'ldrcreatepremis = uchicagoldrtoolsuite.apps.premiscreator:launch',
+            'ldrsetrestriction = uchicagoldrtoolsuite.apps.premisrestrictionsetter:launch',
+            'ldrarchive = uchicagoldrtoolsuite.apps.archiver:launch',
+            'ldraru = uchicagoldrtoolsuite.apps.aru:launch',
+            'ldrpostinstall = uchicagoldrtoolsuite.apps.postinstall:launch'
+        ]
+    },
     keywords = ["uchicago","repository","file-level","processing"],
     package_data = {
         '': ["*.md"]
