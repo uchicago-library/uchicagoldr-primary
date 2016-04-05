@@ -3,7 +3,7 @@ The ArchiverValidator is used to determine whether the input given to a particul
 instance of the Stager class is valid or not.
 """
 
-from abc.validator import Validator
+from .abc.validator import Validator
 
 class ArchiverValidator(Validator):
     """The StagerValidator is a class that will test whether the given tree view
@@ -40,7 +40,7 @@ class ArchiverValidator(Validator):
         return numfilesfound == numfiles and numfoldersfound == numfolders \
             and premisobjectsfound == numtechmdata and accessionrecordpresent \
             and legalnotepresent and adminnotepresent
-									
+
     def get_info_needed(self):
     	return {'numfilesfound':int, 'numfoldersfound':int,'numtechmdata':int,
                 'acessionrecordpresent':bool, 'premisobjectsfound':int,
@@ -62,14 +62,14 @@ class ArchiverValidator(Validator):
         legalnotepresent = processor_info.get('legalnotepresent')
         adminnotepresent = processor_info.get('adminnotepresent')
         numtechmdata = processor_info.get('numtechmdata')
-        
+
         if numfiles != number_of_files_found:
             return ("fatal", "There were {} files actually found,".format(number_of_files_found) +\
                 "but you said there should be {} files".format(self.data.validation.get('numfiles')))
         elif premisobjectsfound != numtechmdata:
             return ("fatal", "There are {} premis objects found".format(premisobjectsfound) +\
                     "and there are {} technical mdata files found".format(numtechmdata))
-                                                                        
+
         elif numfolders != numfoldersfound:
             return ("fatal", "There are {} runs found".format(numfoldersfound) +\
                     "but you said there would be {} runs".format(numfolders))
@@ -78,4 +78,4 @@ class ArchiverValidator(Validator):
         elif not legalnotepresent:
             return ("fatal", "There is no legal note present")
         elif not adminnotepresent:
-            return ("fatal", "There is no admin note present")        
+            return ("fatal", "There is no admin note present")

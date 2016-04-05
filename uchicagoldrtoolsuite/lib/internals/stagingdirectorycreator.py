@@ -4,9 +4,9 @@ DirectoryCreatorFactory
 from os import listdir, mkdir
 from os.path import dirname, exists, join, relpath
 from shutil import copyfile
-from abc.directorycreator import DirectoryCreator
-from group import Group
-from stagingrun import StagingRun
+from .abc.directorycreator import DirectoryCreator
+from .group import Group
+from .stagingrun import StagingRun
 from sys import stdout
 
 
@@ -44,7 +44,7 @@ class StagingDirectoryCreator(DirectoryCreator):
         """
         if not exists(directory_string):
             mkdir(directory_string, 0o750)
-            
+
         self.group.change_location_group_ownership(directory_string)
 
 
@@ -116,7 +116,7 @@ class StagingDirectoryCreator(DirectoryCreator):
                 directory_tree = join(directory_tree, directory_part)
                 if not exists(directory_tree):
                     self.make_a_directory(directory_tree)
-                    
+
 
         def append_to_manifest(relative_filepath: str, md5_hash: str) -> bool:
             """A method to find and append run info to a manifest file

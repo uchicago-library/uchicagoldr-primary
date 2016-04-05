@@ -3,7 +3,7 @@ The StagerValidator is used to determine whether the input given to a particular
 instance of the Stager class is valid or not.
 """
 
-from abc.validator import Validator
+from .abc.validator import Validator
 
 class StagerValidator(Validator):
     """The StagerValidator is a class that will test whether the given tree view
