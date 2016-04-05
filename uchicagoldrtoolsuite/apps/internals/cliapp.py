@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from sys import stdout, stderr
-from os.path import isabs, join, isdir, isfile, exists
+from os.path import isabs, join, isdir, isfile, exists, split
+from os import makedirs
 from uchicagoldrtoolsuite.apps.internals.app import App
 from uchicagoldrtoolsuite.configuration.confreader import ConfReader
 
@@ -13,7 +14,7 @@ class CLIApp(App):
     __Provided Methods__
 
     * spawn_parser (ArgumentParser): Creates the parser boilerplate,
-    with the command line flags that should be all applications set."
+    with the command line flags that all applications set."
     * Prompts
         * prompt (*): Prompt the user for an arbitrary something (usually a str)
         and get their response. The most general user interaction method.
@@ -24,6 +25,8 @@ class CLIApp(App):
     * Prints
         * stdoutp: Print something to standard output
         * stderrp: Print something to standard error
+    * Utility
+        * create_path: Makes a file or a dir at some path
     """
     def __init__(self, __author__=None, __email__=None, __company__=None,
                  __copyright__=None, __publication__=None, __version__=None):
@@ -36,11 +39,6 @@ class CLIApp(App):
             __publication__=__publication__,
             __version__=__version__
         )
-
-    def __repr__(self):
-        # This fixes printing obnoxious things to the terminal
-        # when cli apps are fired.
-        return ''
 
     def spawn_parser(self, **kwargs):
         parser = ArgumentParser(**kwargs)
@@ -152,6 +150,34 @@ class CLIApp(App):
                 return False
         return answer
 
+    def create_path(self, file_or_dir, path=None):
+        if file_or_dir != 'dir' and file_or_dir != 'file':
+            raise AssertionError('Specify either \'file\' or \'dir\'')
+        if path is None:
+            if file_or_dir == 'dir':
+                diropt = True
+                fileopt = False
+            else:
+                fileopt = True
+                diropt = False
+            path = self.path_prompt("Please specify a path to create",
+                                    must_be_absolute=True,
+                                    must_be_file=fileopt,
+                                    must_be_dir=diropt)
+            if not path:
+                return False
+        if file_or_dir == 'file':
+            cdir = split(path)[0]
+            if not exists(cdir):
+                makedirs(cdir)
+            if not exists(path):
+                open(path, 'w').close()
+            return True
+        if file_or_dir == 'dir':
+            if not exists(path):
+                makedirs(path)
+            return True
+
     def stdoutp(self, message, end='\n', sanitize=True):
         if sanitize:
             message = str(message)
@@ -165,5 +191,5 @@ class CLIApp(App):
         stderr.write(message+end)
 
     def get_config(self, config_directory=None, config_file=None):
-        return ConfReader(config_directory=config_dir,
+        return ConfReader(config_directory=config_directory,
                           config_file=config_file,)
