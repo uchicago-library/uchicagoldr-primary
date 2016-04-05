@@ -20,8 +20,6 @@ class App(object):
         self.__publication__ = __publication__
         self.__version__ = __version__
         self.config = None
-        # Do whatever it is this application does
-        self.main()
 
     def main(self):
         raise NotImplemented()

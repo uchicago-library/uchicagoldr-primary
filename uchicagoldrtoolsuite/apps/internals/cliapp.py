@@ -24,6 +24,24 @@ class CLIApp(App):
         * stdoutp: Print something to standard output
         * stderrp: Print something to standard error
     """
+    def __init__(self, __author__=None, __email__=None, __company__=None,
+                 __copyright__=None, __publication__=None, __version__=None):
+        self.spawn_parser()
+        App.__init__(
+            self,
+            __author__=__author__,
+            __email__=__email__,
+            __company__=__company__,
+            __copyright__=__copyright__,
+            __publication__=__publication__,
+            __version__=__version__
+        )
+
+    def __repr__(self):
+        # This fixes printing obnoxious things to the terminal
+        # when cli apps are fired.
+        return ''
+
     def spawn_parser(self, **kwargs):
         parser = ArgumentParser(**kwargs)
 
@@ -48,7 +66,7 @@ class CLIApp(App):
             default=0,
             help="Cause the program to output verbosely."
         )
-        return parser
+        self.parser = parser
 
     def prompt(self, prompt, default=None, disp_default=None, closing=None):
         if not disp_default:

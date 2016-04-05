@@ -8,22 +8,20 @@ __publication__ = "Publication info here"
 __version__ = "0.0.0"
 
 def launch():
-    TestApp(
-        __author__=__author__,
-        __email__=__email__,
-        __company__=__company__,
-        __copyright__=__copyright__,
-        __publication__ = __publication__,
-        __version__=__version__
+    app = TestApp(
+            __author__=__author__,
+            __email__=__email__,
+            __company__=__company__,
+            __copyright__=__copyright__,
+            __publication__ = __publication__,
+            __version__=__version__
     )
-
+    app.main()
 
 class TestApp(CLIApp):
     def main(self):
-        # Get our boilerplate parser
-        parser = self.spawn_parser()
-
-        parser.add_argument(
+        # Add something to our app specific parser
+        self.parser.add_argument(
             '-e',
             '--example',
             action='store_true',
@@ -32,7 +30,7 @@ class TestApp(CLIApp):
         )
 
         # Gather all of our args
-        args = parser.parse_args()
+        args = self.parser.parse_args()
 
         # Begin app code
         if args.example and args.verbose == 0:
