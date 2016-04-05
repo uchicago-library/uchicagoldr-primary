@@ -1,4 +1,4 @@
-from fileprocessor import FileProcessor
+from .fileprocessor import FileProcessor
 
 class Pruner(FileProcessor):
     pattern_inputs = []

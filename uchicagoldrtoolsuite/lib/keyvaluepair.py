@@ -1,7 +1,7 @@
 class KeyValuePair(object):
 
     def __init__(self, key, value=""):
-        from keyvaluepairlist import KeyValuePairList
+        from .keyvaluepairlist import KeyValuePairList
 
         if not isinstance(key, str):
             raise TypeError

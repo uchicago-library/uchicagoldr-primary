@@ -4,7 +4,7 @@ from mimetypes import guess_type
 from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
-from convenience import sane_hash
+from .convenience import sane_hash
 
 
 class PremisObjectRecordCreator(object):
