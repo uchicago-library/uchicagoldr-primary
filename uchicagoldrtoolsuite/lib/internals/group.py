@@ -11,7 +11,11 @@ class Group(object):
     only instantiate if the group name exists on the system
     """
     def __init__(self, name):
-        self.group_id = self.get_group_id(name).gr_gid
+        if not group:
+            self.group_id = self.get_group_id(name).gr_gid
+        else:
+            current_user = pwd.getpwnam(getpass.getuser()).pw_gid
+            self.group_id = self.get_group_id(current_usre_group)
 
     def get_group_id(self, g_name) -> str:
         """A method to get the id of a group name
