@@ -22,4 +22,4 @@ class App(object):
         self.config = None
 
     def main(self):
-        raise NotImplemented()
+        raise NotImplemented('The app abc doesn\'t do anything')
