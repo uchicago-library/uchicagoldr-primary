@@ -1,5 +1,5 @@
 from sys import stdout
-from hierarhicalrecord.hierarchicalrecord import HierarchicalRecord
+from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.accessionrecorder import AccessionRecordConfig, \
     AccessionRecorder

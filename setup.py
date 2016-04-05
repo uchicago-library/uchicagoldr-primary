@@ -28,7 +28,7 @@ setup(
     entry_points = {
         'console_scripts':[
             'ldrstage = uchicagoldrtoolsuite.apps.stager:launch',
-            'ldrprune = uchicagoldrtoolsuite.apps.pruner:launch'
+            'ldrprune = uchicagoldrtoolsuite.apps.pruner:launch',
             'ldrcreatepremis = uchicagoldrtoolsuite.apps.premiscreator:launch',
             'ldrsetrestriction = uchicagoldrtoolsuite.apps.premisrestrictionsetter:launch',
             'ldrarchive = uchicagoldrtoolsuite.apps.archiver:launch',

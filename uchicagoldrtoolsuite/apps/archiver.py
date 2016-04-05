@@ -1,5 +1,5 @@
 from collections import namedtuple
-from uchicagoldrtoolsuite.apps.internals import CLIApp
+from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.fileprocessor import FileProcessor
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
