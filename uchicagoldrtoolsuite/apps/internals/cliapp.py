@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from sys import stdout, stderr
 from os.path import isabs, join, isdir, isfile, exists
 from uchicagoldrtoolsuite.apps.internals.app import App
+from uchicagoldrtoolsuite.configuration.confreader import ConfReader
 
 
 class CLIApp(App):
@@ -163,3 +164,7 @@ class CLIApp(App):
             message = str(message)
             end = str(end)
         stderr.write(message+end)
+
+    def get_config(self, config_directory=None, config_file=None):
+        return ConfReader(config_directory=config_dir,
+                          config_file=config_file,)
