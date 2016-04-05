@@ -6,9 +6,9 @@ from json import dump as json_dump
 from json import dumps as json_dumps
 from json import loads as json_loads
 
-from filepointer import FilePointer
-from keyvaluepair import KeyValuePair
-from keyvaluepairlist import KeyValuePairList
+from .filepointer import FilePointer
+from .keyvaluepair import KeyValuePair
+from .keyvaluepairlist import KeyValuePairList
 
 
 def load_family_from_dir(uuid, dir):

@@ -6,11 +6,11 @@ from os import stat
 from os.path import join
 from typing import NamedTuple
 from magic import Magic
-from absolutefilepathtree import AbsoluteFilePathTree
-from rolevalidatorfactory import RoleValidatorFactory
-from convenience import sane_hash
-from destinationfactory import DestinationFactory
-from filelister import FileLister
+from .absolutefilepathtree import AbsoluteFilePathTree
+from .rolevalidatorfactory import RoleValidatorFactory
+from .convenience import sane_hash
+from .destinationfactory import DestinationFactory
+from .filelister import FileLister
 
 class FileProcessor(object):
     """A class for processing files from one stage of the archiving process to the next
@@ -77,7 +77,7 @@ class FileProcessor(object):
             if key == 'numtechmdata':
                 l1 = [re_complie('fits.xml$').search(x) for x in self.files]
                 output = len(l1)
-            else::
+            else:
                 output = value
             extra_info[key] = output
         return extra_info
@@ -107,7 +107,7 @@ class FileProcessor(object):
                                for x in self.relevant_files if x.path not in nodes]
             file_nodes = [namedtuple("filepath", "type path")("file", x)
                           for x in self.relevant_files]
-            
+
             self.destination.create()
             for n_directory in directory_nodes:
                 self.destination.take_location(n_directory)

@@ -5,9 +5,9 @@ staging directories
 from collections import namedtuple
 from typing import NamedTuple
 from treelib import Tree
-from fileprocessor import FileProcessor
-from rolevalidatorfactory import RoleValidatorFactory
-from internals.abc.validator import Validator
+from .fileprocessor import FileProcessor
+from .rolevalidatorfactory import RoleValidatorFactory
+from .internals.abc.validator import Validator
 
 
 class NewStager(object):

@@ -1,5 +1,5 @@
 
-from fileprocessor import FileProcessor
+from .fileprocessor import FileProcessor
 
 class NewArchiver(FileProcessor):
     def __init__(self, directory, prefix, numfolders, numfiles,

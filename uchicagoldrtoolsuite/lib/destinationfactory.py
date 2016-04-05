@@ -2,8 +2,8 @@
 right type of directory creator
 """
 
-from internals.stagingdirectorycreator import StagingDirectoryCreator
-from internals.archivingdirectorycreator import ArchivingDirectoryCreator
+from .internals.stagingdirectorycreator import StagingDirectoryCreator
+from .internals.archivingdirectorycreator import ArchivingDirectoryCreator
 
 class DestinationFactory(object):
     """A factory class for creating particular directory creator objects
