@@ -2,7 +2,8 @@
 The RoleValidatorFactory shold be used to instantiate a validator for a given role's input
 """
 from typing import NamedTuple
-from stagervalidator import StagerValidator
+from internals.stagervalidator import StagerValidator
+from internals.archivervalidator import ArchiverValidator
 
 class RoleValidatorFactory(object):
     """The RoleValidatorFactory builds validators for every role's input
@@ -18,5 +19,7 @@ class RoleValidatorFactory(object):
             if not data:
                 raise ValueError("to create an instance of this class extra information is required")
             return StagerValidator(data)
+        elif self.order == "archiving":
+            return ArchiverValidator(data)    
         else:
             raise ValueError("{} is not a valid role validator".format(self.order))
