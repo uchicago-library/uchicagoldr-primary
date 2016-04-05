@@ -3,7 +3,7 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.filewalker import FileWalker
-from uchicagoldr.lib.premisextensionnodes import Restriction
+from uchicagoldrtoolsuite.lib.premisextensionnodes import Restriction
 
 
 __author__ = "Brian Balsamo"
