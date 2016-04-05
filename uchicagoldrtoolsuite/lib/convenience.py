@@ -1,10 +1,3 @@
-def get_valid_types():
-    from uchicagoldr.ldrconfiguration import LDRConfiguration
-    config = LDRConfiguration()
-    types = config.get_a_config_data_value('outputinformation', 'valid_types')
-    a_list = types.split(',')
-    return a_list
-
 
 def sane_hash(hash_algo, file_path, block_size=65536):
     """

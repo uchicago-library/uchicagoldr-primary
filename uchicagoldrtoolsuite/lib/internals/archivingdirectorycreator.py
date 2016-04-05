@@ -10,7 +10,7 @@ from stagingrun import StagingRun
 from sys import stdout
 
 
-class StagingDirectoryCreator(DirectoryCreator):
+class ArchivingDirectoryCreator(DirectoryCreator):
     """The StagingDirectoryCreator class is meant to create a valid staging
     directory and copy files from origin into the new staging directory
     """

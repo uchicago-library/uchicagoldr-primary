@@ -2,7 +2,8 @@
 right type of directory creator
 """
 
-from uchicagoldr.stagingdirectorycreator import StagingDirectoryCreator
+from internals.stagingdirectorycreator import StagingDirectoryCreator
+from internals.archivingdirectorycreator import ArchivingDirectoryCreator
 
 class DestinationFactory(object):
     """A factory class for creating particular directory creator objects
@@ -15,5 +16,7 @@ class DestinationFactory(object):
         """
         if self.order == 'staging':
             return StagingDirectoryCreator(info)
+        elif self.order == 'archiving':
+            return ArchivingDirectoryCreator(info)
         else:
             raise ValueError("unable to create that kind of object")

@@ -6,11 +6,11 @@ from os import stat
 from os.path import join
 from typing import NamedTuple
 from magic import Magic
-from uchicagoldr.absolutefilepathtree import AbsoluteFilePathTree
-from uchicagoldr.rolevalidatorfactory import RoleValidatorFactory
-from uchicagoldr.convenience import sane_hash
-from uchicagoldr.destinationfactory import DestinationFactory
-from uchicagoldr.filelister import FileLister
+from absolutefilepathtree import AbsoluteFilePathTree
+from rolevalidatorfactory import RoleValidatorFactory
+from convenience import sane_hash
+from destinationfactory import DestinationFactory
+from filelister import FileLister
 
 class FileProcessor(object):
     """A class for processing files from one stage of the archiving process to the next
@@ -53,9 +53,33 @@ class FileProcessor(object):
         extra_info = {}
         for key, value in needed_info.items():
             if key == 'numfilesfound':
-                answer = len(self.files)
-                if isinstance(answer, value):
-                    extra_info[key] = answer
+                output = len(self.files)
+            if key == 'numfoldersfound':
+                l1 = self.tree.find_leaves_in_a_node(self.tree.\
+                                                    find_tag_at_depth('admin',
+                                                                      1),
+                                                    recursive=False)
+                output = len(l1)
+            if key == 'accessionrecordpresent':
+                check = self.tree.find_tag_at_depth('accessionrecord', 2)
+                extra_info[key] = bool(check)
+            if key == 'adminnotepresent':
+                check = self.tree_find_tag_at_depth('note', 2)
+                output = bool(check)
+            if key == 'legalnotepresent':
+                check = self.tree_find_tag_at_depth('legal', 2)
+                output = bool(check)
+            if key == 'premisobjectsfound':
+                l1 = self.tree.find_leaves_in_a_node(self.tree.\
+                                                     find_tag_at_depth('premis', 2),
+                                                     recursive=True)
+                output = len(l1)
+            if key == 'numtechmdata':
+                l1 = [re_complie('fits.xml$').search(x) for x in self.files]
+                output = len(l1)
+            else::
+                output = value
+            extra_info[key] = output
         return extra_info
 
 
