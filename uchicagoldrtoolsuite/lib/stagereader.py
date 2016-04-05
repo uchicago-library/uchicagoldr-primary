@@ -2,8 +2,8 @@ from os.path import join, split
 from re import sub
 from re import compile as re_compile
 
-from uchicagoldr.filepathtree import FilePathTree
-from uchicagoldr.rootedpath import RootedPath
+from filepathtree import FilePathTree
+from rootedpath import RootedPath
 
 
 class FileSuite(object):

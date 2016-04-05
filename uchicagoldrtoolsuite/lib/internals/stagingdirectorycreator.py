@@ -4,9 +4,9 @@ DirectoryCreatorFactory
 from os import listdir, mkdir
 from os.path import dirname, exists, join, relpath
 from shutil import copyfile
-from uchicagoldr.directorycreator import DirectoryCreator
-from uchicagoldr.group import Group
-from uchicagoldr.stagingrun import StagingRun
+from abc.directorycreator import DirectoryCreator
+from group import Group
+from stagingrun import StagingRun
 from sys import stdout
 
 
