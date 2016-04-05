@@ -16,14 +16,14 @@ class Group(object):
         if not group:
             self.group_id = self.get_group_id(name).gr_gid
         else:
-            current_user = pwd.getpwnam(getpass.getuser()).pw_gid
-            self.group_id = self.get_group_id(current_usre_group)
+            current_user_group = pwd.getpwnam(getpass.getuser()).pw_gid
+            self.group_id = current_user_group
 
     def get_group_id(self, g_name) -> str:
         """A method to get the id of a group name
         """
         try:
-            group_info = getgrnam(g_name)
+            group_info = getgrgid(g_name)
         except KeyError as error:
             stderr.write(error)
             raise ValueError("The group '{}' you entered ".format(g_name) +\
