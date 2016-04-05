@@ -7,7 +7,7 @@ from typing import NamedTuple
 from treelib import Tree
 from fileprocessor import FileProcessor
 from rolevalidatorfactory import RoleValidatorFactory
-from abc.validator import Validator
+from internals.abc.validator import Validator
 
 
 class NewStager(object):
