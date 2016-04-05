@@ -2,8 +2,10 @@
 """
 
 from grp import getgrnam
+from getpass import getuser
 from os import chown, stat
 from os.path import exists
+import pwd
 from sys import stderr
 
 class Group(object):
