@@ -18,6 +18,9 @@ __version__ = "0.0.1dev"
 
 
 def launch():
+    """
+    the hook for setuptools console scripts
+    """
     app = TechnicalMetadataRecordUtility(
             __author__=__author__,
             __email__=__email__,
@@ -30,16 +33,39 @@ def launch():
 
 
 def build_record(path, premisfp, timeout):
+    """
+    build a new FITS record. Update the corresponding PREMIS record
+    in place
+
+    __Args__
+
+    1) path (str): the path to the file to be examined
+    2) premisfp (str): The path to the files PREMIS object record
+    3) timeout (int): How long to give FITS with the files before aborting
+
+    __Returns__
+
+    record (xml.etree.ElementTree): The FITS record
+    """
     premis = PremisRecord(frompath=premisfp)
     builder = TechnicalMetadataRecordCreator(path, premis, timeout=timeout)
     record = builder.get_record()
     premis = builder.get_premis()
+    # dump all the ns0 prints
     register_namespace('', 'http://hul.harvard.edu/ois/xml/ns/fits/fits_output')
     premis.write_to_file(premisfp)
     return record
 
 
 def write_records(records):
+    """
+    write a stack of record tuples to their specified locations
+
+    __Args__
+
+    1) records (list): A list of tuples in the format (FITS Record instance,
+    proposed path)
+    """
     while records:
         x = records.pop()
         target_path = x[1]
@@ -50,6 +76,9 @@ def write_records(records):
 
 
 class TechnicalMetadataRecordUtility(CLIApp):
+    """
+    The CLI App for generating FITS records for staged materials
+    """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +

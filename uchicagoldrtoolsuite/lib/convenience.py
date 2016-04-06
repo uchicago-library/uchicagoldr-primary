@@ -1,4 +1,16 @@
 def iso8601_dt(dt=None, tz=None):
+    """
+    produce an iso8601 time string
+
+    __KWArgs__
+
+    * dt (datetime.datetime): The datetime object to produce a string for
+    * tz (datetime.timezone): The timezone (if desired) to use in the str
+
+    __Returns__
+
+    * (str): The datetime/timezone formatted as an iso8601 string.
+    """
     from datetime import datetime, timezone
     if tz is None:
         from datetime import timedelta

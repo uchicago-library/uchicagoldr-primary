@@ -16,6 +16,9 @@ __version__ = "0.0.1dev"
 
 
 def launch():
+    """
+    the hook for setuptools console_scripts
+    """
     app = PremisObjectCreator(
             __author__=__author__,
             __email__=__email__,
@@ -80,6 +83,9 @@ def build_stage_reader(path, root):
 
 
 class PremisObjectCreator(CLIApp):
+    """
+    The CLI script for creating PREMIS records for staged contents
+    """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
