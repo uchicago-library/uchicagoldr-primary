@@ -1,3 +1,11 @@
+def iso8601_dt(dt=None):
+    from datetime import datetime
+    if dt is None:
+        dt = datetime.now()
+    if not isinstance(dt, datetime):
+        raise ValueError('input needs to be a datetime object')
+    return dt.isoformat()
+
 
 def sane_hash(hash_algo, file_path, block_size=65536):
     """
