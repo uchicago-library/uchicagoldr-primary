@@ -275,7 +275,14 @@ class StageReader(object):
             return node
 
     def hypothesize_fits_from_orig_node(self, n):
-        fits_id = n.identifier + '.fits.xml'
+#        fits_id = n.identifier + '.fits.xml'
+#        return fits_id
+
+        orig_id = n.identifier
+        prefix = self.get_containing_prefix_string_from_path(orig_id)
+        rel_path = RootedPath(orig_id, root=self.get_containing_prefix_dir_node_from_node(n).identifier)
+        fits_id = join(self.admin_path, prefix, 'TECHMD',
+                         rel_path.path + '.fits.xml')
         return fits_id
 
     def get_fits_from_orig_path(self, p):

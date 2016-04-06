@@ -1,5 +1,6 @@
 from os.path import isdir, abspath, split, join
 from os import makedirs
+from xml.etree.ElementTree import register_namespace
 from uchicagoldrtoolsuite.lib.stagereader import StageReader
 from uchicagoldrtoolsuite.lib.technicalmetadatarecordcreator \
     import TechnicalMetadataRecordCreator
@@ -33,6 +34,7 @@ def build_record(path, premisfp, timeout):
     builder = TechnicalMetadataRecordCreator(path, premis, timeout=timeout)
     record = builder.get_record()
     premis = builder.get_premis()
+    register_namespace('', 'http://hul.harvard.edu/ois/xml/ns/fits/fits_output')
     premis.write_to_file(premisfp)
     return record
 

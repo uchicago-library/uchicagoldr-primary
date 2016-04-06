@@ -73,7 +73,8 @@ class TechnicalMetadataRecordCreator(object):
         return eventIdentifier
 
     def _build_eventDetailInformation(self):
-        eventDetail = "FITS run on file"
+        eventDetail = "ran File Information Tool Set (FITS available at " + \
+        "http://projects.iq.harvard.edu/fits/home) over file"
         eventDetailInformation = EventDetailInformation(
             eventDetail=eventDetail)
         return eventDetailInformation
