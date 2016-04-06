@@ -5,6 +5,7 @@ from uchicagoldrtoolsuite.lib.technicalmetadatarecordcreator \
     import TechnicalMetadataRecordCreator
 from uchicagoldrtoolsuite.apps.premiscreator import build_stage_reader
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
+from pypremis.lib import PremisRecord
 
 
 __author__ = "Brian Balsamo"
@@ -27,9 +28,12 @@ def launch():
     app.main()
 
 
-def build_record(path, timeout):
-    builder = TechnicalMetadataRecordCreator(path, timeout=timeout)
+def build_record(path, premisfp, timeout):
+    premis = PremisRecord(frompath=premisfp)
+    builder = TechnicalMetadataRecordCreator(path, premis, timeout=timeout)
     record = builder.get_record()
+    premis = builder.get_premis()
+    premis.write_to_file(premisfp)
     return record
 
 
@@ -37,7 +41,7 @@ def write_records(records):
     while records:
         x = records.pop()
         target_path = x[1]
-        record = x[1]
+        record = x[0]
         if not isdir(split(target_path)[0]):
             makedirs(split(target_path)[0])
         record.write(target_path)
@@ -126,6 +130,7 @@ class TechnicalMetadataRecordUtility(CLIApp):
                 continue
 
             record = build_record(join(stagereader.root_fullpath, x.original),
+                                  join(stagereader.root_fullpath, x.premis[0]),
                                   args.timeout)
             path = join(stagereader.root_fullpath,
                         stagereader.hypothesize_fits_from_orig_node(

@@ -1,4 +1,4 @@
-from os.path import join, split
+from os.path import join, split, isfile
 from re import sub
 from re import compile as re_compile
 
@@ -186,7 +186,8 @@ class StageReader(object):
 
         self.file_suites_nodes = []
         for x in self.data_nodes:
-            self.file_suites_nodes.append(self.build_file_suite_from_node(x))
+            if isfile(join(self.root_fullpath, x.identifier)):
+                self.file_suites_nodes.append(self.build_file_suite_from_node(x))
         self.file_suites_paths = []
         for x in self.file_suites_nodes:
             pathfs = FileSuite()

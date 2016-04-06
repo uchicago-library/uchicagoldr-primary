@@ -31,8 +31,9 @@ class TechnicalMetadataRecordCreator(object):
     def make_fits_in_tmp(self, file_path, tmpdir, timeout=None):
             outfilename = str(uuid1())
             outpath = join(tmpdir, outfilename)
-            cmd = BashCommand(['fits', '-i', self.file_path.path, '-o',
-                               outpath])
+            cmd = BashCommand(['fits', '-i',
+                               getattr(self.file_path, 'path', str(self.file_path)),
+                               '-o', outpath])
             if timeout:
                 cmd.set_timeout(timeout)
             cmd.run_command()
@@ -46,7 +47,10 @@ class TechnicalMetadataRecordCreator(object):
     def get_record(self):
         return self.record
 
-    def update_premis_record(premis_record):
+    def get_premis(self):
+        return self.premis_record
+
+    def update_premis(self, premis_record):
         self.premis_record.add_event(self._build_event())
         return self.premis_record
 
@@ -55,10 +59,10 @@ class TechnicalMetadataRecordCreator(object):
         eventType = "description"
         eventDateTime = iso8601_dt()
         event = Event(eventIdentifier, eventType, eventDateTime)
-        event.set_eventDetailInformation(self._build_eventDetailInformation)
-        event.set_eventOutcomeInformation(self._build_eventOutcomeInformation)
-        event.set_linkingAgentIdentifier(self._build_linkingAgentIdentifier)
-        event.set_linkingObjectIdentifier(self._build_linkingObjectIdentifier)
+        event.set_eventDetailInformation(self._build_eventDetailInformation())
+        event.set_eventOutcomeInformation(self._build_eventOutcomeInformation())
+        event.set_linkingAgentIdentifier(self._build_linkingAgentIdentifier())
+        event.set_linkingObjectIdentifier(self._build_linkingObjectIdentifier())
         return event
 
     def _build_eventIdentifier(self):
@@ -79,7 +83,7 @@ class TechnicalMetadataRecordCreator(object):
             eventOutcome = "SUCCESS"
         else:
             eventOutcome = "FAIL"
-        eventOutcomeDetail = self._build_eventOutcome_detail
+        eventOutcomeDetail = self._build_eventOutcomeDetail()
         eventOutcomeInformation = EventOutcomeInformation(
             eventOutcome=eventOutcome,
             eventOutcomeDetail=eventOutcomeDetail
@@ -103,8 +107,8 @@ class TechnicalMetadataRecordCreator(object):
 
     def _build_linkingObjectIdentifier(self):
         linkingObjectRole = "Described object"
-        linkingObjectIdentifierType = self.premis_record.get_object_list()[0].get_objectIdentifier().get_objectIdentifierType()
-        linkingObjectIdentifierValue = self.premis_record.get_object_list()[0].get_objectIdentifier().get_objectIdentifierValue()
+        linkingObjectIdentifierType = self.premis_record.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierType()
+        linkingObjectIdentifierValue = self.premis_record.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
         linkingObjectIdentifier = LinkingObjectIdentifier(
             linkingObjectIdentifierType, linkingObjectIdentifierValue
         )
