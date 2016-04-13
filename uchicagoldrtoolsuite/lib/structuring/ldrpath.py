@@ -13,10 +13,25 @@ class LDRPath(object):
                 bytes_data = f.read(blocksize)
 
     def open(self):
-        return open(abspath(self.name, 'r'))
+        if self.pipe:
+            raise ValueError("file {} is already opened".format(self.item_name))
+        else:
+            self.pipe = open(self.item_name, 'ab') 
+            return self.pipe
+        
+    def close(self):
+        if not self.pipe:
+            raise ValueError("file {} is alrady closed".format(self.item_name))
+        else:
+            self.pipe.close()
+            self.pipe = None
         
     def exists(self):
         return exists(abspath(self.name))
     
-    def write(self):
-        return self.open()
+    def write(self, data):
+        if self.pipe:
+            self.pipe.write(data)
+            return True
+        else:
+            raise ValueError("file {} is not opened and therefore cannot write".format(self.item_name))
