@@ -18,7 +18,7 @@ class StagingStructure(Structure):
         self.legalnote = []
         
         
-    def _validate(self):
+    def validate(self):
         for n_thing in self.segment:
             if isinstance(n_thing, MaterialSuiteStructure):
                 pass
@@ -30,4 +30,4 @@ class StagingStructure(Structure):
                 pass
             else:
                 return False
-        return self._validate()
+        return super(StagingStructure, self)._validate()
