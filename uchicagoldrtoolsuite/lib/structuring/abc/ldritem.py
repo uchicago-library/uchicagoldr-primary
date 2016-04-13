@@ -4,24 +4,39 @@ Created on Apr 13, 2016
 @author: tdanstrom
 '''
 
+from abc import ABCMeta, abstractmethod, abstractproperty
+
 class LDRItem:
-    name = ""
-    is_flo = True
+    __metaclass__ = ABCMeta
     
-    def read(self, blocksize):
-        raise NotImplemented()
+    @abstractmethod
+    def read(self):
+        pass
     
+    @abstractmethod
     def write(self):
-        raise NotImplemented()
+        pass
     
+    @abstractmethod
     def open(self):
-        raise NotImplemented
+        pass
     
+    @abstractmethod
     def close(self):
-        raise NotImplemented()
+        pass
     
+    @abstractmethod
     def is_flo(self):
-        raise NotImplemented()
+        return True
     
+    @abstractmethod
     def exists(self):
-        raise NotImplemented()
+        pass
+    
+    def getname(self):
+        return self._item_name
+    
+    def setname(self, value):
+        self._item_name = value
+    
+    item_name = abstractproperty(getname, setname)
