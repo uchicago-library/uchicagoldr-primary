@@ -1,26 +1,21 @@
 
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractproperty, abstractmethod
 
-class Structure:
-    
-    __metaclass__ = ABCMeta
-    
+class Structure(metaclass=ABCMeta):
+        
     @abstractmethod 
     def validate(self):
-        if 
-        raise NotImplemented
+        pass
     
     def _validate(self):
-        if getattr(self, 'required_parts', None):
-            for n in self.required_parts:
-                if not getattr(self, n, None):
-                    return False
-                elif not type(getattr(self, n, None)) == type(list):
-                    return False
-                return True
-        else:
-            return False
-        
+        for n_thing in self.required_parts:
+            if not getattr(self, n_thing, None):
+                return False
+            elif not isinstance(getattr(self, n_thing, None), list):
+                return False
+        return True
+    
+
         def getrequiredparts(self):
             return self._required_parts
         
