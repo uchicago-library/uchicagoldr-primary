@@ -37,19 +37,25 @@ class LDRItem(metaclass=ABCMeta):
         return self._item_name
     
     def setname(self, value):
-        self._item_name = value
-
+        if isinstance(value, str):
+            self._item_name = value
+        else:
+            raise ValueError("item_name must be a string")
+        
     def getisflo(self):
         return self._is_flo
     
     def setisflo(self, value):
-        self._is_flo = True
+        if isinstance(value, bool):
+            self._is_flo = True
+        else:
+            raise ValueError("is_flo must be either True or False")
 
     def getpipe(self):
         return self._pipe
     
-    def setpipe(self):
-        self._pipe = None
+    def setpipe(self, value):
+        self._pipe = value
 
     item_name = abstractproperty(getname, setname)
     pipe = abstractproperty(getpipe, setpipe)
