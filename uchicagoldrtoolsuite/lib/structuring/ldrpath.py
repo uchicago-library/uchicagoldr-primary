@@ -1,23 +1,22 @@
 from os.path import abspath, exists
+from pathlib import Path
 
 class LDRPath(object):
     def __init__(self, param1):
         self.item_name = param1
+        self.path = param1
+        self.pipe = None
         self.is_flo = True
         
     def read(self, blocksize=1024):
-        with open(self.name,'rb') as f:
-            bytes_data = f.read(blocksize)
+        with self.path.open('rb'):
+            bytes_data = self.path.read_bytes(blocksize)
             while len(bytes_data) > 0:
                 yield bytes_data
-                bytes_data = f.read(blocksize)
+                bytes_data = self.path.read_bytes(blocksize)
 
     def open(self):
-        if self.pipe:
-            raise ValueError("file {} is already opened".format(self.item_name))
-        else:
-            self.pipe = open(self.item_name, 'ab') 
-            return self.pipe
+        return self.path.open('ab')
         
     def close(self):
         if not self.pipe:

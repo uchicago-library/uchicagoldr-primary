@@ -5,7 +5,7 @@ Created on Apr 13, 2016
 '''
 from abc import ABCMeta, abstractmethod
 
-class SerializationReader:
+class SerializationReader(metaclass=ABCMeta):
     __metaclass__ = ABCMeta
     
     @abstractmethod

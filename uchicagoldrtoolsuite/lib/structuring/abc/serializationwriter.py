@@ -1,9 +1,8 @@
 
 from abc import ABCMeta, abstractmethod
 
-class SerializationWriter:
-    __metaclass__ = ABCMeta
-    
+class SerializationWriter(metaclass=ABCMeta):
+
     @abstractmethod
     def write(self):
         pass
