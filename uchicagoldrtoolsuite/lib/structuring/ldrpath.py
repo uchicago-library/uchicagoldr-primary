@@ -6,7 +6,7 @@ class LDRPath(object):
         self.item_name = param1
         self.path = Path(param1)
         self.pipe = None
-        self.is_flo = True
+        self.is_flo = True if self.path.is_file() else False
         
     def read(self, blocksize=1024):
         with self.path.open('rb'):
