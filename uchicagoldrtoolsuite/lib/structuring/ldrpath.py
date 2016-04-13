@@ -20,7 +20,7 @@ class LDRPath(object):
         
     def close(self):
         if not self.pipe:
-            raise ValueError("file {} is alrady closed".format(self.item_name))
+            raise ValueError("file {} is already closed".format(self.item_name))
         else:
             self.pipe.close()
             self.pipe = None
