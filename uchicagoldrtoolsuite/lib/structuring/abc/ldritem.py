@@ -38,13 +38,7 @@ class LDRItem(metaclass=ABCMeta):
     
     def setname(self, value):
         self._item_name = value
-    
-    def getpath(self):
-        return self._path
-    
-    def setpath(self, value):
-        self._path = Path(value)
-    
+
     def getisflo(self):
         return self._is_flo
     
@@ -58,6 +52,5 @@ class LDRItem(metaclass=ABCMeta):
         self._pipe = None
 
     item_name = abstractproperty(getname, setname)
-    path = abstractproperty(getpath, setpath)
     pipe = abstractproperty(getpipe, setpipe)
     is_flo = abstractproperty(getisflo, setisflo)

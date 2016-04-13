@@ -4,7 +4,7 @@ from pathlib import Path
 class LDRPath(object):
     def __init__(self, param1):
         self.item_name = param1
-        self.path = param1
+        self.path = Path(param1)
         self.pipe = None
         self.is_flo = True
         
