@@ -1,6 +1,9 @@
-from collections import namedtuple
-from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
-from uchicagoldrtoolsuite.lib.fileprocessor import FileProcessor
+from os.path import join
+import sys
+sys.path.append("C:/User/tdanstrom/git/uchicagoldr-toolsuite/uchicagoldrtoolsuite")
+
+from .internals.cliapp import CLIApp
+from lib.structuring.stagingdirectoryreader import StagingDirectoryReader
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -60,11 +63,5 @@ class Stager(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         # App code
-        fp = FileProcessor(args.directory,
-                           'staging', namedtuple("DirectoryInfo",
-                                                 "src_root dest_root directory_id prefix " +
-                                                 "directory_type resume group_name validation")
-                           (args.source_root, args.destination_root, args.staging_id,
-                            args.prefix, 'staging', args.resume,
-                            args.group, {'numfiles': args.numfiles}))
-        fp.move()
+        stagingreader = StagingDirectoryReader(args.destination, args.source, join(args.directory, args.staging_id))
+        stagingreader.gather_resources(args.directory)

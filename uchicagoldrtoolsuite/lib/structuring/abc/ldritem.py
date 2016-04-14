@@ -24,7 +24,7 @@ class LDRItem(metaclass=ABCMeta):
     def close(self):
         pass
     
-    @abstractmethod(self)
+    @abstractmethod
     def is_flo(self):
         pass
     
