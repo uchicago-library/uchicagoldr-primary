@@ -1,7 +1,4 @@
 from os.path import join
-import sys
-sys.path.append("../lib/uchicagoldrtoolsuite")
-sys.path.append(".")
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import StagingDirectoryReader
 
@@ -64,7 +61,7 @@ class Stager(CLIApp):
         args = self.parser.parse_args()
         # App code
         stagingreader = StagingDirectoryReader(args.destination_root,
-args.source_root, join(args.directory, args.staging_id))
+args.source_root, join(args.destination, args.staging_id))
         print(stagingreader)
         stagingreader.gather_resources(args.directory)
 if __name__ == "__main__":

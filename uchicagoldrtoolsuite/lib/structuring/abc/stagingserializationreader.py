@@ -10,8 +10,6 @@ class StagingSerializatinReader:
     
     __metaclass__ = SerializationReader
     
-    def __init__(self, params):
-        '''
-        Constructor
-        '''
+    def __init__(self):
+        pass
         
