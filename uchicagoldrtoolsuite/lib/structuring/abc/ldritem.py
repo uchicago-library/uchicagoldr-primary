@@ -5,7 +5,6 @@ Created on Apr 13, 2016
 '''
 
 from abc import ABCMeta, abstractmethod, abstractproperty
-from pathlib import Path
 
 class LDRItem(metaclass=ABCMeta):
     
@@ -25,9 +24,9 @@ class LDRItem(metaclass=ABCMeta):
     def close(self):
         pass
     
-    @abstractmethod
+    @abstractmethod(self):
     def is_flo(self):
-        return True
+        pass
     
     @abstractmethod
     def exists(self):

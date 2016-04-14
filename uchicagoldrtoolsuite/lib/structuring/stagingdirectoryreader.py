@@ -7,7 +7,7 @@ Created on Apr 13, 2016
 from .abc.stagingserializationreader import StagingSerializatinReader
 from ..structuring.stagingstructure import StagingStructure
 from ..absolutefilepathtree import AbsoluteFilePathTree
-from .ldrpath import LDRPath
+from lib.structuring.ldrpathregularfile import LDRPath
 
 class StagingDirectoryReader(StagingSerializatinReader):
     def __init__(self, source_root, destination_root, a_directory):
@@ -16,5 +16,8 @@ class StagingDirectoryReader(StagingSerializatinReader):
 
     def gather_resources(self, a_directory):
         tree = AbsoluteFilePathTree(a_directory)
-        for n_thing in tree.get_nodes():
-            LDRPath(n_thing.identifier)
+        for n_thing in tree:
+            if n_thing.is_leaf():
+                n_item = LDRPath(n_thing)
+            elif not n_thing.is_leaf():
+                n_item = LDRPath

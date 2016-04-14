@@ -1,12 +1,10 @@
 from os.path import abspath, exists
-from pathlib import Path
 
-class LDRPath(object):
+class LDRPathRegularFile(object):
     def __init__(self, param1):
-        self.item_name = param1
-        self.path = Path(param1)
+        super().__init__(param1)
         self.pipe = None
-        self.is_flo = True if self.path.is_file() else False
+        self.is_flo = True
         
     def read(self, blocksize=1024):
         with self.path.open('rb'):
