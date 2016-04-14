@@ -1,8 +1,4 @@
-'''
-Created on Apr 14, 2016
 
-@author: tdanstrom
-'''
 
 from pathlib import Path
 from ..abc.ldritem import LDRItem

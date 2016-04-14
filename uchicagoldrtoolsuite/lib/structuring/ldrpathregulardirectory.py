@@ -11,7 +11,10 @@ class LDRPathRegularDirectory(LDRPath):
         return NotImplemented
     
     def read_bytes(self, blocksize):
-        return self.path.iterdir()
+        for n_thing in self.path.iterdir():
+            if n_thing.is_file():
+                with open(n_thing, 'rb') as f:
+                    yield f.read(blocksize)
     
     def close(self):
         return NotImplemented
@@ -20,4 +23,4 @@ class LDRPathRegularDirectory(LDRPath):
         return self.path.is_dir()
     
     def write(self):
-        self.path.mkdir(parents=False)
+        self.path.mkdir(parents=True)
