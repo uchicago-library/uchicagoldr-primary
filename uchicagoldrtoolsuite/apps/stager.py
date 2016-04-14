@@ -61,9 +61,11 @@ class Stager(CLIApp):
         args = self.parser.parse_args()
         # App code
         stagingreader = StagingDirectoryReader(args.destination_root,
-args.source_root, join(args.destination, args.staging_id))
+args.source_root, join(args.destination_root, args.staging_id),
+args.staging_id, args.prefix, str(args.resume))
         print(stagingreader)
-        stagingreader.gather_resources(args.directory)
+        print(stagingreader.structure.identifier)
+
 if __name__ == "__main__":
     s = Stager()
     s.main()
