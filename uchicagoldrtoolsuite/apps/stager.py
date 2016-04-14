@@ -1,9 +1,9 @@
 from os.path import join
 import sys
-sys.path.append("C:/User/tdanstrom/git/uchicagoldr-toolsuite/uchicagoldrtoolsuite")
-
-from .internals.cliapp import CLIApp
-from lib.structuring.stagingdirectoryreader import StagingDirectoryReader
+sys.path.append("../lib/uchicagoldrtoolsuite")
+sys.path.append(".")
+from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
+from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import StagingDirectoryReader
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -63,5 +63,10 @@ class Stager(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         # App code
-        stagingreader = StagingDirectoryReader(args.destination, args.source, join(args.directory, args.staging_id))
+        stagingreader = StagingDirectoryReader(args.destination_root,
+args.source_root, join(args.directory, args.staging_id))
+        print(stagingreader)
         stagingreader.gather_resources(args.directory)
+if __name__ == "__main__":
+    s = Stager()
+    s.main()
