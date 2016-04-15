@@ -60,10 +60,11 @@ class Stager(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         # App code
+        print(args.directory)
         stagingreader = StagingDirectoryReader(args.destination_root,
 args.source_root, join(args.destination_root, args.staging_id),
 args.staging_id, args.prefix, str(args.resume))
-
+        stagingreader.add_to_structure()
 
 if __name__ == "__main__":
     s = Stager()

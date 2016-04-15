@@ -25,6 +25,7 @@ prefix, segment_number):
         self.stage_directory = a_directory
         self.prefix = prefix
         self.segment_number = segment_number
+        self.directory_to_stage = a_directory
         self.structure = self.read()
 
     def read(self):
@@ -51,18 +52,24 @@ prefix, segment_number):
                         a_new_segment = SegmentStructure(prefix, number)
                         stagingstructure.segment.append(a_new_segment)
 
+            for n_thing in just_directories:
+                segment_id = join(self.stage_directory, 'data/')
+                if segment_id in n_thing:
+                    split_from_segment_id = n_thing.split(segment_id)
+                    if len(split_from_segment_id) == 2:
+                        file_run = split_from_segment_id[1].split('/')[0]
+                        matching_segment = [x for x in stagingstructure.segment if x.identifier == file_run]
+                        if len(matching_segment) == 1:
+                            a_file = LDRPathRegularDirectory(n_thing)
+                            msuite = MaterialSuiteStructure(a_file.item_name)
+                            msuite.original.append(a_file)
+                            matching_segment[0].materialsuite.append(msuite)
+                        else:
+                            stderr.write("There are more than one segments in the staging structure with id {}\n".\
+                                         format(file_run))
+                    else:
+                        stderr.write("the path for {} is wrong.\n".format(n_thing))
 
-            #depth_of_data_node = tree.find_depth_of_a_path(data_node_identifier)
-
-            # if len(data_node_subdirs) == 1:
-            #     data_node_subdirs = 
-            # print(data_node_subdirs)
-            # for n_thing in just_directories:
-
-            #     a_directory = LDRPathRegularDirectory(n_thing)
-            #     msuite = MaterialSuiteStructure(a_directory.item_name)
-            #     msuite.original.append(a_directory)
-            #     segment.materialsuite.append(msuite)
             for n_thing in just_files:
                 segment_id = join(self.stage_directory, 'data/')
                 if segment_id in n_thing:
@@ -71,21 +78,22 @@ prefix, segment_number):
                         file_run = split_from_segment_id[1].split('/')[0]
                         matching_segment = [x for x in stagingstructure.segment if x.identifier == file_run]
                         if len(matching_segment) == 1:
-                            pass
+                            a_file = LDRPathRegularFile(n_thing)
+                            msuite = MaterialSuiteStructure(a_file.item_name)
+                            msuite.original.append(a_file)
+                            matching_segment[0].materialsuite.append(msuite)
                         else:
                             stderr.write("There are more than one segments in the staging structure with id {}\n".\
                                          format(file_run))
                     else:
                         stderr.write("the path for {} is wrong.\n".format(n_thing))
 
-                        
-                #right_segment = [x for x in stagingstructure.segment if 
-                # a_file = LDRPathRegularFile(n_thing)
-                # msuite = MaterialSuiteStructure(a_file.item_name)
-                # msuite.original.append(a_file)
-                # segment.materialsuite.append(msuite)
-
         else:
             stagingstructure = StagingStructure(self.stage_id)
-
+        stagingstructure.segment.sort(key=lambda x: x.identifier)
+        print(([len(x.materialsuite) for x in stagingstructure.segment]))
         return stagingstructure
+    
+
+    def add_to_structure(self):
+        print(self.directory_to_stage)
