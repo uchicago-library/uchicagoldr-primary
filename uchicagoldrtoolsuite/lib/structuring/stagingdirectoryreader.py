@@ -96,4 +96,15 @@ prefix, segment_number):
     
 
     def add_to_structure(self):
-        print(self.directory_to_stage)
+        tree = AbsoluteFilePathTree(self.directory_to_stage)
+        just_files = tree.get_files()
+        all_nodes = tree.get_nodes()
+        just_directories = [x.identifier for x in all_nodes
+                                if x.identifier not in just_files]
+        last_segment = self.structure.segment[-1].identifier
+        print(last_segment)
+        # for n_thing in just_directories:
+        #     pass
+
+        # for n_thing in just_files:
+        #     pass
