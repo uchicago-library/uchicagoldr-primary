@@ -14,24 +14,23 @@ from .materialsuite import MaterialSuiteStructure
 from .segmentstructure import SegmentStructure
 
 class StagingDirectoryReader(StagingSerializatinReader):
-    def __init__(self, source_root, destination_root, a_directory, stage_id,
-prefix, segment_number):
+    def __init__(self, stage_id, src_root, dest_root, stageable_directory,
+                 prefix, prefixnum):
         super().__init__()
         self.structureType = "staging"
+        self.destination_root = dest_root
+        self.source_root = src_root
+        self.directory_to_stage = stageable_directory
         self.stage_id = stage_id
-        self.resources = []
-        self.source_root = source_root
-        self.destination_root = destination_root
-        self.stage_directory = a_directory
         self.prefix = prefix
-        self.segment_number = segment_number
-        self.directory_to_stage = a_directory
+        self.segment_number = prefixnum
+        self.stage_directory = join(self.destination_root, self.stage_id)
         self.structure = self.read()
 
     def read(self):
         if exists(self.stage_directory):
             tree = AbsoluteFilePathTree(self.stage_directory)
-            segment = SegmentStructure(self.prefix, self.segment_number)
+            segment = SegmentStructure(self.prefix, str(self.segment_number))
             just_files = tree.get_files()
             all_nodes = tree.get_nodes()
             just_directories = [x.identifier for x in all_nodes
@@ -90,21 +89,42 @@ prefix, segment_number):
 
         else:
             stagingstructure = StagingStructure(self.stage_id)
-        stagingstructure.segment.sort(key=lambda x: x.identifier)
-        print(([len(x.materialsuite) for x in stagingstructure.segment]))
+
         return stagingstructure
     
-
+    
     def add_to_structure(self):
         tree = AbsoluteFilePathTree(self.directory_to_stage)
         just_files = tree.get_files()
         all_nodes = tree.get_nodes()
         just_directories = [x.identifier for x in all_nodes
                                 if x.identifier not in just_files]
-        last_segment = self.structure.segment[-1].identifier
-        print(last_segment)
-        # for n_thing in just_directories:
-        #     pass
+        last_segments = self.structure.segment
+        pattern_match = re.compile('(\w{1,})(\d{1,})')
+        potential_past_relevant_segments = []
+        for n_segment in last_segments:
+            pattern_match_group = pattern_match.match(n_segment.identifier)
+            prefix, number = pattern_match_group.group(1), pattern_match_group.group(2)
+            if prefix == self.prefix:
+                potential_past_relevant_segments.append(n_segment)
+        potential_past_relevant_segments.sort(key=lambda x: x.identifier)
+        if len(potential_past_relevant_segments) > 0:
+            last_segment = potential_past_relevant_segments[-1]
+            current_segment_num = str(int(pattern_match.match(last_segment.identifier).\
+                                          group(2))+1)
+        else:
+            current_segment_id = '1'
+        newsegment = SegmentStructure(self.prefix, current_segment_num)
 
-        # for n_thing in just_files:
-        #     pass
+        for n_thing in just_directories:
+            a_file = LDRPathRegularDirectory(n_thing)
+            msuite = MaterialSuiteStructure(a_file.item_name)
+            msuite.original.append(a_file)
+            newsegment.materialsuite.append(msuite)
+
+        for n_thing in just_files:
+            a_file = LDRPathRegularFile(n_thing)
+            msuite = MaterialSuiteStructure(a_file.item_name)
+            msuite.original.append(a_file)
+            newsegment.materialsuite.append(msuite)
+        self.structure.segment.append(newsegment)

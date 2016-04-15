@@ -20,7 +20,7 @@ class SegmentStructure(object):
     def __init__(self, param1, param2):
         self.label = param1
         self.run = param2
-        self.identifier = param1 + param2
+        self.identifier = param1+param2
         self.required_parts = ['identifier', 'materialsuite', 'identifier']
         self.materialsuite = []
 

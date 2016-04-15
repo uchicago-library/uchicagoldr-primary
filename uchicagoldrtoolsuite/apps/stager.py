@@ -1,7 +1,7 @@
 from os.path import join
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import StagingDirectoryReader
-
+from uchicagoldrtoolsuite.lib.structuring.stagingdirectorywriter import StagingDirectoryWriter
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -57,14 +57,19 @@ class Stager(CLIApp):
         self.parser.add_argument("prefix", help="The prefix defining the " +
                                  "type of run that is being processed",
                                  type=str, action='store')
+
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         # App code
-        print(args.directory)
-        stagingreader = StagingDirectoryReader(args.destination_root,
-args.source_root, join(args.destination_root, args.staging_id),
-args.staging_id, args.prefix, str(args.resume))
+        stagingreader = StagingDirectoryReader(args.staging_id,
+                                               args.source_root,
+                                               args.destination_root,
+                                               args.directory,
+                                               args.prefix,
+                                               args.resume)
+        print([x for x in stagingreader.structure.segment])
         stagingreader.add_to_structure()
+        print([x for x in stagingreader.structure.segment])
 
 if __name__ == "__main__":
     s = Stager()
