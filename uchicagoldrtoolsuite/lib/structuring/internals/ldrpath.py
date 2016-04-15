@@ -7,8 +7,8 @@ from abc import abstractmethod
 class LDRPath(LDRItem):
 
     def __init__(self, param1):
-        self.name = param1
-        self.path = Path(self.name)
+        self.item_name = param1
+        self.path = Path(self.item_name)
     
     @abstractmethod
     def open(self):

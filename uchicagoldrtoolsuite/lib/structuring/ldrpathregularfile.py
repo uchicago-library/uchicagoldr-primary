@@ -1,8 +1,13 @@
+
 from os.path import abspath, exists
+from pathlib import Path
+
 
 class LDRPathRegularFile(object):
     def __init__(self, param1):
-        super().__init__(param1)
+
+        self.item_name = param
+        self.path = Path(self.item_name)
         self.pipe = None
         self.is_flo = True
         

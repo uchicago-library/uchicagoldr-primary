@@ -29,12 +29,13 @@ prefix, segment_number):
         if exists(self.stage_directory):
             tree = AbsoluteFilePathTree(self.stage_directory)
             segment = SegmentStructure(self.prefix, self.segment_number)
-            just_files = tree.get_fies()
+            just_files = tree.get_files()
             all_nodes = tree.get_nodes()
-            just_directories = [x for x in all_nodes if not in just_files]
+            just_directories = [x.identifier for x in all_nodes if x.identifier not in just_files]
             for n_thing in just_directories:
+                print(n_thing)
                 a_directory = LDRPathRegularDirectory(n_thing)
-                prin(a_directory)
+                print(a_directory)
             for n_thing in just_files:
                 a_file = LDRPathRegularFile(n_thing)
                 print(a_file)
