@@ -67,10 +67,14 @@ class Stager(CLIApp):
                                                args.directory,
                                                args.prefix,
                                                args.resume)
+        
         print([x for x in stagingreader.structure.segment])
         stagingreader.add_to_structure()
         print([x for x in stagingreader.structure.segment])
 
+        stagingwriter = StagingDirectoryWriter(stagingreader.structure)
+        stagingwriter.write()
+        
 if __name__ == "__main__":
     s = Stager()
     s.main()

@@ -9,6 +9,7 @@ class Structure(metaclass=ABCMeta):
     
     def _validate(self):
         for n_thing in self.required_parts:
+            print(n_thing)
             if not getattr(self, n_thing, None):
                 return False
             elif not isinstance(getattr(self, n_thing, None), list):

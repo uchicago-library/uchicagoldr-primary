@@ -5,7 +5,7 @@ Created on Apr 13, 2016
 '''
 
 from .abc.structure import Structure
-from .materialsuite import MaterialSuiteStructure
+from .segmentstructure import SegmentStructure
 from .abc.ldritem import LDRItem
 
 class StagingStructure(Structure):
@@ -20,7 +20,7 @@ class StagingStructure(Structure):
         
     def validate(self):
         for n_thing in self.segment:
-            if isinstance(n_thing, MaterialSuiteStructure):
+            if isinstance(n_thing, SegmentStructure):
                 pass
             else:
                 return False
