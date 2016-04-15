@@ -3,6 +3,7 @@ Created on Apr 13, 2016
 
 @author: tdanstrom
 '''
+import re
 from os.path import exists, join, split as dirsplit
 from .abc.stagingserializationreader import StagingSerializatinReader
 from ..structuring.stagingstructure import StagingStructure
@@ -38,15 +39,18 @@ prefix, segment_number):
             data_node_depth = tree.find_depth_of_a_path(data_node_identifier)
             data_node = tree.find_tag_at_depth('data', data_node_depth)[0]
             data_node_subdirs = data_node.fpointer
+            stagingstructure = StagingStructure(self.stage_id)
             for n in data_node_subdirs:
                 a_past_segment_node_depth = tree.find_depth_of_a_path(n)
-                print(n)
-                print(a_past_segment_node_depth)
-                prefix_and_num = '/'+dirsplit(n)[1]
-                print(tree.find_tag_at_depth('/data'+prefix_and_num, 6))
-                # print(tree.find_tag_at_depth(join('/data/',
-                #                                   dirsplit(n)[0].split('/')[-1]),
-                #                              a_past_segment_node_depth))
+                if a_past_segment_node_depth > 0:
+                    label = dirsplit(n)[1]
+                    valid_pattern = re.compile('(\w{1,})(\d{1,})')
+                    label_matching = valid_pattern.match(label)           
+                    if label_matching:
+                        prefix, number = label_matching.group(1), label_matching.group(2)
+                        a_new_segment = SegmentStructure(prefix, number)
+                        stagingstructure.segment.append(a_new_segment)
+
 
             #depth_of_data_node = tree.find_depth_of_a_path(data_node_identifier)
 
@@ -59,14 +63,28 @@ prefix, segment_number):
             #     msuite = MaterialSuiteStructure(a_directory.item_name)
             #     msuite.original.append(a_directory)
             #     segment.materialsuite.append(msuite)
-            # for n_thing in just_files:
-            #     a_file = LDRPathRegularFile(n_thing)
-            #     msuite = MaterialSuiteStructure(a_file.item_name)
-            #     msuite.original.append(a_file)
-            #     segment.materialsuite.append(msuite)
-            # stagingstructure = StagingStructure(self.stage_id)
-            # stagingstructure.segment.append(segment)
-            stagingstructure = StagingStructure(self.stage_id)
+            for n_thing in just_files:
+                segment_id = join(self.stage_directory, 'data/')
+                if segment_id in n_thing:
+                    split_from_segment_id = n_thing.split(segment_id)
+                    if len(split_from_segment_id) == 2:
+                        file_run = split_from_segment_id[1].split('/')[0]
+                        matching_segment = [x for x in stagingstructure.segment if x.identifier == file_run]
+                        if len(matching_segment) == 1:
+                            pass
+                        else:
+                            stderr.write("There are more than one segments in the staging structure with id {}\n".\
+                                         format(file_run))
+                    else:
+                        stderr.write("the path for {} is wrong.\n".format(n_thing))
+
+                        
+                #right_segment = [x for x in stagingstructure.segment if 
+                # a_file = LDRPathRegularFile(n_thing)
+                # msuite = MaterialSuiteStructure(a_file.item_name)
+                # msuite.original.append(a_file)
+                # segment.materialsuite.append(msuite)
+
         else:
             stagingstructure = StagingStructure(self.stage_id)
 
