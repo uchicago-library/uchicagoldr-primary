@@ -10,14 +10,15 @@ from .abc.ldritem import LDRItem
 
 class StagingStructure(Structure):
     def __init__(self, param1):
-        self.required_parts = ['identifier', 'segment', 'accessionrecord', 'adminnote', 'legalnote']
+        self.required_parts = ['identifier', 'segment', 'accessionrecord',
+                               'adminnote', 'legalnote']
         self.identifier = param1
         self.segment = []
         self.accessionrecord = []
         self.adminnote = []
         self.legalnote = []
         
-        
+
     def validate(self):
         for n_thing in self.segment:
             if isinstance(n_thing, SegmentStructure):
