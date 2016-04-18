@@ -61,19 +61,13 @@ class Stager(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         # App code
-        stagingreader = StagingDirectoryReader(args.staging_id,
-                                               args.source_root,
-                                               args.destination_root,
-                                               args.directory,
-                                               args.prefix,
-                                               args.resume)
-        
-        print([x for x in stagingreader.structure.segment])
-        stagingreader.add_to_structure()
-        print([x for x in stagingreader.structure.segment])
+        staging_directory = join(args.destination_root, args.staging_id)
+        staging_directory_reader = StagingDirectoryReader(staging_directory)
+        staging_structure = staging_directory_reader.read()
+        staging_directory_reader.structure = staging_structure
 
-        stagingwriter = StagingDirectoryWriter(stagingreader.structure)
-        stagingwriter.write()
+        stagingwriter = staging_directory_reader.add_to_structure(args.directory, args.prefix, source_root=args.source_root, number=args.resume)
+        # stagingwriter.write()
         
 if __name__ == "__main__":
     s = Stager()
