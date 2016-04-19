@@ -1,8 +1,12 @@
+
 from os.path import join
+import re
+
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import StagingDirectoryReader
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectorywriter import StagingDirectoryWriter
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectorywriter import StagingDirectoryWriter
+from uchicagoldrtoolsuite.lib.structuring.segmentpackager import SegmentPackager
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -62,14 +66,29 @@ class Stager(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         
+        
         # App code
         
         staging_directory = join(args.destination_root, args.staging_id)
         staging_directory_reader = StagingDirectoryReader(staging_directory)
         staging_structure = staging_directory_reader.read()
-        segment_packger = SegmentPackager(a_directory, prefix, number=0)
-        new_segment = segment_packager.create_segment()
-        print(new_segment)
+        current_segment = None
+        segment_ids = sorted([x.identifier for x in staging_structure.segment])
+        this_prefix_and_number_segment_ids = [x for x in segment_ids if args.prefix+str(args.resume) in x]
+        this_prefix_segment_ids = [x for x in segment_ids if args.prefix in x]
+        print(this_prefix_segment_ids)
+        if len(this_prefix_and_number_segment_ids) > 0:
+            current_segment_number = this_prefix_and_number_segment_ids[-1]
+        elif len(this_prefix_segment_ids) > 0:
+            current_segment_number = int(re.compile('(\w{1,})(\d{1,})').\
+                                 match(this_prefix_segment_ids[-1]).group(2)) + 1
+
+        else:
+            current_segment_number = +'1'
+        segment_packager = SegmentPackager(args.directory, args.prefix, 
+                                           current_segment_number)
+
+        # new_segment = segment_packager.create_segment()
         
 
     # def add_to_structure(self, a_directory, prefix, source_root='', number=0):
@@ -112,9 +131,6 @@ class Stager(CLIApp):
     #     self.structure.segment.append(newsegment)      
         
         
-        stagingwriter = staging_directory_reader.add_to_structure(args.directory, args.prefix,
-                                                                  source_root=args.source_root,
-                                                                  number=args.resume)
         # stagingwriter.write()
         
 if __name__ == "__main__":

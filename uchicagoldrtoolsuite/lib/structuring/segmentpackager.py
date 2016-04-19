@@ -2,8 +2,9 @@ from .segmentstructure import SegmentStructure
 from .materialsuite import MaterialSuiteStructure
 from .ldrpathregularfile import LDRPathRegularFile
 from .ldrpathregulardirectory import LDRPathRegularDirectory
+from ..absolutefilepathtree import AbsoluteFilePathTree
 
-class SegmentPackger(object):
+class SegmentPackager(object):
 
     def __init__(self, a_directory, prefix, number=0):
         self.segment_input = AbsoluteFilePathTree(a_directory)
@@ -11,12 +12,12 @@ class SegmentPackger(object):
         self.label_qualifier = number
 
     def create_segment(self):
-        just_files = tree.get_files()
-        all_nodes = tree.get_nodes()
+        just_files = self.segment_input.get_files()
+        all_nodes = self.segment_input.get_nodes()
         just_directories = [x.identifier for x in all_nodes
                                 if x.identifier not in just_files]
-        segment_id = self.label_descriptor+self.label_qualifier
-        newsegment = SegmentStructure(prefix, segment_id)
+        segment_id = self.label_descripter+str(self.label_qualifier)
+        newsegment = SegmentStructure(self.label_descripter, segment_id)
         for n_thing in just_directories:
             a_file = LDRPathRegularDirectory(n_thing)
             msuite = MaterialSuiteStructure(a_file.item_name)
