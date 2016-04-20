@@ -4,6 +4,7 @@ from .ldrpathregularfile import LDRPathRegularFile
 from .ldrpathregulardirectory import LDRPathRegularDirectory
 from ..absolutefilepathtree import AbsoluteFilePathTree
 
+
 class SegmentPackager(object):
 
     def __init__(self, a_directory, prefix, number=0):
@@ -29,3 +30,4 @@ class SegmentPackager(object):
             msuite.original.append(a_file)
             newsegment.materialsuite.append(msuite)
         return newsegment
+
