@@ -78,29 +78,34 @@ class Stager(CLIApp):
         segment_ids = sorted([x.identifier for x in staging_structure.segment])
         this_prefix_and_number_segment_ids = [x for x in segment_ids if args.prefix+args.resume in x]
         this_prefix_segment_ids = [x for x in segment_ids if args.prefix in x]
+        remainder = []
         if len(this_prefix_and_number_segment_ids) > 0:
             tree = AbsoluteFilePathTree(args.directory)
             all_nodes = tree.get_nodes()
             relevant_segment = [x for x in staging_structure.segment 
                                 if x.identifier == args.prefix+args.resume][0]
-
-
             partly_done = [x for x in list(chain(*[x.original for x in relevant_segment.materialsuite]))]
+            count = 0
             for x in partly_done:
                 already_staged_x = relpath(x.item_name, args.destination_root)
-                already_staged_x = already_staged_x.split(args.staging_id+'/')[1]
-                already_staged_x = already_staged_x.split(args.prefix+args.resume+'/')
-                print(already_staged_x)
+                already_staged_x = already_staged_x.split(args.staging_id)[1]
+                already_staged_x = already_staged_x.split(args.prefix+args.resume)
+                matches_in_tree = [n for n in all_nodes if re.compile(already_staged_x[1]).search(n.identifier)]
+                if len(matches_in_tree) > 0:
+                    pass
+                else:
+                    remainder.append(n.identifier)
             current_segment_number = this_prefix_and_number_segment_ids[-1]
+            
         elif len(this_prefix_segment_ids) > 0:
             tree = AbsoluteFilePathTree(args.directory)
             current_segment_number = int(re.compile('(\w{1,})(\d{1,})').\
                                  match(this_prefix_segment_ids[-1]).group(2)) + 1
         else:
-            current_segment_number = +'1'
+            current_segment_number = 1
         segment_packager = SegmentPackager(args.directory, args.prefix, 
                                            current_segment_number)
-        new_segment = segment_packager.create_segment()
+        new_segment = segment_packager.create_segment(selected_items=remainder)
 
         
     # def add_to_structure(self, a_directory, prefix, source_root='', number=0):
