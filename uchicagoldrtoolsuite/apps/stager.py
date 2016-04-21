@@ -9,7 +9,7 @@ from uchicagoldrtoolsuite.lib.structuring.stagingdirectorywriter import StagingD
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectorywriter import StagingDirectoryWriter
 from uchicagoldrtoolsuite.lib.structuring.segmentpackager import SegmentPackager
 from uchicagoldrtoolsuite.lib.absolutefilepathtree import AbsoluteFilePathTree
-from uchicagoldrtoolsuite.lib.structuring.stagingdirectorysegmentpackager import StagingDirectorySegmentPackager
+from uchicagoldrtoolsuite.lib.structuring.externalstagingdirectorysegmentpackager import ExternalStagingDirectorySegmentPackager
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -108,7 +108,7 @@ class Stager(CLIApp):
         else:
             current_segment_number = 1
             
-        segment_packager = StagingDirectorySegmentPackager(args.prefix, current_segment_number)
+        segment_packager = ExternalStagingDirectorySegmentPackager(args.prefix, current_segment_number)
         segment = segment_packager.package(args.directory, remainder_files=remainder)
         print(segment)
         # new_segment = segment_packager.create_segment(selected_items=remainder)

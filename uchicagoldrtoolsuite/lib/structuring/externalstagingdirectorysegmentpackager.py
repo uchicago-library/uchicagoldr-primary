@@ -1,24 +1,46 @@
 from .segmentstructure import SegmentStructure
 from .stagingstructure import StagingStructure
 from .stagingsegmentpackager import StagingSegmentPackager
-from .stagingdirectorymaterialsuitepackager import StagingDirectoryMaterialSuitePackager
+from .externalstagingdirectorymaterialsuitepackager import ExternalStagingDirectoryMaterialSuitePackager
 
-class StagingDirectorySegmentPackager(StagingSegmentPackager):
+class ExternalStagingDirectorySegmentPackager(StagingSegmentPackager):
     def __init__(self, label_text, label_number):
         self.struct_type = "staging"
         self.struct = StagingStructure
         self.implementation = "directory"
-        self.msuite_packager = StagingDirectoryMaterialSuitePackager
+        self.msuite_packager = ExternalStagingDirectoryMaterialSuitePackager
         self.id_prefix = label_text
         self.id_num = label_number
         
     def get_material_suites(self):
         return []
 
-    def package(self, a_directory, remainder_files=None):
+    def package(self, a_directory, remainder_files=[]):
         segment_id = self.id_prefix+str(self.id_num)
         newsegment = SegmentStructure(self.id_prefix, str(self.id_num))
-        return newsegment.identifier
+        packager = self.msuite_packager()        
+        if len(remainder_files) <= 0:
+            just_files = self.segment_input.get_files()
+            all_nodes = self.segment_input.get_nodes()
+            just_directories = [x.identifier for x in all_nodes
+                                if x.identifier not in just_files]
+            for n_thing in just_directories:
+                a_directory = LDRPathRegularDirectory(n_thing)
+                msuite = packager.package(a_directory)
+                newsegment.materialsuite.append(msuite)
+            for n_thing in just_files:
+                a_file = LDRPathRegularFile(n_thing)
+                msuite = packager.package(a_file)
+                newsegment.materialsuite.append(msuite)
+        else:
+            for n_item in remainder_files:
+                if is_file(n_item):
+                    a_thing = LDRPathRegularFile(n_file)
+                else:
+                    a_thing = LDRPathRegularDirectory(n_item)
+                msuite = packager.package(a_thing)
+                newsegment.materialsuite.append(msuite)
+        return newsegment
 
     def set_struct(self, value):
         self._struct = value
