@@ -1,17 +1,51 @@
 
+from .stagingsegmentpackager import StagingSegmentPackager
 from .stagingdirectorymaterialsuitepackager import StagingDirectoryMaterialSuitePackager
 
 class StagingDirectorySegmentPackager(StagingSegmentPackager):
-    def __init__(self):
+    def __init__(self, label_text, label_number):
         self.struct_type = "staging"
         self.struct = "segment"
         self.implementation = "directory"
         self.msuite_packager = StagingDirectoryMaterialSuitePackager
-
+        self.id_prefix = label_text
+        self.id_num = label_number
+        
     def get_material_suites(self):
         return []
-    
 
+    def package(self):
+        return None
+
+    def set_struct(self, value):
+        self._struct = value
+
+    def get_struct(self):
+        return self._struct
+    
+    def set_msuite_packager(self, value):
+        self._msuite_packager = value
+
+    def get_msuite_packager(self):
+        return self._msuite_packager
+
+    def set_id_prefix(self, value):
+        self._id_prefix = value
+
+    def get_id_prefix(self):
+        return self._id_prefix
+    
+    def set_id_num(self, value):
+        self._id_num = value
+
+    def get_id_num(self):
+        return self._id_num    
+
+    msuite_packager = property(get_msuite_packager, set_msuite_packager)
+    id_prefix = property(get_id_prefix, set_id_prefix)
+    id_num = property(get_id_num, set_id_num)
+    struct = property(get_struct, set_struct)
+    
 # class SegmentPackager:
 
 #     def create_segment(self, selected_items=[]):

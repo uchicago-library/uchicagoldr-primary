@@ -1,4 +1,6 @@
 
+from .stagingmaterialsuitepackager import StagingMaterialSuitePackager
+
 class StagingDirectoryMaterialSuitePackager(StagingMaterialSuitePackager):
     def __init__(self):
         self.struct_type = 'staging'
@@ -7,3 +9,4 @@ class StagingDirectoryMaterialSuitePackager(StagingMaterialSuitePackager):
 
     def package(self):
         return []
+    

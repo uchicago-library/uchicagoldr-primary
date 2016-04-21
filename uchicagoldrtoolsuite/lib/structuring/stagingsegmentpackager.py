@@ -1,5 +1,7 @@
 
-class StagingSegmentPackager(StagingSegmentPackager):
+from .segmentpackager import SegmentPackager
+
+class StagingSegmentPackager(SegmentPackager):
     def __init__(self, struct_type):
         self.struct_type = "staging"
         

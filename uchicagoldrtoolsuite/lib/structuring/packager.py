@@ -25,6 +25,6 @@ class Packager(metaclass=ABCMeta):
     def package(self):
         pass
     
-    struct = abstractproperty(setstruct, getstruct)
-    struct_type = abstractproperty(settype, gettype)
-    implementation = abstractproperty(setimplementation, getimplementation)
+    struct = abstractproperty(set_struct, get_struct)
+    struct_type = abstractproperty(set_type, get_type)
+    implementation = abstractproperty(set_implementation, get_implementation)

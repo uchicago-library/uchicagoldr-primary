@@ -1,3 +1,5 @@
+from abc import abstractmethod
+from .packager import Packager
 
 class MaterialSuitePackager(Packager):
 
@@ -5,7 +7,7 @@ class MaterialSuitePackager(Packager):
     def get_premis(self):
         pass
 
-    @abstractmethod(self):
+    @abstractmethod
     def get_techmod(self):
         pass
 
