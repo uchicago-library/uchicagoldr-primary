@@ -1,11 +1,12 @@
-
+from .segmentstructure import SegmentStructure
+from .stagingstructure import StagingStructure
 from .stagingsegmentpackager import StagingSegmentPackager
 from .stagingdirectorymaterialsuitepackager import StagingDirectoryMaterialSuitePackager
 
 class StagingDirectorySegmentPackager(StagingSegmentPackager):
     def __init__(self, label_text, label_number):
         self.struct_type = "staging"
-        self.struct = "segment"
+        self.struct = StagingStructure
         self.implementation = "directory"
         self.msuite_packager = StagingDirectoryMaterialSuitePackager
         self.id_prefix = label_text
@@ -14,15 +15,23 @@ class StagingDirectorySegmentPackager(StagingSegmentPackager):
     def get_material_suites(self):
         return []
 
-    def package(self):
-        return None
+    def package(self, a_directory, remainder_files=None):
+        segment_id = self.id_prefix+str(self.id_num)
+        newsegment = SegmentStructure(self.id_prefix, str(self.id_num))
+        return newsegment.identifier
 
     def set_struct(self, value):
         self._struct = value
 
     def get_struct(self):
         return self._struct
-    
+
+    def set_implementation(self, value):
+        self._implementation = value
+
+    def get_implementation(self):
+        return self._implementation
+        
     def set_msuite_packager(self, value):
         self._msuite_packager = value
 
@@ -41,6 +50,7 @@ class StagingDirectorySegmentPackager(StagingSegmentPackager):
     def get_id_num(self):
         return self._id_num    
 
+    implementation = property(get_implementation, set_implementation)
     msuite_packager = property(get_msuite_packager, set_msuite_packager)
     id_prefix = property(get_id_prefix, set_id_prefix)
     id_num = property(get_id_num, set_id_num)
