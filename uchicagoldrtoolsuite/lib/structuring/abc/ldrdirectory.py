@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-class LDRDirectory(metaclass=abc.ABCMeta):
+class LDRDirectory(metaclass=ABCMeta):
 
     @abstractmethod
     def getHierarchyInformation(self):

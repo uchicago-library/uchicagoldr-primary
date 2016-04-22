@@ -1,6 +1,6 @@
 from os.path import relpath
 from pathlib import Path
-from .abc.ldritem import LDRDirectory
+from .abc.ldrdirectory import LDRDirectory
 
 class LDRPathRegularDirectory(LDRDirectory):
 
@@ -13,7 +13,7 @@ class LDRPathRegularDirectory(LDRDirectory):
         return self.path.exists
 
     def getHierarchyInformation(self, root_to_cut):
-        output = relpath(self.item_name, root_to_cut):
+        output = relpath(self.item_name, root_to_cut)
         if output.startswith(".."):
             raise ValueError("bad root_to_cut string passed")
         else:
@@ -38,7 +38,7 @@ class LDRPathRegularDirectory(LDRDirectory):
         return self._item_name
 
     def set_item_name(self, value):
-        return self._item_name
+        self._item_name = value
     
     path = property(get_path, set_path)
     is_flo = property(get_is_flo, set_is_flo)

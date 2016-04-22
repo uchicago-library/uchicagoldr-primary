@@ -73,15 +73,16 @@ class Stager(CLIApp):
         # App code
         
         staging_directory = join(args.destination_root, args.staging_id)
+        print(staging_directory)
         staging_directory_reader = StagingDirectoryReader(staging_directory)
         staging_structure = staging_directory_reader.read()
-        print(staging_structure.identifier)
+        
         segment_ids = sorted([x.identifier for x in staging_structure.segment])        
         this_prefix_and_number_segment_ids = [x for x in segment_ids
-                                              if args.prefix+args.resume in x]
+                                              if args.prefix+str(args.resume) in x]
         this_prefix_segment_ids = [x for x in segment_ids if args.prefix in x]
         remainder = []
- 
+
         if len(this_prefix_and_number_segment_ids) > 0:
             tree = AbsoluteFilePathTree(args.directory)
             all_nodes = tree.get_nodes()
