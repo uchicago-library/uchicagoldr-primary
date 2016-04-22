@@ -20,6 +20,9 @@ class StagingDirectoryWriter(SerializationWriter):
                 mkdir(join(stage_directory, 'admin'))
                 
             for n_item in self.structure.segment:
+                if not exists(join(stage_directory, 'data', n_item.identifier)):
+                    mkdir(join(stage_directory, 'data', n_item.identifier))
+                if not exists(join(stage_directory, 'admin', n_item.identifier)):
+                    mkdir(join(stage_directory, 'admin', n_item.identifier))
+                manifest = LDRPathRegularFile(join(stage_directory, 'admin', n_item.identifier, 'manifest.txt'))
                 
-                print(n_item)
-
