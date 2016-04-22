@@ -1,5 +1,6 @@
 from requests import get as rget
 from requests import codes
+from requests import head as rhead
 from tempfile import TemporaryDirectory
 from os.path import join
 from uuid import uuid1
