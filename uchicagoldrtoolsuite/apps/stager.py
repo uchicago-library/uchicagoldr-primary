@@ -75,6 +75,7 @@ class Stager(CLIApp):
         staging_directory = join(args.destination_root, args.staging_id)
         staging_directory_reader = StagingDirectoryReader(staging_directory)
         staging_structure = staging_directory_reader.read()
+        print(staging_structure.identifier)
         segment_ids = sorted([x.identifier for x in staging_structure.segment])        
         this_prefix_and_number_segment_ids = [x for x in segment_ids
                                               if args.prefix+args.resume in x]
@@ -110,8 +111,8 @@ class Stager(CLIApp):
             
         segment_packager = ExternalStagingDirectorySegmentPackager(args.prefix, current_segment_number)
         segment = segment_packager.package(args.directory, remainder_files=remainder)
-        print(segment)
-        # new_segment = segment_packager.create_segment(selected_items=remainder)
+        staging_structure.segment.append(segment)
+        print(staging_structure.segment)
 
 
 if __name__ == "__main__":

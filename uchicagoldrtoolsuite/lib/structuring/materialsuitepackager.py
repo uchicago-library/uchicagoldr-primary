@@ -8,9 +8,11 @@ class MaterialSuitePackager(Packager):
         pass
 
     @abstractmethod
-    def get_techmod(self):
+    def get_techmd(self):
         pass
 
     @abstractmethod
     def get_presform(self):
         pass
+
+    

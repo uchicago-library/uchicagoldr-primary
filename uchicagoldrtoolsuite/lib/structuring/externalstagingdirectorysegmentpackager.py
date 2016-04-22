@@ -1,7 +1,10 @@
+from ..absolutefilepathtree import AbsoluteFilePathTree
 from .segmentstructure import SegmentStructure
 from .stagingstructure import StagingStructure
 from .stagingsegmentpackager import StagingSegmentPackager
 from .externalstagingdirectorymaterialsuitepackager import ExternalStagingDirectoryMaterialSuitePackager
+from .ldrpathregularfile import LDRPathRegularFile
+from .ldrpathregulardirectory import LDRPathRegularDirectory
 
 class ExternalStagingDirectorySegmentPackager(StagingSegmentPackager):
     def __init__(self, label_text, label_number):
@@ -20,8 +23,9 @@ class ExternalStagingDirectorySegmentPackager(StagingSegmentPackager):
         newsegment = SegmentStructure(self.id_prefix, str(self.id_num))
         packager = self.msuite_packager()        
         if len(remainder_files) <= 0:
-            just_files = self.segment_input.get_files()
-            all_nodes = self.segment_input.get_nodes()
+            tree = AbsoluteFilePathTree(a_directory)
+            just_files = tree.get_files()
+            all_nodes = tree.get_nodes()
             just_directories = [x.identifier for x in all_nodes
                                 if x.identifier not in just_files]
             for n_thing in just_directories:
