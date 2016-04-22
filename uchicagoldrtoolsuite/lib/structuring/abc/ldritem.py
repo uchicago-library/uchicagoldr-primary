@@ -7,55 +7,44 @@ Created on Apr 13, 2016
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 class LDRItem(metaclass=ABCMeta):
-    
+
     @abstractmethod
     def read(self):
         pass
-    
+
     @abstractmethod
     def write(self):
         pass
-    
+
     @abstractmethod
     def open(self):
         pass
-    
+
     @abstractmethod
     def close(self):
         pass
-    
-    @abstractmethod
-    def is_flo(self):
-        pass
-    
+
     @abstractmethod
     def exists(self):
         pass
-    
-    def getname(self):
+
+    def get_name(self):
         return self._item_name
-    
-    def setname(self, value):
+
+    def set_name(self, value):
         if isinstance(value, str):
             self._item_name = value
         else:
             raise ValueError("item_name must be a string")
-        
-    def getisflo(self):
-        return self._is_flo
-    
-    def setisflo(self, value):
+
+    def get_is_flo(self):
+        return self.is_flo
+
+    def set_is_flo(self, value):
         if isinstance(value, bool):
-            self._is_flo = True
+            self._is_flo = value
         else:
             raise ValueError("is_flo must be either True or False")
 
-    def getpipe(self):
-        return self._pipe
-    
-    def setpipe(self, value):
-        self._pipe = value
-
-    item_name = abstractproperty(getname, setname)
-    pipe = abstractproperty(getpipe, setpipe)
-    is_flo = abstractproperty(getisflo, setisflo)
+    item_name = property(get_name, set_name)
+    is_flo = property(get_is_flo, set_is_flo)

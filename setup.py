@@ -73,4 +73,5 @@ setup(
                         'pyxdg',
                         'pypremis',
                         'controlledvocab',
-                        'hierarchicalrecord'])
+                        'hierarchicalrecord',
+                        'requests'])
