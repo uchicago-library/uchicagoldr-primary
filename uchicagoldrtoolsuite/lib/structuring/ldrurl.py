@@ -14,16 +14,13 @@ class LDRURL(LDRItem):
         self.tmpdir = None
         self.is_flo = True
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
     def read(self, blocksize=1024):
         if not self.pipe:
-            raise OSError('{} not open for reading'.format(str(self.path)))
+            raise OSError('{} not open for reading'.format(str(self.item_name)))
         return self.pipe.read(blocksize)
+
+    def write(self, data):
+        raise OSError('URLs are read only.')
 
     def open(self, mode='rb', buffering=-1, errors=None):
         if "t" in mode:
@@ -56,8 +53,6 @@ class LDRURL(LDRItem):
                 self.tmpdir = None
 
     def exists(self):
-        r = rget(self.item_name)
+        r = rhead(self.item_name)
         return r.status_code == codes.ok
 
-    def write(self, data):
-        raise OSError('URLs are read only.')
