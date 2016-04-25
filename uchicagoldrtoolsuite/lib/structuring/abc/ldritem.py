@@ -1,13 +1,12 @@
 '''
 Created on Apr 13, 2016
 
-@author: tdanstrom
+@author: tdanstrom, balsamo
 '''
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 class LDRItem(metaclass=ABCMeta):
-
     @abstractmethod
     def read(self):
         pass
@@ -27,6 +26,12 @@ class LDRItem(metaclass=ABCMeta):
     @abstractmethod
     def exists(self):
         pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def get_name(self):
         return self._item_name

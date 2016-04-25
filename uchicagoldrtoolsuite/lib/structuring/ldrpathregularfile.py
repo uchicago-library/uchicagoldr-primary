@@ -4,17 +4,10 @@ from .abc.ldritem import LDRItem
 
 class LDRPathRegularFile(LDRItem):
     def __init__(self, param1):
-
         self.item_name = param1
         self.path = Path(self.item_name)
         self.pipe = None
         self.is_flo = True
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
 
     def read(self, blocksize=1024):
         if not self.pipe:
