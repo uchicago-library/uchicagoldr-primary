@@ -149,9 +149,11 @@ def copy(origin_loc, destination_loc):
       new file
     * if copy does not occur: a tuple containing false and the Nonetype
     """
-    origin_loc.open()
-    origin_loc.write(destination_loc.item_name)
-    if destination_loc.exists():
-        return (True, sane_hash('md5'))
-    else:
-        return (False, None)
+    print(destination_loc.read())
+
+    # # with destination_loc.open() as destination_opened:
+    # #     destationed_opened.write(origin_loc.read())
+    # if destination_loc.exists():
+    #     return (True, sane_hash('md5'))
+    # else:
+    #     return (False, None)

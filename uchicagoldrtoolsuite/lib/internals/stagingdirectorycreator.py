@@ -23,7 +23,7 @@ class StagingDirectoryCreator(DirectoryCreator):
         self.resume = info.resume
         self.current_run = StagingRun(self.prefix, self.stage_id,
                                       self.destination_root, self.resume).\
-                                      get_current_run()
+                                    get_current_run()
 
 
     def make_a_directory(self, directory_string: str):
