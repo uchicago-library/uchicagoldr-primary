@@ -2,6 +2,7 @@ from os.path import relpath
 from pathlib import Path
 from .abc.ldrdirectory import LDRDirectory
 
+
 class LDRPathRegularDirectory(LDRDirectory):
 
     def __init__(self, param1):
@@ -15,18 +16,16 @@ class LDRPathRegularDirectory(LDRDirectory):
     def getHierarchyInformation(self, root_to_cut):
         output = relpath(self.item_name, root_to_cut)
         if output.startswith(".."):
+            print(self.item_name)
             raise ValueError("bad root_to_cut string passed")
         else:
             return output
         
-    def is_flo(self):
-        return False
-
     def set_is_flo(self, value):
         self._is_flo = False
 
     def get_is_flo(self):
-        return sel._is_flo
+        return self._is_flo
 
     def get_path(self):
         return self._path

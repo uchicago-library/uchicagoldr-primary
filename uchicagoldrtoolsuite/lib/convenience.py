@@ -1,3 +1,4 @@
+from sys import stderr
 
 def sane_hash(hash_algo, file_path, block_size=65536):
     """
@@ -29,15 +30,15 @@ def sane_hash(hash_algo, file_path, block_size=65536):
     hash_result = hasher()
     with open(file_path, 'rb') as f:
         while True:
-           try:
-              data = f.read(block_size)
-           except OSError as e:
-              stderr.write("{} could not be read\n".format(file_path))
-              stderr.write(e)
-              Stderr.write("\n")
-           if not data:
-              break
-           hash_result.update(data)
+            try:
+                data = f.read(block_size)
+            except OSError as e:
+                stderr.write("{} could not be read\n".format(file_path))
+                stderr.write(e)
+                Stderr.write("\n")
+            if not data:
+                break
+            hash_result.update(data)
     return str(hash_result.hexdigest())
 
 
@@ -131,3 +132,26 @@ def retrieve_controlled_vocabulary(vocab_name, built=True):
     if built:
         cv = cv.build()
     return cv
+
+
+def copy(origin_loc, destination_loc):
+    """
+    __Args__
+
+    1. origin_loc (LDRPathRegular): the file object that is the source that
+    needs to be copied
+    2. detination_loc (LDRPathRegularFile): the file object that is the
+    destiatination for the source that needs to be copied
+
+    __Returns__
+
+    * if copy occurs: a tuple containing truth and an md5 hash string of the
+      new file
+    * if copy does not occur: a tuple containing false and the Nonetype
+    """
+    origin_loc.open()
+    origin_loc.write(destination_loc.item_name)
+    if destination_loc.exists():
+        return (True, sane_hash('md5'))
+    else:
+        return (False, None)

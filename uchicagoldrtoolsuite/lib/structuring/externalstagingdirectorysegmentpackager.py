@@ -1,10 +1,13 @@
+from os.path import isfile
 from ..absolutefilepathtree import AbsoluteFilePathTree
 from .segmentstructure import SegmentStructure
 from .stagingstructure import StagingStructure
 from .stagingsegmentpackager import StagingSegmentPackager
-from .externalstagingdirectorymaterialsuitepackager import ExternalStagingDirectoryMaterialSuitePackager
+from .externalstagingdirectorymaterialsuitepackager import \
+    ExternalStagingDirectoryMaterialSuitePackager
 from .ldrpathregularfile import LDRPathRegularFile
 from .ldrpathregulardirectory import LDRPathRegularDirectory
+
 
 class ExternalStagingDirectorySegmentPackager(StagingSegmentPackager):
     def __init__(self, label_text, label_number):
@@ -19,29 +22,19 @@ class ExternalStagingDirectorySegmentPackager(StagingSegmentPackager):
         return []
 
     def package(self, a_directory, remainder_files=[]):
-        segment_id = self.id_prefix+str(self.id_num)
         newsegment = SegmentStructure(self.id_prefix, str(self.id_num))
-        packager = self.msuite_packager()        
+        packager = self.msuite_packager()
         if len(remainder_files) <= 0:
             tree = AbsoluteFilePathTree(a_directory)
             just_files = tree.get_files()
-            all_nodes = tree.get_nodes()
-            just_directories = [x.identifier for x in all_nodes
-                                if x.identifier not in just_files]
-            for n_thing in just_directories:
-                a_directory = LDRPathRegularDirectory(n_thing)
-                msuite = packager.package(a_directory)
-                newsegment.materialsuite.append(msuite)
             for n_thing in just_files:
                 a_file = LDRPathRegularFile(n_thing)
                 msuite = packager.package(a_file)
                 newsegment.materialsuite.append(msuite)
         else:
             for n_item in remainder_files:
-                if is_file(n_item):
-                    a_thing = LDRPathRegularFile(n_file)
-                else:
-                    a_thing = LDRPathRegularDirectory(n_item)
+                if isfile(n_item):
+                    a_thing = LDRPathRegularFile(n_item)
                 msuite = packager.package(a_thing)
                 newsegment.materialsuite.append(msuite)
         return newsegment

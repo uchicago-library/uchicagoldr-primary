@@ -5,8 +5,6 @@ class StagingSegmentPackager(SegmentPackager):
     def __init__(self, label_text, label_number):
         self.struct_type = "staging"
             
-
-
     def set_type(self, value):
         self._struct_type = value
 
