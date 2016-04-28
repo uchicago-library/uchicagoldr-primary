@@ -1,4 +1,6 @@
 from sys import stderr
+from .structuring.ldrpathregularfile import LDRPathRegularFile
+
 
 def sane_hash(hash_algo, file_path, block_size=65536):
     """
@@ -149,11 +151,25 @@ def copy(origin_loc, destination_loc):
       new file
     * if copy does not occur: a tuple containing false and the Nonetype
     """
-    print(destination_loc.read())
-
-    # # with destination_loc.open() as destination_opened:
-    # #     destationed_opened.write(origin_loc.read())
-    # if destination_loc.exists():
-    #     return (True, sane_hash('md5'))
-    # else:
-    #     return (False, None)
+    if not isinstance(origin_loc, LDRPathRegularFile)\
+       and not isinstance(destination_loc, LDRPathRegularFile):
+        raise ValueError("must pass two instances of LDRPathRegularFile" +
+                         " to the copy function.")
+    with origin_loc.open('rb') as reading_file:
+        with destination_loc.open('wb') as writing_file:
+            while True:
+                buf = reading_file.read(1024)
+                if buf:
+                    writing_file.write(buf)
+                else:
+                    break
+    if destination_loc.exists():
+        destination_checksum = sane_hash('md5', destination_loc.item_name)
+        destination_checksum_sha256 = sane_hash('sha256',
+                                                destination_loc.item_name)
+        origin_checksum = sane_hash('md5', origin_loc.item_name)
+        if destination_checksum == origin_checksum:
+            return (True, sane_hash('md5', destination_loc.item_name,
+                                    destination_checksum_sha256))
+    else:
+        return (False, None, None)

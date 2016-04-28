@@ -37,7 +37,6 @@ class LDRPathRegularFile(LDRItem):
 
     def write(self, data):
         if self.pipe:
-            print(self.pipe)
             self.pipe.write(data)
             return True
         else:
