@@ -83,26 +83,25 @@ class StagingDirectoryWriter(SerializationWriter):
                                         new_file_name)
                                     makedirs(dirname(new_file.item_name),
                                              exist_ok=True)
+                                    success = False
                                     try:
                                         success, checksum = copy(n_file,
                                                                  new_file)
-                                        if success:
-                                            manifest_line = "{}\t{}\n".\
-                                                    format(relevant_path,
-                                                           checksum)
-                                            manifest_line = bytes(
-                                                manifest_line.
-                                                encode('utf-8'))
-                                            with manifest.open('ab') as f:
-                                                f.write(manifest_line)
-                                        else:
-                                            stderr.write("{}".format(
-                                                n_file.item_name) +
+                                    except Exception:
+                                        stderr.write("{}".format(
+                                            n_file.item_name) +
                                                 " could not be copied to " +
                                                 "{}\n".format(
                                                     new_file.item_name))
-                                    except Exception as ex:
-                                        print(ex)
-                                        stderr.write("could not open file " +
-                                                     " {}\n".format(
-                                                          n_file.item_name))
+                                    if success:
+                                        manifest_line = "{}\t{}\n".\
+                                                        format(relevant_path,
+                                                               checksum)
+                                        manifest_line = bytes(
+                                            manifest_line.encode('utf-8'))
+                                        with manifest.open('ab') as f:
+                                            f.write(manifest_line)
+                                    else:
+                                        stderr.write("no checksum for {}"
+                                                     .format(
+                                                destination_loc.item_name))
