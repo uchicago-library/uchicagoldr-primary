@@ -102,7 +102,7 @@ class StagingDirectoryWriter(SerializationWriter):
                                                 "{}\n".format(
                                                     new_file.item_name))
                                     except Exception as ex:
-                                        stderr.write(ex)
+                                        print(ex)
                                         stderr.write("could not open file " +
                                                      " {}\n".format(
                                                           n_file.item_name))
