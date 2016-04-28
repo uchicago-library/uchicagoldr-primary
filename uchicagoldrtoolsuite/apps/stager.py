@@ -116,8 +116,9 @@ class Stager(CLIApp):
         else:
             current_segment_number = 1
 
-        segment_packager = ExternalStagingDirectorySegmentPackager(args.prefix,
-                                                                   current_segment_number)
+        segment_packager = ExternalStagingDirectorySegmentPackager(
+            args.prefix,
+            current_segment_number)
         segment = segment_packager.package(args.directory,
                                            remainder_files=remainder)
         staging_structure.segment.append(segment)
@@ -125,7 +126,6 @@ class Stager(CLIApp):
         staging_directory_writer.write(join(args.destination_root,
                                             args.staging_id),
                                        args.source_root)
-
 
 
 if __name__ == "__main__":

@@ -55,18 +55,24 @@ class Pruner(CLIApp):
                                  action='store', nargs="*")
         # Parse arguments into args namespace
         args = self.parser.parse_args()
+        print(args)
         # App code
+        staging_directory = join(args.destination_root, args.staging_id)
+        staging_directory_reader = StagingDirectoryReader(staging_directory)
+        staging_structure = staging_directory_reader.read()
         try:
-            p = Pruner(args.directory, args.source_root, args.patterns)
-            is_it_valid = p.validate()
-            if is_it_valid:
-                num_files_deleted = p.ingest()
-                self.stdoutp("{} have been removed from {}\n".format(
-                    str(num_files_deleted), args.directory))
-            else:
-                problem = p.explain_validation_result()
-                self.stderrp("{}: {}\n".format(problem.category,
-                                               problem.message))
-            return 0
+            print(staging_structure)
+
+        # p = Pruner(args.directory, args.source_root, args.patterns)
+        #     is_it_valid = p.validate()
+        #     if is_it_valid:
+        #         num_files_deleted = p.ingest()
+        #         self.stdoutp("{} have been removed from {}\n".format(
+        #             str(num_files_deleted), args.directory))
+        #     else:
+        #         problem = p.explain_validation_result()
+        #         self.stderrp("{}: {}\n".format(problem.category,
+        #                                        problem.message))
+
         except KeyboardInterrupt:
             return 131

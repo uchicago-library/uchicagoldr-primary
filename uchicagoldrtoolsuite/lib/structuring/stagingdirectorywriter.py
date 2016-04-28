@@ -101,7 +101,8 @@ class StagingDirectoryWriter(SerializationWriter):
                                                 " could not be copied to " +
                                                 "{}\n".format(
                                                     new_file.item_name))
-                                    except Exception:
+                                    except Exception as ex:
+                                        stderr.write(ex)
                                         stderr.write("could not open file " +
-                                                     "{}".format(
+                                                     " {}\n".format(
                                                           n_file.item_name))
