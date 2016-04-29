@@ -155,6 +155,9 @@ def copy(origin_loc, destination_loc):
        and not isinstance(destination_loc, LDRPathRegularFile):
         raise ValueError("must pass two instances of LDRPathRegularFile" +
                          " to the copy function.")
+    if destination_loc.exists:
+        return (True, False, "already present", None, None)
+
     with origin_loc.open('rb') as reading_file:
         with destination_loc.open('wb') as writing_file:
             while True:
@@ -168,8 +171,11 @@ def copy(origin_loc, destination_loc):
         destination_checksum_sha256 = sane_hash('sha256',
                                                 destination_loc.item_name)
         origin_checksum = sane_hash('md5', origin_loc.item_name)
+
         if destination_checksum == origin_checksum:
-            return (True, sane_hash('md5', destination_loc.item_name,
-                                    destination_checksum_sha256))
+            return (True, True, destination_checksum,
+                    destination_checksum_sha256)
+        else:
+            return (True, False, "copied", None, None)
     else:
-        return (False, None, None)
+        return (False, None, "not copied", None, None)

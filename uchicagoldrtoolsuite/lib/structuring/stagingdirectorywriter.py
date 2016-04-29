@@ -1,7 +1,7 @@
 from datetime import datetime
-from os import makedirs, mkdir, stat
+from os import makedirs, mkdir
 from os.path import exists, join, relpath, dirname
-from sys import stderr
+from sys import stderr, stdout
 from .abc.serializationwriter import SerializationWriter
 from ..convenience import copy
 from .ldrpathregularfile import LDRPathRegularFile
@@ -41,13 +41,10 @@ class StagingDirectoryWriter(SerializationWriter):
                 mkdir(admin_dir)
             if not exists(adminnotes_dir):
                 mkdir(adminnotes_dir)
-
             if not exists(accessionrecords_dir):
                 mkdir(accessionrecords_dir)
-
             if not exists(legalnotes_dir):
                 mkdir(legalnotes_dir)
-
             for n_item in self.structure.segment:
                 cur_data_dir = join(data_dir, n_item.identifier)
                 cur_admin_dir = join(admin_dir, n_item.identifier)
@@ -84,24 +81,33 @@ class StagingDirectoryWriter(SerializationWriter):
                                     makedirs(dirname(new_file.item_name),
                                              exist_ok=True)
                                     success = False
-                                    try:
-                                        success, checksum = copy(n_file,
-                                                                 new_file)
-                                    except Exception:
-                                        stderr.write("{}".format(
-                                            n_file.item_name) +
-                                                " could not be copied to " +
-                                                "{}\n".format(
-                                                    new_file.item_name))
-                                    if success:
-                                        manifest_line = "{}\t{}\n".\
-                                                        format(relevant_path,
-                                                               checksum)
-                                        manifest_line = bytes(
-                                            manifest_line.encode('utf-8'))
-                                        with manifest.open('ab') as f:
-                                            f.write(manifest_line)
+                                    success, checksum_matched, copy_status,\
+                                        checksum1, checksum2 = copy(n_file,
+                                                                    new_file)
+                                    if not success:
+                                        stderr.write("{} could not ".
+                                                     format(n_file.item_name +
+                                                            "be coppied to {}".
+                                                            format(
+                                                                new_file.
+                                                                item_name)))
+                                    if copy_status == 'copied':
+                                        if checksum_matched:
+                                            manifest_line = "{}\t{}\t{}\n".\
+                                                            format(relevant_path,
+                                                                   checksum1,
+                                                                   checksum2)
+                                            manifest_line = bytes(
+                                                manifest_line.encode('utf-8'))
+                                            with manifest.open('ab') as f:
+                                                f.write(manifest_line)
+                                        elif copy_status == 'already moved':
+                                            stderr.write("no checksum for {}\n".
+                                                         format(new_file.
+                                                                item_name))
+
                                     else:
-                                        stderr.write("no checksum for {}"
-                                                     .format(
-                                                destination_loc.item_name))
+                                            stdout.write("{} was "
+                                                         .format(relevant_path) +
+                                                         " already present" +
+                                                         " in the segment\n")

@@ -35,14 +35,13 @@ class StagingDirectoryReader(StagingSerializatinReader):
                 a_past_segment_node_depth = tree.find_depth_of_a_path(n)
                 if a_past_segment_node_depth > 0:
                     label = dirsplit(n)[1]
-                    valid_pattern = re.compile('(\w{1,})(\d{1,})')
+                    valid_pattern = re.compile('(\w{1,})-(\d{1,})')
                     label_matching = valid_pattern.match(label)
                     if label_matching:
                         prefix, number = label_matching.group(1), \
                                          label_matching.group(2)
-                        a_new_segment = SegmentStructure(prefix, number)
+                        a_new_segment = SegmentStructure(prefix, int(number))
                         stagingstructure.segment.append(a_new_segment)
-
             for n_thing in just_files:
                 segment_id = join(self.serialized_location, 'data/')
                 if segment_id in n_thing:
@@ -57,10 +56,12 @@ class StagingDirectoryReader(StagingSerializatinReader):
                             msuite.original.append(a_file)
                             matching_segment[0].materialsuite.append(msuite)
                         else:
-                            stderr.write("There are more than one segments in the staging structure with id {}\n".
+                            stderr.write("There are more than one segments in " +
+                                         " the staging structure with id {}\n".
                                          format(file_run))
                     else:
-                        stderr.write("the path for {} is wrong.\n".format(n_thing))
+                        stderr.write("the path for {} is wrong.\n".format(
+                            n_thing))
 
         else:
             stagingstructure = StagingStructure(self.stage_id)

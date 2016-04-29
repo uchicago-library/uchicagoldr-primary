@@ -79,40 +79,39 @@ class Stager(CLIApp):
 
         segment_ids = sorted([x.identifier for x in staging_structure.segment])
         this_prefix_and_number_segment_ids = [x for x in segment_ids
-                                              if args.prefix+str(args.resume)
+                                              if args.prefix+'-'+str(args.resume)
                                               in x]
         this_prefix_segment_ids = [x for x in segment_ids if args.prefix in x]
         remainder = []
 
         if len(this_prefix_and_number_segment_ids) > 0:
             tree = AbsoluteFilePathTree(args.directory)
-            all_nodes = tree.get_nodes()
+            all_nodes = tree.get_files()
             relevant_segment = [x for x in staging_structure.segment
-                                if x.identifier == args.prefix+args.resume][0]
+                                if x.identifier == args.prefix + '-' +
+                                args.resume][0]
             partly_done = [x for x in list(chain(*[x.original
                                                    for x in relevant_segment.
                                                    materialsuite]))]
 
-            for n_partly_done_item in partly_done:
-                already_staged_x = relpath(n_partly_done_item.item_name,
-                                           args.destination_root)
-                already_staged_x = already_staged_x.split(args.staging_id)[1]
-                already_staged_x = already_staged_x.split(args.prefix +
-                                                          args.resume)
-                matches_in_tree = [n for n in all_nodes
-                                   if re.compile(already_staged_x[1]).
-                                   search(n.identifier)]
-                if len(matches_in_tree) > 0:
-                    pass
+            for n_origin_item in all_nodes:
+                n_identifier = '.*'+relpath(n_origin_item,
+                                            args.source_root) + '$'
+                match_pattern = re.compile(r'%s' % n_identifier)
+                matches = [x.item_name for x in partly_done
+                           if match_pattern.match(x.item_name)]
+                if len(matches) == 0:
+                    remainder.append(n_origin_item)
                 else:
-                    remainder.append(n_partly_done_item.identifier)
+                    pass
             current_segment_number = args.resume
-
         elif len(this_prefix_segment_ids) > 0:
             tree = AbsoluteFilePathTree(args.directory)
-            current_segment_number = int(re.compile('(\w{1,})(\d{1,})').
-                                         match(this_prefix_segment_ids[-1]).
-                                         group(2)) + 1
+            match_pattern = re.compile('(\w{1,})[-](\d{1,2})')
+            segment_numbers = [int(re.compile('(\w{1,})[-](\d{1,})').
+                                   match(x).group(2))
+                               for x in this_prefix_segment_ids]
+            current_segment_number = sorted(segment_numbers)[-1] + 1
         else:
             current_segment_number = 1
 
@@ -121,7 +120,9 @@ class Stager(CLIApp):
             current_segment_number)
         segment = segment_packager.package(args.directory,
                                            remainder_files=remainder)
+
         staging_structure.segment.append(segment)
+
         staging_directory_writer = StagingDirectoryWriter(staging_structure)
         staging_directory_writer.write(join(args.destination_root,
                                             args.staging_id),
