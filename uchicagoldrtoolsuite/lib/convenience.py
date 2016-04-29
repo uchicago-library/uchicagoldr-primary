@@ -1,4 +1,3 @@
-from os import remove
 from sys import stderr
 from .structuring.ldrpathregularfile import LDRPathRegularFile
 
@@ -179,18 +178,3 @@ def copy(origin_loc, destination_loc):
             return (True, False, "copied", None, None)
     else:
         return (False, False, "not copied", None, None)
-
-
-def remove_file(a_loc, final=False):
-    if not isinstance(a_loc, LDRPathRegularFile):
-        raise TypeError("must pass an instance of LDRPathRegularFile " +
-                        "to remove_file function")
-    if final:
-        if a_loc.exists():
-            remove(a_loc.item_name)
-            if not a_loc.exists():
-                return (True, "{} no longer exists.".format(a_loc.item_name))
-            else:
-                return (False, "{} exists.".format(a_loc.item_name))
-    else:
-        return (False, "{} will be removed.".format(a_loc.item_name))

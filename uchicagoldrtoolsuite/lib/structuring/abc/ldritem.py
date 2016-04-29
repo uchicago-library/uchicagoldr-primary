@@ -3,8 +3,8 @@ Created on Apr 13, 2016
 
 @author: tdanstrom, balsamo
 '''
+from abc import ABCMeta, abstractmethod
 
-from abc import ABCMeta, abstractmethod, abstractproperty
 
 class LDRItem(metaclass=ABCMeta):
     @abstractmethod
@@ -25,6 +25,10 @@ class LDRItem(metaclass=ABCMeta):
 
     @abstractmethod
     def exists(self):
+        pass
+
+    @abstractmethod
+    def deletE(self):
         pass
 
     def __enter__(self):

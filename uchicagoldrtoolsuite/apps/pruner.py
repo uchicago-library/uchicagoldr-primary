@@ -4,7 +4,6 @@ from argparse import Action
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import \
     StagingDirectoryReader
-from uchicagoldr.lib.convenience import remove_file
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -71,8 +70,9 @@ class Pruner(CLIApp):
                                 for pattern in args.patterns:
                                     match_pattern = re.compile(pattern)
                                     if match_pattern.search(n_file.item_name):
-                                        remove_file(n_file.item_name,
-                                                    args.final_decision)
+                                        n_file.delete(
+                                            final=args.final_decision
+                                        )
 
             return 0
         except KeyboardInterrupt:

@@ -1,3 +1,4 @@
+from os import remove
 from pathlib import Path
 from .abc.ldritem import LDRItem
 
@@ -34,6 +35,17 @@ class LDRPathRegularFile(LDRItem):
 
     def exists(self):
         return self.path.exists()
+
+    def delete(self, final=False):
+        if final:
+            if self.exists():
+                remove(self.item_name)
+            if not self.exists():
+                return (True, "{} no longer exists.".format(self.item_name))
+            else:
+                return (False, "{} exists.".format(self.item_name))
+        else:
+            return (False, "{} will be removed.".format(self.item_name))
 
     def write(self, data):
         if self.pipe:
