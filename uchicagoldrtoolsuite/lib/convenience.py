@@ -1,3 +1,4 @@
+from os.path import exists
 from sys import stderr
 from .structuring.ldrpathregularfile import LDRPathRegularFile
 
@@ -155,7 +156,7 @@ def copy(origin_loc, destination_loc):
        and not isinstance(destination_loc, LDRPathRegularFile):
         raise ValueError("must pass two instances of LDRPathRegularFile" +
                          " to the copy function.")
-    if destination_loc.exists:
+    if destination_loc.exists():
         return (True, False, "already present", None, None)
 
     with origin_loc.open('rb') as reading_file:
@@ -171,11 +172,10 @@ def copy(origin_loc, destination_loc):
         destination_checksum_sha256 = sane_hash('sha256',
                                                 destination_loc.item_name)
         origin_checksum = sane_hash('md5', origin_loc.item_name)
-
         if destination_checksum == origin_checksum:
-            return (True, True, destination_checksum,
+            return (True, True, "copied", destination_checksum,
                     destination_checksum_sha256)
         else:
             return (True, False, "copied", None, None)
     else:
-        return (False, None, "not copied", None, None)
+        return (False, False, "not copied", None, None)
