@@ -70,9 +70,10 @@ class Pruner(CLIApp):
                                 for pattern in args.patterns:
                                     match_pattern = re.compile(pattern)
                                     if match_pattern.search(n_file.item_name):
-                                        n_file.delete(
+                                        success, message = n_file.delete(
                                             final=args.final_decision
                                         )
+                                        print(message)
 
             return 0
         except KeyboardInterrupt:

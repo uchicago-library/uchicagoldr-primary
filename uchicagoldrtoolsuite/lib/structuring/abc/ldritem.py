@@ -28,7 +28,7 @@ class LDRItem(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def deletE(self):
+    def delete(self):
         pass
 
     def __enter__(self):
