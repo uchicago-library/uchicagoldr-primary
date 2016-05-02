@@ -1,6 +1,7 @@
-import re
-from os.path import exists
 from argparse import Action
+from os.path import exists
+import re
+from sys import stdout
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import \
     StagingDirectoryReader
@@ -73,7 +74,7 @@ class Pruner(CLIApp):
                                         success, message = n_file.delete(
                                             final=args.final_decision
                                         )
-                                        print(message)
+                                        stdout.write("{}\n".format(message))
 
             return 0
         except KeyboardInterrupt:
