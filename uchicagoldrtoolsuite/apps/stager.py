@@ -6,8 +6,8 @@ from os.path import relpath
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import \
     StagingDirectoryReader
-from uchicagoldrtoolsuite.lib.structuring.stagingdirectorywriter import \
-    StagingDirectoryWriter
+from uchicagoldrtoolsuite.lib.structuring.filesystemstagingstructurewriter\
+    import FileSystemStagingStructureWriter
 from uchicagoldrtoolsuite.lib.absolutefilepathtree import AbsoluteFilePathTree
 from uchicagoldrtoolsuite.lib.structuring.\
     externalstagingdirectorysegmentpackager import \
@@ -123,7 +123,8 @@ class Stager(CLIApp):
 
         staging_structure.segment.append(segment)
 
-        staging_directory_writer = StagingDirectoryWriter(staging_structure)
+        staging_directory_writer = FileSystemStagingStructureWriter(
+            staging_structure)
         staging_directory_writer.write(join(args.destination_root,
                                             args.staging_id),
                                        args.source_root)
