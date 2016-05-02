@@ -4,6 +4,8 @@ from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import\
     StagingDirectoryReader
 from uchicagoldrtoolsuite.lib.structuring.archivestructure import\
     ArchiveStructure
+from uchicagoldrtoolsuite.lib.structuring.filesystemarchivestructurewriter\
+    import FileSystemArchiverStructureWriter
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -56,12 +58,13 @@ class Archiver(CLIApp):
 
         for n_record in staging_structure.accessionrecord:
             archivable_accessionrecords.extend(n_record)
-
         archive_structure.accession_record = archivable_accessionrecords
         archive_structure.premis_object = archivable_premisrecords
         archive_structure.data_object = archivable_dataobjects
         archive_structure.technical_metadata = archivable_techmdrecords
 
+        archiver_writer = FileSystemArchiverStructureWriter(archive_structure)
+        archiver_writer.write()
 
 if __name__ == "__main__":
     a = Archiver()

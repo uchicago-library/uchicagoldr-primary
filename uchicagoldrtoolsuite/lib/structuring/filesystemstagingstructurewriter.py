@@ -7,7 +7,7 @@ from ..convenience import copy
 from .ldrpathregularfile import LDRPathRegularFile
 
 
-class StagingDirectoryWriter(SerializationWriter):
+class FileSystemStagingStructureWriter(SerializationWriter):
 
     def __init__(self, aStructure):
         self.structure = aStructure
