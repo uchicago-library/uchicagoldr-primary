@@ -168,13 +168,10 @@ def copy(origin_loc, destination_loc):
                     break
     if destination_loc.exists():
         destination_checksum = sane_hash('md5', destination_loc.item_name)
-        destination_checksum_sha256 = sane_hash('sha256',
-                                                destination_loc.item_name)
         origin_checksum = sane_hash('md5', origin_loc.item_name)
         if destination_checksum == origin_checksum:
-            return (True, True, "copied", destination_checksum,
-                    destination_checksum_sha256)
+            return (True, True, "copied", destination_checksum)
         else:
-            return (True, False, "copied", None, None)
+            return (True, False, "copied", None)
     else:
-        return (False, False, "not copied", None, None)
+        return (False, False, "not copied", None)

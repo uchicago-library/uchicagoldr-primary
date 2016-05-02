@@ -82,8 +82,8 @@ class StagingDirectoryWriter(SerializationWriter):
                                              exist_ok=True)
                                     success = False
                                     success, checksum_matched, copy_status,\
-                                        checksum1, checksum2 = copy(n_file,
-                                                                    new_file)
+                                        checksum1 = copy(n_file,
+                                                         new_file)
                                     if not success:
                                         stderr.write("{} could not ".
                                                      format(n_file.item_name +
@@ -95,8 +95,7 @@ class StagingDirectoryWriter(SerializationWriter):
                                         if checksum_matched:
                                             manifest_line = "{}\t{}\t{}\n".\
                                                             format(relevant_path,
-                                                                   checksum1,
-                                                                   checksum2)
+                                                                   checksum1)
                                             manifest_line = bytes(
                                                 manifest_line.encode('utf-8'))
                                             with manifest.open('ab') as f:
@@ -105,9 +104,8 @@ class StagingDirectoryWriter(SerializationWriter):
                                             stderr.write("no checksum for {}\n".
                                                          format(new_file.
                                                                 item_name))
-
                                     else:
-                                            stdout.write("{} was "
-                                                         .format(relevant_path) +
-                                                         " already present" +
-                                                         " in the segment\n")
+                                        stdout.write("{} was "
+                                                     .format(relevant_path) +
+                                                     " already present" +
+                                                     " in the segment\n")
