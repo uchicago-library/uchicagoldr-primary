@@ -19,7 +19,6 @@ class StagingStructure(Structure):
         self.adminnote = []
         self.legalnote = []
 
-
     def validate(self):
         for n_thing in self.segment:
             if isinstance(n_thing, SegmentStructure):

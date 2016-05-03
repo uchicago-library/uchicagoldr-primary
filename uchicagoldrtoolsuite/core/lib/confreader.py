@@ -120,7 +120,8 @@ class ConfReader(object):
                 for option in subparser.options(section):
                     if not parser.has_section(section):
                         parser.add_section(section)
-                    parser[section][option] = subparser.get(section, option, raw=True)
+                    parser[section][option] = subparser.get(section, option,
+                                                            raw=True)
 
         return parser
 

@@ -127,12 +127,13 @@ class PremisRestrictionSetter(CLIApp):
                 try:
                     rights_extension = rights.get_rightsExtension(0)
                     rights_extension.add_to_field('Restriction',
-                                                build_restriction_node(
+                                                  build_restriction_node(
                                                     args.restriction,
                                                     True,
                                                     args.reason,
                                                     args.donor_stipulation
-                                                ))
+                                                  )
+                                                  )
                 except KeyError:
                     rights.add_rightsExtension(build_rights_extension_node(
                                                 args.restriction,

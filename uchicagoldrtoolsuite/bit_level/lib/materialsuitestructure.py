@@ -1,6 +1,7 @@
 from .abc.structure import Structure
 from .abc.ldritem import LDRItem
 
+
 class MaterialSuiteStructure(Structure):
     def __init__(self, param1):
         self.required_parts = ['identifier', 'original', 'premis',

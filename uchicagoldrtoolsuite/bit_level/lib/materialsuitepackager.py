@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from .abc.packager import Packager
 
-class MaterialSuitePackager(Packager):
 
+class MaterialSuitePackager(Packager):
     @abstractmethod
     def get_premis(self):
         pass

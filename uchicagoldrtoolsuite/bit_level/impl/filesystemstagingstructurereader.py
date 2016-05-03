@@ -56,7 +56,7 @@ class FileSystemStagingStructureReader(StagingSerializationReader):
                             msuite.original.append(a_file)
                             matching_segment[0].materialsuite.append(msuite)
                         else:
-                            stderr.write("There are more than one segments in " +
+                            stderr.write("There are more than one segments in" +
                                          " the staging structure with id {}\n".
                                          format(file_run))
                     else:

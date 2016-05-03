@@ -1,7 +1,10 @@
+from ...core.lib.convenience import sane_hash
 from .abc.ldritem import LDRItem
+
 
 def move(origin_loc, destination_loc):
     raise NotImplemented('yet')
+
 
 def copy(origin_loc, destination_loc):
     """
@@ -18,8 +21,8 @@ def copy(origin_loc, destination_loc):
         new file
     * if copy does not occur: a tuple containing false and the Nonetype
     """
-    if not isinstance(origin_loc, LDRPathRegularFile)\
-        and not isinstance(destination_loc, LDRPathRegularFile):
+    if not isinstance(origin_loc, LDRItem) or not \
+            isinstance(destination_loc, LDRItem):
         raise TypeError("must pass two instances of LDRPathRegularFile" +
                         " to the copy function.")
     if destination_loc.exists():

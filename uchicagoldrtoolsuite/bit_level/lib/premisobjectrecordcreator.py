@@ -10,6 +10,7 @@ try:
 except:
     pass
 
+
 class PremisObjectRecordCreator(object):
     """
     This class is meant to automate the construction of standard minimal

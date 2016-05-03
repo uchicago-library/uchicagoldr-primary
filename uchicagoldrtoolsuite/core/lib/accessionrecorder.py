@@ -85,7 +85,7 @@ class AccessionRecorder(object):
         for x in self.get_record().keys():
             comp = self._generalize_keys(x)
             if comp == field_name:
-                key = subn("\d*$","",x)[0]
+                key = subn("\d*$", "", x)[0]
                 result.append(self.get_record()[key])
         return result
 

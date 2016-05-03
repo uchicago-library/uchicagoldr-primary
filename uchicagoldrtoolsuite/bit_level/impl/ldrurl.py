@@ -6,6 +6,7 @@ from os.path import join
 from uuid import uuid1
 from ..lib.abc.ldritem import LDRItem
 
+
 class LDRURL(LDRItem):
     def __init__(self, param1):
 
@@ -58,4 +59,3 @@ class LDRURL(LDRItem):
     def exists(self):
         r = rhead(self.item_name)
         return r.status_code == codes.ok
-

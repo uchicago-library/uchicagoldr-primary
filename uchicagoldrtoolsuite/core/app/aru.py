@@ -16,26 +16,33 @@ __version__ = "0.0.1dev"
 def add(recorder, args):
     recorder.get_record().add_to_field(args.key, args.value)
 
+
 def set(recorder, args):
     recorder.get_record()[args.key] = args.value
+
 
 def delete(recorder, args):
     del recorder.get_record()[args.key]
 
+
 def get(recorder, args):
     stdout.write(recorder.get_record()[args.key]+'\n')
+
 
 def leaves(recorder):
     for x in recorder.get_record().leaves():
         stdout.write(str(x)+'\n')
 
+
 def keys(recorder):
     for x in recorder.get_record().keys():
         stdout.write(str(x)+'\n')
 
+
 def values(recorder):
     for x in recorder.get_record().values():
         stdout.write(str(x)+'\n')
+
 
 def validate(recorder):
     result = recorder.validate_record()
@@ -46,9 +53,11 @@ def validate(recorder):
         stdout.write(result[1])
     stdout.write("\n")
 
+
 def write(recorder, args):
     with open(args.out, 'w') as f:
         f.write(recorder.get_record().toJSON())
+
 
 def build_accession_recorder(args):
     if args.record:
@@ -62,6 +71,7 @@ def build_accession_recorder(args):
     a = AccessionRecorder(record=record, conf=config)
     return a
 
+
 def set_out(args):
     if args.out:
         return args.out
@@ -70,6 +80,7 @@ def set_out(args):
             return args.record
         else:
             return None
+
 
 def make_bools(args):
     if args.value == "False":

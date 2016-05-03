@@ -1,5 +1,5 @@
-
 from abc import ABCMeta, abstractmethod, abstractproperty
+
 
 class Packager(metaclass=ABCMeta):
 
@@ -24,7 +24,7 @@ class Packager(metaclass=ABCMeta):
     @abstractmethod
     def package(self):
         pass
-    
+
     struct = abstractproperty(set_struct, get_struct)
     struct_type = abstractproperty(set_type, get_type)
     implementation = abstractproperty(set_implementation, get_implementation)

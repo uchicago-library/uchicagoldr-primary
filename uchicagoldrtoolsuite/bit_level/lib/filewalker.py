@@ -4,6 +4,7 @@ from re import compile as re_compile
 
 from .rootedpath import RootedPath
 
+
 class FileWalker(object):
     """
     == Attributes ==
@@ -22,14 +23,18 @@ class FileWalker(object):
         1. directory_path : literal string
         2. filter_pattern : regular expression
 
-        This class gets initialized with a directory path literal string and immediately defines the item attribute with the genexp of walking the directory for all files contained inside that directory path.
+        This class gets initialized with a directory path literal string and
+        immediately defines the item attribute with the genexp of walking the
+        directory for all files contained inside that directory path.
         """
         self.directory = directory_path
-        self.items = self.walk_directory(filter_pattern=filter_pattern, inc_dirs=inc_dirs)
+        self.items = self.walk_directory(filter_pattern=filter_pattern,
+                                         inc_dirs=inc_dirs)
 
     def __iter__(self):
         """
-        This function allows an application to call for n in FileWalker to iterate through all the files.
+        This function allows an application to call for n in FileWalker to
+        iterate through all the files.
         """
         return self.items
 
@@ -39,14 +44,16 @@ class FileWalker(object):
         """
         return self.directory
 
-    def walk_directory(self, directory=None, filter_pattern=None, inc_dirs=False):
+    def walk_directory(self, directory=None, filter_pattern=None,
+                       inc_dirs=False):
         if directory is None:
             directory = self.get_directory()
 
         if isinstance(directory, str):
             return self._walk_abs_directory(directory, filter_pattern, inc_dirs)
         elif isinstance(directory, RootedPath):
-            return self._walk_rooted_directory(directory, filter_pattern, inc_dirs)
+            return self._walk_rooted_directory(directory, filter_pattern,
+                                               inc_dirs)
         else:
             raise ValueError('dir not a str or RootedPath')
 
@@ -75,7 +82,9 @@ class FileWalker(object):
         1. filter_pattern : regular expression
         2. directory : literal string
 
-        This function walks the directory attribute value and optionally filters out files that match a determined filter pattern. It returns a genexp.
+        This function walks the directory attribute value and optionally
+        filters out files that match a determined filter pattern. It returns
+        a genexp.
         """
         flat_list = listdir(directory)
         while flat_list:

@@ -4,7 +4,6 @@ from .abc.packager import Packager
 
 
 class SegmentPackager(Packager):
-
     def set_msuite_packager(self, value):
         self.msuite_packager = value
 

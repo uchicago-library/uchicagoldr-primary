@@ -3,7 +3,6 @@ from .abc.serializationreader import SerializationReader
 
 
 class StagingSerializationReader(SerializationReader):
-
     def __init__(self):
         pass
 

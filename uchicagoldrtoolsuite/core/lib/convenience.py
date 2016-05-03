@@ -161,5 +161,3 @@ def retrieve_controlled_vocabulary(vocab_name, built=True):
     if built:
         cv = cv.build()
     return cv
-
-
