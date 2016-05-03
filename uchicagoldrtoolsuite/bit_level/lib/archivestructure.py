@@ -6,7 +6,7 @@ Created on Apr 13, 2016
 
 from .abc.structure import Structure
 from .abc.ldritem import LDRItem
-from .materialsuite import MaterialSuiteStructure
+from .materialsuitestructure import MaterialSuiteStructure
 
 
 class ArchiveStructure(Structure):

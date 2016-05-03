@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 from os.path import join, isfile
 from xdg import BaseDirectory
-from uchicagoldrtoolsuite.lib.convenience import retrieve_resource_filepath
+from .convenience import retrieve_resource_filepath
 
 
 class ConfReader(object):

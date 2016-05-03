@@ -6,7 +6,7 @@ Created on Apr 13, 2016
 
 import re
 from .abc.structure import Structure
-from .materialsuite import MaterialSuiteStructure
+from .materialsuitestructure import MaterialSuiteStructure
 
 
 class SegmentStructure(Structure):
