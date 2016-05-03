@@ -29,7 +29,7 @@ setup(
             "docs",
             "record_configs",
             "tests",
-            "uchicagoldr.egg-info"
+            "uchicagoldrtoolsuite.egg-info"
         ]
     ),
     entry_points = {
