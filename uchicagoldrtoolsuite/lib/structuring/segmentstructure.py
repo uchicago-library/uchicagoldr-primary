@@ -9,7 +9,7 @@ from .abc.structure import Structure
 from .materialsuite import MaterialSuiteStructure
 
 
-class SegmentStructure(object):
+class SegmentStructure(Structure):
     """The SegmentStructure holds materialsuites that are part of a segment of
     a larger structure. It validates to make sure that it only contains
     MaterialStructures

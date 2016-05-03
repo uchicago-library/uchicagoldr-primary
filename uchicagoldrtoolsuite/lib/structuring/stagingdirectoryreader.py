@@ -6,7 +6,7 @@ Created on Apr 13, 2016
 import re
 from sys import stderr
 from os.path import exists, join, split as dirsplit
-from .abc.stagingserializationreader import StagingSerializatinReader
+from .abc.stagingserializationreader import StagingSerializationReader
 from ..structuring.stagingstructure import StagingStructure
 from ..absolutefilepathtree import AbsoluteFilePathTree
 from .ldrpathregularfile import LDRPathRegularFile
@@ -14,7 +14,7 @@ from .materialsuite import MaterialSuiteStructure
 from .segmentstructure import SegmentStructure
 
 
-class StagingDirectoryReader(StagingSerializatinReader):
+class StagingDirectoryReader(StagingSerializationReader):
     def __init__(self, staging_directory):
         self.stage_id = staging_directory.split('/')[-1]
         self.structureType = "staging"

@@ -23,6 +23,7 @@ class SegmentPackager(Packager):
     def get_id_num(self):
         return self._id_num
 
-    msuite_packager = abstractproperty(get_msuite_packager, set_msuite_packager)
+    msuite_packager = abstractproperty(get_msuite_packager,
+                                       set_msuite_packager)
     id_prefix = abstractproperty(get_id_prefix, set_id_prefix)
     id_num = abstractproperty(get_id_num, set_id_num)

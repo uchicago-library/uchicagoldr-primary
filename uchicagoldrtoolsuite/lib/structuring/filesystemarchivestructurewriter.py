@@ -1,3 +1,4 @@
+from sys import stderr
 from .abc.serializationwriter import SerializationWriter
 from .abc.structure import Structure
 
@@ -6,8 +7,12 @@ class FileSystemArchiveStructureWriter(SerializationWriter):
     def __init__(self, aStructure):
         self.structure = aStructure
 
-    def write():
-        pass
+    def write(self):
+        if self.structure.validate():
+            pass
+        else:
+            stderr.write("invalid staging directory passed to  the " +
+                         " file system archive structure writer")
 
     def get_structure(self):
         return self._structure

@@ -8,6 +8,7 @@ from .abc.structure import Structure
 from .segmentstructure import SegmentStructure
 from .abc.ldritem import LDRItem
 
+
 class StagingStructure(Structure):
     def __init__(self, param1):
         self.required_parts = ['identifier', 'segment', 'accessionrecord',
@@ -17,7 +18,7 @@ class StagingStructure(Structure):
         self.accessionrecord = []
         self.adminnote = []
         self.legalnote = []
-        
+
 
     def validate(self):
         for n_thing in self.segment:
