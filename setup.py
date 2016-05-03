@@ -80,7 +80,7 @@ setup(
         'pyxdg',
         'pypremis',
         'controlledvocab',
-        'hierarchicalrecord'
+        'hierarchicalrecord',
         'requests'
     ],
     extras_require = {
