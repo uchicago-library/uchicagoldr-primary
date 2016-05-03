@@ -87,4 +87,3 @@ setup(
         'magic_mimes': ["python-magic"]
     }
 )
->>>>>>> dev
