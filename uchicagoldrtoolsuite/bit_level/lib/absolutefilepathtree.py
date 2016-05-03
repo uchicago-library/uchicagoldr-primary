@@ -1,6 +1,8 @@
 from os.path import isabs, isfile, isdir, split, getsize
 from mimetypes import guess_type
+
 from magic import from_file
+
 from .filepathtree import FilePathTree
 from ...core.lib.convenience import sane_hash
 

@@ -3,7 +3,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from os.path import join
 from uuid import uuid1
+
 from pypremis.nodes import *
+
 from ...core.lib.bash_cmd import BashCommand
 from ...core.lib.convenience import iso8601_dt
 

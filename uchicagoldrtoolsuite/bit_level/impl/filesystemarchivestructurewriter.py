@@ -1,4 +1,5 @@
 from sys import stderr
+
 from ..lib.abc.serializationwriter import SerializationWriter
 from ..lib.abc.structure import Structure
 

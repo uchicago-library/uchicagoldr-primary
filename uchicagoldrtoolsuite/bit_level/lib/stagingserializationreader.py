@@ -1,4 +1,5 @@
 from abc import abstractproperty
+
 from .abc.serializationreader import SerializationReader
 
 

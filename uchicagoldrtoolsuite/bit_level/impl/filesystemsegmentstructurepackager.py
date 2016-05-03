@@ -1,4 +1,5 @@
 from os.path import isfile
+
 from ..lib.absolutefilepathtree import AbsoluteFilePathTree
 from ..lib.segmentstructure import SegmentStructure
 from ..lib.stagingstructure import StagingStructure

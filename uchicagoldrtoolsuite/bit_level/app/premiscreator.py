@@ -1,5 +1,6 @@
 from os.path import isdir, split, join, abspath
 from os import makedirs
+
 from uchicagoldrtoolsuite.lib.premisobjectrecordcreator import \
     PremisObjectRecordCreator
 from uchicagoldrtoolsuite.lib.stagereader import StageReader

@@ -1,8 +1,11 @@
-from ..lib.convenience import retrieve_resource_filepath
-from .internal.cliapp import CLIApp
 from os.path import join
 from shutil import copyfile
+
 from xdg import BaseDirectory
+
+from ..lib.convenience import retrieve_resource_filepath
+from .internal.cliapp import CLIApp
+
 
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"

@@ -2,9 +2,11 @@ from argparse import Action
 from os.path import exists
 import re
 from sys import stdout
+
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import \
     StagingDirectoryReader
+
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"

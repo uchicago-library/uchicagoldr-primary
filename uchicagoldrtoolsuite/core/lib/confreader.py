@@ -1,6 +1,8 @@
 from configparser import ConfigParser
 from os.path import join, isfile
+
 from xdg import BaseDirectory
+
 from .convenience import retrieve_resource_filepath
 
 

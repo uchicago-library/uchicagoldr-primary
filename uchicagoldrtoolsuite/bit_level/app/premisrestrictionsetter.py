@@ -1,6 +1,8 @@
 from os.path import abspath, isdir
+
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
+
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.filewalker import FileWalker
 from uchicagoldrtoolsuite.lib.premisextensionnodes import Restriction

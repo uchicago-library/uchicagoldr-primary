@@ -1,12 +1,14 @@
 from os.path import isdir, abspath, split, join
 from os import makedirs
 from xml.etree.ElementTree import register_namespace
+
+from pypremis.lib import PremisRecord
+
 from uchicagoldrtoolsuite.lib.stagereader import StageReader
 from uchicagoldrtoolsuite.lib.technicalmetadatarecordcreator \
     import TechnicalMetadataRecordCreator
 from uchicagoldrtoolsuite.apps.premiscreator import build_stage_reader
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
-from pypremis.lib import PremisRecord
 
 
 __author__ = "Brian Balsamo"

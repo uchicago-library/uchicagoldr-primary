@@ -1,5 +1,6 @@
 from csv import DictReader
 from re import match, subn
+
 from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
 

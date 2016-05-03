@@ -2,6 +2,7 @@ from os.path import join
 import re
 from itertools import chain
 from os.path import relpath
+
 from ...core.app.internal.cliapp import CLIApp
 from ..impl.filesystemstagingstructurewriter\
     import FileSystemStagingStructureWriter
@@ -10,6 +11,7 @@ from ..impl.filesystemstagingstructurereader \
 from ..lib.absolutefilepathtree import AbsoluteFilePathTree
 from ..impl.filesystemsegmentstructurepackager\
     import FileSystemSegmentStructurePackager
+
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"

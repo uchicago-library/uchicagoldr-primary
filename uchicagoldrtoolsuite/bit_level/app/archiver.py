@@ -1,4 +1,5 @@
 from uuid import uuid1
+
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
 from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import\
     StagingDirectoryReader
@@ -6,6 +7,7 @@ from uchicagoldrtoolsuite.lib.structuring.archivestructure import\
     ArchiveStructure
 from uchicagoldrtoolsuite.lib.structuring.filesystemarchivestructurewriter\
     import FileSystemArchiverStructureWriter
+
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"

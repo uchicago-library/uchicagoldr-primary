@@ -1,8 +1,10 @@
 from os.path import getsize, split
 from mimetypes import guess_type
 from uuid import uuid1
+
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
+
 from ...core.lib.convenience import sane_hash
 
 try:

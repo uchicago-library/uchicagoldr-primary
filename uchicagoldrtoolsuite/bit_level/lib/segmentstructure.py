@@ -1,6 +1,9 @@
 import re
+
 from .abc.structure import Structure
 from .materialsuitestructure import MaterialSuiteStructure
+
+
 '''
 Created on Apr 13, 2016
 
