@@ -1,3 +1,6 @@
+from sys import stderr
+from .structuring.ldrpathregularfile import LDRPathRegularFile
+
 def iso8601_dt(dt=None, tz=None):
     """
     produce an iso8601 time string
@@ -24,7 +27,6 @@ def iso8601_dt(dt=None, tz=None):
     if not isinstance(dt, datetime):
         raise ValueError('dt input needs to be a datetime.datetime object')
     return dt.isoformat()
-
 
 def sane_hash(hash_algo, file_path, block_size=65536):
     """
@@ -56,15 +58,15 @@ def sane_hash(hash_algo, file_path, block_size=65536):
     hash_result = hasher()
     with open(file_path, 'rb') as f:
         while True:
-           try:
-              data = f.read(block_size)
-           except OSError as e:
-              stderr.write("{} could not be read\n".format(file_path))
-              stderr.write(e)
-              stderr.write("\n")
-           if not data:
-              break
-           hash_result.update(data)
+            try:
+                data = f.read(block_size)
+            except OSError as e:
+                stderr.write("{} could not be read\n".format(file_path))
+                stderr.write(e)
+                stderr.write("\n")
+            if not data:
+                break
+            hash_result.update(data)
     return str(hash_result.hexdigest())
 
 
@@ -158,3 +160,44 @@ def retrieve_controlled_vocabulary(vocab_name, built=True):
     if built:
         cv = cv.build()
     return cv
+
+
+def copy(origin_loc, destination_loc):
+    """
+    __Args__
+
+    1. origin_loc (LDRPathRegular): the file object that is the source that
+    needs to be copied
+    2. detination_loc (LDRPathRegularFile): the file object that is the
+    destiatination for the source that needs to be copied
+
+    __Returns__
+
+    * if copy occurs: a tuple containing truth and an md5 hash string of the
+      new file
+    * if copy does not occur: a tuple containing false and the Nonetype
+    """
+    if not isinstance(origin_loc, LDRPathRegularFile)\
+       and not isinstance(destination_loc, LDRPathRegularFile):
+        raise TypeError("must pass two instances of LDRPathRegularFile" +
+                        " to the copy function.")
+    if destination_loc.exists():
+        return (True, False, "already present", None, None)
+
+    with origin_loc.open('rb') as reading_file:
+        with destination_loc.open('wb') as writing_file:
+            while True:
+                buf = reading_file.read(1024)
+                if buf:
+                    writing_file.write(buf)
+                else:
+                    break
+    if destination_loc.exists():
+        destination_checksum = sane_hash('md5', destination_loc.item_name)
+        origin_checksum = sane_hash('md5', origin_loc.item_name)
+        if destination_checksum == origin_checksum:
+            return (True, True, "copied", destination_checksum)
+        else:
+            return (True, False, "copied", None)
+    else:
+        return (False, False, "not copied", None)

@@ -1,7 +1,10 @@
-from os.path import exists
 from argparse import Action
+from os.path import exists
+import re
+from sys import stdout
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
-
+from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import \
+    StagingDirectoryReader
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -41,12 +44,13 @@ class Pruner(CLIApp):
                           "{}".format(self.__email__),
                           fromfile_prefix_chars='@')
         # Add application specific flags/arguments
+        self.parser.add_argument('--final_decision', type=bool,
+                                 help="A flag to set when you really want to" +
+                                 " delete the files matching the pattern",
+                                 default=False)
         self.parser.add_argument("directory",
                                  help="Enter a valid directory that needs " +
                                  "to be pruned",
-                                 action=ValidateDirectory)
-        self.parser.add_argument("source_root",
-                                 help="Enter the root of the directory",
                                  action=ValidateDirectory)
         self.parser.add_argument("patterns",
                                  help="Enter a list of regular " +
@@ -56,17 +60,27 @@ class Pruner(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         # App code
+        staging_directory_reader = StagingDirectoryReader(args.directory)
+        staging_structure = staging_directory_reader.read()
         try:
-            p = Pruner(args.directory, args.source_root, args.patterns)
-            is_it_valid = p.validate()
-            if is_it_valid:
-                num_files_deleted = p.ingest()
-                self.stdoutp("{} have been removed from {}\n".format(
-                    str(num_files_deleted), args.directory))
-            else:
-                problem = p.explain_validation_result()
-                self.stderrp("{}: {}\n".format(problem.category,
-                                               problem.message))
+            for n_segment in staging_structure.segment:
+                for n_suite in n_segment.materialsuite:
+                    for req_part in n_suite.required_parts:
+                        if isinstance(getattr(n_suite, req_part), list):
+                            for n_file in getattr(n_suite, req_part):
+                                for pattern in args.patterns:
+                                    match_pattern = re.compile(pattern)
+                                    if match_pattern.search(n_file.item_name):
+                                        success, message = n_file.delete(
+                                            final=args.final_decision
+                                        )
+                                        stdout.write("{}\n".format(message))
+
             return 0
         except KeyboardInterrupt:
             return 131
+
+
+if __name__ == "__main__":
+    p = Pruner()
+    p.main()
