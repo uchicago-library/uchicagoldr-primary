@@ -93,7 +93,7 @@ class FileSystemStagingStructureWriter(SerializationWriter):
                                                                 item_name)))
                                     if copy_status == 'copied':
                                         if checksum_matched:
-                                            manifest_line = "{}\t{}\t{}\n".\
+                                            manifest_line = "{}\t{}\n".\
                                                             format(relevant_path,
                                                                    checksum1)
                                             manifest_line = bytes(
