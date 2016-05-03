@@ -3,7 +3,7 @@ from pathlib import Path
 from .abc.ldritem import LDRItem
 
 
-class LDRPathRegularFile(LDRItem):
+class LDRPath(LDRItem):
     def __init__(self, param1):
         self.item_name = param1
         self.path = Path(self.item_name)

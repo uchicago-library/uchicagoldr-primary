@@ -1,18 +1,18 @@
-
 from .stagingmaterialsuitepackager import StagingMaterialSuitePackager
 from .materialsuite import MaterialSuiteStructure
 
-class ExternalStagingDirectoryMaterialSuitePackager(StagingMaterialSuitePackager):
+
+class FileSystemMaterialSuiteStructurePackager(
+        StagingMaterialSuitePackager):
+
     def __init__(self):
         self.struct_type = 'staging'
         self.implementation = 'directory'
-
 
     def package(self, an_item):
         msuite = MaterialSuiteStructure(an_item)
         msuite.original.append(an_item)
         return msuite
-    
 
     def get_techmd(self):
         pass
@@ -40,7 +40,7 @@ class ExternalStagingDirectoryMaterialSuitePackager(StagingMaterialSuitePackager
 
     def get_implementation(self):
         return self._implementation
-    
+
     struct = property(get_struct, set_struct)
     struct_type = property(get_type, set_type)
     implementation = property(get_implementation, set_implementation)

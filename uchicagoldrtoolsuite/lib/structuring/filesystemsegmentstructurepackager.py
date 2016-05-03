@@ -3,17 +3,17 @@ from ..absolutefilepathtree import AbsoluteFilePathTree
 from .segmentstructure import SegmentStructure
 from .stagingstructure import StagingStructure
 from .stagingsegmentpackager import StagingSegmentPackager
-from .externalstagingdirectorymaterialsuitepackager import \
-    ExternalStagingDirectoryMaterialSuitePackager
-from .ldrpathregularfile import LDRPathRegularFile
+from .filesystemmaterialsuitestructurepackager import\
+    FileSystemMaterialSuiteStructurePackager
+from .ldrpath import LDRPath
 
 
-class ExternalStagingDirectorySegmentPackager(StagingSegmentPackager):
+class FileSystemSegmentStructurePackager(StagingSegmentPackager):
     def __init__(self, label_text, label_number):
         self.struct_type = "staging"
         self.struct = StagingStructure
         self.implementation = "directory"
-        self.msuite_packager = ExternalStagingDirectoryMaterialSuitePackager
+        self.msuite_packager = FileSystemMaterialSuiteStructurePackager
         self.id_prefix = label_text
         self.id_num = label_number
 
@@ -27,14 +27,13 @@ class ExternalStagingDirectorySegmentPackager(StagingSegmentPackager):
             tree = AbsoluteFilePathTree(a_directory)
             just_files = tree.get_files()
             for n_thing in just_files:
-                a_file = LDRPathRegularFile(n_thing)
+                a_file = LDRPath(n_thing)
                 msuite = packager.package(a_file)
                 newsegment.materialsuite.append(msuite)
         else:
-            print(remainder_files)
             for n_item in remainder_files:
                 if isfile(n_item):
-                    a_thing = LDRPathRegularFile(n_item)
+                    a_thing = LDRPath(n_item)
                 msuite = packager.package(a_thing)
                 newsegment.materialsuite.append(msuite)
         return newsegment

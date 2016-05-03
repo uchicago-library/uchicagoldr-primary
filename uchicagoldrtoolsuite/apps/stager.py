@@ -9,9 +9,8 @@ from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import \
 from uchicagoldrtoolsuite.lib.structuring.filesystemstagingstructurewriter\
     import FileSystemStagingStructureWriter
 from uchicagoldrtoolsuite.lib.absolutefilepathtree import AbsoluteFilePathTree
-from uchicagoldrtoolsuite.lib.structuring.\
-    externalstagingdirectorysegmentpackager import \
-    ExternalStagingDirectorySegmentPackager
+from uchicagoldrtoolsuite.lib.structuring.filesystemsegmentstructurepackager\
+    import FileSystemSegmentStructurePackager
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -115,7 +114,7 @@ class Stager(CLIApp):
         else:
             current_segment_number = 1
 
-        segment_packager = ExternalStagingDirectorySegmentPackager(
+        segment_packager = FileSystemSegmentStructurePackager(
             args.prefix,
             current_segment_number)
         segment = segment_packager.package(args.directory,
