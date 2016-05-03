@@ -1,8 +1,3 @@
-'''
-Created on Apr 13, 2016
-
-@author: tdanstrom
-'''
 import re
 from sys import stderr
 from os.path import exists, join, split as dirsplit
@@ -12,6 +7,10 @@ from ..lib.absolutefilepathtree import AbsoluteFilePathTree
 from .ldrpath import LDRPath
 from ..lib.materialsuitestructure import MaterialSuiteStructure
 from ..lib.segmentstructure import SegmentStructure
+'''
+Created on Apr 13, 2016
+@author: tdanstrom
+'''
 
 
 class FileSystemStagingStructureReader(StagingSerializationReader):

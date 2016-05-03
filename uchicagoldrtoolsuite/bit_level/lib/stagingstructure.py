@@ -1,12 +1,12 @@
+from .abc.structure import Structure
+from .segmentstructure import SegmentStructure
+from .abc.ldritem import LDRItem
 '''
 Created on Apr 13, 2016
 
 @author: tdanstrom
 '''
 
-from .abc.structure import Structure
-from .segmentstructure import SegmentStructure
-from .abc.ldritem import LDRItem
 
 
 class StagingStructure(Structure):

@@ -1,9 +1,10 @@
+from abc import ABCMeta, abstractmethod
+
 '''
 Created on Apr 13, 2016
 
 @author: tdanstrom, balsamo
 '''
-from abc import ABCMeta, abstractmethod
 
 
 class LDRItem(metaclass=ABCMeta):

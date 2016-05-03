@@ -1,12 +1,12 @@
+from .abc.structure import Structure
+from .abc.ldritem import LDRItem
+from .materialsuitestructure import MaterialSuiteStructure
 '''
 Created on Apr 13, 2016
 
 @author: tdanstrom
 '''
 
-from .abc.structure import Structure
-from .abc.ldritem import LDRItem
-from .materialsuitestructure import MaterialSuiteStructure
 
 
 class ArchiveStructure(Structure):
