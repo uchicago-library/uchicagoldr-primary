@@ -33,7 +33,8 @@ setup(
             'ldrsetrestriction = uchicagoldrtoolsuite.apps.premisrestrictionsetter:launch',
             'ldrarchive = uchicagoldrtoolsuite.apps.archiver:launch',
             'ldraru = uchicagoldrtoolsuite.apps.aru:launch',
-            'ldrpostinstall = uchicagoldrtoolsuite.apps.postinstall:launch'
+            'ldrpostinstall = uchicagoldrtoolsuite.apps.postinstall:launch',
+            'ldrcreatetechmd = uchicagoldrtoolsuite.apps.technicalmetadatacreator:launch'
         ]
     },
     keywords = ["uchicago","repository","file-level","processing"],

@@ -1,3 +1,30 @@
+def iso8601_dt(dt=None, tz=None):
+    """
+    produce an iso8601 time string
+
+    __KWArgs__
+
+    * dt (datetime.datetime): The datetime object to produce a string for
+    * tz (datetime.timezone): The timezone (if desired) to use in the str
+
+    __Returns__
+
+    * (str): The datetime/timezone formatted as an iso8601 string.
+    """
+    from datetime import datetime, timezone
+    if tz is None:
+        from datetime import timedelta
+        # Central time
+        tzd = timedelta(hours=-5)
+        tz = timezone(tzd)
+    if not isinstance(tz, timezone):
+        raise ValueError('tz input needs to be a datetime.timezone')
+    if dt is None:
+        dt = datetime.now(tz)
+    if not isinstance(dt, datetime):
+        raise ValueError('dt input needs to be a datetime.datetime object')
+    return dt.isoformat()
+
 
 def sane_hash(hash_algo, file_path, block_size=65536):
     """
@@ -34,7 +61,7 @@ def sane_hash(hash_algo, file_path, block_size=65536):
            except OSError as e:
               stderr.write("{} could not be read\n".format(file_path))
               stderr.write(e)
-              Stderr.write("\n")
+              stderr.write("\n")
            if not data:
               break
            hash_result.update(data)

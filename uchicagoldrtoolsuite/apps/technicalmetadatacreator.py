@@ -1,10 +1,12 @@
-from os.path import isdir, split, join, abspath
+from os.path import isdir, abspath, split, join
 from os import makedirs
-from uchicagoldrtoolsuite.lib.premisobjectrecordcreator import \
-    PremisObjectRecordCreator
+from xml.etree.ElementTree import register_namespace
 from uchicagoldrtoolsuite.lib.stagereader import StageReader
-from uchicagoldrtoolsuite.lib.rootedpath import RootedPath
+from uchicagoldrtoolsuite.lib.technicalmetadatarecordcreator \
+    import TechnicalMetadataRecordCreator
+from uchicagoldrtoolsuite.apps.premiscreator import build_stage_reader
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
+from pypremis.lib import PremisRecord
 
 
 __author__ = "Brian Balsamo"
@@ -17,9 +19,9 @@ __version__ = "0.0.1dev"
 
 def launch():
     """
-    the hook for setuptools console_scripts
+    the hook for setuptools console scripts
     """
-    app = PremisObjectCreator(
+    app = TechnicalMetadataRecordUtility(
             __author__=__author__,
             __email__=__email__,
             __company__=__company__,
@@ -30,14 +32,39 @@ def launch():
     app.main()
 
 
-def write_records(records):
+def build_record(path, premisfp, timeout):
     """
-    write a stack of records to disk
+    build a new FITS record. Update the corresponding PREMIS record
+    in place
 
     __Args__
 
-    1. records (list): A list of tuples formatted as:
-        (PremisRecord instance, filepath)
+    1) path (str): the path to the file to be examined
+    2) premisfp (str): The path to the files PREMIS object record
+    3) timeout (int): How long to give FITS with the files before aborting
+
+    __Returns__
+
+    record (xml.etree.ElementTree): The FITS record
+    """
+    premis = PremisRecord(frompath=premisfp)
+    builder = TechnicalMetadataRecordCreator(path, premis, timeout=timeout)
+    record = builder.get_record()
+    premis = builder.get_premis()
+    # dump all the ns0 prints
+    register_namespace('', 'http://hul.harvard.edu/ois/xml/ns/fits/fits_output')
+    premis.write_to_file(premisfp)
+    return record
+
+
+def write_records(records):
+    """
+    write a stack of record tuples to their specified locations
+
+    __Args__
+
+    1) records (list): A list of tuples in the format (FITS Record instance,
+    proposed path)
     """
     while records:
         x = records.pop()
@@ -45,51 +72,17 @@ def write_records(records):
         record = x[0]
         if not isdir(split(target_path)[0]):
             makedirs(split(target_path)[0])
-        record.write_to_file(target_path)
+        record.write(target_path)
 
 
-def build_record(path):
+class TechnicalMetadataRecordUtility(CLIApp):
     """
-    build a populated LDR premis record from a file on disk
-
-    __Args__
-
-    1. path (str): an abspath to a file to build a record for
-
-    __Returns__
-
-    * (PremisRecord): the built PREMIS record
-    """
-    return PremisObjectRecordCreator(path).get_record()
-
-
-def build_stage_reader(path, root):
-    """
-    build a stage reader from a path
-
-    __Args__
-
-    1. path (str): the fullpath to a staging dir
-    2. root(str): the rootpath for the staging dir
-        - the arg parser handles setting root to None if left blank
-
-    __Returns__
-
-    * (StageReader): The built StageReader for the path
-    """
-    rooted_path = RootedPath(path, root=root)
-    stage_reader = StageReader(rooted_path)
-    return stage_reader
-
-
-class PremisObjectCreator(CLIApp):
-    """
-    The CLI script for creating PREMIS records for staged contents
+    The CLI App for generating FITS records for staged materials
     """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
-                          "for creating original PREMIS object records " +
+                          "for creating original technical metadata records " +
                           "for materials in staging structures.",
                           epilog="{}\n".format(self.__copyright__) +
                           "{}\n".format(self.__author__) +
@@ -138,7 +131,13 @@ class PremisObjectCreator(CLIApp):
             help='Create premis records for files ending in .fits.xml.' +
             'Defaults to False.'
         )
-
+        self.parser.add_argument(
+            '--timeout',
+            default=43200,
+            type=int,
+            help='Specify how many seconds can elapse while a single ' +
+            'fits record is being produced. Default is 12 hours'
+        )
         args = self.parser.parse_args()
 
         path = abspath(args.path)
@@ -152,7 +151,7 @@ class PremisObjectCreator(CLIApp):
         records = []
 
         for x in file_suites:
-            if x.premis and not args.overwrite:
+            if x.fits and not args.overwrite:
                 continue
             if not args.fits and \
                     StageReader.re_trailing_fits.search(x.original):
@@ -161,9 +160,11 @@ class PremisObjectCreator(CLIApp):
                     StageReader.re_trailing_premis.search(x.original):
                 continue
 
-            record = build_record(join(stagereader.root_fullpath, x.original))
+            record = build_record(join(stagereader.root_fullpath, x.original),
+                                  join(stagereader.root_fullpath, x.premis[0]),
+                                  args.timeout)
             path = join(stagereader.root_fullpath,
-                        stagereader.hypothesize_premis_from_orig_node(
+                        stagereader.hypothesize_fits_from_orig_node(
                             stagereader.fpt.tree.get_node(x.original)
                         )
                         )
