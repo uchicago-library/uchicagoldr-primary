@@ -14,7 +14,7 @@ from .materialsuite import MaterialSuiteStructure
 from .segmentstructure import SegmentStructure
 
 
-class FileSystemStagingReader(StagingSerializationReader):
+class FileSystemStagingStructureReader(StagingSerializationReader):
     def __init__(self, staging_directory):
         self.stage_id = staging_directory.split('/')[-1]
         self.structureType = "staging"

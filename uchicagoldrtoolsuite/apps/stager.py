@@ -4,10 +4,10 @@ import re
 from itertools import chain
 from os.path import relpath
 from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
-from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import \
-    StagingDirectoryReader
 from uchicagoldrtoolsuite.lib.structuring.filesystemstagingstructurewriter\
     import FileSystemStagingStructureWriter
+from uchicagoldrtoolsuite.lib.structuring.filesystemstagingstructurereader \
+    import FileSystemStagingStructureReader
 from uchicagoldrtoolsuite.lib.absolutefilepathtree import AbsoluteFilePathTree
 from uchicagoldrtoolsuite.lib.structuring.filesystemsegmentstructurepackager\
     import FileSystemSegmentStructurePackager
@@ -51,9 +51,6 @@ class Stager(CLIApp):
         self.parser.add_argument("directory", help="The directory that " +
                                  "needs to be staged.",
                                  type=str, action='store')
-        self.parser.add_argument("numfiles", help="The number of files that " +
-                                 "you are expecting to process",
-                                 type=int, action='store')
         self.parser.add_argument("source_root", help="The root of the  " +
                                  "directory that needs to be staged.",
                                  type=str, action='store')
@@ -73,7 +70,7 @@ class Stager(CLIApp):
 
         # App code
         staging_directory = join(args.destination_root, args.staging_id)
-        staging_directory_reader = StagingDirectoryReader(staging_directory)
+        staging_directory_reader = FileSystemStagingStructureReader(staging_directory)
         staging_structure = staging_directory_reader.read()
 
         segment_ids = sorted([x.identifier for x in staging_structure.segment])
