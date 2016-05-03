@@ -1,15 +1,14 @@
-
 from os.path import join
 import re
 from itertools import chain
 from os.path import relpath
-from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
-from uchicagoldrtoolsuite.lib.structuring.filesystemstagingstructurewriter\
+from ...core.app.internal.cliapp import CLIApp
+from ..impl.filesystemstagingstructurewriter\
     import FileSystemStagingStructureWriter
-from uchicagoldrtoolsuite.lib.structuring.filesystemstagingstructurereader \
+from ..impl.filesystemstagingstructurereader \
     import FileSystemStagingStructureReader
-from uchicagoldrtoolsuite.lib.absolutefilepathtree import AbsoluteFilePathTree
-from uchicagoldrtoolsuite.lib.structuring.filesystemsegmentstructurepackager\
+from ..lib.absolutefilepathtree import AbsoluteFilePathTree
+from ..impl.filesystemsegmentstructurepackager\
     import FileSystemSegmentStructurePackager
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
