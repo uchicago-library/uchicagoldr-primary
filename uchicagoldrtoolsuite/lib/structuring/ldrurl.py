@@ -22,6 +22,9 @@ class LDRURL(LDRItem):
     def write(self, data):
         raise OSError('URLs are read only.')
 
+    def delete(self):
+        raise OSError('Remote URLs do not support deletion')
+
     def open(self, mode='rb', buffering=-1, errors=None):
         if "t" in mode:
             raise OSError('LDR Items do not support text mode')
