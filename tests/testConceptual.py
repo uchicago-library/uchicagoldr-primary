@@ -1,9 +1,9 @@
 import unittest
 
-from uchicagoldr.keyvaluepair import KeyValuePair as KVP
-from uchicagoldr.keyvaluepairlist import KeyValuePairList as KVPList
-from uchicagoldr.family import Family
-from uchicagoldr.filepointer import FilePointer
+from uchicagoldrtoolsuite.lib.keyvaluepair import KeyValuePair as KVP
+from uchicagoldrtoolsuite.lib.keyvaluepairlist import KeyValuePairList as KVPList
+from uchicagoldrtoolsuite.lib.family import Family
+from uchicagoldrtoolsuite.lib.filepointer import FilePointer
 
 
 class TestKeyValuePair(unittest.TestCase):

@@ -1,15 +1,24 @@
 from setuptools import setup
 from setuptools import find_packages
 
+
 def readme():
     with open('README.md', 'r') as f:
         return f.read()
 
 setup(
     name = 'uchicagoldrtoolsuite',
+    description = "A suite of tools for working with digital repositories",
+    long_description = readme(),
     version = '0.0.1dev',
     author = "Brian Balsamo, Tyler Danstrom",
     author_email = "balsamo@uchicago.edu, tdanstrom@uchicago.edu",
+    keywords = [
+        "uchicago",
+        "repository",
+        "file-level",
+        "processing"
+    ],
     packages = find_packages(
         exclude = [
             "build",
@@ -23,8 +32,6 @@ setup(
             "uchicagoldr.egg-info"
         ]
     ),
-    description = "A suite of tools for working with digital repositories",
-    long_description=readme(),
     entry_points = {
         'console_scripts':[
             'ldrstage = uchicagoldrtoolsuite.apps.stager:launch',
@@ -33,10 +40,10 @@ setup(
             'ldrsetrestriction = uchicagoldrtoolsuite.apps.premisrestrictionsetter:launch',
             'ldrarchive = uchicagoldrtoolsuite.apps.archiver:launch',
             'ldraru = uchicagoldrtoolsuite.apps.aru:launch',
-            'ldrpostinstall = uchicagoldrtoolsuite.apps.postinstall:launch'
+            'ldrpostinstall = uchicagoldrtoolsuite.apps.postinstall:launch',
+            'ldrcreatetechmd = uchicagoldrtoolsuite.apps.technicalmetadatacreator:launch'
         ]
     },
-    keywords = ["uchicago","repository","file-level","processing"],
     package_data = {
         '': ["*.md"]
     },
@@ -49,7 +56,7 @@ setup(
             'controlledvocabs/filepaths_presform.json',
             'controlledvocabs/restriction_codes.json'
         ]),
-        ('record_configs',[
+        ('record_configs', [
             'record_configs/AccessionRecordFields.csv'
         ])
     ],
@@ -59,7 +66,7 @@ setup(
         "Intended Audience :: Developers",
         "Operating System :: Unix",
         "Topic :: Software Development :: Libraries :: Python Modules",
-        ],
+    ],
     dependency_links = [
         'https://github.com/uchicago-library/uchicagoldr-premiswork' +
         '/tarball/master#egg=pypremis',
@@ -68,10 +75,16 @@ setup(
         'https://github.com/uchicago-library/uchicagoldr-hierarchicalrecords' +
         '/tarball/master#egg=hierarchicalrecord',
     ],
-    install_requires = ['treelib',
-                        'python-magic',
-                        'pyxdg',
-                        'pypremis',
-                        'controlledvocab',
-                        'hierarchicalrecord',
-                        'requests'])
+    install_requires = [
+        'treelib',
+        'pyxdg',
+        'pypremis',
+        'controlledvocab',
+        'hierarchicalrecord'
+        'requests'
+    ],
+    extras_require = {
+        'magic_mimes': ["python-magic"]
+    }
+)
+>>>>>>> dev

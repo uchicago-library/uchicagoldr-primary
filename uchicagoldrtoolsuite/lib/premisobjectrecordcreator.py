@@ -1,11 +1,14 @@
 from os.path import getsize, split
-from magic import from_file
 from mimetypes import guess_type
 from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 from .convenience import sane_hash
 
+try:
+    from magic import from_file
+except:
+    pass
 
 class PremisObjectRecordCreator(object):
     """
