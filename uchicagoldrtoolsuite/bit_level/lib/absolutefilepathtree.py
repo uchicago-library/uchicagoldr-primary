@@ -1,8 +1,6 @@
 from os.path import isabs, isfile, isdir, split, getsize
 from mimetypes import guess_type
 
-from magic import from_file
-
 from .filepathtree import FilePathTree
 from ...core.lib.convenience import sane_hash
 
@@ -16,8 +14,6 @@ __version__ = "0.0.1dev"
 
 
 class AbsoluteFilePathTree(FilePathTree):
-    # Certain documentation omitted, as this functionality may move to
-    # FileProcessor in the near future
     """
     A class meant to enforce that a FilePathTree contains only absolute paths
     that are located on addressable disk
@@ -166,70 +162,3 @@ class AbsoluteFilePathTree(FilePathTree):
                     matches.append(y)
         return matches
 
-    def find_shas(self):
-        shas_dict = {}
-        for x in self.get_files():
-            shas_dict[x] = sane_hash('sha256', x)
-        self.shas = shas_dict
-
-    def get_shas(self):
-        if not self.shas:
-            self.find_shas()
-        return self.shas
-
-    def find_md5s(self):
-        md5s_dict = {}
-        for x in self.get_files():
-            md5s_dict[x] = sane_hash('md5', x)
-        self.md5s = md5s_dict
-
-    def get_md5s(self):
-        if not self.md5s:
-            self.find_md5s()
-        return self.md5s
-
-    def find_mimes_from_extension(self):
-        mimes_dict = {}
-        for x in self.get_files():
-            mimes_dict[x] = guess_type(x)[0]
-        self.ext_mimes = mimes_dict
-
-    def get_mimes_from_extension(self):
-        if not self.ext_mimes:
-            self.find_mimes_from_extension()
-        return self.ext_mimes
-
-    def find_mimes_from_magic_number(self):
-        mimes_dict = {}
-        for x in self.get_files():
-            mimes_dict[x] = from_file(x, mime=True).decode()
-        self.magic_mimes = mimes_dict
-
-    def get_mimes_from_magic_number(self):
-        if not self.magic_mimes:
-            self.find_mimes_from_magic_number()
-        return self.magic_mimes
-
-    def find_file_sizes(self):
-        size_dict = {}
-        for x in self.get_files():
-            size_dict[x] = getsize(x)
-        self.file_sizes = size_dict
-
-    def get_file_sizes(self):
-        if not self.file_sizes:
-            self.find_file_sizes()
-        return self.file_sizes
-
-    def find_total_size(self):
-        if not self.file_sizes:
-            self.find_file_sizes()
-        tote = 0
-        for x in self.get_file_sizes():
-            tote = tote + self.get_file_sizes()[x]
-        self.total_size = tote
-
-    def get_total_size(self):
-        if not self.total_size:
-            self.find_total_size()
-        return self.total_size
