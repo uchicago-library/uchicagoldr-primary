@@ -11,7 +11,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class StagingSerializationReader(SerializationReader):
+class StageSerializationReader(SerializationReader):
     """
     A base class for all Staging Structure Serialization Readers
     """

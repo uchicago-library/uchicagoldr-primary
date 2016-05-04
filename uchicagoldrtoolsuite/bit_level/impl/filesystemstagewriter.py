@@ -16,7 +16,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class FileSystemStagingStructureWriter(SerializationWriter):
+class FileSystemStageWriter(SerializationWriter):
     """
     writes a Staging Structure to disk as a series of directories and files
     """
@@ -98,7 +98,7 @@ class FileSystemStagingStructureWriter(SerializationWriter):
                                     if not success:
                                         stderr.write("{} could not ".
                                                      format(n_file.item_name +
-                                                            "be coppied to {}".
+                                                            "be copied to {}".
                                                             format(
                                                                 new_file.
                                                                 item_name)))

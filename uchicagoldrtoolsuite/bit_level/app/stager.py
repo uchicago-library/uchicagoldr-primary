@@ -4,13 +4,10 @@ from itertools import chain
 from os.path import relpath
 
 from ...core.app.internal.cliapp import CLIApp
-from ..impl.filesystemstagingstructurewriter\
-    import FileSystemStagingStructureWriter
-from ..impl.filesystemstagingstructurereader \
-    import FileSystemStagingStructureReader
+from ..impl.filesystemstagewriter import FileSystemStageWriter
+from ..impl.filesystemstagereader import FileSystemStageReader
 from ..lib.absolutefilepathtree import AbsoluteFilePathTree
-from ..impl.filesystemsegmentstructurepackager\
-    import FileSystemSegmentStructurePackager
+from ..impl.filesystemsegmentpackager import FileSystemSegmentPackager
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -78,7 +75,7 @@ class Stager(CLIApp):
 
         # App code
         staging_directory = join(args.destination_root, args.staging_id)
-        staging_directory_reader = FileSystemStagingStructureReader(staging_directory)
+        staging_directory_reader = FileSystemStageReader(staging_directory)
         staging_structure = staging_directory_reader.read()
 
         segment_ids = sorted([x.identifier for x in staging_structure.segment])
@@ -119,7 +116,7 @@ class Stager(CLIApp):
         else:
             current_segment_number = 1
 
-        segment_packager = FileSystemSegmentStructurePackager(
+        segment_packager = FileSystemSegmentPackager(
             args.prefix,
             current_segment_number)
         segment = segment_packager.package(args.directory,
@@ -127,8 +124,7 @@ class Stager(CLIApp):
 
         staging_structure.segment.append(segment)
 
-        staging_directory_writer = FileSystemStagingStructureWriter(
-            staging_structure)
+        staging_directory_writer = FileSystemStageWriter(staging_structure)
         staging_directory_writer.write(join(args.destination_root,
                                             args.staging_id),
                                        args.source_root)

@@ -34,7 +34,7 @@ def copy(origin_loc, destination_loc):
         raise TypeError("must pass two instances of LDRPathRegularFile" +
                         " to the copy function.")
     if destination_loc.exists():
-        return (True, False, "already present", None, None)
+        return (True, False, "already present", None)
 
     with origin_loc.open('rb') as reading_file:
         with destination_loc.open('wb') as writing_file:

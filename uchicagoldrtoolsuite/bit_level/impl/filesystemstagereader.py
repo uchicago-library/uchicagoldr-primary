@@ -2,12 +2,12 @@ import re
 from sys import stderr
 from os.path import exists, join, split as dirsplit
 
-from ..lib.stagingserializationreader import StagingSerializationReader
-from ..lib.stagingstructure import StagingStructure
+from ..lib.stageserializationreader import StageSerializationReader
+from ..lib.stage import Stage
 from ..lib.absolutefilepathtree import AbsoluteFilePathTree
 from .ldrpath import LDRPath
-from ..lib.materialsuitestructure import MaterialSuiteStructure
-from ..lib.segmentstructure import SegmentStructure
+from ..lib.materialsuite import MaterialSuite
+from ..lib.segment import Segment
 
 
 __author__ = "Tyler Danstrom"
@@ -18,7 +18,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class FileSystemStagingStructureReader(StagingSerializationReader):
+class FileSystemStageReader(StageSerializationReader):
     """
     Repackages files written to disk as a Staging Structure
     """
@@ -35,9 +35,7 @@ class FileSystemStagingStructureReader(StagingSerializationReader):
             data_node_depth = tree.find_depth_of_a_path(data_node_identifier)
             data_node = tree.find_tag_at_depth('data', data_node_depth)[0]
             data_node_subdirs = data_node.fpointer
-            stagingstructure = StagingStructure(self.
-                                                serialized_location.
-                                                split('/')[-1])
+            stagingstructure = Stage(self.serialized_location.split('/')[-1])
             for n in data_node_subdirs:
                 a_past_segment_node_depth = tree.find_depth_of_a_path(n)
                 if a_past_segment_node_depth > 0:
@@ -47,7 +45,7 @@ class FileSystemStagingStructureReader(StagingSerializationReader):
                     if label_matching:
                         prefix, number = label_matching.group(1), \
                                          label_matching.group(2)
-                        a_new_segment = SegmentStructure(prefix, int(number))
+                        a_new_segment = Segment(prefix, int(number))
                         stagingstructure.segment.append(a_new_segment)
             for n_thing in just_files:
                 segment_id = join(self.serialized_location, 'data/')
@@ -59,7 +57,7 @@ class FileSystemStagingStructureReader(StagingSerializationReader):
                                             if x.identifier == file_run]
                         if len(matching_segment) == 1:
                             a_file = LDRPath(n_thing)
-                            msuite = MaterialSuiteStructure(a_file.item_name)
+                            msuite = MaterialSuite(a_file.item_name)
                             msuite.original.append(a_file)
                             matching_segment[0].materialsuite.append(msuite)
                         else:
@@ -71,7 +69,7 @@ class FileSystemStagingStructureReader(StagingSerializationReader):
                             n_thing))
 
         else:
-            stagingstructure = StagingStructure(self.stage_id)
+            stagingstructure = Stage(self.stage_id)
         return stagingstructure
 
     def set_structure(self, aStructure):

@@ -10,7 +10,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class MaterialSuiteStructure(Structure):
+class MaterialSuite(Structure):
     """
     A structure which holds all LDR Items pertaining to an "original" and that
     original itself

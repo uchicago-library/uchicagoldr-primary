@@ -1,7 +1,7 @@
 import re
 
 from .abc.structure import Structure
-from .materialsuitestructure import MaterialSuiteStructure
+from .materialsuite import MaterialSuite
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -12,9 +12,9 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class SegmentStructure(Structure):
+class Segment(Structure):
     """
-    The SegmentStructure holds materialsuites that are part of a segment of
+    The Segment holds materialsuites that are part of a segment of
     a larger structure. It validates to make sure that it only contains
     MaterialStructures
     1. label (str): a string of alphabetic characters
@@ -39,7 +39,7 @@ class SegmentStructure(Structure):
 
     def validate(self):
         for n_thing in self.materialsuite:
-            if getattr(n_thing, MaterialSuiteStructure):
+            if getattr(n_thing, MaterialSuite):
                 pass
             else:
                 return False
