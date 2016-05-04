@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 from os.path import join
 from uuid import uuid1
 
-from ..lib.abc.ldritem import LDRItem
+from .abc.ldritem import LDRItem
 
 
 __author__ = "Brian Balsamo"

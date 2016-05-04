@@ -1,5 +1,5 @@
-from ..lib.materialsuitepackager import MaterialSuitePackager
-from ..lib.materialsuite import MaterialSuite
+from .abc.materialsuitepackager import MaterialSuitePackager
+from .materialsuite import MaterialSuite
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

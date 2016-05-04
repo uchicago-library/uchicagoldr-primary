@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABCMeta
 
 from .abc.packager import Packager
-from .segment import Segment
+from ..segment import Segment
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

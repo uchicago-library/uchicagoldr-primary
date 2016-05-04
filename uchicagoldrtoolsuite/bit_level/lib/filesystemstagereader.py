@@ -2,12 +2,12 @@ import re
 from sys import stderr
 from os.path import exists, join, split as dirsplit
 
-from ..lib.stageserializationreader import StageSerializationReader
-from ..lib.stage import Stage
-from ..lib.absolutefilepathtree import AbsoluteFilePathTree
+from .abc.stageserializationreader import StageSerializationReader
+from .stage import Stage
+from .absolutefilepathtree import AbsoluteFilePathTree
 from .ldrpath import LDRPath
-from ..lib.materialsuite import MaterialSuite
-from ..lib.segment import Segment
+from .materialsuite import MaterialSuite
+from .segment import Segment
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

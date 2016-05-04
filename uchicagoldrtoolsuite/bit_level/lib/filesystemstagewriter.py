@@ -3,8 +3,8 @@ from os import makedirs, mkdir
 from os.path import exists, join, relpath, dirname
 from sys import stderr, stdout
 
-from ..lib.stageserializationwriter import StageSerializationWriter
-from ..lib.ldritemoperations import copy
+from .abc.stageserializationwriter import StageSerializationWriter
+from .ldritemoperations import copy
 from .ldrpath import LDRPath
 
 
