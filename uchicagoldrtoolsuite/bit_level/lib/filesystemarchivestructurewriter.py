@@ -1,7 +1,7 @@
 from sys import stderr
 
 from .abc.abc.serializationwriter import SerializationWriter
-from .abc.abc.structure import Structure
+from .abc.structure import Structure
 
 
 __author__ = "Tyler Danstrom"
