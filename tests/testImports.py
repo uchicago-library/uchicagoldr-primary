@@ -1,7 +1,7 @@
 import unittest
 
 class TestImports(unittest.TestCase):
-    def test(self):
+    def test_bit_level_imports(self):
         from uchicagoldrtoolsuite.bit_level.impl.filesystemarchivestructurewriter import FileSystemArchiveStructureWriter
         from uchicagoldrtoolsuite.bit_level.impl.filesystemmaterialsuitestructurepackager import FileSystemMaterialSuiteStructurePackager
         from uchicagoldrtoolsuite.bit_level.impl.filesystemsegmentstructurepackager import FileSystemSegmentStructurePackager
@@ -9,7 +9,6 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.impl.filesystemstagingstructurewriter import FileSystemStagingStructureWriter
         from uchicagoldrtoolsuite.bit_level.impl.ldrpath import LDRPath
         from uchicagoldrtoolsuite.bit_level.impl.ldrurl import LDRURL
-
 
         from uchicagoldrtoolsuite.bit_level.lib.absolutefilepathtree import AbsoluteFilePathTree
         from uchicagoldrtoolsuite.bit_level.lib.archivestructure import ArchiveStructure
@@ -36,7 +35,7 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.abc.structure import Structure
 
 
-
+    def test_core_imports(self):
         from uchicagoldrtoolsuite.core.app.abc.app import App
         from uchicagoldrtoolsuite.core.app.internal.cliapp import CLIApp
         from uchicagoldrtoolsuite.core.app.aru import AccessionRecordEditor
