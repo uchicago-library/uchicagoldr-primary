@@ -3,10 +3,10 @@ import unittest
 class TestImports(unittest.TestCase):
     def test_bit_level_imports(self):
         from uchicagoldrtoolsuite.bit_level.impl.filesystemarchivestructurewriter import FileSystemArchiveStructureWriter
-        from uchicagoldrtoolsuite.bit_level.impl.filesystemmaterialsuitestructurepackager import FileSystemMaterialSuiteStructurePackager
-        from uchicagoldrtoolsuite.bit_level.impl.filesystemsegmentstructurepackager import FileSystemSegmentStructurePackager
-        from uchicagoldrtoolsuite.bit_level.impl.filesystemstagingstructurereader import FileSystemStagingStructureReader
-        from uchicagoldrtoolsuite.bit_level.impl.filesystemstagingstructurewriter import FileSystemStagingStructureWriter
+        from uchicagoldrtoolsuite.bit_level.impl.filesystemmaterialsuitepackager import FileSystemMaterialSuitePackager
+        from uchicagoldrtoolsuite.bit_level.impl.filesystemsegmentpackager import FileSystemSegmentPackager
+        from uchicagoldrtoolsuite.bit_level.impl.filesystemstagereader import FileSystemStageReader
+        from uchicagoldrtoolsuite.bit_level.impl.filesystemstagewriter import FileSystemStageWriter
         from uchicagoldrtoolsuite.bit_level.impl.ldrpath import LDRPath
         from uchicagoldrtoolsuite.bit_level.impl.ldrurl import LDRURL
 

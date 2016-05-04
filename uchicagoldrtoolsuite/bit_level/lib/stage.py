@@ -1,5 +1,5 @@
 from .abc.structure import Structure
-from .segmentstructure import SegmentStructure
+from .segment import Segment
 from .abc.ldritem import LDRItem
 
 
@@ -27,7 +27,7 @@ class Stage(Structure):
 
     def validate(self):
         for n_thing in self.segment:
-            if isinstance(n_thing, SegmentStructure):
+            if isinstance(n_thing, Segment):
                 pass
             else:
                 return False
@@ -37,4 +37,4 @@ class Stage(Structure):
                 pass
             else:
                 return False
-        return super(StagingStructure, self)._validate()
+        return super(Stage, self)._validate()

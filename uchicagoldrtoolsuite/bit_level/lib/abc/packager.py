@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 
-__author__ = "Tyler Danstrom"
-__email__ = "tdanstrom@uchicago.edu"
+__author__ = "Brian Balsamo, Tyler Danstrom"
+__email__ = "balsamo@uchicago,edu tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
@@ -15,17 +15,15 @@ class Packager(metaclass=ABCMeta):
     reader information in addition to knowledge of a serialization in order
     to construct substructures in a larger structure
     """
+
+    _struct = None
+    _implementation = None
+
     def set_struct(self, value):
         self._struct = value
 
     def get_struct(self):
         return self._struct
-
-    def set_type(self, value):
-        self._struct_type = value
-
-    def get_type(self):
-        return self._struct_type
 
     def set_implementation(self, value):
         return self._implementation
@@ -37,6 +35,5 @@ class Packager(metaclass=ABCMeta):
     def package(self):
         pass
 
-    struct = abstractproperty(set_struct, get_struct)
-    struct_type = abstractproperty(set_type, get_type)
-    implementation = abstractproperty(set_implementation, get_implementation)
+    struct = property(set_struct, get_struct)
+    implementation = property(set_implementation, get_implementation)

@@ -1,6 +1,6 @@
 from .abc.structure import Structure
 from .abc.ldritem import LDRItem
-from .materialsuitestructure import MaterialSuiteStructure
+from .materialsuite import MaterialSuite
 
 
 __author__ = "Tyler Danstrom"
@@ -31,7 +31,7 @@ class ArchiveStructure(Structure):
             if getattr(n_thing, LDRItem):
                 return False
         for n_thing in self.segment:
-            if not getattr(n_thing, MaterialSuiteStructure):
+            if not getattr(n_thing, MaterialSuite):
                 return False
         return True
 

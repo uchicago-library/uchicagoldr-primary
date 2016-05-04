@@ -16,7 +16,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class FileSystemStagingStructureWriter(SerializationWriter):
+class FileSystemStageWriter(SerializationWriter):
     """
     writes a Staging Structure to disk as a series of directories and files
     """

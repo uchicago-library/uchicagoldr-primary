@@ -1,7 +1,7 @@
 import re
 
 from .abc.structure import Structure
-from .materialsuitestructure import MaterialSuiteStructure
+from .materialsuite import MaterialSuite
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -39,7 +39,7 @@ class Segment(Structure):
 
     def validate(self):
         for n_thing in self.materialsuite:
-            if getattr(n_thing, MaterialSuiteStructure):
+            if getattr(n_thing, MaterialSuite):
                 pass
             else:
                 return False
