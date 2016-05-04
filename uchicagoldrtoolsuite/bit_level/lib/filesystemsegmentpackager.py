@@ -1,9 +1,9 @@
 from os.path import isfile
 
-from ..lib.absolutefilepathtree import AbsoluteFilePathTree
-from ..lib.segment import Segment
-from ..lib.stage import Stage
-from ..lib.segmentpackager import SegmentPackager
+from .absolutefilepathtree import AbsoluteFilePathTree
+from .segment import Segment
+from .stage import Stage
+from .abc.segmentpackager import SegmentPackager
 from .filesystemmaterialsuitepackager import\
     FileSystemMaterialSuitePackager
 from .ldrpath import LDRPath

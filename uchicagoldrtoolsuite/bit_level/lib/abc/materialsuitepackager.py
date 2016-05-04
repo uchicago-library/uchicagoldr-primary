@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABCMeta
 
 from .abc.packager import Packager
-from .materialsuite import MaterialSuite
+from ..materialsuite import MaterialSuite
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

@@ -1,7 +1,7 @@
 from os import remove
 from pathlib import Path
 
-from ..lib.abc.ldritem import LDRItem
+from .abc.ldritem import LDRItem
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
