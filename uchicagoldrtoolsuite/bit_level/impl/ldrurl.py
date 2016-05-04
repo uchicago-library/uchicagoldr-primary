@@ -8,6 +8,14 @@ from uuid import uuid1
 from ..lib.abc.ldritem import LDRItem
 
 
+__author__ = "Brian Balsamo"
+__email__ = "balsamo@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
+
+
 class LDRURL(LDRItem):
     def __init__(self, param1):
 

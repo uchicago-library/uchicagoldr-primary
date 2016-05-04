@@ -2,6 +2,14 @@ from ...core.lib.convenience import sane_hash
 from .abc.ldritem import LDRItem
 
 
+__author__ = "Brian Balsamo, Tyler Danstrom"
+__email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
+
+
 def move(origin_loc, destination_loc):
     raise NotImplemented('yet')
 

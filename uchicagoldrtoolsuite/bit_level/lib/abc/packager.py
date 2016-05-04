@@ -1,8 +1,15 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 
-class Packager(metaclass=ABCMeta):
+__author__ = "Tyler Danstrom"
+__email__ = "tdanstrom@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
 
+
+class Packager(metaclass=ABCMeta):
     def set_struct(self, value):
         self._struct = value
 
@@ -19,7 +26,7 @@ class Packager(metaclass=ABCMeta):
         return self._implementation
 
     def get_implementation(self, value):
-        return self._implemetnation
+        return self._implementation
 
     @abstractmethod
     def package(self):
