@@ -2,8 +2,8 @@ from ..lib.materialsuitepackager import MaterialSuitePackager
 from ..lib.materialsuite import MaterialSuite
 
 
-__author__ = "Tyler Danstrom"
-__email__ = "tdanstrom@uchicago.edu"
+__author__ = "Brian Balsamo, Tyler Danstrom"
+__email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
@@ -16,8 +16,8 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
     material suites from the contents for inclusion in segment structures
     """
     def __init__(self):
-        self.set_struct(MaterialSuite)
-        self.set_implementation('directory')
+        super().__init__()
+        self.set_implementation('file system')
 
     def package(self, an_item):
         msuite = MaterialSuite(an_item)

@@ -24,6 +24,7 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.stageserializationreader import StageSerializationReader
         from uchicagoldrtoolsuite.bit_level.lib.stageserializationwriter import StageSerializationWriter
         from uchicagoldrtoolsuite.bit_level.lib.stage import Stage
+        from uchicagoldrtoolsuite.bit_level.lib.segment import Segment
         from uchicagoldrtoolsuite.bit_level.lib.technicalmetadatarecordcreator import TechnicalMetadataRecordCreator
 
         from uchicagoldrtoolsuite.bit_level.lib.abc.ldritem import LDRItem

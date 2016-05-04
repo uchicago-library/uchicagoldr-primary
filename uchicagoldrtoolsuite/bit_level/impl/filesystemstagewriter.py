@@ -3,24 +3,26 @@ from os import makedirs, mkdir
 from os.path import exists, join, relpath, dirname
 from sys import stderr, stdout
 
-from ..lib.abc.serializationwriter import SerializationWriter
+from ..lib.stageserializationwriter import StageSerializationWriter
 from ..lib.ldritemoperations import copy
 from .ldrpath import LDRPath
 
 
-__author__ = "Tyler Danstrom"
-__email__ = "tdanstrom@uchicago.edu"
+__author__ = "Brian Balsamo, Tyler Danstrom"
+__email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class FileSystemStageWriter(SerializationWriter):
+class FileSystemStageWriter(StageSerializationWriter):
     """
     writes a Staging Structure to disk as a series of directories and files
     """
     def __init__(self, aStructure):
+        super().__init__()
+        self.set_implementation('file system')
         self.structure = aStructure
 
     def write(self, stage_directory, origin_root):

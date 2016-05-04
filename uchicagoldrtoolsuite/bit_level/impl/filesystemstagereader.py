@@ -10,8 +10,8 @@ from ..lib.materialsuite import MaterialSuite
 from ..lib.segment import Segment
 
 
-__author__ = "Tyler Danstrom"
-__email__ = "tdanstrom@uchicago.edu"
+__author__ = "Brian Balsamo, Tyler Danstrom"
+__email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
@@ -23,6 +23,8 @@ class FileSystemStageReader(StageSerializationReader):
     Repackages files written to disk as a Staging Structure
     """
     def __init__(self, staging_directory):
+        super().__init__()
+        self.set_implementation('file system')
         self.stage_id = staging_directory.split('/')[-1]
         self.structureType = "staging"
         self.serialized_location = staging_directory

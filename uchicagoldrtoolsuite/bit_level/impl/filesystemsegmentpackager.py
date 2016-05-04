@@ -24,8 +24,8 @@ class FileSystemSegmentPackager(SegmentPackager):
     Structure
     """
     def __init__(self, label_text, label_number):
-        self.set_struct(Stage)
-        self.set_implementation("directory")
+        super().__init__()
+        self.set_implementation("file system")
         self.set_msuite_packager(FileSystemMaterialSuitePackager)
         self.set_id_prefix(label_text)
         self.set_id_num(label_number)

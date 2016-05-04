@@ -1,6 +1,7 @@
-from abc import abstractproperty
+from abc import abstractmethod, ABCMeta
 
 from .abc.packager import Packager
+from .segment import Segment
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -11,7 +12,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class SegmentPackager(Packager):
+class SegmentPackager(Packager, metaclass=ABCMeta):
     """
     The base class for all segment packagers
 
@@ -22,6 +23,10 @@ class SegmentPackager(Packager):
     _msuite_packager = None
     _id_prefix = None
     _id_num = None
+
+    @abstractmethod
+    def __init__(self):
+        self.set_struct(Segment)
 
     def set_msuite_packager(self, value):
         self._msuite_packager = value
