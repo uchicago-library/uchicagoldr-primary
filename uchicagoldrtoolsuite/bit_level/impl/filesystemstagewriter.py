@@ -98,7 +98,7 @@ class FileSystemStageWriter(SerializationWriter):
                                     if not success:
                                         stderr.write("{} could not ".
                                                      format(n_file.item_name +
-                                                            "be coppied to {}".
+                                                            "be copied to {}".
                                                             format(
                                                                 new_file.
                                                                 item_name)))
