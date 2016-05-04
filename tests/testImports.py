@@ -16,16 +16,14 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.filewalker import FileWalker
         from uchicagoldrtoolsuite.bit_level.lib.ldritemoperations import copy
         from uchicagoldrtoolsuite.bit_level.lib.materialsuitepackager import MaterialSuitePackager
-        from uchicagoldrtoolsuite.bit_level.lib.materialsuitestructure import MaterialSuiteStructure
+        from uchicagoldrtoolsuite.bit_level.lib.materialsuite import MaterialSuite
         from uchicagoldrtoolsuite.bit_level.lib.premisextensionnodes import Restriction
         from uchicagoldrtoolsuite.bit_level.lib.premisobjectrecordcreator import PremisObjectRecordCreator
         from uchicagoldrtoolsuite.bit_level.lib.rootedpath import RootedPath
         from uchicagoldrtoolsuite.bit_level.lib.segmentpackager import SegmentPackager
-        from uchicagoldrtoolsuite.bit_level.lib.stagingmaterialsuitepackager import StagingMaterialSuitePackager
-        from uchicagoldrtoolsuite.bit_level.lib.stagingsegmentpackager import StagingSegmentPackager
-        from uchicagoldrtoolsuite.bit_level.lib.stagingserializationreader import StagingSerializationReader
-        from uchicagoldrtoolsuite.bit_level.lib.stagingserializationwriter import StagingSerializationWriter
-        from uchicagoldrtoolsuite.bit_level.lib.stagingstructure import StagingStructure
+        from uchicagoldrtoolsuite.bit_level.lib.stageserializationreader import StageSerializationReader
+        from uchicagoldrtoolsuite.bit_level.lib.stageserializationwriter import StageSerializationWriter
+        from uchicagoldrtoolsuite.bit_level.lib.stage import Stage
         from uchicagoldrtoolsuite.bit_level.lib.technicalmetadatarecordcreator import TechnicalMetadataRecordCreator
 
         from uchicagoldrtoolsuite.bit_level.lib.abc.ldritem import LDRItem

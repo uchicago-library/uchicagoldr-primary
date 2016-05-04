@@ -11,7 +11,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class StagingStructure(Structure):
+class Stage(Structure):
     """
     A Staging Structure is a structure which holds an aggregates contents
     as they are being processed for ingestion into long term storage

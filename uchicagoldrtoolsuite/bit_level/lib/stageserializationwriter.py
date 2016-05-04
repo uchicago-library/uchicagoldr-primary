@@ -9,7 +9,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class StagingSerializationWriter(SerializationWriter):
+class StageSerializationWriter(SerializationWriter):
     """
     A base class for all Staging Structure Serialization Writers
     """
