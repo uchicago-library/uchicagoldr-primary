@@ -17,6 +17,9 @@ __version__ = "0.0.1dev"
 
 
 class FileSystemStagingStructureWriter(SerializationWriter):
+    """
+    writes a Staging Structure to disk as a series of directories and files
+    """
     def __init__(self, aStructure):
         self.structure = aStructure
 

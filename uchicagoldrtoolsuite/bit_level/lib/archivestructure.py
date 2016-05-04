@@ -12,6 +12,9 @@ __version__ = "0.0.1dev"
 
 
 class ArchiveStructure(Structure):
+    """
+    The structure which holds archival contents in the archive environment.
+    """
     def __init__(self, param1):
         self.requird_parts = ['identifier', 'segment', 'accessionrecord',
                               'admninnote', 'legalnote']

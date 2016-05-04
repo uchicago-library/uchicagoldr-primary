@@ -11,6 +11,10 @@ __version__ = "0.0.1dev"
 
 
 class MaterialSuiteStructure(Structure):
+    """
+    A structure which holds all LDR Items pertaining to an "original" and that
+    original itself
+    """
     def __init__(self, param1):
         self.required_parts = ['identifier', 'original', 'premis',
                                'technicalmetadata', 'presform']

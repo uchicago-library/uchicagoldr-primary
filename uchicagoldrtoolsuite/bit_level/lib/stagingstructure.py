@@ -12,6 +12,10 @@ __version__ = "0.0.1dev"
 
 
 class StagingStructure(Structure):
+    """
+    A Staging Structure is a structure which holds an aggregates contents
+    as they are being processed for ingestion into long term storage
+    """
     def __init__(self, param1):
         self.required_parts = ['identifier', 'segment', 'accessionrecord',
                                'adminnote', 'legalnote']

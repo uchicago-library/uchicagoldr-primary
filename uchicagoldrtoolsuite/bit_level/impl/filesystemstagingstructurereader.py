@@ -19,6 +19,9 @@ __version__ = "0.0.1dev"
 
 
 class FileSystemStagingStructureReader(StagingSerializationReader):
+    """
+    Repackages files written to disk as a Staging Structure
+    """
     def __init__(self, staging_directory):
         self.stage_id = staging_directory.split('/')[-1]
         self.structureType = "staging"

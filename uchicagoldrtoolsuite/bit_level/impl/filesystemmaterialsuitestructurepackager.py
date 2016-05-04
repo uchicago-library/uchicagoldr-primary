@@ -12,6 +12,10 @@ __version__ = "0.0.1dev"
 
 class FileSystemMaterialSuiteStructurePackager(
         StagingMaterialSuitePackager):
+    """
+    Reads a file system MaterialSuite serialization and knows how to package
+    material suites from the contents for inclusion in segment structures
+    """
     def __init__(self):
         self.struct_type = 'staging'
         self.implementation = 'directory'

@@ -10,6 +10,9 @@ __version__ = "0.0.1dev"
 
 
 class StagingSegmentPackager(SegmentPackager):
+    """
+    a segment packager for staging segments
+    """
     def __init__(self, label_text, label_number):
         self.struct_type = "staging"
 

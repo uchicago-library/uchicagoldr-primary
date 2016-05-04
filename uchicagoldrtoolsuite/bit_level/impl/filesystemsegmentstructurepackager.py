@@ -18,6 +18,11 @@ __version__ = "0.0.1dev"
 
 
 class FileSystemSegmentStructurePackager(StagingSegmentPackager):
+    """
+    Reads a segment structure that has been serialized to disk and understands
+    how to package it back up as a segment for inclusion in a Staging
+    Structure
+    """
     def __init__(self, label_text, label_number):
         self.struct_type = "staging"
         self.struct = StagingStructure

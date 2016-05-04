@@ -13,10 +13,23 @@ __version__ = "0.0.1dev"
 
 
 class FileSystemArchiveStructureWriter(SerializationWriter):
+    """
+    writes an archive structure to the file system as a directory
+    """
     def __init__(self, aStructure):
+        """
+        initialize the writer
+
+        __Args__
+
+        1. aStructure (ArchiveStructure): The structure to write
+        """
         self.structure = aStructure
 
     def write(self):
+        """
+        write the structure to disk
+        """
         if self.structure.validate():
             pass
         else:

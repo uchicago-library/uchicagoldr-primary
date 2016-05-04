@@ -10,6 +10,14 @@ __version__ = "0.0.1dev"
 
 
 class Structure(metaclass=ABCMeta):
+    """
+    ABC for all Structures.
+
+    Mandates the presence of a required parts str array and a str identifier
+
+    Provides a low level _validate() method for assuring a structure is composed
+    of the parts it promises.
+    """
     @abstractmethod
     def validate(self):
         pass

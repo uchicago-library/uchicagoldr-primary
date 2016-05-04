@@ -28,6 +28,12 @@ def launch():
 
 
 class PostInstall(CLIApp):
+    """
+    Walks a user through a few initial steps after installing
+    the tool suite
+
+    Makes configs, specifies locations, etc
+    """
     def main(self):
         print('Welcome to the University of Chicago Library Digital ' +
             'Repository Tool Suite configuration wizard.')

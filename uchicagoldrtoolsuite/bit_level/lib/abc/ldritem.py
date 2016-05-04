@@ -10,6 +10,14 @@ __version__ = "0.0.1dev"
 
 
 class LDRItem(metaclass=ABCMeta):
+    """
+    Specifies methods which must be implemented in order for a subclass
+    to qualify as a representation of an LDR Item in the UChicago
+    Library Digital Repository Specification
+
+    Provides generalizable functionality to facilitate "with" syntax when
+    properly implemented.
+    """
     @abstractmethod
     def read(self):
         pass

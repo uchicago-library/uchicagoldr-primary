@@ -12,6 +12,14 @@ __version__ = "0.0.1dev"
 
 
 class MaterialSuitePackager(Packager):
+    """
+    ABC for all MaterialSuitePackagers
+
+    mandates:
+        * .get_premis()
+        * .get_techmd()
+        * .get_presform()
+    """
     @abstractmethod
     def get_premis(self):
         pass

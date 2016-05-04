@@ -11,6 +11,9 @@ __version__ = "0.0.1dev"
 
 
 class Restriction(ExtensionNode):
+    """
+    A restriction node for use in PREMIS records describing LDR Items
+    """
 
     restriction_codes_strs = [
         "O",

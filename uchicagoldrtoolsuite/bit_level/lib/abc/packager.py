@@ -10,6 +10,11 @@ __version__ = "0.0.1dev"
 
 
 class Packager(metaclass=ABCMeta):
+    """
+    ABC for packagers - the workhorses of readers which utilize internal
+    reader information in addition to knowledge of a serialization in order
+    to construct substructures in a larger structure
+    """
     def set_struct(self, value):
         self._struct = value
 

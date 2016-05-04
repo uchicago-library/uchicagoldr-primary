@@ -13,7 +13,8 @@ __version__ = "0.0.1dev"
 
 
 class SegmentStructure(Structure):
-    """The SegmentStructure holds materialsuites that are part of a segment of
+    """
+    The SegmentStructure holds materialsuites that are part of a segment of
     a larger structure. It validates to make sure that it only contains
     MaterialStructures
     1. label (str): a string of alphabetic characters

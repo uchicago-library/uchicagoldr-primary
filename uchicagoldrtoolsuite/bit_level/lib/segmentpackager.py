@@ -12,6 +12,12 @@ __version__ = "0.0.1dev"
 
 
 class SegmentPackager(Packager):
+    """
+    The base class for all segment packagers
+
+    defines the msuite packager they should use to package their contents, as
+    well as the interface for setting the segment id
+    """
     def set_msuite_packager(self, value):
         self.msuite_packager = value
 

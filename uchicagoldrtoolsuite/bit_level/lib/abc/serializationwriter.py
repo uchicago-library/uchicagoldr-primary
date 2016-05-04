@@ -10,6 +10,11 @@ __version__ = "0.0.1dev"
 
 
 class SerializationWriter(metaclass=ABCMeta):
+    """
+    ABC for all Serialization Writers
+
+    assures the .write() method
+    """
     @abstractmethod
     def write(self):
         pass

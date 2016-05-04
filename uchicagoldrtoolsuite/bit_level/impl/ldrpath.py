@@ -13,6 +13,9 @@ __version__ = "0.0.1dev"
 
 
 class LDRPath(LDRItem):
+    """
+    Allows a file path to a file on the file system to be treated as an LDRItem
+    """
     def __init__(self, param1):
         self.item_name = param1
         self.path = Path(self.item_name)

@@ -104,6 +104,10 @@ def launch():
 
 
 class AccessionRecordEditor(CLIApp):
+    """
+    Provides a minimal CLI utility for editing accession records formatted
+    as HierarchicalRecords
+    """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +

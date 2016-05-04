@@ -17,8 +17,11 @@ __version__ = "0.0.1dev"
 
 
 class LDRURL(LDRItem):
+    """
+    Allows any readable URL to be treated as an LDRItem with limited
+    functionality.
+    """
     def __init__(self, param1):
-
         self.item_name = param1
         self.pipe = None
         self.tmpdir = None

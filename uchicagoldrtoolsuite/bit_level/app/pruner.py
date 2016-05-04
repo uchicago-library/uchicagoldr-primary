@@ -17,6 +17,9 @@ __version__ = "0.0.1dev"
 
 
 def launch():
+    """
+    entry_point launch hook
+    """
     app = Pruner(
             __author__=__author__,
             __email__=__email__,
@@ -29,6 +32,10 @@ def launch():
 
 
 class ValidateDirectory(Action):
+    """
+    Argparse Action class for determining a directory exists
+    when passed as an argument
+    """
     def __call__(self, parser, namespace, value, option_string=None):
         if not exists(value):
             print(value)
@@ -37,6 +44,10 @@ class ValidateDirectory(Action):
 
 
 class Pruner(CLIApp):
+    """
+    Looks through staging directories for files whose names match
+    a given set of patterns and removes them if they do
+    """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
@@ -72,7 +83,7 @@ class Pruner(CLIApp):
                             for n_file in getattr(n_suite, req_part):
                                 for pattern in args.patterns:
                                     match_pattern = re.compile(pattern)
-                                    if match_pattern.search(n_file.item_name):
+                                    if match_pattern.match(n_file.item_name):
                                         success, message = n_file.delete(
                                             final=args.final_decision
                                         )

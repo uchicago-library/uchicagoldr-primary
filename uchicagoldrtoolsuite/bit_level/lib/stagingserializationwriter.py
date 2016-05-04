@@ -10,4 +10,7 @@ __version__ = "0.0.1dev"
 
 
 class StagingSerializationWriter(SerializationWriter):
+    """
+    A base class for all Staging Structure Serialization Writers
+    """
     pass

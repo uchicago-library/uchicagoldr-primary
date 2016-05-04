@@ -12,6 +12,9 @@ __version__ = "0.0.1dev"
 
 
 class StagingSerializationReader(SerializationReader):
+    """
+    A base class for all Staging Structure Serialization Readers
+    """
     def __init__(self):
         pass
 

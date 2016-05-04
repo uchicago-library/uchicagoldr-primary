@@ -10,6 +10,9 @@ __version__ = "0.0.1dev"
 
 
 class BashCommand(object):
+    """
+    Wraps constructing an executing a command in bash for use in python code
+    """
     args = []
     status = None
     cmd_out = None

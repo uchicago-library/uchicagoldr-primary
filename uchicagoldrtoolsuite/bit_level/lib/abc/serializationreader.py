@@ -10,6 +10,11 @@ __version__ = "0.0.1dev"
 
 
 class SerializationReader(metaclass=ABCMeta):
+    """
+    ABC for all Serialization Readers.
+
+    Assures implementation of .read()
+    """
     @abstractmethod
     def read(self, aStructure, aString):
         pass

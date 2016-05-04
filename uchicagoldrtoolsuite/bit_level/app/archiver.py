@@ -18,6 +18,9 @@ __version__ = "0.0.1dev"
 
 
 def launch():
+    """
+    launch hook for entry point
+    """
     app = Archiver(
             __author__=__author__,
             __email__=__email__,
@@ -30,6 +33,11 @@ def launch():
 
 
 class Archiver(CLIApp):
+    """
+    This application reads a complete staging directory, translates the
+    resulting Staging Structure into an Archive Structure and writes that
+    Archive Structure to a location.
+    """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +

@@ -22,6 +22,9 @@ __version__ = "0.0.1dev"
 
 
 def launch():
+    """
+    entry point launch hook
+    """
     app = Stager(
             __author__=__author__,
             __email__=__email__,
@@ -34,6 +37,10 @@ def launch():
 
 
 class Stager(CLIApp):
+    """
+    takes an external location and formats it's contents into the
+    beginnings of a staging structure and writes that to disk.
+    """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +

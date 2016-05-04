@@ -17,6 +17,9 @@ __version__ = "0.0.1dev"
 
 
 def launch():
+    """
+    entry point launch hook
+    """
     app = PremisRestrictionSetter(
             __author__=__author__,
             __email__=__email__,
@@ -50,6 +53,18 @@ def gather_records(path):
 
 
 def load_record(path):
+    """
+    read an xml record at a path into a PremisRecord object
+
+    __Args__
+
+    1. path (str): A valid path to an xml record
+
+    __Returns__
+
+    * (PremisRecord): The data as a PremisRecord object
+
+    """
     return PremisRecord(frompath=path)
 
 
@@ -83,6 +98,10 @@ def build_restriction_node(restriction_code, active=True,
 
 
 class PremisRestrictionSetter(CLIApp):
+    """
+    Builds restriction XML entries and applies them to PREMIS metadata
+    for staged contents
+    """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
