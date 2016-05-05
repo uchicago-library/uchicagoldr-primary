@@ -42,6 +42,16 @@ from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.app.aru import AccessionRecordEditor
 from uchicagoldrtoolsuite.core.app.postinstall import PostInstall
 
+from uchicagoldrtoolsuite.conceptual.lib.abc.abc.retriever import Retriever
+from uchicagoldrtoolsuite.conceptual.lib.abc.contentpointerresolver import ContentPointerResolver
+from uchicagoldrtoolsuite.conceptual.lib.abc.contentpointerretriever import ContentPointerRetriever
+from uchicagoldrtoolsuite.conceptual.lib.abc.familyretriever import FamilyRetriever
+from uchicagoldrtoolsuite.conceptual.lib.contentpointer import ContentPointer
+from uchicagoldrtoolsuite.conceptual.lib.family import Family
+from uchicagoldrtoolsuite.conceptual.lib.dbcontentpointerresolver import DatabaseContentPointerResolver
+from uchicagoldrtoolsuite.conceptual.lib.dbcontentpointerretriever import DatabaseContentPointerRetriever
+from uchicagoldrtoolsuite.conceptual.lib.dbenvmixin import DatabaseEnvironmentMixin
+from uchicagoldrtoolsuite.conceptual.lib.dbfamilyretriever import DatabaseFamilyRetriever
 
 class TestStructures(unittest.TestCase):
     def testStage(self):
@@ -157,6 +167,44 @@ class TestSerializationWriters(unittest.TestCase):
         self.assertTrue(type(x) == inheritance_tree[-1])
 
 
+class testRetrievers(unittest.TestCase):
+    def testDatabaseFamilyRetriever(self):
+        x = DatabaseFamilyRetriever()
+        inheritance_tree = [
+            Retriever,
+            FamilyRetriever,
+            DatabaseFamilyRetriever
+        ]
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(isinstance(x, DatabaseEnvironmentMixin))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
+    def testDatabaseContentPointerRetriever(self):
+        x = DatabaseContentPointerRetriever()
+        inheritance_tree = [
+            Retriever,
+            ContentPointerRetriever,
+            DatabaseContentPointerRetriever
+        ]
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(isinstance(x, DatabaseEnvironmentMixin))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
+class testResolvers(unittest.TestCase):
+    def testDatabaseContentPointerResolver(self):
+        x = DatabaseContentPointerResolver()
+        inheritance_tree = [
+            ContentPointerResolver,
+            DatabaseContentPointerResolver
+        ]
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(isinstance(x, DatabaseEnvironmentMixin))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
+
 class TestApplications(unittest.TestCase):
     def testStager(self):
         x = Stager()
@@ -212,6 +260,7 @@ class TestApplications(unittest.TestCase):
         for parent in inheritance_tree:
             self.assertTrue(isinstance(x, parent))
         self.assertTrue(type(x) == inheritance_tree[-1])
+
 
 #    def testArchiver(self):
 #        x = Archiver()
