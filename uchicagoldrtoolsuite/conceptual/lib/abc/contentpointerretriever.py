@@ -1,7 +1,7 @@
 from abc import ABCMeta
 
 from .abc.retriever import Retriever
-from ..contentpointerresolver import ContentPointerResolver
+from .contentpointerresolver import ContentPointerResolver
 
 
 __author__ = "Brian Balsamo"

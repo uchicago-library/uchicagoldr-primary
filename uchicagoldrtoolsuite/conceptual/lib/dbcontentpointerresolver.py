@@ -1,4 +1,4 @@
-from .contentpointerresolver import ContentPointerResolver
+from .abc.contentpointerresolver import ContentPointerResolver
 from .dbenvmixin import DatabaseEnvironmentMixin
 
 

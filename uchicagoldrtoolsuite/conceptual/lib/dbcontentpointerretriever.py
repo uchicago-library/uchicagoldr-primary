@@ -1,4 +1,4 @@
-from .contentpointerretriever import ContentPointerRetriever
+from .abc.contentpointerretriever import ContentPointerRetriever
 from .dbenvmixin import DatabaseEnvironmentMixin
 from .dbcontentpointerresolver import DatabaseContentPointerResolver
 

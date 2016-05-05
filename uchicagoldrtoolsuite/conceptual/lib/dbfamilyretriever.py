@@ -1,4 +1,4 @@
-from .familyretriever import FamilyRetriever
+from .abc.familyretriever import FamilyRetriever
 from .dbenvmixin import DatabaseEnvironmentMixin
 
 __author__ = "Brian Balsamo"
