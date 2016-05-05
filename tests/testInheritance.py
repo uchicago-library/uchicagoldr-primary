@@ -35,8 +35,9 @@ from uchicagoldrtoolsuite.bit_level.app.premisrestrictionsetter import PremisRes
 from uchicagoldrtoolsuite.bit_level.app.pruner import Pruner
 from uchicagoldrtoolsuite.bit_level.app.stager import Stager
 from uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator import TechnicalMetadataCreator
+#from uchicagoldrtoolsuite.bit_level.app.archiver import Archiver
 
-from uchicagoldrtoolsuite.core.app.abc.app import App
+from uchicagoldrtoolsuite.core.app.abc.abc.app import App
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.app.aru import AccessionRecordEditor
 from uchicagoldrtoolsuite.core.app.postinstall import PostInstall
@@ -157,19 +158,71 @@ class TestSerializationWriters(unittest.TestCase):
 
 
 class TestApplications(unittest.TestCase):
-    def testPremisObjectCreator(self):
+    def testStager(self):
         x = Stager()
         inheritance_tree = [
             App,
             CLIApp,
             Stager
         ]
-        self.assertTrue(isinstance(x, App))
-        self.assertTrue(isinstance(x, CLIApp))
-        self.assertTrue(isinstance(x, PremisObjectCreatorApp))
         for parent in inheritance_tree:
             self.assertTrue(isinstance(x, parent))
         self.assertTrue(type(x) == inheritance_tree[-1])
+
+    def testPruner(self):
+        x = Pruner()
+        inheritance_tree = [
+            App,
+            CLIApp,
+            Pruner
+        ]
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
+    def testTechnicalMetadataCreator(self):
+        x = TechnicalMetadataCreator()
+        inheritance_tree = [
+            App,
+            CLIApp,
+            TechnicalMetadataCreator
+        ]
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
+    def testPremisObjectCreator(self):
+        x = PremisObjectCreator()
+        inheritance_tree = [
+            App,
+            CLIApp,
+            PremisObjectCreator
+        ]
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
+    def testPremisRestrictionSetter(self):
+        x = PremisRestrictionSetter()
+        inheritance_tree = [
+            App,
+            CLIApp,
+            PremisRestrictionSetter
+        ]
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
+#    def testArchiver(self):
+#        x = Archiver()
+#        inheritance_tree = [
+#            App,
+#            CLIApp,
+#            Archiver
+#        ]
+#        for parent in inheritance_tree:
+#            self.assertTrue(isinstance(x, parent))
+#        self.assertTrue(type(x) == inheritance_tree[-1])
 
 
 

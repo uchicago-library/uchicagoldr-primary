@@ -2,7 +2,7 @@ from sys import stdout
 
 from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
-from .internal.cliapp import CLIApp
+from .abc.cliapp import CLIApp
 from ..lib.accessionrecorder import AccessionRecordConfig, \
     AccessionRecorder
 

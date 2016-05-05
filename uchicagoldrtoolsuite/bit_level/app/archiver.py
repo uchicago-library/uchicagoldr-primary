@@ -1,12 +1,9 @@
 from uuid import uuid1
 
-from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
-from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import\
-    StagingDirectoryReader
-from uchicagoldrtoolsuite.lib.structuring.archivestructure import\
-    ArchiveStructure
-from uchicagoldrtoolsuite.lib.structuring.filesystemarchivestructurewriter\
-    import FileSystemArchiverStructureWriter
+from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.archivestructure import ArchiveStructure
+from ..lib.filesystemarchivestructurewriter import FileSystemArchiverStructureWriter
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
