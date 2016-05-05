@@ -4,7 +4,7 @@ from shutil import copyfile
 from xdg import BaseDirectory
 
 from ..lib.convenience import retrieve_resource_filepath
-from .internal.cliapp import CLIApp
+from .abc.cliapp import CLIApp
 
 
 __author__ = "Brian Balsamo"

@@ -1,3 +1,6 @@
+from abc import ABCMeta, abstractmethod
+
+
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
 __company__ = "The University of Chicago Library"
@@ -6,7 +9,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class App(object):
+class App(metaclass=ABCMeta):
     """
     The base class for all applications
 
@@ -29,5 +32,6 @@ class App(object):
         self.__version__ = __version__
         self.config = None
 
+    @abstractmethod
     def main(self):
-        raise NotImplemented('The app abc doesn\'t do anything')
+        pass

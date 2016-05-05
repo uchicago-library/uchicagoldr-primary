@@ -1,11 +1,10 @@
 from os.path import isdir, split, join, abspath
 from os import makedirs
 
-from uchicagoldrtoolsuite.lib.premisobjectrecordcreator import \
-    PremisObjectRecordCreator
-from uchicagoldrtoolsuite.lib.stagereader import StageReader
-from uchicagoldrtoolsuite.lib.rootedpath import RootedPath
-from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
+from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from ..lib.premisobjectrecordcreator import PremisObjectRecordCreator
+#from ..lib.stagereader import StageReader
+from ..lib.rootedpath import RootedPath
 
 
 __author__ = "Brian Balsamo"
@@ -79,8 +78,8 @@ def build_stage_reader(path, root):
     * (StageReader): The built StageReader for the path
     """
     rooted_path = RootedPath(path, root=root)
-    stage_reader = StageReader(rooted_path)
-    return stage_reader
+#    stage_reader = StageReader(rooted_path)
+#    return stage_reader
 
 
 class PremisObjectCreator(CLIApp):
@@ -155,11 +154,11 @@ class PremisObjectCreator(CLIApp):
         for x in file_suites:
             if x.premis and not args.overwrite:
                 continue
-            if not args.fits and \
-                    StageReader.re_trailing_fits.search(x.original):
+#            if not args.fits and \
+#                    StageReader.re_trailing_fits.search(x.original):
                 continue
-            if not args.premis and \
-                    StageReader.re_trailing_premis.search(x.original):
+#            if not args.premis and \
+#                    StageReader.re_trailing_premis.search(x.original):
                 continue
 
             record = build_record(join(stagereader.root_fullpath, x.original))

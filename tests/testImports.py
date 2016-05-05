@@ -20,26 +20,41 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.premisextensionnodes import Restriction
         from uchicagoldrtoolsuite.bit_level.lib.premisobjectrecordcreator import PremisObjectRecordCreator
         from uchicagoldrtoolsuite.bit_level.lib.rootedpath import RootedPath
-        from uchicagoldrtoolsuite.bit_level.lib.abc.segmentpackager import SegmentPackager
-        from uchicagoldrtoolsuite.bit_level.lib.abc.stageserializationreader import StageSerializationReader
-        from uchicagoldrtoolsuite.bit_level.lib.abc.stageserializationwriter import StageSerializationWriter
         from uchicagoldrtoolsuite.bit_level.lib.stage import Stage
         from uchicagoldrtoolsuite.bit_level.lib.segment import Segment
         from uchicagoldrtoolsuite.bit_level.lib.technicalmetadatarecordcreator import TechnicalMetadataRecordCreator
+#       from uchicagoldrtoolsuite.bit_level.lib.archivestructure import ArchiveStructure
 
-        from uchicagoldrtoolsuite.bit_level.lib.abc.ldritem import LDRItem
         from uchicagoldrtoolsuite.bit_level.lib.abc.abc.packager import Packager
         from uchicagoldrtoolsuite.bit_level.lib.abc.abc.serializationreader import SerializationReader
         from uchicagoldrtoolsuite.bit_level.lib.abc.abc.serializationwriter import SerializationWriter
         from uchicagoldrtoolsuite.bit_level.lib.abc.structure import Structure
+        from uchicagoldrtoolsuite.bit_level.lib.abc.ldritem import LDRItem
+        from uchicagoldrtoolsuite.bit_level.lib.abc.segmentpackager import SegmentPackager
+        from uchicagoldrtoolsuite.bit_level.lib.abc.stageserializationreader import StageSerializationReader
+        from uchicagoldrtoolsuite.bit_level.lib.abc.stageserializationwriter import StageSerializationWriter
+
+        from uchicagoldrtoolsuite.bit_level.app.premisobjectcreator import PremisObjectCreator
+        from uchicagoldrtoolsuite.bit_level.app.stager import Stager
+        from uchicagoldrtoolsuite.bit_level.app.pruner import Pruner
+        from uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator import TechnicalMetadataCreator
+#        from uchicagoldrtoolsuite.bit_level.app.archiver import Archiver
 
 
     def test_core_imports(self):
-        from uchicagoldrtoolsuite.core.app.abc.app import App
-        from uchicagoldrtoolsuite.core.app.internal.cliapp import CLIApp
+        from uchicagoldrtoolsuite.core.lib.accessionrecorder import AccessionRecorder
+        from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
+        from uchicagoldrtoolsuite.core.lib.confreader import ConfReader
+        from uchicagoldrtoolsuite.core.lib.convenience import \
+            iso8601_dt, \
+            sane_hash, \
+            retrieve_resource_filepath, \
+            retrieve_resource_stream, \
+            retrieve_controlled_vocabulary
+        from uchicagoldrtoolsuite.core.app.abc.abc.app import App
+        from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
         from uchicagoldrtoolsuite.core.app.aru import AccessionRecordEditor
         from uchicagoldrtoolsuite.core.app.postinstall import PostInstall
-
 
 if __name__ == '__main__':
     unittest.main()

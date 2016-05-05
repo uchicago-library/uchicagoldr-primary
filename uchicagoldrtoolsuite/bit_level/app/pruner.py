@@ -3,9 +3,8 @@ from os.path import exists
 import re
 from sys import stdout
 
-from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
-from uchicagoldrtoolsuite.lib.structuring.stagingdirectoryreader import \
-    StagingDirectoryReader
+from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from ..lib.filesystemstagereader import FileSystemStageReader
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -73,7 +72,7 @@ class Pruner(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         # App code
-        staging_directory_reader = StagingDirectoryReader(args.directory)
+        staging_directory_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_directory_reader.read()
         try:
             for n_segment in staging_structure.segment:
