@@ -3,11 +3,11 @@ import re
 from itertools import chain
 from os.path import relpath
 
-from ...core.app.internal.cliapp import CLIApp
-from ..impl.filesystemstagewriter import FileSystemStageWriter
-from ..impl.filesystemstagereader import FileSystemStageReader
+from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from ..lib.filesystemstagewriter import FileSystemStageWriter
+from ..lib.filesystemstagereader import FileSystemStageReader
 from ..lib.absolutefilepathtree import AbsoluteFilePathTree
-from ..impl.filesystemsegmentpackager import FileSystemSegmentPackager
+from ..lib.filesystemsegmentpackager import FileSystemSegmentPackager
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

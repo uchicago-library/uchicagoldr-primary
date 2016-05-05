@@ -33,13 +33,26 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.abc.abc.serializationwriter import SerializationWriter
         from uchicagoldrtoolsuite.bit_level.lib.abc.structure import Structure
 
+        from uchicagoldrtoolsuite.bit_level.app.premisobjectcreator import PremisObjectCreator
+        from uchicagoldrtoolsuite.bit_level.app.stager import Stager
+        from uchicagoldrtoolsuite.bit_level.app.pruner import Pruner
+        from uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator import TechnicalMetadataCreator
+
 
     def test_core_imports(self):
+        from uchicagoldrtoolsuite.core.lib.accessionrecorder import AccessionRecorder
+        from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
+        from uchicagoldrtoolsuite.core.lib.confreader import ConfReader
+        from uchicagoldrtoolsuite.core.lib.convenience import \
+            iso8601_dt, \
+            sane_hash, \
+            retrieve_resource_filepath, \
+            retrieve_resource_stream, \
+            retrieve_controlled_vocabulary
         from uchicagoldrtoolsuite.core.app.abc.app import App
         from uchicagoldrtoolsuite.core.app.internal.cliapp import CLIApp
         from uchicagoldrtoolsuite.core.app.aru import AccessionRecordEditor
         from uchicagoldrtoolsuite.core.app.postinstall import PostInstall
-
 
 if __name__ == '__main__':
     unittest.main()

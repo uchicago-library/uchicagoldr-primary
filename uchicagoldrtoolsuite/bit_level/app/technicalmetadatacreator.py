@@ -4,11 +4,11 @@ from xml.etree.ElementTree import register_namespace
 
 from pypremis.lib import PremisRecord
 
-from uchicagoldrtoolsuite.lib.stagereader import StageReader
-from uchicagoldrtoolsuite.lib.technicalmetadatarecordcreator \
+from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+#from uchicagoldrtoolsuite.lib.stagereader import StageReader
+from ..lib.technicalmetadatarecordcreator \
     import TechnicalMetadataRecordCreator
-from uchicagoldrtoolsuite.apps.premiscreator import build_stage_reader
-from uchicagoldrtoolsuite.apps.internals.cliapp import CLIApp
+from .premisobjectcreator import build_stage_reader
 
 
 __author__ = "Brian Balsamo"
@@ -77,7 +77,7 @@ def write_records(records):
         record.write(target_path)
 
 
-class TechnicalMetadataRecordUtility(CLIApp):
+class TechnicalMetadataCreator(CLIApp):
     """
     The CLI App for generating FITS records for staged materials
     """
@@ -155,11 +155,11 @@ class TechnicalMetadataRecordUtility(CLIApp):
         for x in file_suites:
             if x.fits and not args.overwrite:
                 continue
-            if not args.fits and \
-                    StageReader.re_trailing_fits.search(x.original):
+#            if not args.fits and \
+#                    StageReader.re_trailing_fits.search(x.original):
                 continue
-            if not args.premis and \
-                    StageReader.re_trailing_premis.search(x.original):
+#            if not args.premis and \
+#                    StageReader.re_trailing_premis.search(x.original):
                 continue
 
             record = build_record(join(stagereader.root_fullpath, x.original),

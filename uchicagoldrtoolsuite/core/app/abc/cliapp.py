@@ -2,9 +2,10 @@ from argparse import ArgumentParser
 from sys import stdout, stderr
 from os.path import isabs, join, isdir, isfile, exists, split
 from os import makedirs
+from abc import ABCMeta
 
-from ..abc.app import App
-from ....core.lib.confreader import ConfReader
+from .abc.app import App
+from ...lib.confreader import ConfReader
 
 
 __author__ = "Brian Balsamo"
@@ -15,7 +16,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class CLIApp(App):
+class CLIApp(App, metaclass=ABCMeta):
     """
     The base class for CLI applications, from which specific
     applications should be derived.
@@ -37,18 +38,6 @@ class CLIApp(App):
     * Utility
         * create_path: Makes a file or a dir at some path
     """
-    def __init__(self, __author__=None, __email__=None, __company__=None,
-                 __copyright__=None, __publication__=None, __version__=None):
-        App.__init__(
-            self,
-            __author__=__author__,
-            __email__=__email__,
-            __company__=__company__,
-            __copyright__=__copyright__,
-            __publication__=__publication__,
-            __version__=__version__
-        )
-
     def spawn_parser(self, **kwargs):
         parser = ArgumentParser(**kwargs)
 
