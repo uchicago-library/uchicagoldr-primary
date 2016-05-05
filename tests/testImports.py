@@ -56,5 +56,18 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.core.app.aru import AccessionRecordEditor
         from uchicagoldrtoolsuite.core.app.postinstall import PostInstall
 
+    def test_conceptual_imports(self):
+        from uchicagoldrtoolsuite.conceptual.lib.abc.abc.retriever import Retriever
+        from uchicagoldrtoolsuite.conceptual.lib.abc.contentpointerresolver import ContentPointerResolver
+        from uchicagoldrtoolsuite.conceptual.lib.abc.contentpointerretriever import ContentPointerRetriever
+        from uchicagoldrtoolsuite.conceptual.lib.abc.familyretriever import FamilyRetriever
+        from uchicagoldrtoolsuite.conceptual.lib.contentpointer import ContentPointer
+        from uchicagoldrtoolsuite.conceptual.lib.family import Family
+        from uchicagoldrtoolsuite.conceptual.lib.dbcontentpointerresolver import DatabaseContentPointerResolver
+        from uchicagoldrtoolsuite.conceptual.lib.dbcontentpointerretriever import DatabaseContentPointerRetriever
+        from uchicagoldrtoolsuite.conceptual.lib.dbenvmixin import DatabaseEnvironmentMixin
+        from uchicagoldrtoolsuite.conceptual.lib.dbfamilyretriever import DatabaseFamilyRetriever
+
+
 if __name__ == '__main__':
     unittest.main()

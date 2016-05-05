@@ -9,7 +9,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class DatabaseFamilyRetriever(DataBaseEnvironmentMixin,
+class DatabaseFamilyRetriever(DatabaseEnvironmentMixin,
                               FamilyRetriever):
     def __init__(self):
         pass

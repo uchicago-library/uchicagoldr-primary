@@ -35,7 +35,7 @@ class Retriever(metaclass=ABCMeta):
     _supplied_uuid = None
 
     @abstractmethod
-    def retrieve(self uuid=None):
+    def retrieve(self, uuid=None):
         pass
 
     def _set_supplied_uuid(self, uuid):

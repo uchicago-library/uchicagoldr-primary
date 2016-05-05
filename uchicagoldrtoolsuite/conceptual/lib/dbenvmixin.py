@@ -8,7 +8,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class DatabaseBaseEnvironmentMixin(object):
+class DatabaseEnvironmentMixin(object):
     def set_db_ip(self, ip):
         if not isinstance(ip, str):
             raise ValueError('IPs must be provided as strings')
