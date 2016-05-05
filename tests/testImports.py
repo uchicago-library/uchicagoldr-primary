@@ -51,8 +51,8 @@ class TestImports(unittest.TestCase):
             retrieve_resource_filepath, \
             retrieve_resource_stream, \
             retrieve_controlled_vocabulary
-        from uchicagoldrtoolsuite.core.app.abc.app import App
-        from uchicagoldrtoolsuite.core.app.internal.cliapp import CLIApp
+        from uchicagoldrtoolsuite.core.app.abc.abc.app import App
+        from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
         from uchicagoldrtoolsuite.core.app.aru import AccessionRecordEditor
         from uchicagoldrtoolsuite.core.app.postinstall import PostInstall
 
