@@ -3,7 +3,7 @@ from os.path import abspath, isdir
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from uchicagoldrtoolsuite.core.apps.abc.cliapp import CLIApp
+from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filewalker import FileWalker
 from ..lib.premisextensionnodes import Restriction
 

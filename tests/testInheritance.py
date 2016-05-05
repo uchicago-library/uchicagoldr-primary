@@ -7,7 +7,6 @@ from uchicagoldrtoolsuite.bit_level.lib.filesystemstagereader import FileSystemS
 from uchicagoldrtoolsuite.bit_level.lib.filesystemstagewriter import FileSystemStageWriter
 from uchicagoldrtoolsuite.bit_level.lib.ldrpath import LDRPath
 from uchicagoldrtoolsuite.bit_level.lib.ldrurl import LDRURL
-
 from uchicagoldrtoolsuite.bit_level.lib.absolutefilepathtree import AbsoluteFilePathTree
 from uchicagoldrtoolsuite.bit_level.lib.archivestructure import ArchiveStructure
 from uchicagoldrtoolsuite.bit_level.lib.filepathtree import FilePathTree
@@ -31,11 +30,17 @@ from uchicagoldrtoolsuite.bit_level.lib.abc.abc.serializationreader import Seria
 from uchicagoldrtoolsuite.bit_level.lib.abc.abc.serializationwriter import SerializationWriter
 from uchicagoldrtoolsuite.bit_level.lib.abc.structure import Structure
 
+from uchicagoldrtoolsuite.bit_level.app.premisobjectcreator import PremisObjectCreator
+from uchicagoldrtoolsuite.bit_level.app.premisrestrictionsetter import PremisRestrictionSetter
+from uchicagoldrtoolsuite.bit_level.app.pruner import Pruner
+from uchicagoldrtoolsuite.bit_level.app.stager import Stager
+from uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator import TechnicalMetadataCreator
 
 from uchicagoldrtoolsuite.core.app.abc.app import App
-from uchicagoldrtoolsuite.core.app.internal.cliapp import CLIApp
+from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.app.aru import AccessionRecordEditor
 from uchicagoldrtoolsuite.core.app.postinstall import PostInstall
+
 
 class TestStructures(unittest.TestCase):
     def testStage(self):
@@ -149,6 +154,23 @@ class TestSerializationWriters(unittest.TestCase):
         for parent in inheritance_tree:
             self.assertTrue(isinstance(x, parent))
         self.assertTrue(type(x) == inheritance_tree[-1])
+
+
+class TestApplications(unittest.TestCase):
+    def testPremisObjectCreator(self):
+        x = Stager()
+        inheritance_tree = [
+            App,
+            CLIApp,
+            Stager
+        ]
+        self.assertTrue(isinstance(x, App))
+        self.assertTrue(isinstance(x, CLIApp))
+        self.assertTrue(isinstance(x, PremisObjectCreatorApp))
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
 
 
 if __name__ == '__main__':
