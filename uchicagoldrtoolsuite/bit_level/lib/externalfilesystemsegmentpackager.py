@@ -3,8 +3,8 @@ from os.path import isfile
 from .absolutefilepathtree import AbsoluteFilePathTree
 from .segment import Segment
 from .abc.segmentpackager import SegmentPackager
-from .filesystemmaterialsuitepackager import\
-    FileSystemMaterialSuitePackager
+from .externalfilesystemmaterialsuitepackager import\
+    ExternalFileSystemMaterialSuitePackager
 from .ldrpath import LDRPath
 
 
@@ -16,7 +16,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class FileSystemSegmentPackager(SegmentPackager):
+class ExternalFileSystemSegmentPackager(SegmentPackager):
     """
     Reads a segment structure that has been serialized to disk and understands
     how to package it back up as a segment for inclusion in a Staging
@@ -25,19 +25,19 @@ class FileSystemSegmentPackager(SegmentPackager):
     def __init__(self, label_text, label_number):
         super().__init__()
         self.set_implementation("file system")
-        self.set_msuite_packager(FileSystemMaterialSuitePackager)
+        self.set_msuite_packager(ExternalFileSystemMaterialSuitePackager)
         self.set_id_prefix(label_text)
         self.set_id_num(label_number)
         self.set_struct(Segment(self.get_id_prefix(), int(self.get_id_num())))
 
     def package(self, a_directory, remainder_files=[]):
-        packager = self.msuite_packager()
         if len(remainder_files) <= 0:
             tree = AbsoluteFilePathTree(a_directory)
             just_files = tree.get_files()
             for n_thing in just_files:
                 a_file = LDRPath(n_thing)
-                msuite = packager.package(a_file)
+                packager = self.msuite_packager(a_file)
+                msuite = packager.package()
                 self.get_struct().add_material_suite(msuite)
         else:
             for n_item in remainder_files:

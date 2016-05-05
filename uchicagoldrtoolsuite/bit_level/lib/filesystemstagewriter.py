@@ -21,13 +21,12 @@ class FileSystemStageWriter(StageSerializationWriter):
     writes a Staging Structure to disk as a series of directories and files
     """
     def __init__(self, aStructure):
-        super().__init__()
+        super().__init__(aStructure)
         self.set_implementation('file system')
-        self.structure = aStructure
 
     def write(self, stage_directory, origin_root):
 
-        validated = self.structure.validate()
+        validated = self.get_struct().validate()
         if not validated:
             raise ValueError("Cannot serialize an invalid " +
                              " structure of type {}".
@@ -58,7 +57,7 @@ class FileSystemStageWriter(StageSerializationWriter):
                 mkdir(accessionrecords_dir)
             if not exists(legalnotes_dir):
                 mkdir(legalnotes_dir)
-            for n_item in self.structure.segment:
+            for n_item in self.get_struct().segment:
                 cur_data_dir = join(data_dir, n_item.identifier)
                 cur_admin_dir = join(admin_dir, n_item.identifier)
                 if not exists(cur_data_dir):

@@ -17,5 +17,5 @@ class StageSerializationWriter(SerializationWriter, metaclass=ABCMeta):
     A base class for all Staging Structure Serialization Writers
     """
     @abstractmethod
-    def __init__(self):
-        self.set_struct(Stage)
+    def __init__(self, struct):
+        self.set_struct(struct)

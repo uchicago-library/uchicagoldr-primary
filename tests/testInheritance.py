@@ -75,7 +75,7 @@ class TestStructures(unittest.TestCase):
         self.assertTrue(type(x) == inheritance_tree[-1])
 
     def testMaterialSuite(self):
-        x = MaterialSuite('someid')
+        x = MaterialSuite()
         inheritance_tree = [
             Structure,
             MaterialSuite

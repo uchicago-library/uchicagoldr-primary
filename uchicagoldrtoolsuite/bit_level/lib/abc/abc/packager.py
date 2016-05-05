@@ -19,6 +19,10 @@ class Packager(metaclass=ABCMeta):
     _struct = None
     _implementation = None
 
+    @abstractmethod
+    def __init__(self):
+        pass
+
     def set_struct(self, value):
         self._struct = value
 

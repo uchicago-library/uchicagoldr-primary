@@ -24,6 +24,9 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         msuite.original.append(an_item)
         return msuite
 
+    def get_original(self):
+        pass
+
     def get_techmd(self):
         pass
 

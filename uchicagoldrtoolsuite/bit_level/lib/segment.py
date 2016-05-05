@@ -37,6 +37,9 @@ class Segment(Structure):
         self.required_parts = ['identifier', 'materialsuite', 'identifier']
         self.materialsuite = []
 
+    def add_material_suite(self, x):
+        self.materialsuite.append(x)
+
     def validate(self):
         for n_thing in self.materialsuite:
             if getattr(n_thing, MaterialSuite):
