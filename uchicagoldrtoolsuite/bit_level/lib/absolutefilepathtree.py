@@ -27,12 +27,6 @@ class AbsoluteFilePathTree(FilePathTree):
         if path is not None:
             if not isabs(path):
                 raise ValueError()
-        self.shas = None
-        self.md5s = None
-        self.ext_mimes = None
-        self.magic_mimes = None
-        self.file_sizes = None
-        self.total_size = None
 
         FilePathTree.__init__(self, path=path, filter_pattern=filter_pattern,
                               leaf_dirs=leaf_dirs)

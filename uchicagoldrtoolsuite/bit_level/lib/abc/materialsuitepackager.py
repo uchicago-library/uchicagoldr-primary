@@ -28,9 +28,8 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     simply eats these.
     """
     @abstractmethod
-    def __init__(self, ldritem):
+    def __init__(self):
         self.set_struct(MaterialSuite())
-        self.get_struct().add_original(ldritem)
 
     @abstractmethod
     def get_premis(self):
@@ -49,6 +48,10 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         default package implementation
         """
         ms = self.get_struct()
+        try:
+            ms.set_original_list(self.get_original())
+        except NotImplementedError:
+            pass
         try:
             ms.set_premis_list(self.get_premis())
         except NotImplementedError:

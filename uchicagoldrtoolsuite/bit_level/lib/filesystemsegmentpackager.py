@@ -1,11 +1,12 @@
+from os.path import join
 from os.path import isfile
 
-from .absolutefilepathtree import AbsoluteFilePathTree
+from .rootedpath import RootedPath
+from .filepathtree import FilePathTree
 from .segment import Segment
 from .abc.segmentpackager import SegmentPackager
 from .filesystemmaterialsuitepackager import\
     FileSystemMaterialSuitePackager
-from .ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -24,27 +25,32 @@ class FileSystemSegmentPackager(SegmentPackager):
     """
     def __init__(self, stage_env_path, stage_id, label_text, label_number):
         super().__init__()
-        self.set_implementation("file system")
-        self.set_msuite_packager(FileSystemMaterialSuitePackager)
         self.stage_env_path = stage_env_path
         self.stage_id = stage_id
-        self.set_id_prefix(label_text)
-        self.set_id_num(label_number)
-        self.set_struct(Segment(self.get_id_prefix(), int(self.get_id_num())))
+        self.label_text = label_text
+        self.label_number = label_number
+        self.set_implementation("file system")
+        self.set_msuite_packager(FileSystemMaterialSuitePackager)
+        self.segment_data_root = join(stage_env_path, stage_id,
+                                      'data',
+                                      label_text + "-" + str(label_number))
+        self.set_struct(Segment(label_text, int(label_number)))
 
-    def package(self, a_directory, remainder_files=[]):
-        packager = self.msuite_packager()
-        if len(remainder_files) <= 0:
-            tree = AbsoluteFilePathTree(a_directory)
-            just_files = tree.get_files()
-            for n_thing in just_files:
-                a_file = LDRPath(n_thing)
-                msuite = packager.package(a_file)
-                self.get_struct().add_material_suite(msuite)
-        else:
-            for n_item in remainder_files:
-                if isfile(n_item):
-                    a_thing = LDRPath(n_item)
-                msuite = packager.package(a_thing)
-                self.get_struct().add_material_suite(msuite)
+    def package(self):
+        segment_rooted_path = RootedPath(
+            self.segment_data_root+"/",
+            root=self.segment_data_root
+        )
+        tree = FilePathTree(segment_rooted_path)
+        for x in tree.get_paths():
+            if not isfile(join(self.segment_data_root, x)):
+                continue
+            ms = FileSystemMaterialSuitePackager(
+                self.stage_env_path,
+                self.stage_id,
+                self.label_text,
+                self.label_number,
+                x
+            ).package()
+            self.get_struct().add_material_suite(ms)
         return self.get_struct()

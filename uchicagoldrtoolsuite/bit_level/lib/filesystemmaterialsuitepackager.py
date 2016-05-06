@@ -1,5 +1,7 @@
+from os.path import join
+
 from .abc.materialsuitepackager import MaterialSuitePackager
-from .materialsuite import MaterialSuite
+from .ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -15,28 +17,25 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
     Reads a file system MaterialSuite serialization and knows how to package
     material suites from the contents for inclusion in segment structures
     """
-    def __init__(self, stage_env_path, stage_id, label_text, label_number, orig_path):
+    def __init__(self, stage_env_path, stage_id, label_text, label_number,
+                 rel_orig_path):
         super().__init__()
         self.set_implementation('file system')
-        self.stage_env_path = stage_env_path
-        self.stage_id = stage_id
-        self.label_text = label_text
-        self.label_number = label_number
-        self.orig_path = orig_path
-
-    def package(self):
-        msuite = MaterialSuite(an_item)
-        msuite.original.append(an_item)
-        return msuite
+        self.rel_orig_path = rel_orig_path
+        stage_fullpath = join(stage_env_path, stage_id)
+        self.data_fullpath = join(stage_fullpath, 'data',
+                                  label_text + "-" + str(label_number))
+        self.admin_fullpath = join(stage_fullpath, 'admin',
+                                  label_text + "-" + str(label_number))
 
     def get_original(self):
-        return LDRPath(self.orig_path)
+        return [LDRPath(join(self.data_fullpath, self.rel_orig_path))]
 
     def get_techmd(self):
-        pass
+        raise NotImplementedError()
 
     def get_presform(self):
-        pass
+        raise NotImplementedError()
 
     def get_premis(self):
-        pass
+        raise NotImplementedError()
