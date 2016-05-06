@@ -18,30 +18,30 @@ class Structure(metaclass=ABCMeta):
     Provides a low level _validate() method for assuring a structure is composed
     of the parts it promises.
     """
+
+    _required_parts = []
+
     @abstractmethod
     def validate(self):
-        pass
-
-    def _validate(self):
-        for n_thing in self.required_parts:
+        for thing in self.get_required_parts():
             if  getattr(self, n_thing, None) == None:
-                return False
-            elif (n_thing != 'identifier' and not\
-                  isinstance(getattr(self, n_thing, None), list)):
                 return False
         return True
 
-        def getrequiredparts(self):
-            return self._required_parts
+    def get_required_parts(self):
+        return self._required_parts
 
-        def setrequiredparts(self, value):
-            self._required_parts = value
+    def set_required_parts(self, required_parts):
+        for x in required_parts:
+            self.add_required_part(x)
 
-        def getidentifier(self):
-            return self._identifier
+    def del_required_parts(self):
+        while self.get_required_parts():
+            self._required_parts.pop()
 
-        def setidentifier(self, value):
-            self._identifier = value
+    def add_required_part(self, x):
+        if not isinstance(x, str):
+            raise ValueError('Required parts must be specified as strings.')
+        self._required_parts.append(x)
 
-        required_parts = abstractproperty(getrequiredparts, setrequiredparts)
-        identifier = abstractproperty(getidentifier, setidentifier)
+    required_parts = property(get_required_parts, set_required_parts)

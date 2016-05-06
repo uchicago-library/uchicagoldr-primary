@@ -39,5 +39,5 @@ class Packager(metaclass=ABCMeta):
     def package(self):
         pass
 
-    struct = property(set_struct, get_struct)
-    implementation = property(set_implementation, get_implementation)
+    struct = property(get_struct, set_struct)
+    implementation = property(get_implementation, set_implementation)

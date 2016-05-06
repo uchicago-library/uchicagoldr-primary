@@ -48,6 +48,8 @@ class Stage(Structure):
             self.pop_segment()
 
     def add_segment(self, segment):
+        if not isinstance(segment, Segment):
+            raise ValueError('only Segments can be added to the segments_list')
         self._segment.append(segment)
 
     def get_segment(self, index):
@@ -143,10 +145,19 @@ class Stage(Structure):
                 pass
             else:
                 return False
-        return super(Stage, self)._validate()
+        return super().validate()
 
-    property(get_identifier, set_identifier)
-    property(get_segment_list, set_segment_list, del_segment_list)
-    property(get_accessionrecord_list, set_accessionrecord_list, del_accessionrecord_list)
-    property(get_adminnote_list, set_adminnote_list, del_adminnote_list)
-    property(get_legalnote_list, set_legalnote_list, del_legalnote_list)
+    identifier = property(get_identifier,
+                          set_identifier)
+    segment_list = property(get_segment_list,
+                            set_segment_list,
+                            del_segment_list)
+    accessionrecord_list = property(get_accessionrecord_list,
+                                    set_accessionrecord_list,
+                                    del_accessionrecord_list)
+    adminnote_list = property(get_adminnote_list,
+                              set_adminnote_list,
+                              del_adminnote_list)
+    legalnote_list = property(get_legalnote_list,
+                              set_legalnote_list,
+                              del_legalnote_list)

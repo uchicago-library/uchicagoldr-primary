@@ -35,5 +35,5 @@ class SerializationReader(metaclass=ABCMeta):
     def get_implementation(self):
         return self._implementation
 
-    property(get_struct, set_struct)
-    property(get_implementation, set_implementation)
+    struct = property(get_struct, set_struct)
+    implementation = property(get_implementation, set_implementation)

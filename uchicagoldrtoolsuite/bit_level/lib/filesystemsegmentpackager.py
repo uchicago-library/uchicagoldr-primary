@@ -52,5 +52,5 @@ class FileSystemSegmentPackager(SegmentPackager):
                 self.label_number,
                 x
             ).package()
-            self.get_struct().add_material_suite(ms)
+            self.get_struct().add_materialsuite(ms)
         return self.get_struct()

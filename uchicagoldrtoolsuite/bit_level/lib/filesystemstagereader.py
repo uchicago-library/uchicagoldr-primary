@@ -24,7 +24,7 @@ class FileSystemStageReader(StageSerializationReader):
         self.set_implementation('file system')
         self.stage_id = staging_directory.split('/')[-1]
         self.get_struct().set_identifier(staging_directory.split('/')[-1])
-        self.stage_env_path = staging_directory.split('/')[0:-1]
+        self.stage_env_path = "/".join(staging_directory.split('/')[0:-1])
         self.structureType = "staging"
         self.serialized_location = staging_directory
 
@@ -50,10 +50,10 @@ class FileSystemStageReader(StageSerializationReader):
                                 self.stage_id,
                                 prefix,
                                 number
-                            )
+                            ).package()
                         )
                     else:
                         stderr.write("the path for {} is wrong.\n".format(
-                            n_thing))
+                            label))
             # Go on to handle adminnote, legalnote, acc rec
         return self.get_struct()
