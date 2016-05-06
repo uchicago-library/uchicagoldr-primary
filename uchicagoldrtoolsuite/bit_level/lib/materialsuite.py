@@ -16,8 +16,8 @@ class MaterialSuite(Structure):
     original itself
     """
     def __init__(self):
-        self.required_parts = ['original', 'premis',
-                               'technicalmetadata', 'presform']
+#        self.required_parts = ['_original', '_premis',
+#                               '_technicalmetadata', '_presform']
         self._original = []
         self._premis = []
         self._technicalmetadata = []

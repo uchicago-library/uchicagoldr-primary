@@ -30,7 +30,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         if not validated:
             raise ValueError("Cannot serialize an invalid " +
                              " structure of type {}".
-                             format(type(self.structure).__name__))
+                             format(type(self.get_struct()).__name__))
         else:
             data_dir = join(stage_directory, 'data')
             admin_dir = join(stage_directory, 'admin')
@@ -57,7 +57,7 @@ class FileSystemStageWriter(StageSerializationWriter):
                 mkdir(accessionrecords_dir)
             if not exists(legalnotes_dir):
                 mkdir(legalnotes_dir)
-            for n_item in self.get_struct().segment:
+            for n_item in self.get_struct().segment_list:
                 cur_data_dir = join(data_dir, n_item.identifier)
                 cur_admin_dir = join(admin_dir, n_item.identifier)
                 if not exists(cur_data_dir):
@@ -77,11 +77,12 @@ class FileSystemStageWriter(StageSerializationWriter):
                         today_str = bytes(today_str.encode('utf-8'))
                         mf.write(today_str)
 
-                for n_suite in n_item.materialsuite:
+                for n_suite in n_item.materialsuite_list:
                     for req_part in n_suite.required_parts:
                         if type(getattr(n_suite, req_part, None)) == list:
                             for n_file in getattr(n_suite, req_part):
                                 if stage_directory in n_file.item_name:
+                                    print('not writing for some reason')
                                     pass
                                 else:
                                     relevant_path = relpath(n_file.item_name,

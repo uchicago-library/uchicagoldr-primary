@@ -3,14 +3,19 @@ from .ldrpath import LDRPath
 
 
 class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
-    def __init__(self, orig):
-        super().__init__(orig)
+    def __init__(self, orig, root=None):
+        super().__init__()
+        self.orig = orig
+        self.root = root
 
-    def get_premis(self):
+    def get_original_list(self):
+        return [LDRPath(self.orig, root=self.root)]
+
+    def get_premis_list(self):
         raise NotImplementedError()
 
-    def get_techmd(self):
+    def get_techmd_list(self):
         raise NotImplementedError()
 
-    def get_presform(self):
+    def get_presform_list(self):
         raise NotImplementedError()

@@ -1,11 +1,12 @@
 from os.path import isfile
+from os.path import join
 
-from .absolutefilepathtree import AbsoluteFilePathTree
 from .segment import Segment
 from .abc.segmentpackager import SegmentPackager
 from .externalfilesystemmaterialsuitepackager import\
     ExternalFileSystemMaterialSuitePackager
-from .ldrpath import LDRPath
+from .rootedpath import RootedPath
+from .filepathtree import FilePathTree
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -22,27 +23,32 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
     how to package it back up as a segment for inclusion in a Staging
     Structure
     """
-    def __init__(self, label_text, label_number):
+    def __init__(self, path, label_text, label_number, root=None):
         super().__init__()
         self.set_implementation("file system")
         self.set_msuite_packager(ExternalFileSystemMaterialSuitePackager)
         self.set_id_prefix(label_text)
         self.set_id_num(label_number)
         self.set_struct(Segment(self.get_id_prefix(), int(self.get_id_num())))
-
-    def package(self, a_directory, remainder_files=[]):
-        if len(remainder_files) <= 0:
-            tree = AbsoluteFilePathTree(a_directory)
-            just_files = tree.get_files()
-            for n_thing in just_files:
-                a_file = LDRPath(n_thing)
-                packager = self.msuite_packager(a_file)
-                msuite = packager.package()
-                self.get_struct().add_material_suite(msuite)
+        self.root = root
+        if root:
+            self.path = RootedPath(path, root=root)
         else:
-            for n_item in remainder_files:
-                if isfile(n_item):
-                    a_thing = LDRPath(n_item)
-                msuite = packager.package(a_thing)
-                self.get_struct().add_material_suite(msuite)
+            self.path = path
+
+    def package(self):
+        tree = FilePathTree(self.path)
+        if self.root:
+            for x in tree.get_paths():
+                if not isfile(join(self.root, x)):
+                    continue
+                ms = self.get_msuite_packager(join(self.root, x),
+                                              root=self.root).package()
+                self.get_struct().add_materialsuite(ms)
+        else:
+            for x in tree.get_paths():
+                if not isfile(x):
+                    continue
+                ms = self.get_msuite_packager()(x).package()
+                self.get_struct().add_materialsuite(ms)
         return self.get_struct()

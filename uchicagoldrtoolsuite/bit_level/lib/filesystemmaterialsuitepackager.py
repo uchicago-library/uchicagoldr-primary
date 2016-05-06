@@ -28,15 +28,15 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.admin_fullpath = join(stage_fullpath, 'admin',
                                   label_text + "-" + str(label_number))
 
-    def get_original(self):
+    def get_original_list(self):
         return [LDRPath(join(self.data_fullpath, self.rel_orig_path),
                         root=self.data_fullpath)]
 
-    def get_techmd(self):
+    def get_techmd_list(self):
         raise NotImplementedError()
 
-    def get_presform(self):
+    def get_presform_list(self):
         raise NotImplementedError()
 
-    def get_premis(self):
+    def get_premis_list(self):
         raise NotImplementedError()

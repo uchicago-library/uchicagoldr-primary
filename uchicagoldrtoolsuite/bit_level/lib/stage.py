@@ -134,16 +134,18 @@ class Stage(Structure):
             return self.get_legalnote_list().pop(index)
 
     def validate(self):
-        for n_thing in self.segment:
+        for n_thing in self.segment_list:
             if isinstance(n_thing, Segment):
                 pass
             else:
+                print("11111")
                 return False
-        big_list = self.accessionrecord + self.adminnote + self.legalnote
+        big_list = self.accessionrecord_list + self.adminnote_list + self.legalnote_list
         for n_thing in big_list:
             if isinstance(n_thing, LDRItem):
                 pass
             else:
+                print("22222")
                 return False
         return super().validate()
 

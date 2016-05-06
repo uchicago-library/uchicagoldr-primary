@@ -32,15 +32,19 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         self.set_struct(MaterialSuite())
 
     @abstractmethod
-    def get_premis(self):
+    def get_original_list(self):
         pass
 
     @abstractmethod
-    def get_techmd(self):
+    def get_premis_list(self):
         pass
 
     @abstractmethod
-    def get_presform(self):
+    def get_techmd_list(self):
+        pass
+
+    @abstractmethod
+    def get_presform_list(self):
         pass
 
     def package(self):
@@ -49,19 +53,19 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         """
         ms = self.get_struct()
         try:
-            ms.set_original_list(self.get_original())
+            ms.set_original_list(self.get_original_list())
         except NotImplementedError:
             pass
         try:
-            ms.set_premis_list(self.get_premis())
+            ms.set_premis_list(self.get_premis_list())
         except NotImplementedError:
             pass
         try:
-            ms.set_presform_list(self.get_presform())
+            ms.set_presform_list(self.get_presform_list())
         except NotImplementedError:
             pass
         try:
-            ms.set_technicalmetadata_list(self.get_techmd())
+            ms.set_technicalmetadata_list(self.get_techmd_list())
         except NotImplementedError:
             pass
         return ms

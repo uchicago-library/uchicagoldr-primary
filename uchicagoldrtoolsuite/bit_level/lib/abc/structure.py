@@ -24,7 +24,9 @@ class Structure(metaclass=ABCMeta):
     @abstractmethod
     def validate(self):
         for thing in self.get_required_parts():
-            if  getattr(self, n_thing, None) == None:
+            if  getattr(self, thing, None) == None:
+                print("333333333333")
+                print(thing)
                 return False
         return True
 
