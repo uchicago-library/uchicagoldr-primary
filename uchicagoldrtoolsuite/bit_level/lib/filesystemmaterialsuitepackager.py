@@ -29,7 +29,8 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
                                   label_text + "-" + str(label_number))
 
     def get_original(self):
-        return [LDRPath(join(self.data_fullpath, self.rel_orig_path))]
+        return [LDRPath(join(self.data_fullpath, self.rel_orig_path),
+                        root=self.data_fullpath)]
 
     def get_techmd(self):
         raise NotImplementedError()
