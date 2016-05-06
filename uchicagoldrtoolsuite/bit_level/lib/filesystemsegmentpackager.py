@@ -22,10 +22,12 @@ class FileSystemSegmentPackager(SegmentPackager):
     how to package it back up as a segment for inclusion in a Staging
     Structure
     """
-    def __init__(self, label_text, label_number):
+    def __init__(self, stage_env_path, stage_id, label_text, label_number):
         super().__init__()
         self.set_implementation("file system")
         self.set_msuite_packager(FileSystemMaterialSuitePackager)
+        self.stage_env_path = stage_env_path
+        self.stage_id = stage_id
         self.set_id_prefix(label_text)
         self.set_id_num(label_number)
         self.set_struct(Segment(self.get_id_prefix(), int(self.get_id_num())))

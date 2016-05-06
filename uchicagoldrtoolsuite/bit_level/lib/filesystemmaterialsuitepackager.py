@@ -15,17 +15,22 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
     Reads a file system MaterialSuite serialization and knows how to package
     material suites from the contents for inclusion in segment structures
     """
-    def __init__(self):
+    def __init__(self, stage_env_path, stage_id, label_text, label_number, orig_path):
         super().__init__()
         self.set_implementation('file system')
+        self.stage_env_path = stage_env_path
+        self.stage_id = stage_id
+        self.label_text = label_text
+        self.label_number = label_number
+        self.orig_path = orig_path
 
-    def package(self, an_item):
+    def package(self):
         msuite = MaterialSuite(an_item)
         msuite.original.append(an_item)
         return msuite
 
     def get_original(self):
-        pass
+        return LDRPath(self.orig_path)
 
     def get_techmd(self):
         pass
