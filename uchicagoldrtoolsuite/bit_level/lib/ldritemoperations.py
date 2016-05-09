@@ -16,7 +16,7 @@ def move(origin_loc, destination_loc):
     raise NotImplemented('yet')
 
 
-def copy(origin_loc, destination_loc):
+def copy(origin_loc, destination_loc, clobber):
     """
     __Args__
 
@@ -35,8 +35,9 @@ def copy(origin_loc, destination_loc):
             isinstance(destination_loc, LDRItem):
         raise TypeError("must pass two instances of LDRPathRegularFile" +
                         " to the copy function.")
-    if destination_loc.exists():
-        return (True, False, "already present", None)
+    if clobber is False:
+        if destination_loc.exists():
+            return (True, False, "already present", None)
 
     origin_hash = md5()
     destination_hash = md5()

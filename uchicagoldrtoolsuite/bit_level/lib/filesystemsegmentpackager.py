@@ -37,6 +37,7 @@ class FileSystemSegmentPackager(SegmentPackager):
         self.set_struct(Segment(label_text, int(label_number)))
 
     def package(self):
+        presform_filename_pattern = re_compile("^.*\.presform(\.[a-zA-Z0-9]*)?$")
         segment_rooted_path = RootedPath(
             self.segment_data_root+"/",
             root=self.segment_data_root
@@ -44,6 +45,10 @@ class FileSystemSegmentPackager(SegmentPackager):
         tree = FilePathTree(segment_rooted_path)
         for x in tree.get_paths():
             if not isfile(join(self.segment_data_root, x)):
+                # Its a directory
+                continue
+            if presform_filename_pattern.match(x):
+                # Its a presform
                 continue
             ms = FileSystemMaterialSuitePackager(
                 self.stage_env_path,

@@ -1,13 +1,10 @@
-from os.path import join
-import re
-from itertools import chain
-from os.path import relpath
+from os.path import join, dirname
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagewriter import FileSystemStageWriter
 from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.absolutefilepathtree import AbsoluteFilePathTree
-from ..lib.filesystemsegmentpackager import FileSystemSegmentPackager
+from ..lib.externalfilesystemsegmentpackager import \
+    ExternalFileSystemSegmentPackager
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -46,18 +43,8 @@ class Stager(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument("--resume", "-r", help="An integer for a " +
-                                 "run that needs to be resumed.",
-                                 type=str, action='store', default=0)
-        self.parser.add_argument("--group", "-g", help="The name of a group " +
-                                 "to assign group ownership to the new " +
-                                 "staging directory",
-                                 type=str, action='store', default='None')
         self.parser.add_argument("directory", help="The directory that " +
                                  "needs to be staged.",
-                                 type=str, action='store')
-        self.parser.add_argument("source_root", help="The root of the  " +
-                                 "directory that needs to be staged.",
                                  type=str, action='store')
         self.parser.add_argument("destination_root", help="The location " +
                                  "that the staging directory should be " +
@@ -69,65 +56,53 @@ class Stager(CLIApp):
         self.parser.add_argument("prefix", help="The prefix defining the " +
                                  "type of run that is being processed",
                                  type=str, action='store')
+        self.parser.add_argument("--resume", "-r", help="An integer for a " +
+                                 "run that needs to be resumed.",
+                                 type=str, action='store', default=0)
+        self.parser.add_argument("--clobber",
+                                 help="Clobber any existing files in the dst.",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--source_root", help="The root of the  " +
+                                 "directory that needs to be staged.",
+                                 type=str, action='store',
+                                 default=None)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
 
         # App code
-        staging_directory = join(args.destination_root, args.staging_id)
-        staging_directory_reader = FileSystemStageReader(staging_directory)
-        staging_structure = staging_directory_reader.read()
-
-        segment_ids = sorted([x.identifier for x in staging_structure.segment])
-        this_prefix_and_number_segment_ids = [x for x in segment_ids
-                                              if args.prefix+'-'+str(args.resume)
-                                              in x]
-        this_prefix_segment_ids = [x for x in segment_ids if args.prefix in x]
-        remainder = []
-
-        if len(this_prefix_and_number_segment_ids) > 0:
-            tree = AbsoluteFilePathTree(args.directory)
-            all_nodes = tree.get_files()
-            relevant_segment = [x for x in staging_structure.segment
-                                if x.identifier == args.prefix + '-' +
-                                args.resume][0]
-            partly_done = [x for x in list(chain(*[x.original
-                                                   for x in relevant_segment.
-                                                   materialsuite]))]
-
-            for n_origin_item in all_nodes:
-                n_identifier = '.*'+relpath(n_origin_item,
-                                            args.source_root) + '$'
-                match_pattern = re.compile(r'%s' % n_identifier)
-                matches = [x.item_name for x in partly_done
-                           if match_pattern.match(x.item_name)]
-                if len(matches) == 0:
-                    remainder.append(n_origin_item)
-                else:
-                    pass
-            current_segment_number = args.resume
-        elif len(this_prefix_segment_ids) > 0:
-            tree = AbsoluteFilePathTree(args.directory)
-            match_pattern = re.compile('(\w{1,})[-](\d{1,2})')
-            segment_numbers = [int(re.compile('(\w{1,})[-](\d{1,})').
-                                   match(x).group(2))
-                               for x in this_prefix_segment_ids]
-            current_segment_number = sorted(segment_numbers)[-1] + 1
+        stage = FileSystemStageReader(join(args.destination_root,
+                                           args.staging_id)).read()
+        if args.resume:
+            seg_num = args.resume
         else:
-            current_segment_number = 1
+            segment_ids = []
+            for segment in stage.segment_list:
+                segment_ids.append(segment.identifier)
+            segment_ids = [x for x in segment_ids if
+                           x.split("-")[0] == args.prefix]
+            segment_nums = [x.split("-")[1] for x in segment_ids]
+            segment_nums = [int(x) for x in segment_nums]
+            segment_nums.sort()
+            if segment_nums:
+                seg_num = segment_nums[-1]+1
+            else:
+                seg_num = 1
+        if args.source_root:
+            root = args.source_root
+        else:
+            root = dirname(args.directory)
 
-        segment_packager = FileSystemSegmentPackager(
-            args.prefix,
-            current_segment_number)
-        segment = segment_packager.package(args.directory,
-                                           remainder_files=remainder)
+        ext_seg_packager = ExternalFileSystemSegmentPackager(args.directory,
+                                                             args.prefix,
+                                                             seg_num,
+                                                             root=root)
 
-        staging_structure.segment.append(segment)
-
-        staging_directory_writer = FileSystemStageWriter(staging_structure)
-        staging_directory_writer.write(join(args.destination_root,
-                                            args.staging_id),
-                                       args.source_root)
+        seg = ext_seg_packager.package()
+        stage.add_segment(seg)
+        writer = FileSystemStageWriter(stage, args.destination_root)
+        writer.write(clobber=args.clobber)
 
 
 if __name__ == "__main__":
