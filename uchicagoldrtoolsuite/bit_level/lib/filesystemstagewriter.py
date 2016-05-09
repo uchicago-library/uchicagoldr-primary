@@ -78,47 +78,54 @@ class FileSystemStageWriter(StageSerializationWriter):
                         mf.write(today_str)
 
                 for n_suite in n_item.materialsuite_list:
-                    for req_part in n_suite.required_parts:
-                        if type(getattr(n_suite, req_part, None)) == list:
-                            for n_file in getattr(n_suite, req_part):
-                                if stage_directory in n_file.item_name:
-                                    print('not writing for some reason')
-                                    pass
-                                else:
-                                    relevant_path = relpath(n_file.item_name,
-                                                            origin_root)
-                                    new_file_name = join(cur_data_dir,
-                                                         relevant_path)
-                                    new_file = LDRPath(
-                                        new_file_name)
-                                    makedirs(dirname(new_file.item_name),
-                                             exist_ok=True)
-                                    success = False
-                                    success, checksum_matched, copy_status,\
-                                        checksum1 = copy(n_file,
-                                                         new_file)
-                                    if not success:
-                                        stderr.write("{} could not ".
-                                                     format(n_file.item_name +
-                                                            "be copied to {}".
-                                                            format(
-                                                                new_file.
-                                                                item_name)))
-                                    if copy_status == 'copied':
-                                        if checksum_matched:
-                                            manifest_line = "{}\t{}\n".\
-                                                            format(relevant_path,
-                                                                   checksum1)
-                                            manifest_line = bytes(
-                                                manifest_line.encode('utf-8'))
-                                            with manifest.open('ab') as f:
-                                                f.write(manifest_line)
-                                        elif copy_status == 'already moved':
-                                            stderr.write("no checksum for {}\n".
-                                                         format(new_file.
-                                                                item_name))
-                                    else:
-                                        stdout.write("{} was "
-                                                     .format(relevant_path) +
-                                                     " already present" +
-                                                     " in the segment\n")
+                    for orig in n_suite.get_original_list():
+                        pass
+                    for premis in n_suite.get_premis_list():
+                        pass
+                    for presform in n_suite.get_presform_list():
+                        pass
+                    for techmd in n_suite.get_technicalmetadata_list():
+                        pass
+#                    for req_part in n_suite.required_parts:
+#                        if type(getattr(n_suite, req_part, None)) == list:
+#                            for n_file in getattr(n_suite, req_part):
+#                                if stage_directory in n_file.item_name:
+#                                    pass
+#                                else:
+#                                    relevant_path = relpath(n_file.item_name,
+#                                                            origin_root)
+#                                    new_file_name = join(cur_data_dir,
+#                                                         relevant_path)
+#                                    new_file = LDRPath(
+#                                        new_file_name)
+#                                    makedirs(dirname(new_file.item_name),
+#                                             exist_ok=True)
+#                                    success = False
+#                                    success, checksum_matched, copy_status,\
+#                                        checksum1 = copy(n_file,
+#                                                         new_file)
+#                                    if not success:
+#                                        stderr.write("{} could not ".
+#                                                     format(n_file.item_name +
+#                                                            "be copied to {}".
+#                                                            format(
+#                                                                new_file.
+#                                                                item_name)))
+#                                    if copy_status == 'copied':
+#                                        if checksum_matched:
+#                                            manifest_line = "{}\t{}\n".\
+#                                                            format(relevant_path,
+#                                                                   checksum1)
+#                                            manifest_line = bytes(
+#                                                manifest_line.encode('utf-8'))
+#                                            with manifest.open('ab') as f:
+#                                                f.write(manifest_line)
+#                                        elif copy_status == 'already moved':
+#                                            stderr.write("no checksum for {}\n".
+#                                                         format(new_file.
+#                                                                item_name))
+#                                    else:
+#                                        stdout.write("{} was "
+#                                                     .format(relevant_path) +
+#                                                     " already present" +
+#                                                     " in the segment\n")
