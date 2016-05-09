@@ -48,7 +48,6 @@ class FileSystemStageWriter(StageSerializationWriter):
 
             for n_item in self.get_struct().segment_list:
                 cur_data_dir = join(data_dir, n_item.identifier)
-                print(cur_data_dir)
                 cur_admin_dir = join(admin_dir, n_item.identifier)
                 if not isdir(cur_data_dir):
                     mkdir(cur_data_dir)
@@ -68,12 +67,9 @@ class FileSystemStageWriter(StageSerializationWriter):
                         mf.write(today_str)
 
                 for n_suite in n_item.materialsuite_list:
-                    print("msuite detected")
                     for orig in n_suite.get_original_list():
-                        print("copying original")
                         recv_item_path = join(cur_data_dir,
                                               orig.item_name)
-                        print(recv_item_path)
                         if isfile(recv_item_path) and not clobber:
                             continue
                         if not isdir(dirname(recv_item_path)):
@@ -82,7 +78,7 @@ class FileSystemStageWriter(StageSerializationWriter):
                         success, checksum_matched, copy_status, checksum1 = \
                             copy(orig, recv_item)
                         # do stderr printing here
-                        with manifest.open('w') as mf:
+                        with manifest.open('a') as mf:
                             mf_line_str = "{}\t{}\n".format(orig.item_name,
                                                             checksum1)
                             mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
@@ -99,7 +95,7 @@ class FileSystemStageWriter(StageSerializationWriter):
                         success, checksum_matched, copy_status, checksum1 = \
                             copy(orig, recv_item)
                         # do stderr printing here
-                        with manifest.open('w') as mf:
+                        with manifest.open('a') as mf:
                             mf_line_str = "{}\t{}\n".format(orig.item_name,
                                                             checksum1)
                             mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
@@ -115,7 +111,7 @@ class FileSystemStageWriter(StageSerializationWriter):
                         success, checksum_matched, copy_status, checksum1 = \
                             copy(orig, recv_item)
                         # do stderr printing here
-                        with manifest.open('w') as mf:
+                        with manifest.open('a') as mf:
                             mf_line_str = "{}\t{}\n".format(orig.item_name,
                                                             checksum1)
                             mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
@@ -131,7 +127,7 @@ class FileSystemStageWriter(StageSerializationWriter):
                         success, checksum_matched, copy_status, checksum1 = \
                             copy(orig, recv_item)
                         # do stderr printing here
-                        with manifest.open('w') as mf:
+                        with manifest.open('a') as mf:
                             mf_line_str = "{}\t{}\n".format(orig.item_name,
                                                             checksum1)
                             mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
