@@ -7,6 +7,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         super().__init__()
         self.orig = orig
         self.root = root
+        print(self.root)
 
     def get_original_list(self):
         return [LDRPath(self.orig, root=self.root)]

@@ -102,13 +102,16 @@ class MaterialSuite(Structure):
             return self.get_technicalmetadata_list.pop(index)
 
     def get_presform_list(self):
-        pass
+        return self._presform
 
     def set_presform_list(self, presform_list):
-        pass
+        self.del_presform_list()
+        for x in presform_list:
+            self.add_presform(x)
 
     def del_presform_list(self):
-        pass
+        while self.get_presform_list():
+            self.get_presform_list().pop()
 
     def add_presform(self, presform, index=None):
         if index is None:
@@ -133,8 +136,8 @@ class MaterialSuite(Structure):
                 return False
         return Structure._validate()
 
-    property(get_original_list, set_original_list, del_original_list)
-    property(get_premis_list, set_premis_list, del_premis_list)
-    property(get_technicalmetadata_list, set_technicalmetadata_list,
+    original_list = property(get_original_list, set_original_list, del_original_list)
+    premis_list = property(get_premis_list, set_premis_list, del_premis_list)
+    technicalmetadata_list = property(get_technicalmetadata_list, set_technicalmetadata_list,
              del_technicalmetadata_list)
-    property(get_presform_list, set_presform_list, del_presform_list)
+    presform_list = property(get_presform_list, set_presform_list, del_presform_list)
