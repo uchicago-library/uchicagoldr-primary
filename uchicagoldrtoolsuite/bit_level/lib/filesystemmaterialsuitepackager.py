@@ -1,4 +1,5 @@
-from os.path import join
+from os import listdir
+from os.path import join, dirname, basename
 
 from .abc.materialsuitepackager import MaterialSuitePackager
 from .ldrpath import LDRPath
@@ -38,7 +39,18 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
                              self.rel_orig_path+".fits.xml"))]
 
     def get_presform_list(self):
-        raise NotImplementedError()
+        presforms = []
+        presform_filename_pattern = "^{}\.presform(\.[a-zA-Z0-9]*)?$".format(
+            basename(self.rel_orig_path)
+        )
+        containing_folder_path = join(self.data_fullpath,
+                                      dirname(self.rel_orig_path))
+        siblings = [x for x in listdir(containing_folder_path)]
+        for x in siblings:
+            if presform_filename_pattern.match(x):
+                presforms.append(LDRPath(join(containing_folder_path, x),
+                                         root=containing_folder_path))
+        return presforms
 
     def get_premis_list(self):
         return [LDRPath(join(self.admin_fullpath,
