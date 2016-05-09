@@ -1,6 +1,6 @@
 from datetime import datetime
 from os import makedirs, mkdir
-from os.path import exists, join, relpath, dirname
+from os.path import join, dirname, isdir, isfile
 from sys import stderr, stdout
 
 from .abc.stageserializationwriter import StageSerializationWriter
@@ -20,11 +20,12 @@ class FileSystemStageWriter(StageSerializationWriter):
     """
     writes a Staging Structure to disk as a series of directories and files
     """
-    def __init__(self, aStructure):
+    def __init__(self, aStructure, aRoot):
         super().__init__(aStructure)
+        self.stage_env_path = aRoot
         self.set_implementation('file system')
 
-    def write(self, stage_directory, origin_root):
+    def write(self, clobber=False):
 
         validated = self.get_struct().validate()
         if not validated:
@@ -32,41 +33,32 @@ class FileSystemStageWriter(StageSerializationWriter):
                              " structure of type {}".
                              format(type(self.get_struct()).__name__))
         else:
+            stage_directory = join(self.stage_env_path,
+                                   self.get_struct().get_identifier())
             data_dir = join(stage_directory, 'data')
             admin_dir = join(stage_directory, 'admin')
-            if not exists(stage_directory):
-                mkdir(stage_directory)
-            if not exists(admin_dir):
-                mkdir(admin_dir)
-            if not exists(data_dir):
-                mkdir(data_dir)
             adminnotes_dir = join(admin_dir, 'adminnotes')
             accessionrecords_dir = join(admin_dir, 'accessionrecords')
             legalnotes_dir = join(admin_dir, 'legalnotes')
-            if not exists(data_dir):
-                mkdir(data_dir)
-            if not exists(admin_dir):
-                mkdir(admin_dir)
-            if not exists(data_dir):
-                mkdir(data_dir)
-            if not exists(admin_dir):
-                mkdir(admin_dir)
-            if not exists(adminnotes_dir):
-                mkdir(adminnotes_dir)
-            if not exists(accessionrecords_dir):
-                mkdir(accessionrecords_dir)
-            if not exists(legalnotes_dir):
-                mkdir(legalnotes_dir)
+
+            for x in [stage_directory, data_dir, admin_dir, adminnotes_dir,
+                      accessionrecords_dir, legalnotes_dir]:
+                if not isdir(x):
+                    mkdir(x)
+
             for n_item in self.get_struct().segment_list:
                 cur_data_dir = join(data_dir, n_item.identifier)
                 cur_admin_dir = join(admin_dir, n_item.identifier)
-                if not exists(cur_data_dir):
+                if not isdir(cur_data_dir):
                     mkdir(cur_data_dir)
-                if not exists(cur_admin_dir):
+                if not isdir(cur_admin_dir):
                     mkdir(cur_admin_dir)
-                manifest = join(cur_admin_dir, 'manifest.txt')
-                manifest = LDRPath(manifest)
-                if not exists(manifest.item_name):
+                manifest_path = join(cur_admin_dir, 'manifest.txt')
+                if n_item.get_manifest_list():
+                    manifest = n_item.get_manifest(0)
+                else:
+                    manifest = LDRPath(manifest_path)
+                if not manifest.exists():
                     with manifest.open('wb') as mf:
                         today = datetime.today()
 
@@ -79,13 +71,70 @@ class FileSystemStageWriter(StageSerializationWriter):
 
                 for n_suite in n_item.materialsuite_list:
                     for orig in n_suite.get_original_list():
-                        pass
+                        recv_item_path = join(cur_data_dir,
+                                              orig.item_name)
+                        if isfile(recv_item_path) and not clobber:
+                            continue
+                        if not isdir(dirname(recv_item_path)):
+                            makedirs(dirname(recv_item_path), exist_ok=True)
+                        recv_item = LDRPath(join(cur_data_dir, orig.item_name))
+                        success, checksum_matched, copy_status, checksum1 = \
+                            copy(orig, recv_item)
+                        # do stderr printing here
+                        with manifest.open('w') as mf:
+                            mf_line_str = "{}\t{}\n".format(orig.item_name,
+                                                            checksum1)
+                            mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
+                            mf.write(mf_line_bytes)
                     for premis in n_suite.get_premis_list():
-                        pass
+                        recv_item_path = join(cur_admin_dir,
+                                              "PREMIS",
+                                              orig.item_name)
+                        if isfile(recv_item_path) and not clobber:
+                            continue
+                        if not isdir(dirname(recv_item_path)):
+                            makedirs(dirname(recv_item_path), exist_ok=True)
+                        recv_item = LDRPath(join(cur_data_dir, orig.item_name))
+                        success, checksum_matched, copy_status, checksum1 = \
+                            copy(orig, recv_item)
+                        # do stderr printing here
+                        with manifest.open('w') as mf:
+                            mf_line_str = "{}\t{}\n".format(orig.item_name,
+                                                            checksum1)
+                            mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
+                            mf.write(mf_line_bytes)
                     for presform in n_suite.get_presform_list():
-                        pass
+                        recv_item_path = join(cur_data_dir,
+                                              orig.item_name)
+                        if isfile(recv_item_path) and not clobber:
+                            continue
+                        if not isdir(dirname(recv_item_path)):
+                            makedirs(dirname(recv_item_path), exist_ok=True)
+                        recv_item = LDRPath(join(cur_data_dir, orig.item_name))
+                        success, checksum_matched, copy_status, checksum1 = \
+                            copy(orig, recv_item)
+                        # do stderr printing here
+                        with manifest.open('w') as mf:
+                            mf_line_str = "{}\t{}\n".format(orig.item_name,
+                                                            checksum1)
+                            mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
+                            mf.write(mf_line_bytes)
                     for techmd in n_suite.get_technicalmetadata_list():
-                        pass
+                        recv_item_path = join(cur_data_dir,
+                                              orig.item_name)
+                        if isfile(recv_item_path) and not clobber:
+                            continue
+                        if not isdir(dirname(recv_item_path)):
+                            makedirs(dirname(recv_item_path), exist_ok=True)
+                        recv_item = LDRPath(join(cur_data_dir, orig.item_name))
+                        success, checksum_matched, copy_status, checksum1 = \
+                            copy(orig, recv_item)
+                        # do stderr printing here
+                        with manifest.open('w') as mf:
+                            mf_line_str = "{}\t{}\n".format(orig.item_name,
+                                                            checksum1)
+                            mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
+                            mf.write(mf_line_bytes)
 #                    for req_part in n_suite.required_parts:
 #                        if type(getattr(n_suite, req_part, None)) == list:
 #                            for n_file in getattr(n_suite, req_part):
