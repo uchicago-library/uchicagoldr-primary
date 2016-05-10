@@ -92,9 +92,9 @@ class FileSystemStageWriter(StageSerializationWriter):
                             if not isdir(dirname(recv_item_path)):
                                 makedirs(dirname(recv_item_path), exist_ok=True)
                             recv_item = LDRPath(join(cur_admin_dir, "PREMIS",
-                                                        orig.item_name))
+                                                        orig.item_name+".premis.xml"))
                             success, checksum_matched, copy_status, checksum1 = \
-                                copy(orig, recv_item, clobber=clobber)
+                                copy(premis, recv_item, clobber=clobber)
                             # do stderr printing here
                             with manifest.open('a') as mf:
                                 mf_line_str = "{}\t{}\n".format(orig.item_name,
@@ -102,23 +102,23 @@ class FileSystemStageWriter(StageSerializationWriter):
                                 mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
                                 mf.write(mf_line_bytes)
 
-                    if n_suite.get_presform_list():
-                        for presform in n_suite.get_presform_list():
-                            recv_item_path = join(cur_data_dir,
-                                                orig.item_name)
-                            if isfile(recv_item_path) and not clobber:
-                                continue
-                            if not isdir(dirname(recv_item_path)):
-                                makedirs(dirname(recv_item_path), exist_ok=True)
-                            recv_item = LDRPath(join(cur_data_dir, orig.item_name))
-                            success, checksum_matched, copy_status, checksum1 = \
-                                copy(orig, recv_item, clobber=clobber)
-                            # do stderr printing here
-                            with manifest.open('a') as mf:
-                                mf_line_str = "{}\t{}\n".format(orig.item_name,
-                                                                checksum1)
-                                mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
-                                mf.write(mf_line_bytes)
+#                    if n_suite.get_presform_list():
+#                        for presform in n_suite.get_presform_list():
+#                            recv_item_path = join(cur_data_dir,
+#                                                orig.item_name)
+#                            if isfile(recv_item_path) and not clobber:
+#                                continue
+#                            if not isdir(dirname(recv_item_path)):
+#                                makedirs(dirname(recv_item_path), exist_ok=True)
+#                            recv_item = LDRPath(join(cur_data_dir, orig.item_name))
+#                            success, checksum_matched, copy_status, checksum1 = \
+#                                copy(presform, recv_item, clobber=clobber)
+#                            # do stderr printing here
+#                            with manifest.open('a') as mf:
+#                                mf_line_str = "{}\t{}\n".format(orig.item_name,
+#                                                                checksum1)
+#                                mf_line_bytes = bytes(mf_line_str.encode('utf-8'))
+#                                mf.write(mf_line_bytes)
                     if n_suite.get_technicalmetadata_list():
                         for techmd in n_suite.get_technicalmetadata_list():
                             recv_item_path = join(cur_admin_dir, "TECHMD",
