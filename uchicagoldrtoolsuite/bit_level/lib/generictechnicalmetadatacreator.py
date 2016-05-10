@@ -33,6 +33,11 @@ class GenericTechnicalMetadataCreator(object):
                 materialsuite.set_technicalmetadata_list(
                     self.instantiate_and_make_techmd(materialsuite.content)
                 )
+                if materialsuite.presform_list is not None:
+                    for presform_ms in materialsuite.presform_list:
+                        presform_ms.set_technicalmetadata_list(
+                            self.instantiate_and_make_techmd(presform_ms.content)
+                        )
 
     def instantiate_and_make_techmd(self, item):
         recv_file = join(self.working_dir_path, str(uuid1()))
