@@ -127,9 +127,10 @@ class FileSystemStageWriter(StageSerializationWriter):
                                 continue
                             if not isdir(dirname(recv_item_path)):
                                 makedirs(dirname(recv_item_path), exist_ok=True)
-                            recv_item = LDRPath(join(cur_data_dir, orig.item_name))
+                            recv_item = LDRPath(join(cur_admin_dir, "TECHMD",
+                                                     orig.item_name+".fits.xml"))
                             success, checksum_matched, copy_status, checksum1 = \
-                                copy(orig, recv_item, clobber=clobber)
+                                copy(techmd, recv_item, clobber=clobber)
                             # do stderr printing here
                             with manifest.open('a') as mf:
                                 mf_line_str = "{}\t{}\n".format(orig.item_name,
