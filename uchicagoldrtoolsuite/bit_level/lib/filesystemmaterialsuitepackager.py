@@ -1,5 +1,6 @@
 from os import listdir
-from os.path import join, dirname, basename
+from os.path import join, dirname, basename, isfile
+from re import compile as re_compile
 
 from .abc.materialsuitepackager import MaterialSuitePackager
 from .ldrpath import LDRPath
@@ -34,15 +35,19 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
                         root=self.data_fullpath)]
 
     def get_techmd_list(self):
-        return [LDRPath(join(self.admin_fullpath,
+        techmd = []
+        fits_path = join(self.admin_fullpath,
                              "TECHMD",
-                             self.rel_orig_path+".fits.xml"))]
+                             self.rel_orig_path+".fits.xml")
+        if isfile(fits_path):
+            techmd.append(LDRPath(fits_path, root=join(self.admin_fullpath, "TECHMD")))
+        return techmd
 
     def get_presform_list(self):
         presforms = []
-        presform_filename_pattern = "^{}\.presform(\.[a-zA-Z0-9]*)?$".format(
+        presform_filename_pattern = re_compile("^{}\.presform(\.[a-zA-Z0-9]*)?$".format(
             basename(self.rel_orig_path)
-        )
+        ))
         containing_folder_path = join(self.data_fullpath,
                                       dirname(self.rel_orig_path))
         siblings = [x for x in listdir(containing_folder_path)]
@@ -53,6 +58,12 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         return presforms
 
     def get_premis_list(self):
-        return [LDRPath(join(self.admin_fullpath,
-                             "PREMIS",
-                             self.rel_orig_path+".fits.xml"))]
+        premis = []
+        premis_path = join(self.admin_fullpath,
+                           "PREMIS",
+                           self.rel_orig_path+".premis.xml")
+        if isfile(premis_path):
+            premis.append(
+                LDRPath(premis_path, root=join(self.admin_fullpath, "PREMIS"))
+            )
+        return premis

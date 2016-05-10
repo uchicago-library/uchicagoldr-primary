@@ -16,64 +16,30 @@ class MaterialSuite(Structure):
     original itself
     """
     def __init__(self):
-#        self.required_parts = ['_original', '_premis',
-#                               '_technicalmetadata', '_presform']
-        self._original = []
-        self._premis = []
+        self.required_parts = ['original', 'premis',
+                               'technicalmetadata_list', 'presform_list']
+        self._original = None
+        self._premis = None
         self._technicalmetadata = []
         self._presform = []
 
-    def get_original_list(self):
+    def set_original(self, original):
+        self._original = original
+
+    def get_original(self):
         return self._original
 
-    def set_original_list(self, original_list):
-        self.del_original_list()
-        for x in original_list:
-            self.add_original(x)
+    def del_original(self):
+        self._original = None
 
-    def del_original_list(self):
-        while self.get_original_list():
-            self.get_original_list().pop()
+    def set_premis(self, premis):
+        self._premis = premis
 
-    def add_original(self, original, index=None):
-        if index is None:
-            index = len(self.get_original_list())
-        self.get_original_list().insert(index, original)
-
-    def get_original(self, index):
-        return self.get_original_list()[index]
-
-    def pop_original(self, index=None):
-        if index is None:
-            return self.get_original_list().pop()
-        else:
-            return self.get_original_list().pop(index)
-
-    def get_premis_list(self):
+    def get_premis(self):
         return self._premis
 
-    def set_premis_list(self, premis_list):
-        self.del_premis_list()
-        for x in premis_list:
-            self.add_premis(x)
-
-    def del_premis_list(self):
-        while self.get_premis_list():
-            self.get_premis_list().pop()
-
-    def add_premis(self, premis, index=None):
-        if index is None:
-            index = len(self.get_premis_list())
-        self.get_premis_list().insert(index, premis)
-
-    def get_premis(self, index):
-        return self.get_premis_list()[index]
-
-    def pop_premis(self, index=None):
-        if index is None:
-            return self.get_premis_list().pop()
-        else:
-            return self.get_premis_list().pop(index)
+    def del_premis(self):
+        self._premis = None
 
     def get_technicalmetadata_list(self):
         return self._technicalmetadata
@@ -136,8 +102,26 @@ class MaterialSuite(Structure):
                 return False
         return Structure._validate()
 
-    original_list = property(get_original_list, set_original_list, del_original_list)
-    premis_list = property(get_premis_list, set_premis_list, del_premis_list)
-    technicalmetadata_list = property(get_technicalmetadata_list, set_technicalmetadata_list,
-             del_technicalmetadata_list)
-    presform_list = property(get_presform_list, set_presform_list, del_presform_list)
+    original = property(
+        get_original,
+        set_original,
+        del_original
+    )
+
+    premis = property(
+        get_premis,
+        set_premis,
+        del_premis
+    )
+
+    technicalmetadata_list = property(
+        get_technicalmetadata_list,
+        set_technicalmetadata_list,
+        del_technicalmetadata_list
+    )
+
+    presform_list = property(
+        get_presform_list,
+        set_presform_list,
+        del_presform_list
+    )
