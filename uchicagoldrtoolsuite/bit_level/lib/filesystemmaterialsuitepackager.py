@@ -20,50 +20,64 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
     material suites from the contents for inclusion in segment structures
     """
     def __init__(self, stage_env_path, stage_id, label_text, label_number,
-                 rel_orig_path):
+                 rel_content_path):
         super().__init__()
+        self.stage_env_path = stage_env_path
+        self.stage_id = stage_id
+        self.label_text = label_text
+        self.label_number = label_number
         self.set_implementation('file system')
-        self.rel_orig_path = rel_orig_path
+        self.rel_content_path = rel_content_path
         stage_fullpath = join(stage_env_path, stage_id)
         self.data_fullpath = join(stage_fullpath, 'data',
                                   label_text + "-" + str(label_number))
+        self.file_fullpath = join(self.data_fullpath, self.rel_content_path)
+        self.file_name = basename(self.rel_content_path)
         self.admin_fullpath = join(stage_fullpath, 'admin',
                                    label_text + "-" + str(label_number))
 
-    def get_original_list(self):
-        return [LDRPath(join(self.data_fullpath, self.rel_orig_path),
-                        root=self.data_fullpath)]
+    def get_original(self):
+        return LDRPath(self.file_fullpath,
+                       root=self.data_fullpath)
 
     def get_techmd_list(self):
-        techmd = []
         fits_path = join(self.admin_fullpath,
-                             "TECHMD",
-                             self.rel_orig_path+".fits.xml")
+                         "TECHMD",
+                         self.rel_content_path+".fits.xml")
         if isfile(fits_path):
-            techmd.append(LDRPath(fits_path, root=join(self.admin_fullpath, "TECHMD")))
-        return techmd
+            return LDRPath(fits_path, root=join(self.admin_fullpath, "TECHMD"))
+        return None
 
     def get_presform_list(self):
         presforms = []
-        presform_filename_pattern = re_compile("^{}\.presform(\.[a-zA-Z0-9]*)?$".format(
-            basename(self.rel_orig_path)
-        ))
+        presform_filename_pattern = re_compile(
+            "^{}\.presform(\.[a-zA-Z0-9]*)?$".format(
+                self.file_name
+            )
+        )
         containing_folder_path = join(self.data_fullpath,
-                                      dirname(self.rel_orig_path))
+                                      dirname(self.rel_content_path))
         siblings = [x for x in listdir(containing_folder_path)]
         for x in siblings:
             if presform_filename_pattern.match(x):
-                presforms.append(LDRPath(join(containing_folder_path, x),
-                                         root=containing_folder_path))
-        return presforms
+                presforms.append(
+                    FileSystemMaterialSuitePackager(
+                        self.stage_env_path,
+                        self.stage_id,
+                        self.label_text,
+                        self.label_number,
+                        join(containing_folder_path, x)
+                    ).package()
+                )
+        if len(presforms) > 0:
+            return presforms
+        return None
 
-    def get_premis_list(self):
-        premis = []
+    def get_premis(self):
         premis_path = join(self.admin_fullpath,
                            "PREMIS",
-                           self.rel_orig_path+".premis.xml")
+                           self.rel_content_path+".premis.xml")
         if isfile(premis_path):
-            premis.append(
-                LDRPath(premis_path, root=join(self.admin_fullpath, "PREMIS"))
-            )
-        return premis
+            return LDRPath(premis_path,
+                           root=join(self.admin_fullpath, "PREMIS"))
+        return None

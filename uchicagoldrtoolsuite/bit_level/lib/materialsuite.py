@@ -16,7 +16,7 @@ class MaterialSuite(Structure):
     original itself
     """
 
-    required_parts = ['original', 'premis',
+    required_parts = ['content', 'original', 'premis',
                       'technicalmetadata_list', 'presform_list']
 
     def __init__(self):
@@ -24,7 +24,7 @@ class MaterialSuite(Structure):
         self._original = None
         self._premis = None
         self._technicalmetadata = []
-        self._presform = []
+        self._presform = None
 
     def set_content(self, original):
         self._original = original
@@ -88,10 +88,11 @@ class MaterialSuite(Structure):
             self.add_presform(x)
 
     def del_presform_list(self):
-        while self.get_presform_list():
-            self.get_presform_list().pop()
+        self._presform = None
 
     def add_presform(self, presform, index=None):
+        if self.get_presform_list() is None:
+            self._presform = []
         if index is None:
             index = len(self.get_technicalmetadata_list())
         self.get_presform_list().insert(index, presform)
@@ -106,8 +107,11 @@ class MaterialSuite(Structure):
             return self.get_presform_list().pop(index)
 
     def validate(self):
-        if not isinstance(self.get_original(), LDRItem):
+        if not isinstance(self.get_content(), LDRItem):
             return False
+        if self.get_original() is not None:
+            if not isinstance(self.get_original(), LDRItem):
+                return False
         if self.get_premis() is not None:
             if not isinstance(self.get_premis(), LDRItem):
                 return False
