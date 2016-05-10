@@ -6,7 +6,19 @@ from .ldrpath import LDRPath
 from ...core.lib.bash_cmd import BashCommand
 
 
+__author__ = "Brian Balsamo"
+__email__ = "balsamo@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
+
+
 class GenericTechnicalMetadataCreator(object):
+    """
+    Ingests a stage structure and produces a FITS xml record for every
+    file in it.
+    """
     def __init__(self, stage):
         self.stage = stage
         # This instance var should hold the dir open until the instance is
