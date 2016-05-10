@@ -56,6 +56,7 @@ class MaterialSuite(Structure):
 
     def set_technicalmetadata_list(self, technicalmetadata_list):
         self.del_technicalmetadata_list()
+        self._technicalmetadata = []
         for x in technicalmetadata_list:
             self.add_technicalmetadata(x)
 
@@ -64,6 +65,8 @@ class MaterialSuite(Structure):
             self.get_technicalmetadata_list().pop()
 
     def add_technicalmetadata(self, technicalmetadata, index=None):
+        if self.get_technicalmetadata_list() is None:
+            self._technicalmetadata = []
         if index is None:
             index = len(self.get_technicalmetadata_list())
         self.get_technicalmetadata_list().insert(index, technicalmetadata)
@@ -82,6 +85,7 @@ class MaterialSuite(Structure):
 
     def set_presform_list(self, presform_list):
         self.del_presform_list()
+        self._presform = []
         for x in presform_list:
             self.add_presform(x)
 

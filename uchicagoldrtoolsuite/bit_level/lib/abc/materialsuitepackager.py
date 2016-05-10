@@ -53,19 +53,27 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         """
         ms = self.get_struct()
         try:
-            ms.set_content(self.get_content())
+            val = self.get_content()
+            if val:
+                ms.set_content(val)
         except NotImplementedError:
             pass
         try:
-            ms.set_premis(self.get_premis())
+            val = self.get_premis()
+            if val:
+                ms.set_premis(val)
         except NotImplementedError:
             pass
         try:
-            ms.set_presform_list(self.get_presform_list())
+            val = self.get_presform_list()
+            if val:
+                ms.set_presform_list(val)
         except NotImplementedError:
             pass
         try:
-            ms.set_technicalmetadata_list(self.get_techmd_list())
+            val = self.get_techmd_list()
+            if val:
+                ms.set_technicalmetadata_list(val)
         except NotImplementedError:
             pass
         return ms
