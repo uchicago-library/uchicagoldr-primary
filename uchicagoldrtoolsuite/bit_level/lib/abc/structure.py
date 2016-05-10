@@ -19,31 +19,16 @@ class Structure(metaclass=ABCMeta):
     of the parts it promises.
     """
 
-    _required_parts = []
+    required_parts = []
 
     @abstractmethod
     def validate(self):
         for thing in self.get_required_parts():
             if  getattr(self, thing, None) == None:
-                print("333333333333")
-                print(thing)
                 return False
         return True
 
     def get_required_parts(self):
-        return self._required_parts
+        return self.required_parts
 
-    def set_required_parts(self, required_parts):
-        for x in required_parts:
-            self.add_required_part(x)
-
-    def del_required_parts(self):
-        while self.get_required_parts():
-            self._required_parts.pop()
-
-    def add_required_part(self, x):
-        if not isinstance(x, str):
-            raise ValueError('Required parts must be specified as strings.')
-        self._required_parts.append(x)
-
-    required_parts = property(get_required_parts, set_required_parts)
+    required_parts = property(get_required_parts)
