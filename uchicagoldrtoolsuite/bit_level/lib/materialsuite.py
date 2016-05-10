@@ -15,13 +15,25 @@ class MaterialSuite(Structure):
     A structure which holds all LDR Items pertaining to an "original" and that
     original itself
     """
+
+    required_parts = ['original', 'premis',
+                      'technicalmetadata_list', 'presform_list']
+
     def __init__(self):
-        self.required_parts = ['original', 'premis',
-                               'technicalmetadata_list', 'presform_list']
+        self._content = None
         self._original = None
         self._premis = None
         self._technicalmetadata = []
         self._presform = []
+
+    def set_content(self, original):
+        self._original = original
+
+    def get_content(self):
+        return self._content
+
+    def del_content(self):
+        self._content = None
 
     def set_original(self, original):
         self._original = original
@@ -110,6 +122,12 @@ class MaterialSuite(Structure):
                 if not x.validate():
                     return False
         return super().validate()
+
+    content = property(
+        get_content,
+        set_content,
+        del_content
+    )
 
     original = property(
         get_original,
