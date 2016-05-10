@@ -21,7 +21,6 @@ class MaterialSuite(Structure):
 
     def __init__(self):
         self._content = None
-        self._original = None
         self._premis = None
         self._technicalmetadata = []
         self._presform = None
@@ -34,15 +33,6 @@ class MaterialSuite(Structure):
 
     def del_content(self):
         self._content = None
-
-    def set_original(self, original):
-        self._original = original
-
-    def get_original(self):
-        return self._original
-
-    def del_original(self):
-        self._original = None
 
     def set_premis(self, premis):
         self._premis = premis
@@ -131,12 +121,6 @@ class MaterialSuite(Structure):
         get_content,
         set_content,
         del_content
-    )
-
-    original = property(
-        get_original,
-        set_original,
-        del_original
     )
 
     premis = property(

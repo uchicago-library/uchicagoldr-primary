@@ -32,11 +32,11 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         self.set_struct(MaterialSuite())
 
     @abstractmethod
-    def get_original_list(self):
+    def get_content(self):
         pass
 
     @abstractmethod
-    def get_premis_list(self):
+    def get_premis(self):
         pass
 
     @abstractmethod
@@ -53,11 +53,11 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         """
         ms = self.get_struct()
         try:
-            ms.set_original_list(self.get_original_list())
+            ms.set_content(self.get_content())
         except NotImplementedError:
             pass
         try:
-            ms.set_premis_list(self.get_premis_list())
+            ms.set_premis(self.get_premis())
         except NotImplementedError:
             pass
         try:

@@ -8,10 +8,10 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.orig = orig
         self.root = root
 
-    def get_original_list(self):
-        return [LDRPath(self.orig, root=self.root)]
+    def get_content(self):
+        return LDRPath(self.orig, root=self.root)
 
-    def get_premis_list(self):
+    def get_premis(self):
         raise NotImplementedError()
 
     def get_techmd_list(self):

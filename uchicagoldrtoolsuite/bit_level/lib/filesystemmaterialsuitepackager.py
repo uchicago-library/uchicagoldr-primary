@@ -36,7 +36,7 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.admin_fullpath = join(stage_fullpath, 'admin',
                                    label_text + "-" + str(label_number))
 
-    def get_original(self):
+    def get_content(self):
         return LDRPath(self.file_fullpath,
                        root=self.data_fullpath)
 
