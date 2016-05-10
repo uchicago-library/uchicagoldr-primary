@@ -23,11 +23,24 @@ class Stage(Structure):
     _adminnote = []
     _legalnote = []
 
-    required_parts = ['identifier', 'segment', 'accessionrecord',
-                      'adminnote', 'legalnote']
+    required_parts = ['identifier', 'segment_list', 'accessionrecord_list',
+                      'adminnote_list', 'legalnote_list']
 
     def __init__(self, param1):
         self.set_identifier(param1)
+
+    def __repr__(self):
+        repr_str = "<ID: {}".format(self.get_identifier())
+        for x in self.get_segment_list():
+            repr_str = repr_str + str(x)
+        for x in self.get_accessionrecord_list():
+            repr_str = repr_str + str(x)
+        for x in self.get_adminnote_list():
+            repr_str = repr_str + str(x)
+        for x in self.get_legalnote_list():
+            repr_str = repr_str + str(x)
+        repr_str = repr_str + ">"
+        return repr_str
 
     def get_identifier(self):
         return self._identifier
@@ -138,14 +151,12 @@ class Stage(Structure):
             if isinstance(n_thing, Segment):
                 pass
             else:
-                print("11111")
                 return False
         big_list = self.accessionrecord_list + self.adminnote_list + self.legalnote_list
         for n_thing in big_list:
             if isinstance(n_thing, LDRItem):
                 pass
             else:
-                print("22222")
                 return False
         return super().validate()
 

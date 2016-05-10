@@ -38,6 +38,13 @@ class Segment(Structure):
         self.set_run(run_no)
         self.materialsuite = []
 
+    def __repr__(self):
+        repr_str = "<{}".format(self.get_identifier())
+        for x in self.get_materialsuite_list():
+            repr_str = repr_str + str(x)
+        repr_str = repr_str + ">"
+        return repr_str
+
     def get_materialsuite_list(self):
         return self._materialsuite
 

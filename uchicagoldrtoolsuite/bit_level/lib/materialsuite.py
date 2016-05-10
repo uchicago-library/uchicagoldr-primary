@@ -25,8 +25,16 @@ class MaterialSuite(Structure):
         self._technicalmetadata = []
         self._presform = None
 
-    def set_content(self, original):
-        self._original = original
+    def __repr__(self):
+        repr_dict = {}
+        repr_dict['content'] = self.get_content()
+        repr_dict['premis'] = self.get_premis()
+        repr_dict['technicalmetadata'] = self.get_technicalmetadata_list()
+        repr_dict['presform'] = self.get_presform_list()
+        return str(repr_dict)
+
+    def set_content(self, content):
+        self._content = content
 
     def get_content(self):
         return self._content
