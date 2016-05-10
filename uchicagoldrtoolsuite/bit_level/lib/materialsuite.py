@@ -94,13 +94,22 @@ class MaterialSuite(Structure):
             return self.get_presform_list().pop(index)
 
     def validate(self):
-        big_list = self.original + self.premis + self.presform
-        for n_thing in big_list:
-            if isinstance(n_thing, LDRItem):
-                pass
-            else:
+        if not isinstance(self.get_original(), LDRItem):
+            return False
+        if self.get_premis() is not None:
+            if not isinstance(self.get_premis(), LDRItem):
                 return False
-        return Structure._validate()
+        if len(self.get_technicalmetadata_list()) > 0:
+            for x in self.get_technicalmetadata_list():
+                if not isinstance(x, LDRItem):
+                    return False
+        if len(self.get_presform_list()) > 0:
+            for x in self.get_presform_list():
+                if not isinstance(x, MaterialSuite):
+                    return False
+                if not x.validate():
+                    return False
+        return super().validate()
 
     original = property(
         get_original,
