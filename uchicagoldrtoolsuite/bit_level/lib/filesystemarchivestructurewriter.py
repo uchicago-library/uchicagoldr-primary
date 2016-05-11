@@ -2,7 +2,7 @@ from sys import stderr
 
 from .abc.abc.serializationwriter import SerializationWriter
 from .abc.structure import Structure
-
+from stage import Stage
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
@@ -30,8 +30,8 @@ class FileSystemArchiveStructureWriter(SerializationWriter):
         """
         write the structure to disk
         """
-        if self.structure.validate():
-            pass
+        if self.structure.validate() and isinstance(self.structure, Stage):
+            final_id = urllib.request
         else:
             stderr.write("invalid staging directory passed to  the " +
                          " file system archive structure writer")
