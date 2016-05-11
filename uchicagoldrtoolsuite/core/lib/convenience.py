@@ -1,6 +1,5 @@
 from sys import stderr
-from urllib.request import urlopen
-from urllib import URLError
+from urllib.request import urlopen, URLError
 from uuid import uuid1
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -173,7 +172,7 @@ def retrieve_controlled_vocabulary(vocab_name, built=True):
     return cv
 
 
-def get_archivable_identifier(self, noid=False):
+def get_archivable_identifier(noid=False):
     """
     returns an archive-worthy identifier for a submission into the ldritem
 

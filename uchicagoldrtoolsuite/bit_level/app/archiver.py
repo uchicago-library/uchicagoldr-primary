@@ -38,23 +38,28 @@ class Archiver(CLIApp):
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
-                          "for moving materials into staging structures.",
+                          "for moving materials into the archive.",
                           epilog="{}\n".format(self.__copyright__) +
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument("directory", type=str, action='store')
-        self.parser.add_argument("source_root", type=str, action='store')
-        self.parser.add_argument("destination_root", type=str, action='store')
-
+        self.parser.add_argument("directory", type=str, action='store',
+                                 help="Enter the stage directory that is" +
+                                 " ready to be archived")
+        self.parser.add_argument("--archive", type=str, action='store',
+                                 help="Use this to specify a non-default " +
+                                 "archive location",
+                                 default="/data/repository/archive")
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
-        writer = FileSystemArchiveStructureWriter(staging_structure,
-                                                  args.destination_root)
+        print(staging_structure)
 
-        #writer.write()
+        writer = FileSystemArchiveStructureWriter(staging_structure,
+                                                  args.archive)
+
+        writer.write()
 
 
 if __name__ == "__main__":
