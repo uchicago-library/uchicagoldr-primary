@@ -46,6 +46,8 @@ class Archiver(CLIApp):
         self.parser.add_argument("directory", type=str, action='store',
                                  help="Enter the stage directory that is" +
                                  " ready to be archived")
+        self.parser.add_argument("origin_root", type=str, action='store',
+                                 help="Enter the root of the directory entered")
         self.parser.add_argument("--archive", type=str, action='store',
                                  help="Use this to specify a non-default " +
                                  "archive location",
@@ -55,6 +57,7 @@ class Archiver(CLIApp):
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
         writer = FileSystemArchiveStructureWriter(staging_structure,
+                                                  args.origin_root,
                                                   args.archive)
         writer.write()
 
