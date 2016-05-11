@@ -1,6 +1,7 @@
 from hashlib import md5
+from urllib.request import urlopen, URLError
+from uuid import uuid1
 
-from ...core.lib.convenience import sane_hash
 from .abc.ldritem import LDRItem
 
 
@@ -12,8 +13,68 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+def pairtree_a_string(input_to_pairtree):
+    """
+    returns a list of pairtree parts
+
+    __Args__
+
+    1. input_to_pairtree (str): a string that needs to be converted
+    into pairtree parts
+    """
+    if len(input_to_pairtree) % 2 > 0:
+        output = input_to_pairtree+'1'
+    else:
+        output = input_to_pairtree
+    output = [output[i:i+2] for i in range(0, len(output), 2)]
+    return output
+
+
+def get_archivable_identifier(noid=False):
+    """
+    returns an archive-worthy identifier for a submission into the ldritem
+
+    __KWArgs__
+
+    1. test (bool): a flag that is defaulted to False that determines
+    whether the output id string will be a noid. If the flag is False,
+    it will return a uuid hex string. If it is False, it will return a
+    CDL noid identifier.
+    """
+
+    if not noid:
+        data_output = uuid1()
+        data_output = data_output.hex
+    else:
+        request = urlopen("https://y1.lib.uchicago.edu/" +
+                          "cgi-bin/minter/noid?action=mint&n=1")
+        if request.status == 200:
+            data = request.readlines()
+            data_output = data.decode('utf-8').split('61001/')[1].rstrip()
+        else:
+            raise URLError("Cannot read noid minter located at" +
+                           "https://y1.lib.uchicago.edu/cgi-bin/minter/" +
+                           "noid?action=mint&n=1")
+    return data_output
+
+
 def move(origin_loc, destination_loc):
-    raise NotImplemented('yet')
+    """
+    a variation on copy which rather than merely copy the byte-stream of
+    the origin into the destination and deletes the origin
+
+    __Args__
+
+    1. origin_loc (LDRItem): origin_loc is the source data to move
+    2. destination_loc (LDRItem): destination_loc is where the source
+    should be moved
+    """
+    copy(origin_loc, destination_loc)
+    origin_loc.delete(final=True)
+    if not origin_loc.exists() and destination_loc.exists():
+        return True
+    else:
+        return False
 
 
 def copy(origin_loc, destination_loc, clobber):

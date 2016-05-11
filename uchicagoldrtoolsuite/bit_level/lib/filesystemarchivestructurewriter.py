@@ -1,11 +1,13 @@
 
-from os.path import exists
+from os import mkdir
+from os.path import exists, join
 from sys import stderr
-
-from uchicagoldrtoolsuite.core.lib.convenience import get_archivable_identifier
 
 from .abc.abc.serializationwriter import SerializationWriter
 from .abc.structure import Structure
+from .ldritemoperations import get_archivable_identifier, pairtree_a_string
+
+
 from .stage import Stage
 
 __author__ = "Tyler Danstrom"
@@ -37,7 +39,11 @@ class FileSystemArchiveStructureWriter(SerializationWriter):
         """
         if self.structure.validate() and isinstance(self.structure, Stage):
             final_id = get_archivable_identifier()
-            print(final_id)
+            new_location = join(self.archive, final_id)
+            new_object_parts = pairtree_a_string(final_id)
+            new_location = join(self.archive, *new_object_parts)
+            print(new_location)
+
         else:
             stderr.write("invalid staging directory passed to  the " +
                          " file system archive structure writer")

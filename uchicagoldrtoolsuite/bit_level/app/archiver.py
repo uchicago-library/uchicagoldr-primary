@@ -54,11 +54,8 @@ class Archiver(CLIApp):
         args = self.parser.parse_args()
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
-        print(staging_structure)
-
         writer = FileSystemArchiveStructureWriter(staging_structure,
                                                   args.archive)
-
         writer.write()
 
 
