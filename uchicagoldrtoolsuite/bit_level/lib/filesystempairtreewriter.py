@@ -4,10 +4,10 @@ from os.path import abspath, dirname, exists, join, relpath
 from sys import stderr
 
 from .abc.abc.serializationwriter import SerializationWriter
-from .abc.structure import Structure
 from .ldritemoperations import copy, get_archivable_identifier,\
     pairtree_a_string
 from .ldrpath import LDRPath
+from .pairtree import Pairtree
 from .stage import Stage
 
 __author__ = "Tyler Danstrom"
@@ -34,59 +34,51 @@ class FileSystemPairTreeWriter(SerializationWriter):
         being archived
         """
         self.structure = aStructure
+        self.identifier = get_archivable_identifier(noid=False)
+        self.pairtree = Pairtree(self.identifier)
         self.origin_root = origin_loc
         self.archive = archive_loc
+
+    def find_and_pairtree_admin_content(self, segment_id, iterable):
+        for n_thing in iterable:
+            n_thing_destination = LDRPath(
+                self.pairtree.pairtree_path,
+                'admin', segment_id,
+                n_thing.content.item_name)
+            self.pairtree.content = n_thing_destination
+
+    def find_and_pairtree_data_content(self, segment_id, n_thing):
+        n_thing_destination = LDRPath(
+            self.pairtree.pairtree_path,
+            'data', segment_id,
+            n_thing.content.item_name)
+        self.pairtree.content = n_thing_destination
 
     def write(self):
         """
         serializes a staging directory structure into an archive structure
         onto disk
         """
-        if self.structure.validate() and isinstance(self.structure, Stage):
-            final_id = get_archivable_identifier()
-            new_location = join(self.archive, final_id)
-            new_object_parts = pairtree_a_string(final_id)
-            new_location = join(self.archive, *new_object_parts)
-            makedirs(new_location, exist_ok=True)
+        if self.structure.validate():
             for n_segment in self.structure.segment_list:
-                segment_location = join(new_location,
-                                        n_segment.label+str(n_segment.run),
-                                        )
+                segment_id = n_segment.label+str(n_segment.run)
                 for n_msuite in n_segment.materialsuite_list:
-                    if len(n_msuite.technicalmetadata_list) > 0 \
-                       and n_msuite.premis is not None:
-
-
-                        main_dest = LDRPath(join(segment_location,
-                                                 n_msuite.content.item_name))
-                        new_dirs = join(segment_location,
-                                        dirname(n_msuite.content.item_name))
-                        makedirs(new_dirs, exist_ok=True)
-                        copy(n_msuite.content, main_dest, clobber=False)
-                        print(n_msuite.premis)
-                        for n_techmd in n_msuite.technicalmetadata_list:
-                            tech_dest = LDRPath(join(new_location,
-                                                     n_techmd.content.
-                                                     item_name))
-                            new_dirs = join(new_location, dirname(n_techmd.
-                                                                  content.
-                                                                  item_name))
-                            makedirs(new_dirs, exist_ok=True)
-                            copy(n_techmd.content, tech_dest, clobber=False)
-
-                        for n_presform in n_msuite.presform_list:
-                            presform_dest = LDRPath(join(new_location,
-                                                         n_presform.content.
-                                                         item_name))
-                            new_dirs = join(new_location, dirname(n_presform.
-                                                                  content.
-                                                                  item_name))
-                            makedirs(new_dirs, exist_ok=True)
-                            copy(n_presform.content, presform_dest)
-                    else:
-                        raise ValueError("cannot archive an incomplete " +
-                                         "stage directory")
-
+                    self.find_and_pairtree_data_content(
+                        segment_id, n_msuite.content)
+                    self.find_and_pairtree_admin_content(
+                        segment_id, n_msuite.technicalmetadata_list)
+                    self.find_and_pairtree_admin_content(
+                        segment_id, n_msuite.premis)
+                    for n_presform_msuite in n_msuite.presform_list:
+                        self.find_and_pairtree_data_content(
+                            segment_id, n_presform_msuite.content)
+                        self.find_and_pairtree_admin_content(
+                            segment_id,
+                            n_presform_msuite.technicalmetadata_list)
+                        self.find_and_pairtree_admin_content(
+                            segment_id, n_presform_msuite.premis)
+            for n_item in self.pairtree:
+                print(n_item)
         else:
             stderr.write("invalid staging directory passed to  the " +
                          " file system archive structure writer")
@@ -95,7 +87,7 @@ class FileSystemPairTreeWriter(SerializationWriter):
         return self._structure
 
     def set_structure(self, value):
-        if isinstance(value, Structure):
+        if isinstance(value, Stage):
             self._structure = value
         else:
             raise ValueError("must pass an instance of Structure" +
@@ -113,5 +105,30 @@ class FileSystemPairTreeWriter(SerializationWriter):
             raise ValueError("Cannot pass {} to the archive".format(value) +
                              " writer because that path does not exist")
 
+    def get_identifier(self):
+        return self._identifier
+
+    def set_identifier(self, value):
+        self._identifier = value
+
+    def get_pairtree(self):
+        return self._pairtree
+
+    def set_pairtree(self, value):
+        self._pairtree = value
+
+    def get_origin_root(self):
+        return self._origin_root
+
+    def set_origin_root(self, value):
+        if not exists(value):
+            raise ValueError("origin_root {}".format(self.origin_root) +
+                             " in FileSystemArchiveWriter" +
+                             " must exist on the file system")
+        self._origin_root = value
+
     structure = property(get_structure, set_structure)
+    identifier = property(get_identifier, set_identifier)
+    pairtree = property(get_pairtree, set_pairtree)
+    origin_root = property(get_origin_root, set_origin_root)
     archive_loc = property(get_archive_loc, set_archive_loc)
