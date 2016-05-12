@@ -1,4 +1,3 @@
-from hashlib import md5
 from os.path import join
 
 from .ldritemoperations import duplicate_ldritem, pairtree_a_string
@@ -19,6 +18,7 @@ class Pairtree(object):
         self.object_encapsulation = 'arf'
         self.pairtree_path = 'doesn\'t matter what I type here'
         self.contents = []
+        self.content_index = 0
 
     def set_contents(self, value):
         if not isinstance(value, LDRItem):
@@ -54,6 +54,24 @@ class Pairtree(object):
 
     def get_pairtree_path(self):
         return self._pairtree_path
+
+    def __repr__(self):
+        return "<{} ({} byte streams)>".format(self.pairtree_path,
+                                               len(self.contents))
+
+    def __str__(self):
+        return "{}".format(self.pairtree_path)
+
+    def __iter__(self):
+        return self.contents
+
+    def __next__(self):
+        try:
+            result = self.contents[self.content_index]
+        except IndexError:
+            raise StopIteration
+        self.content += 1
+        return result
 
     contents = property(get_contents, set_contents)
     object_encapsulation = property(get_object_encapsulation,
