@@ -49,7 +49,7 @@ class GenericTechnicalMetadataCreator(object):
         recv_file = join(self.working_dir_path, str(uuid1()))
         recv_item = LDRPath(recv_file)
         fits_file = join(self.working_dir_path, str(uuid1()))
-        copy(ms.content, recv_item, True)
+        copy(ms.content, recv_item, clobber=True)
 
         com = BashCommand(['fits', '-i', recv_file, '-o', fits_file])
         com.set_timeout(43200)
