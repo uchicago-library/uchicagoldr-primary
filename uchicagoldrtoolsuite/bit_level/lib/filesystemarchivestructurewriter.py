@@ -39,7 +39,8 @@ class FileSystemArchiveStructureWriter(SerializationWriter):
 
     def write(self):
         """
-        write the structure to disk
+        serializes a staging directory structure into an archive structure
+        onto disk
         """
         if self.structure.validate() and isinstance(self.structure, Stage):
             final_id = get_archivable_identifier()
@@ -48,15 +49,21 @@ class FileSystemArchiveStructureWriter(SerializationWriter):
             new_location = join(self.archive, *new_object_parts)
             makedirs(new_location, exist_ok=True)
             for n_segment in self.structure.segment_list:
+                segment_location = join(new_location,
+                                        n_segment.label+str(n_segment.run),
+                                        )
                 for n_msuite in n_segment.materialsuite_list:
+                    msuite_location = join(segment_location,
+                                           n_msuite.content.item_name)
                     if len(n_msuite.technicalmetadata_list) > 0 \
                        and n_msuite.premis is not None:
-                        main_dest = LDRPath(join(new_location,
+                        main_dest = LDRPath(join(segment_location,
                                                  n_msuite.content.item_name))
-                        new_dirs = join(new_location,
+                        new_dirs = join(segment_location,
                                         dirname(n_msuite.content.item_name))
                         makedirs(new_dirs, exist_ok=True)
                         copy(n_msuite.content, main_dest, clobber=False)
+                        print(n_msuite.premis)
                         for n_techmd in n_msuite.technicalmetadata_list:
                             tech_dest = LDRPath(join(new_location,
                                                      n_techmd.content.
