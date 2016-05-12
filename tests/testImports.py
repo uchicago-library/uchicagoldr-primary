@@ -9,7 +9,6 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.filesystemstagewriter import FileSystemStageWriter
         from uchicagoldrtoolsuite.bit_level.lib.ldrpath import LDRPath
         from uchicagoldrtoolsuite.bit_level.lib.ldrurl import LDRURL
-
         from uchicagoldrtoolsuite.bit_level.lib.absolutefilepathtree import AbsoluteFilePathTree
         from uchicagoldrtoolsuite.bit_level.lib.archivestructure import ArchiveStructure
         from uchicagoldrtoolsuite.bit_level.lib.filepathtree import FilePathTree
@@ -23,6 +22,9 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.stage import Stage
         from uchicagoldrtoolsuite.bit_level.lib.segment import Segment
         from uchicagoldrtoolsuite.bit_level.lib.technicalmetadatarecordcreator import TechnicalMetadataRecordCreator
+        from uchicagoldrtoolsuite.bit_level.lib.externalfilesystemmaterialsuitepackager import ExternalFileSystemMaterialSuitePackager
+        from uchicagoldrtoolsuite.bit_level.lib.externalfilesystemsegmentpackager import ExternalFileSystemSegmentPackager
+
 #       from uchicagoldrtoolsuite.bit_level.lib.archivestructure import ArchiveStructure
 
         from uchicagoldrtoolsuite.bit_level.lib.abc.abc.packager import Packager
@@ -34,7 +36,8 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.abc.stageserializationreader import StageSerializationReader
         from uchicagoldrtoolsuite.bit_level.lib.abc.stageserializationwriter import StageSerializationWriter
 
-        from uchicagoldrtoolsuite.bit_level.app.premisobjectcreator import PremisObjectCreator
+        from uchicagoldrtoolsuite.bit_level.lib.genericpremiscreator import GenericPREMISCreator
+        from uchicagoldrtoolsuite.bit_level.lib.generictechnicalmetadatacreator import GenericTechnicalMetadataCreator
         from uchicagoldrtoolsuite.bit_level.app.stager import Stager
         from uchicagoldrtoolsuite.bit_level.app.pruner import Pruner
         from uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator import TechnicalMetadataCreator
