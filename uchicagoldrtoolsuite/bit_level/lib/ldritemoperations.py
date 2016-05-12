@@ -1,6 +1,6 @@
-from hashlib import md5
 from urllib.request import urlopen, URLError
 from uuid import uuid1
+from hashlib import md5, sha256
 
 from .abc.ldritem import LDRItem
 
@@ -130,3 +130,103 @@ def copy(origin_loc, destination_loc, clobber):
             return (True, False, "copied", None)
     else:
         return (False, False, "not copied", None)
+
+def hash_ldritem(ldritem, algo="md5", buffering=1024):
+
+    supported_hashes = [
+        "md5",
+        "sha256"
+    ]
+
+    if algo not in supported_hashes:
+        raise ValueError("{} is not a supported hash.".format(str(algo)) +
+                         "Supported Hashes include:\n"
+                         "{}".format(", ".join(supported_hashes)))
+
+    if algo == "md5":
+        hasher = md5()
+    elif algo == "sha256":
+        hasher = sha256()
+    else:
+        raise AssertionError("Implementation goofs in the LDR Item hasher.")
+
+    hash_str = None
+
+    with ldritem.open() as f:
+        data = f.read(buffering)
+        while data:
+            hasher.update(data)
+            data = f.read(buffering)
+        hash_hex = hasher.hexdigest()
+        hash_str = str(hash_hex)
+
+    return hash_str
+
+def duplicate_ldritem(src, dst, dst_mode="wb", buffering=1024, confirm=True):
+    if not isinstance(src, LDRItem) or not isinstance(dst, LDRItem):
+        raise ValueError("src and dst must be LDRItems")
+
+    confirmation = None
+
+    if confirm:
+        write_hasher = md5()
+
+    with src.open('rb') as src_flo:
+        with dst.open(dst_mode) as dst_flo:
+            data = src_flo.read(buffering)
+            while data:
+                if confirm:
+                    write_hasher.update(data)
+                dst_flo.write(data)
+
+    if confirm:
+        if str(write_hasher.hexdigest()) == hash_ldritem(dst):
+            confirmation = True
+
+    return confirmation
+
+
+def copy2(src, dst, clobber=False, detection="hash", max_retries=3,
+          buffering=1024, confirm=True):
+
+    supported_detections = [
+        "hash",
+        "name"
+    ]
+
+    if detection not in supported_detections:
+        raise ValueError("{} is not a supported clobber " +
+                         "detection scheme.".format(str(detection)))
+
+    if dst.exists():
+        if not clobber:
+            return None
+        else: # Clobber stuff
+            if detection is "hash":
+                if hash_ldritem(src) == hash_ldritem(dst): # Its got the same hash, don't copy anything its already the same
+                    return True
+            elif detection is "name":
+                if src.item_name == dst.item_name: # Its got the same name, don't copy anything its already the same
+                    return True
+            else: # Some mismatch between these impl ifs and the array at the top
+                raise AssertionError("ldr item copy func error")
+
+            while max_retries > -1:
+                max_retries = max_retires - 1
+                if not confirm: # Fly by the seat of our pants, don't check anything just copy the bytes
+                    duplicate_ldritem(src, dst, buffering=buffering, confirm=False)
+                    return True
+                else:
+                    if duplicateldritem(src, dst, buffering=buffering, confirm=True) is True:
+                        return True
+    else: # The dst doesn't exist
+        while max_retries > -1:
+            max_retries = max_retires - 1
+            if not confirm: # Fly by the seat of our pants, don't check anything just copy the bytes
+                duplicate_ldritem(src, dst, buffering=buffering, confirm=False)
+                return True
+            else:
+                if duplicateldritem(src, dst, buffering=buffering, confirm=True) is True:
+                    return True
+    return False
+

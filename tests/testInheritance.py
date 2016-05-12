@@ -192,6 +192,7 @@ class testRetrievers(unittest.TestCase):
         self.assertTrue(isinstance(x, DatabaseEnvironmentMixin))
         self.assertTrue(type(x) == inheritance_tree[-1])
 
+
 class testResolvers(unittest.TestCase):
     def testDatabaseContentPointerResolver(self):
         x = DatabaseContentPointerResolver()
