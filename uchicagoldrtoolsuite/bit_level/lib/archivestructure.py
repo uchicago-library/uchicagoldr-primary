@@ -1,7 +1,8 @@
 from .abc.structure import Structure
 from .abc.ldritem import LDRItem
+from .ldritemoperations import get_archivable_identifier
 from .materialsuite import MaterialSuite
-
+from .segment import Segment
 
 __author__ = "Tyler Danstrom"
 __email__ = "tdanstrom@uchicago.edu"
@@ -15,14 +16,14 @@ class ArchiveStructure(Structure):
     """
     The structure which holds archival contents in the archive environment.
     """
-    def __init__(self, param1):
+    def __init__(self):
         self.requird_parts = ['identifier', 'segment', 'accessionrecord',
                               'admninnote', 'legalnote']
-        self.identifier = param1
-        self.data_object = []
-        self.premis_object = []
-        self.accession_record = []
-        self.technicalmetadata_object = []
+        self.identifier = get_archivable_identifier(noid=False)
+        self.premis_list = []
+        self.segments_list = []
+        self.accession_record_list = []
+        self.technicalmetadata_list = []
 
     def validate(self):
         super(ArchiveStructure, self)._validate()
@@ -44,12 +45,14 @@ class ArchiveStructure(Structure):
                                  " something of type {}".
                                  format(type(n_input).__name__))
 
-    def get_data_object(self):
-        return self._data_object
+    def get_segments_list(self):
+        return self._segment_list
 
-    def set_data_object(self, value):
-        self.validate_input(value)
-        self._data_object = value
+    def set_segments_list(self, value):
+        if not isinstance(value, Segment):
+            raise ValueError("Must pass only a Segment Structure to" +
+                             " segments_list")
+        sel._segments_list = value
 
     def get_premis_object(self):
         return self._data_object
