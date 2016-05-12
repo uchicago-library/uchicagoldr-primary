@@ -1,10 +1,13 @@
 from uuid import uuid1
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.filesystemarchivestructurewriter import \
-    FileSystemArchiveStructureWriter
 
+
+from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.filesystempairtreewriter import \
+    FileSystemPairTreeWriter
+from ..lib.ldritemoperations import get_archivable_identifier
+from ..lib.pairtree import Pairtree
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -47,7 +50,8 @@ class Archiver(CLIApp):
                                  help="Enter the stage directory that is" +
                                  " ready to be archived")
         self.parser.add_argument("origin_root", type=str, action='store',
-                                 help="Enter the root of the directory entered")
+                                 help="Enter the root of the directory " +
+                                 "entered")
         self.parser.add_argument("--archive", type=str, action='store',
                                  help="Use this to specify a non-default " +
                                  "archive location",
@@ -56,9 +60,17 @@ class Archiver(CLIApp):
         args = self.parser.parse_args()
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
-        writer = FileSystemArchiveStructureWriter(staging_structure,
-                                                  args.origin_root,
-                                                  args.archive)
+        archive_identifier = get_archivable_identifier(noid=False)
+        pairtree = Pairtree(archive_identifier)
+
+        for n_segment in staging_structure.segment_list:
+            for n_msuite in n_segment.materialsuite_list:
+                base_content = n_msuite.content
+                techmds = n_msuite.technicalmetadata_list
+                presforms = n_msuite.presform_list
+                premis = n_msuite.premis
+
+        writer = FileSystemPairTreeWriter(pairtree)
         writer.write()
 
 

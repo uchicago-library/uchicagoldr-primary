@@ -18,7 +18,7 @@ class Pairtree(object):
         self.object_encapsulation = 'arf'
         self.pairtree_path = 'doesn\'t matter what I type here'
         self.contents = []
-        self.content_index = 0
+        self.content_index = -1
 
     def set_contents(self, value):
         if not isinstance(value, LDRItem):
@@ -69,9 +69,16 @@ class Pairtree(object):
         try:
             result = self.contents[self.content_index]
         except IndexError:
-            raise StopIteration
+            raise StopIteration()
         self.content += 1
         return result
+
+    def pop(self):
+        if len(self.content_index) > 0:
+            self.content_index += 1
+        else:
+            raise StopIteration()
+        return self.contents.pop(self.content_index)
 
     contents = property(get_contents, set_contents)
     object_encapsulation = property(get_object_encapsulation,
