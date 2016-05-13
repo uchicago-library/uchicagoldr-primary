@@ -1,9 +1,8 @@
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.filesystempairtreewriter import \
-    FileSystemPairTreeWriter
-from ..lib.stagetopairtreetransformer import StageToPairTreeTransformer
+from ..lib.filesystemarchivewriter import FileSystemArchiveWriter
+from ..lib.stagetoarchivetransformer import StageToArchiveTransformer
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"

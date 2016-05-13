@@ -1,7 +1,6 @@
 from os.path import join
 
-from .ldritemoperations import duplicate_ldritem, pairtree_a_string
-from .abc.ldritem import LDRItem
+from .ldritemoperations import pairtree_a_string
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
@@ -16,25 +15,6 @@ class Pairtree(object):
         self.pairtree_parts = pairtree_a_string(identifier_string)
         self.pairtree_root = 'pairtree_root'
         self.object_encapsulation = 'arf'
-        self.pairtree_path = 'doesn\'t matter what I type here'
-        self.contents = []
-        self.content_index = -1
-
-    def set_contents(self, value):
-        if not isinstance(value, LDRItem):
-            raise TypeError("pairtree contents must be an ldr item")
-        if self.contents == []:
-            self._contents = [value]
-        else:
-            already_added = False
-            for n_item in self._contents:
-                if duplicate_ldritem(n_item, value):
-                    break
-            if not already_added:
-                self._contents.append(value)
-
-    def get_contents(self):
-        return self._contents
 
     def set_object_encapsulation(self, value):
         self._object_encapsulation = 'arf'
@@ -48,41 +28,16 @@ class Pairtree(object):
     def get_pairtree_root(self):
         return self._pairtree_root
 
-    def set_pairtree_path(self, value):
-        self._pairtree_path = join(self.pairtree_root, *self.pairtree_parts,
-                                   self.object_encapsulation)
-
     def get_pairtree_path(self):
-        return self._pairtree_path
+        return join(self.pairtree_root, *self.pairtree_parts,
+                    self.object_encapsulation)
 
     def __repr__(self):
-        return "<{} ({} byte streams)>".format(self.pairtree_path,
-                                               len(self.contents))
+        return "<{} ({} byte streams)>".format(self.pairtree_path)
 
     def __str__(self):
         return "{}".format(self.pairtree_path)
 
-    def __iter__(self):
-        return self.contents
-
-    def __next__(self):
-        try:
-            result = self.contents[self.content_index]
-        except IndexError:
-            raise StopIteration()
-        self.content += 1
-        return result
-
-    def pop(self):
-        if len(self.content_index) > 0:
-            self.content_index += 1
-        else:
-            raise StopIteration()
-        return self.contents.pop(self.content_index)
-
-    contents = property(get_contents, set_contents)
     object_encapsulation = property(get_object_encapsulation,
                                     set_object_encapsulation)
     pairtree_root = property(get_pairtree_root, set_pairtree_root)
-    pairtree_path = property(get_pairtree_path, set_pairtree_path)
-    contents = property(get_contents, set_contents)

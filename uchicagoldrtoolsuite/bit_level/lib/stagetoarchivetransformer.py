@@ -7,7 +7,6 @@ from .stage import Stage
 class StageToArchiveTransformer(Transformer):
     def __init__(self, origin_structure):
         self.origin_structure = origin_structure
-
         self.destination_structure = Archive()
 
     def transform(self):

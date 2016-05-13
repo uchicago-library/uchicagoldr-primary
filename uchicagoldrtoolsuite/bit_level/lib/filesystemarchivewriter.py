@@ -18,7 +18,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class FileSystemPairTreeWriter(SerializationWriter):
+class FileSystemArchiveWriter(SerializationWriter):
     """
     writes an archive structure to the file system as a directory
     """
@@ -35,7 +35,7 @@ class FileSystemPairTreeWriter(SerializationWriter):
         """
         self.structure = aStructure
         self.identifier = get_archivable_identifier(noid=False)
-        self.pairtree = Pairtree(self.identifier)
+        self.pairtree = Pairtree(self.identifier).get_pairtree_path()
         self.origin_root = origin_loc
         self.archive = archive_loc
 
