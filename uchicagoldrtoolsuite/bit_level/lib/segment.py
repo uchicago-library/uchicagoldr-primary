@@ -28,15 +28,17 @@ class Segment(Structure):
 
     """
 
-    _label = None
-    _run = None
-    _materialsuite = []
     required_parts = ['identifier', 'materialsuite', 'label', 'run']
 
     def __init__(self, label, run_no):
+
+        self._label = None
+        self._run = None
+        self._materialsuite = []
+
         self.set_label(label)
         self.set_run(run_no)
-        self.materialsuite = []
+        self.set_materialsuite_list([])
 
     def __repr__(self):
         repr_str = "<{}".format(self.get_identifier())

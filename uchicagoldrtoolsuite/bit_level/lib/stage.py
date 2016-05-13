@@ -17,16 +17,15 @@ class Stage(Structure):
     as they are being processed for ingestion into long term storage
     """
 
-    _identifier = None
-    _segment = []
-    _accessionrecord = []
-    _adminnote = []
-    _legalnote = []
-
     required_parts = ['identifier', 'segment_list', 'accessionrecord_list',
                       'adminnote_list', 'legalnote_list']
 
     def __init__(self, param1):
+        self._identifier = None
+        self._segment = []
+        self._accessionrecord = []
+        self._adminnote = []
+        self._legalnote = []
         self.set_identifier(param1)
 
     def __repr__(self):
