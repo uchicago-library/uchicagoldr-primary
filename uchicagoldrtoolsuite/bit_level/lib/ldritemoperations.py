@@ -78,62 +78,23 @@ def move(origin_loc, destination_loc):
         return False
 
 
-#def copy(origin_loc, destination_loc, clobber):
-#    """
-#    __Args__
-#
-#    1. origin_loc (LDRPathRegular): the file object that is the source that
-#    needs to be copied
-#    2. detination_loc (LDRPathRegularFile): the file object that is the
-#    destiatination for the source that needs to be copied
-#
-#    __Returns__
-#
-#    * if copy occurs: a tuple containing truth and an md5 hash string of the
-#        new file
-#    * if copy does not occur: a tuple containing false and the Nonetype
-#    """
-#    if not isinstance(origin_loc, LDRItem) or not \
-#            isinstance(destination_loc, LDRItem):
-#        raise TypeError("must pass two instances of LDRPathRegularFile" +
-#                        " to the copy function.")
-#    if clobber is False:
-#        if destination_loc.exists():
-#            return (True, False, "already present", None)
-#
-#    origin_hash = md5()
-#    destination_hash = md5()
-#    origin_checksum = None
-#    destination_checksum = None
-#
-#    with origin_loc.open('rb') as reading_file:
-#        with destination_loc.open('wb') as writing_file:
-#            while True:
-#                buf = reading_file.read(1024)
-#                if buf:
-#                    origin_hash.update(buf)
-#                    writing_file.write(buf)
-#                else:
-#                    origin_checksum = str(origin_hash.hexdigest())
-#                    break
-#    if destination_loc.exists():
-#        with destination_loc.open('rb') as dst:
-#            while True:
-#                buf = dst.read(1024)
-#                if buf:
-#                    destination_hash.update(buf)
-#                else:
-#                    destination_checksum = str(destination_hash.hexdigest())
-#                    break
-#        if destination_checksum == origin_checksum:
-#            return (True, True, "copied", destination_checksum)
-#        else:
-#            return (True, False, "copied", None)
-#    else:
-#        return (False, False, "not copied", None)
-
-
 def hash_ldritem(ldritem, algo="md5", buffering=1024):
+    """
+    hash any flavor of LDRItem
+
+    __Args__
+
+    1. ldritem (LDRItem): The item to compute the hash of
+
+    __KWArgs__
+
+    * algo (str): The hashing algorithm to use
+    * buffering (int): The amount of the file to read at a time
+
+    __Returns__
+
+    hash_str (str): The str-ified hash hexdigest
+    """
 
     supported_hashes = [
         "md5",
@@ -166,6 +127,25 @@ def hash_ldritem(ldritem, algo="md5", buffering=1024):
 
 
 def duplicate_ldritem(src, dst, dst_mode="wb", buffering=1024, confirm=True):
+    """
+    Copy an LDRItem's byte contents from one to another
+
+    __Args__
+
+    1. src (LDRItem): The source LDRItem
+    2. dst (LDRItem): The destination LDRItem
+
+    __KWArgs__
+
+    * dst_mode (str): The mode to pass to .open() on the dst
+    * buffering (int): The amount of data to load into RAM at a time
+    * confirm (bool): Whether or not to confirm the duplication was successful
+        via hashing the write stream and the result
+
+    __Returns__
+
+    * confirmation (str||None): Either the matched hash or None
+    """
     if not isinstance(src, LDRItem) or not isinstance(dst, LDRItem):
         raise ValueError("src and dst must be LDRItems")
 
@@ -194,8 +174,33 @@ def duplicate_ldritem(src, dst, dst_mode="wb", buffering=1024, confirm=True):
 
 def copy(src, dst, clobber=False, detection="hash", max_retries=3,
           buffering=1024, confirm=True):
+    """
+    copy one LDRItem's byte contents into another
+
+    __Args__
+
+    1. src (LDRItem): The source LDRItem
+    2. dst (LDRItem): The destination LDRItem
+
+    __KWArgs__
+
+    * detection (str): What metric to use to determine equivalence
+    * max_retries (int): How many times to retry at max on a bad copy
+    * buffering (int): How much of anything to load into RAM at once
+    * confirm (bool): Whether or not to confirm the copy by hashing
+        the write stream and the resulting copy
+
+    __Returns__
+
+    * cr (CopyReport): A stub class loaded with fields
+    * _OR_
+    * "BADCOPY" if things went really wrong
+    """
 
     class CopyReport(object):
+        """
+        stub class to carry info out of this function
+        """
         def __init__(self):
             self.src_eq_dst = None
             self.copied = False

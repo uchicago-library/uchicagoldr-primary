@@ -1,11 +1,10 @@
-from os.path import abspath, isdir
-
-from pypremis.lib import PremisRecord
-from pypremis.nodes import *
+from sys import stdout
+from os.path import join
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filewalker import FileWalker
-from ..lib.premisextensionnodes import Restriction
+from ..lib.filesystemstagewriter import FileSystemStageWriter
+from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.genericpremisrestrictionsetter import GenericPREMISRestrictionSetter
 
 
 __author__ = "Brian Balsamo"
@@ -31,142 +30,65 @@ def launch():
     app.main()
 
 
-def gather_records(path):
-    """
-    gather all .premis.xml files from a path
-
-    __Args__
-
-    1. path (str): the path to a dir to search for premis records
-
-    __Returns__
-    * (list): A list of tuples formatted as:
-        (PremisRecord instance, path)
-    """
-    records = []
-    if isdir(path):
-        for x in FileWalker(path, filter_pattern="^.*\.premis.xml$"):
-            records.append((load_record(x), x))
-    else:
-        records.append((load_record(path), path))
-    return records
-
-
-def load_record(path):
-    """
-    read an xml record at a path into a PremisRecord object
-
-    __Args__
-
-    1. path (str): A valid path to an xml record
-
-    __Returns__
-
-    * (PremisRecord): The data as a PremisRecord object
-
-    """
-    return PremisRecord(frompath=path)
-
-
-def build_rights_extension_node(restriction_code, restriction_reason=None,
-                                donor_stipulation=None, linkingAgentIds=None,
-                                active=True):
-    rights_extension = RightsExtension()
-    rights_extension.add_to_field('Restriction', build_restriction_node(
-        restriction_code=restriction_code,
-        restriction_reason=restriction_reason,
-        donor_stipulation=donor_stipulation,
-        linkingAgentIds=linkingAgentIds,
-        active=active))
-    return rights_extension
-
-
-def build_restriction_node(restriction_code, active=True,
-                           restriction_reason=None, donor_stipulation=None,
-                           linkingAgentIds=None):
-    restrictionNode = Restriction(restriction_code, active)
-    if restriction_reason:
-        for x in restriction_reason:
-            restrictionNode.add_restrictionReason(x)
-    if donor_stipulation:
-        for x in donor_stipulation:
-            restrictionNode.add_donorStipulation(x)
-    if linkingAgentIds:
-        for x in linkingAgentIds:
-            restrictionNode.add_linkingAgentIdentifier(x)
-    return restrictionNode
-
-
 class PremisRestrictionSetter(CLIApp):
     """
-    Builds restriction XML entries and applies them to PREMIS metadata
-    for staged contents
+    Sets restrictions in PREMIS records
     """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
-                          "for setting restrictions in PREMIS files.",
+                          "for setting restrictions in PREMIS metadata " +
+                          "records in a stage.",
                           epilog="{}\n".format(self.__copyright__) +
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument(
-            'path',
-            help='Specify a path to a premis record, or a path to search for ' +
-            'premis records, all of which will be acted upon.'
-        )
-        self.parser.add_argument(
-            'restriction',
-            # choices = somecontrolledvocabhere,
-            # https://docs.python.org/3/library/argparse.html#choices
-            help='Specify the restriction code to apply to all ' +
-            'found PREMIS records.'
-        )
-        self.parser.add_argument(
-            '--reason',
-            default=None,
-            action='append',
-            help='Specify the reason for applying the restriction'
-        )
-        self.parser.add_argument(
-            '--donor-stipulation',
-            action='append',
-            default=None,
-            help='Specify a donor stipulation'
-        )
+        self.parser.add_argument("staging_env", help="The path to your " +
+                                 "staging environment",
+                                 type=str, action='store')
+        self.parser.add_argument("stage_id", help="The stage identifier",
+                                 type=str, action='store')
+        self.parser.add_argument("restriction", help="The restriction to set.",
+                                 type=str, action='store')
+        self.parser.add_argument("--reason", help="The reason for setting " +
+                                 "this restriction",
+                                 action="append")
+        self.parser.add_argument("--donor-stipulation", help="A donor " +
+                                 "stipulation pertaining to this restriction.",
+                                 action="append")
+        self.parser.add_argument("--linking-agentid", help="Any linking " +
+                                 "agent identifiers pertaining to this " +
+                                 "restriction.",
+                                 action="append")
+        self.parser.add_argument("--inactive", help="Use this flag to set a " +
+                                 "restriction to inactive when it is added.",
+                                 action="store_true",
+                                 default=False)
+
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-        # App code
-        path = abspath(args.path)
-        record_tups = gather_records(path)
 
-        for x in record_tups:
-            record = x[0]
-            rec_path = x[1]
-            if record.get_rights_list():
-                rights = record.get_rights_list()[0]
-                try:
-                    rights_extension = rights.get_rightsExtension(0)
-                    rights_extension.add_to_field('Restriction',
-                                                  build_restriction_node(
-                                                    args.restriction,
-                                                    True,
-                                                    args.reason,
-                                                    args.donor_stipulation
-                                                  )
-                                                  )
-                except KeyError:
-                    rights.add_rightsExtension(build_rights_extension_node(
-                                                args.restriction,
-                                                True,
-                                                args.reason,
-                                                args.donor_stipulation
-                    ))
-            else:
-                rights = Rights(rightsExtension=build_rights_extension_node(
-                    args.restriction,
-                    args.reason,
-                    args.donor_stipulation
-                ))
-                record.add_rights(rights)
-            record.write_to_file(rec_path)
+        # App code
+        stage_fullpath = join(args.staging_env, args.stage_id)
+        reader = FileSystemStageReader(stage_fullpath)
+        stage = reader.read()
+        stdout.write("Stage: " + stage_fullpath + "\n")
+
+        premis_restriction_setter = GenericPREMISRestrictionSetter(
+            stage,
+            args.restriction,
+            args.reason,
+            args.donor_stipulation,
+            args.linking_agentid,
+            not args.inactive
+        )
+        premis_restriction_setter.process()
+
+        writer = FileSystemStageWriter(stage, args.staging_env)
+        writer.write()
+        stdout.write("Complete\n")
+
+
+if __name__ == "__main__":
+    s = PremisRestrictionSetter()
+    s.main()
