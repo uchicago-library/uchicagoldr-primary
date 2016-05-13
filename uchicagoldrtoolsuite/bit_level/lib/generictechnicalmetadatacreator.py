@@ -7,6 +7,7 @@ from pypremis.nodes import *
 
 from .ldrpath import LDRPath
 from .ldritemoperations import copy
+from .abc.ldritem import LDRItem
 from ...core.lib.bash_cmd import BashCommand
 from ...core.lib.convenience import iso8601_dt
 
@@ -32,9 +33,16 @@ class GenericTechnicalMetadataCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
 
-    def process(self):
+    def process(self, skip_existing=False):
         for segment in self.stage.segment_list:
             for materialsuite in segment.materialsuite_list:
+                if not isinstance(materialsuite.get_premis(), LDRItem):
+                    raise ValueError("All material suites must have a PREMIS " +
+                                     "record in order to generated technical " +
+                                     "metadata records.")
+                if skip_existing:
+                    if isinstance(materialsuite.get_technicalmetadata(0), LDRItem):
+                        continue
                 techmd, premis = self.instantiate_and_make_techmd(materialsuite)
                 materialsuite.set_technicalmetadata_list(techmd)
                 materialsuite.set_premis(premis)

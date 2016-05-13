@@ -12,6 +12,7 @@ except:
     pass
 
 from ...core.lib.convenience import sane_hash
+from .abc.ldritem import LDRItem
 from .ldrpath import LDRPath
 
 
@@ -36,9 +37,12 @@ class GenericPREMISCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
 
-    def process(self):
+    def process(self, skip_existing=False):
         for segment in self.stage.segment_list:
             for materialsuite in segment.materialsuite_list:
+                if skip_existing:
+                    if isinstance(materialsuite.get_premis(), LDRItem):
+                        continue
                 materialsuite.set_premis(
                     self.instantiate_and_make_premis(materialsuite.content)
                 )
