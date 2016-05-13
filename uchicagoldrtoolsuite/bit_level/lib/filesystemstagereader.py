@@ -81,21 +81,21 @@ class FileSystemStageReader(StageSerializationReader):
                 if not isfile(x):
                     raise OSError("The contents of the adminnote dir must " +
                                   "be just files")
-                i = LDRPath(x)
+                i = LDRPath(x, root=adminnotes_node.identifier)
                 self.get_struct().add_adminnote(i)
 
             for x in legalnotes_files:
                 if not isfile(x):
                     raise OSError("The contents of the legalnote dir must " +
                                   "be just files")
-                i = LDRPath(x)
+                i = LDRPath(x, root=legalnotes_node.identifier)
                 self.get_struct().add_legalnote(i)
 
             for x in accessionrecords_files:
                 if not isfile(x):
                     raise OSError("The contents of the accessionrecord dir " +
                                   "must be just files")
-                i = LDRPath(x)
+                i = LDRPath(x, root=accessionrecords_node.identifier)
                 self.get_struct().add_accessionrecord(i)
 
         return self.get_struct()

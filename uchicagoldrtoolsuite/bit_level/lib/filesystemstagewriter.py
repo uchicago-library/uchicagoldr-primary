@@ -142,3 +142,18 @@ class FileSystemStageWriter(StageSerializationWriter):
 
         for seg in self.get_struct().segment_list:
             self._write_seg(seg, data_dir, admin_dir)
+
+        for legalnote in self.get_struct().get_legalnote_list():
+            recv_item_path = join(legalnotes_dir, legalnote.item_name)
+            recv_item = LDRPath(recv_item_path, root=legalnotes_dir)
+            copy(legalnote, recv_item)
+
+        for adminnote in self.get_struct().get_adminnote_list():
+            recv_item_path = join(adminnotes_dir, adminnote.item_name)
+            recv_item = LDRPath(recv_item_path, root=adminnote_dir)
+            copy(adminnote, recv_item)
+
+        for accessionrecord in self.get_struct().get_accessionrecord_list():
+            recv_item_path = join(accessionrecords_dir, accessionrecord.item_name)
+            recv_item = LDRPath(recv_item_path, root=accessionrecords_dir)
+            copy(accessionrecord, recv_item)
