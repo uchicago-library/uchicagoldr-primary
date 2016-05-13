@@ -20,6 +20,14 @@ class FileSystemStageWriter(StageSerializationWriter):
     writes a Staging Structure to disk as a series of directories and files
     """
     def __init__(self, aStructure, aRoot):
+        """
+        spawn a writer
+
+        __Args__
+
+        1. aStructure (Stage): The Stage to write to disk
+        2. aRoot (str): The path to your staging environment
+        """
         super().__init__(aStructure)
         self.stage_env_path = aRoot
         self.set_implementation('file system')

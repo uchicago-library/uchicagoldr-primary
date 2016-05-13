@@ -25,6 +25,26 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
     """
     def __init__(self, path, label_text, label_number, root=None,
                  filter_pattern=None):
+        """
+        instantiate a new ExternalFileSystemSegmentPackager with all the
+        information that it will need to package the contents of an external
+        directory as a segment to be inserted into an existing Stage.
+
+        __Args__
+
+        1. path (str): The path to the external directory whose contents
+            are going to be packaged in the segment
+        2. label_text (str): The label for the first part of the segments id
+        3. label_number (int): The number for the second part of the segments
+            id
+
+        __KWArgs__
+
+        * root (str): A path root to remove from the item information, by
+            default this will be the containing directory of the specified
+            directory
+        * filter_pattern (str): A regex to use to specify files not to include
+        """
         super().__init__()
         self.filter_pattern = filter_pattern
         self.set_implementation("file system")
@@ -39,6 +59,13 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             self.path = path
 
     def package(self):
+        """
+        read the file system and package things up into a Segment
+
+        __Returns__
+
+        * self.get_struct(): The packaged Segment
+        """
         tree = FilePathTree(self.path, filter_pattern=self.filter_pattern)
         if self.root:
             for x in tree.get_paths():

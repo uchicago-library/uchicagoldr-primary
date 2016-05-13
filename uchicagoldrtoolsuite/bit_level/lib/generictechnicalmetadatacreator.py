@@ -26,6 +26,14 @@ class GenericTechnicalMetadataCreator(object):
     file in it.
     """
     def __init__(self, stage):
+        """
+        spawn a technical metadata creator that should work regardless of
+        what kind of LDRItems are being used
+
+        __Args__
+
+        stage (Stage): the Stage to operate on
+        """
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -54,6 +62,19 @@ class GenericTechnicalMetadataCreator(object):
                         presform_ms.set_premis(pres_premis)
 
     def instantiate_and_make_techmd(self, ms):
+        """
+        write the file to disk an examine it, update its PREMIS
+
+        __Args__
+
+        1. ms (MaterialSuite): The MaterialSuite of the item in question
+
+        __Returns__
+
+        * (tuple): The first entry is a list of one element, the technical
+            metadata.
+            The second is the updated record PREMIS record.
+        """
         recv_file = join(self.working_dir_path, str(uuid1()))
         recv_item = LDRPath(recv_file)
         fits_file = join(self.working_dir_path, str(uuid1()))

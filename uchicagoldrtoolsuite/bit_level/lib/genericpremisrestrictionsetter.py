@@ -11,8 +11,29 @@ from .ldritemoperations import copy
 
 
 class GenericPREMISRestrictionSetter(object):
+    """
+    Ingests a Stage which already has PREMIS records in it and sets a
+    restriction node in each of their records
+    """
     def __init__(self, stage, restriction, reasons=None,
                  donor_stipulations=None, linkingAgentIds=None, active=True):
+        """
+        spawn a restriction setter
+
+        __Args__
+
+        1. stage (Stage): The Stage to operate on
+        2. restriction (str): The restriction code to set
+
+        __KWArgs__
+
+        * reasons (list [of strs]): Reasons the restriction was applied
+        * donor_stipulations (list [of strs]): Any donor stipulations that
+            are pertinent to this restriction
+        * linkingAgentIds (list [of strs]): Any linkingAgentIdentifiers that
+            are relevant to this restriction
+        * active (bool): Whether or not this restriction is currently active
+        """
         self.stage = stage
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
@@ -36,6 +57,17 @@ class GenericPREMISRestrictionSetter(object):
                 )
 
     def instantiate_and_set_restriction(self, item):
+        """
+        do the work on the record
+
+        __Args__
+
+        1. item (LDRItem): The LDRItem of the standing PREMIS record
+
+        __Returns__
+
+        * return_item (LDRItem): The LDRItem of the updated PREMIS record
+        """
         recv_file = join(self.working_dir_path, str(uuid1()))
         recv_item = LDRPath(recv_file)
         copy(item, recv_item)

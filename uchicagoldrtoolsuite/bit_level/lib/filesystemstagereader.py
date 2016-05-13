@@ -20,6 +20,13 @@ class FileSystemStageReader(StageSerializationReader):
     Repackages files written to disk as a Staging Structure
     """
     def __init__(self, staging_directory):
+        """
+        spawn a reader
+
+        __Args__
+
+        1. staging_directory (str): The path to the Stage on disk
+        """
         super().__init__()
         self.set_implementation('file system')
         self.stage_id = staging_directory.split('/')[-1]

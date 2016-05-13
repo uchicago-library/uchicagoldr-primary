@@ -30,6 +30,13 @@ class GenericPREMISCreator(object):
     record for everything in it
     """
     def __init__(self, stage):
+        """
+        spawn a premis creator that should work for any LDRItems
+
+        __Args__
+
+        1. stage (Stage): The Stage to generate PREMIS object records for
+        """
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -38,6 +45,14 @@ class GenericPREMISCreator(object):
         self.working_dir_path = self.working_dir.name
 
     def process(self, skip_existing=False):
+        """
+        make the premis records for everything
+
+        __KWArgs__
+
+        * skip_existing (bool): If True: Skip all materialsuites which claim
+            to already have PREMIS records as a part of them.
+        """
         for segment in self.stage.segment_list:
             for materialsuite in segment.materialsuite_list:
                 if skip_existing:
@@ -48,6 +63,17 @@ class GenericPREMISCreator(object):
                 )
 
     def instantiate_and_make_premis(self, item):
+        """
+        Write an item to a tempdir, examine it and make a PREMIS record
+
+        __KWArgs__
+
+        * item (LDRItem): The LDRItem to create a premis record for
+
+        __Returns__
+
+        * (LDRPath): The item representing the PREMIS record
+        """
         recv_file = join(self.working_dir_path, str(uuid1()))
         premis_file = join(self.working_dir_path, str(uuid1()))
         with item.open('rb') as src:

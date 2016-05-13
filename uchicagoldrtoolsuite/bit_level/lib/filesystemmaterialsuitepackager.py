@@ -21,6 +21,20 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
     """
     def __init__(self, stage_env_path, stage_id, label_text, label_number,
                  rel_content_path):
+        """
+        spawn a packager
+
+        __Args__
+
+        1. stage_env_path (str): The file system path to the staging environment
+        2. stage_id (str): The stage identifier for the stage on disk
+        3. label_text (str): The text that makes up the first part of the
+            segment identifier
+        4. label_number (int): The number that makes up the second part of
+            the segment identifier
+        5. rel_content_path (str): The **relative** path to the content in
+            the segment which should have some of the parts of a MaterialSuite
+        """
         super().__init__()
         self.stage_env_path = stage_env_path
         self.stage_id = stage_id

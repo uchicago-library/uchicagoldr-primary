@@ -25,6 +25,18 @@ class FileSystemSegmentPackager(SegmentPackager):
     Structure
     """
     def __init__(self, stage_env_path, stage_id, label_text, label_number):
+        """
+        spawn a packager
+
+        __Args__
+
+        1. stage_env_path (str): The file system path to the staging environment
+        2. stage_id (str): The stage identifier for the stage on disk
+        3. label_text (str): The text that makes up the first part of the
+            segment identifier
+        4. label_number (int): The number that makes up the second part of
+            the segment identifier
+        """
         super().__init__()
         self.stage_env_path = stage_env_path
         self.stage_id = stage_id
