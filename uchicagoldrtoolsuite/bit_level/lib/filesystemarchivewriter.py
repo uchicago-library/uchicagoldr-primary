@@ -3,7 +3,7 @@ from os import makedirs
 from os.path import abspath, dirname, exists, join, relpath
 from sys import stderr
 
-from .abc.abc.serializationwriter import SerializationWriter
+from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .ldritemoperations import copy, get_archivable_identifier,\
     pairtree_a_string
 from .ldrpath import LDRPath
@@ -18,7 +18,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class FileSystemArchiveWriter(SerializationWriter):
+class FileSystemArchiveWriter(ArchiveSerializationWriter):
     """
     writes an archive structure to the file system as a directory
     """
