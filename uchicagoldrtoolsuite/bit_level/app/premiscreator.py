@@ -48,7 +48,7 @@ class PremisCreator(CLIApp):
         self.parser.add_argument("--skip-existing", help="Skip material " +
                                  "suites which already claim to have " +
                                  "premis records",
-                                 type=bool, action='store_true',
+                                 action='store_true',
                                  default=False)
 
         # Parse arguments into args namespace
