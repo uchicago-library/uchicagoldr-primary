@@ -15,17 +15,23 @@ class Archive(Structure):
     """
     The structure which holds archival contents in the archive environment.
     """
-    def __init__(self):
-        self.requird_parts = ['identifier', 'segment', 'accessionrecord',
-                              'admninnote', 'legalnote']
-        self.identifier = get_archivable_identifier(noid=False)
-        self.segments_list = []
+
+    requird_parts = ['identifier', 'segment', 'accessionrecord',
+                     'admninnote', 'legalnote']
+
+    def __init__(self, defined_id=None, make_noid=False):
+
+        if defined_id:
+            self.identifier = defined_id
+        else:
+            self.identifier = get_archivable_identifier(noid=make_noid)
+        self.segment_list = []
         self.accession_record_list = []
         self.legalnote_list = []
         self.adminnote_list = []
 
     def validate(self):
-        super(ArchiveStructure, self)._validate()
+        super().validate()
         big_list = self.accessionrecord + self.adminnote + self.legalnote
         for n_thing in big_list:
             if getattr(n_thing, LDRItem):
@@ -49,15 +55,17 @@ class Archive(Structure):
                                  format(type(n_input).__name__))
 
     def get_segments_list(self):
-        return self.iterate_through_a_list(self.segments_list)
+        return self._segment_list
 
     def set_segments_list(self, value):
         if not isinstance(value, list):
             raise ValueError("Must pass only a Segment Structure to" +
                              " segments_list")
+        else:
+            self._segment_list = value
 
     def get_premis_list(self):
-        return self.iterate_through_a_list(self.premis_list)
+        return self._premis_list
 
     def set_premis_list(self, value):
         if not self.validate_input(value):
@@ -67,7 +75,7 @@ class Archive(Structure):
             self._premis_list = value
 
     def get_accession_record(self):
-        return self.iterate_through_a_list(self.accession_record)
+        return self._Accession_record_list
 
     def set_accession_record(self, value):
         self.validate_input(value)

@@ -4,8 +4,8 @@ from os.path import abspath, dirname, exists, join, relpath
 from sys import stderr
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
-from .ldritemoperations import copy, get_archivable_identifier,\
-    pairtree_a_string
+from .archive import Archive
+from .ldritemoperations import copy
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
 from .stage import Stage
@@ -34,10 +34,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         being archived
         """
         self.structure = aStructure
-        self.identifier = get_archivable_identifier(noid=False)
-        self.pairtree = Pairtree(self.identifier).get_pairtree_path()
+        self.pairtree = Pairtree(self.structure.identifier).get_pairtree_path()
         self.origin_root = origin_loc
-        self.archive = archive_loc
+        self.archive_loc = archive_loc
 
     def find_and_pairtree_admin_content(self, segment_id, iterable):
         for n_thing in iterable:
@@ -60,25 +59,26 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         onto disk
         """
         if self.structure.validate():
-            for n_segment in self.structure.segment_list:
-                segment_id = n_segment.label+str(n_segment.run)
-                for n_msuite in n_segment.materialsuite_list:
-                    self.find_and_pairtree_data_content(
-                        segment_id, n_msuite.content)
-                    self.find_and_pairtree_admin_content(
-                        segment_id, n_msuite.technicalmetadata_list)
-                    self.find_and_pairtree_admin_content(
-                        segment_id, n_msuite.premis)
-                    for n_presform_msuite in n_msuite.presform_list:
-                        self.find_and_pairtree_data_content(
-                            segment_id, n_presform_msuite.content)
-                        self.find_and_pairtree_admin_content(
-                            segment_id,
-                            n_presform_msuite.technicalmetadata_list)
-                        self.find_and_pairtree_admin_content(
-                            segment_id, n_presform_msuite.premis)
-            for n_item in self.pairtree:
-                print(n_item)
+            print("hi")
+            #     for n_segment in self.structure.segment_list:
+            #         segment_id = n_segment.label+str(n_segment.run)
+            #         for n_msuite in n_segment.materialsuite_list:
+            #             self.find_and_pairtree_data_content(
+            #                 segment_id, n_msuite.content)
+            #             self.find_and_pairtree_admin_content(
+            #                 segment_id, n_msuite.technicalmetadata_list)
+            #             self.find_and_pairtree_admin_content(
+            #                 segment_id, n_msuite.premis)
+            #             for n_presform_msuite in n_msuite.presform_list:
+            #                 self.find_and_pairtree_data_content(
+            #                     segment_id, n_presform_msuite.content)
+            #                 self.find_and_pairtree_admin_content(
+            #                     segment_id,
+            #                     n_presform_msuite.technicalmetadata_list)
+            #                 self.find_and_pairtree_admin_content(
+            #                     segment_id, n_presform_msuite.premis)
+            #     for n_item in self.pairtree:
+            #         print(n_item)
         else:
             stderr.write("invalid staging directory passed to  the " +
                          " file system archive structure writer")
@@ -87,12 +87,12 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         return self._structure
 
     def set_structure(self, value):
-        if isinstance(value, Stage):
+        if isinstance(value, Archive):
             self._structure = value
         else:
             raise ValueError("must pass an instance of Structure" +
                              " abstract class to a " +
-                             " FileSystemArchiveStructureWriter")
+                             "FileSystemArchiveStructureWriter")
 
     def get_archive_loc(self):
         return self._archive_loc
@@ -104,12 +104,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         else:
             raise ValueError("Cannot pass {} to the archive".format(value) +
                              " writer because that path does not exist")
-
-    def get_identifier(self):
-        return self._identifier
-
-    def set_identifier(self, value):
-        self._identifier = value
 
     def get_pairtree(self):
         return self._pairtree
@@ -128,7 +122,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self._origin_root = value
 
     structure = property(get_structure, set_structure)
-    identifier = property(get_identifier, set_identifier)
     pairtree = property(get_pairtree, set_pairtree)
     origin_root = property(get_origin_root, set_origin_root)
     archive_loc = property(get_archive_loc, set_archive_loc)

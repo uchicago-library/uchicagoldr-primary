@@ -7,12 +7,17 @@ from .stage import Stage
 class StageToArchiveTransformer(Transformer):
     def __init__(self, origin_structure):
         self.origin_structure = origin_structure
-        self.destination_structure = Archive()
+        self.destination_structure = None
 
-    def transform(self):
+    def transform(self, defined_id=None, make_noid=False):
+        print(self.destination_structure)
+        if self.destination_structure is not None:
+            raise TypeError("a transformation already occured.")
+        self.destination_structure = Archive(defined_id=defined_id,
+                                             make_noid=make_noid)
         for n_segment in self.origin_structure.segment_list:
             self.destination_structure.segment_list.append(n_segment)
-        for n_accessionrecord in self.origin_structure.accession_record_list:
+        for n_accessionrecord in self.origin_structure.accessionrecord_list:
             self.destination_structure.accession_record_list.append(
                 n_accessionrecord
             )
@@ -20,6 +25,7 @@ class StageToArchiveTransformer(Transformer):
             self.destination_structure.legalnote_list.append(n_legalnote)
         for n_adminnote in self.origin_structure.adminnote_list:
             self.destination_structure.adminnote_list.append(n_adminnote)
+        return self.destination_structure
 
     def get_origin_structure(self):
         return self._origin_structure
@@ -35,7 +41,7 @@ class StageToArchiveTransformer(Transformer):
         return self._destination_structure
 
     def set_destination_structure(self, value):
-        self._destination_structure = Archive()
+        self._destination_structure = value
 
     def __repr__(self):
         return "< transform from stage {} to archive {}".\

@@ -1,5 +1,6 @@
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from ..lib.ldritemoperations import get_archivable_identifier
 from ..lib.filesystemstagereader import FileSystemStageReader
 from ..lib.filesystemarchivewriter import FileSystemArchiveWriter
 from ..lib.stagetoarchivetransformer import StageToArchiveTransformer
@@ -57,12 +58,11 @@ class Archiver(CLIApp):
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
         transformer = StageToArchiveTransformer(staging_structure)
-        archive_structure = transformer.transform()
-        print(archive_structure)
-
-        #writer = FileSystemArchiveWriter(archive_structure, args.archive_loc,
-        #args.origin_loc)
-        #writer.write()
+        identifier = get_archivable_identifier(noid=False)
+        archive_structure = transformer.transform(defined_id=identifier)
+        writer = FileSystemArchiveWriter(archive_structure, args.archive,
+                                         args.origin_root)
+        writer.write()
 
 
 if __name__ == "__main__":
