@@ -53,32 +53,34 @@ class GenericPREMISCreator(object):
         with item.open('rb') as src:
             with open(recv_file, 'wb') as dst:
                 dst.write(src.read(1024))
-        rec = self.make_record(recv_file)
+        rec = self.make_record(recv_file, item)
         rec.write_to_file(premis_file)
         return LDRPath(premis_file)
 
-    def make_record(self, file_path):
+    def make_record(self, file_path, item):
         """
         build a PremisNode.Object from a file and use it to instantiate a record
 
         __Args__
 
         1. file_path (str): The full path to a file
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
         1. (PremisRecord): The populated record instance
         """
-        obj = self._make_object(file_path)
+        obj = self._make_object(file_path, item)
         return PremisRecord(objects=[obj])
 
-    def _make_object(self, file_path):
+    def _make_object(self, file_path, item):
         """
         make an object entry auto-populated with the required information
 
         __Args__
 
         1. file_path (str): The path to the file
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
@@ -86,8 +88,8 @@ class GenericPREMISCreator(object):
         """
         objectIdentifier = self._make_objectIdentifier()
         objectCategory = 'file'
-        objectCharacteristics = self._make_objectCharacteristics(file_path)
-        originalName = split(file_path)[1]
+        objectCharacteristics = self._make_objectCharacteristics(file_path, item)
+        originalName = item.item_name
         storage = self._make_Storage(file_path)
         obj = Object(objectIdentifier, objectCategory, objectCharacteristics)
         obj.set_originalName(originalName)
@@ -108,13 +110,14 @@ class GenericPREMISCreator(object):
         # overflow about why this should be fine
         return ObjectIdentifier("DOI", str(uuid1()))
 
-    def _make_objectCharacteristics(self, file_path):
+    def _make_objectCharacteristics(self, file_path, item):
         """
         make a new objectCharacteristics node for a file
 
         __Args__
 
         1. file_path (str): The path to a file to generate info for
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
@@ -123,7 +126,7 @@ class GenericPREMISCreator(object):
         """
         fixity1, fixity2 = self._make_fixity(file_path)
         size = str(getsize(file_path))
-        formats = self._make_format(file_path)
+        formats = self._make_format(file_path, item)
         objChar = ObjectCharacteristics(formats[0])
         if len(formats) > 1:
             for x in formats[1:]:
@@ -169,19 +172,20 @@ class GenericPREMISCreator(object):
         sha256_fixity.set_messageDigestOriginator('python3 hashlib.sha256')
         return md5_fixity, sha256_fixity
 
-    def _make_format(self, file_path):
+    def _make_format(self, file_path, item):
         """
         make new format nodes for a file
 
         __Args__
 
         1. file_path (str): The path to the file to generate info for
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
         1. (list): a list of format nodes
         """
-        magic_num, guess = self._detect_mime(file_path)
+        magic_num, guess = self._detect_mime(file_path, item)
         formats = []
         if magic_num:
             premis_magic_format_desig = FormatDesignation(magic_num)
@@ -227,13 +231,14 @@ class GenericPREMISCreator(object):
         """
         return ContentLocation("Unix File Path", file_path)
 
-    def _detect_mime(self, file_path):
+    def _detect_mime(self, file_path, item):
         """
         use both magic number and file extension mime detection on a file
 
         __Args__
 
         1. file_path (str): The path to the file in question
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
@@ -245,7 +250,7 @@ class GenericPREMISCreator(object):
         except:
             magic_num = None
         try:
-            guess = guess_type(file_path)[0]
+            guess = guess_type(item.item_name)[0]
         except:
             guess = None
         return magic_num, guess
