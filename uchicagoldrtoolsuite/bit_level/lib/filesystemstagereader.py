@@ -1,10 +1,11 @@
 import re
 from sys import stderr
-from os.path import exists, join, split as dirsplit
+from os.path import exists, join, isfile, split as dirsplit
 
 from .abc.stageserializationreader import StageSerializationReader
 from .absolutefilepathtree import AbsoluteFilePathTree
 from .filesystemsegmentpackager import FileSystemSegmentPackager
+from .ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -62,5 +63,39 @@ class FileSystemStageReader(StageSerializationReader):
                     else:
                         stderr.write("the path for {} is wrong.\n".format(
                             label))
-            # Go on to handle adminnote, legalnote, acc rec
+
+            admin_node_identifier = join(self.serialized_location, 'admin')
+            admin_node_depth = tree.find_depth_of_a_path(admin_node_identifier)
+            legalnotes_node = tree.find_tag_at_depth(
+                'legalnotes', admin_node_depth+1)[0]
+            adminnotes_node = tree.find_tag_at_depth(
+                'adminnotes', admin_node_depth+1)[0]
+            accessionrecords_node = tree.find_tag_at_depth(
+                'accessionrecords', admin_node_depth+1)[0]
+
+            adminnotes_files = adminnotes_node.fpointer
+            legalnotes_files = legalnotes_node.fpointer
+            accessionrecords_files = accessionrecords_node.fpointer
+
+            for x in adminnotes_files:
+                if not isfile(x):
+                    raise OSError("The contents of the adminnote dir must " +
+                                  "be just files")
+                i = LDRPath(x)
+                self.get_struct().add_adminnote(i)
+
+            for x in legalnotes_files:
+                if not isfile(x):
+                    raise OSError("The contents of the legalnote dir must " +
+                                  "be just files")
+                i = LDRPath(x)
+                self.get_struct().add_legalnote(i)
+
+            for x in accessionrecords_files:
+                if not isfile(x):
+                    raise OSError("The contents of the accessionrecord dir " +
+                                  "must be just files")
+                i = LDRPath(x)
+                self.get_struct().add_accessionrecord(i)
+
         return self.get_struct()
