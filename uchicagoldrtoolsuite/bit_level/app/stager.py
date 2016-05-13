@@ -102,13 +102,15 @@ class Stager(CLIApp):
             root=root,
             filter_pattern=args.filter_pattern)
 
-        stdout.write(args.directory)
-        stdout.write(args.prefix + str(seg_num))
+        stdout.write("Source: " + args.directory+"\n")
+        stdout.write("Stage: " + join(args.destination_root, args.staging_id) +
+                     "\n")
+        stdout.write("Segment: " + args.prefix + "-" + str(seg_num) + "\n")
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
         writer = FileSystemStageWriter(stage, args.destination_root)
         writer.write()
-        stdout.write("Complete")
+        stdout.write("Complete\n")
 
 
 if __name__ == "__main__":

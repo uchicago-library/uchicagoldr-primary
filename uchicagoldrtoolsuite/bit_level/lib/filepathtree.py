@@ -38,7 +38,10 @@ class FilePathTree(object):
         contents in the tree
         """
         self.tree = Tree()
-        self.filter_pattern = re_compile(filter_pattern)
+        if filter_pattern is not None:
+            self.filter_pattern = re_compile(filter_pattern)
+        else:
+            self.filter_pattern = None
         if path:
             if not (isinstance(path, str) or isinstance(path, RootedPath)):
                 raise ValueError()
@@ -49,8 +52,9 @@ class FilePathTree(object):
                             filter_pattern=filter_pattern,
                             inc_dirs=leaf_dirs)
             for i, path in enumerate(fw):
-                if self.filter_pattern.match(i):
-                    continue
+                if self.filter_pattern is not None:
+                    if self.filter_pattern.match(i):
+                        continue
                 self.add_node(path)
 
     def __repr__(self):

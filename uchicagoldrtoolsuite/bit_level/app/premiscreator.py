@@ -1,4 +1,5 @@
 from sys import stdout
+from os.path import join
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagewriter import FileSystemStageWriter
@@ -42,8 +43,10 @@ class PremisCreator(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument("directory", help="The directory containing " +
-                                 "the serialized stage.",
+        self.parser.add_argument("staging_env", help="The path to your " +
+                                 "staging environment",
+                                 type=str, action='store')
+        self.parser.add_argument("stage_id", help="The stage identifier",
                                  type=str, action='store')
         self.parser.add_argument("--skip-existing", help="Skip material " +
                                  "suites which already claim to have " +
@@ -55,15 +58,17 @@ class PremisCreator(CLIApp):
         args = self.parser.parse_args()
 
         # App code
-        stage = FileSystemStageReader(args.directory)
-        stdout.write(args.directory)
+        stage_fullpath = join(args.staging_env, args.stage_id)
+        reader = FileSystemStageReader(stage_fullpath)
+        stage = reader.read()
+        stdout.write("Stage: " + stage_fullpath + "\n")
 
         premis_creator = GenericPREMISCreator(stage)
         premis_creator.process(skip_existing=args.skip_existing)
 
-        writer = FileSystemStageWriter(stage, args.directory)
+        writer = FileSystemStageWriter(stage, args.staging_env)
         writer.write()
-        stdout.write("Complete")
+        stdout.write("Complete\n")
 
 
 if __name__ == "__main__":
