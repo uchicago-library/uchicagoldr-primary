@@ -3,8 +3,7 @@ from sys import stdout
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagewriter import FileSystemStageWriter
 from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.generictechnicalmetadatacreator import \
-    GenericTechnicalMetadataCreator
+from ..lib.genericpremiscreator import GenericPREMISCreator
 
 
 __author__ = "Brian Balsamo"
@@ -19,7 +18,7 @@ def launch():
     """
     entry point launch hook
     """
-    app = TechnicalMetadataCreator(
+    app = PremisCreator(
             __author__=__author__,
             __email__=__email__,
             __company__=__company__,
@@ -30,9 +29,9 @@ def launch():
     app.main()
 
 
-class TechnicalMetadataCreator(CLIApp):
+class PremisCreator(CLIApp):
     """
-    Creates technical metadata (FITs) for all the material suites in a stage.
+    Creates PREMIS object records for all the material suites in a stage.
     """
     def main(self):
         # Instantiate boilerplate parser
@@ -48,7 +47,7 @@ class TechnicalMetadataCreator(CLIApp):
                                  type=str, action='store')
         self.parser.add_argument("--skip-existing", help="Skip material " +
                                  "suites which already claim to have " +
-                                 "technical metadata",
+                                 "premis records",
                                  type=bool, action='store_true',
                                  default=False)
 
@@ -59,8 +58,8 @@ class TechnicalMetadataCreator(CLIApp):
         stage = FileSystemStageReader(args.directory)
         stdout.write(args.directory)
 
-        techmd_creator = GenericTechnicalMetadataCreator(stage)
-        techmd_creator.process(skip_existing=args.skip_existing)
+        premis_creator = GenericPREMISCreator(stage)
+        premis_creator.process(skip_existing=args.skip_existing)
 
         writer = FileSystemStageWriter(stage, args.directory)
         writer.write()
@@ -68,5 +67,5 @@ class TechnicalMetadataCreator(CLIApp):
 
 
 if __name__ == "__main__":
-    s = TechnicalMetadataCreator()
+    s = PremisCreator()
     s.main()
