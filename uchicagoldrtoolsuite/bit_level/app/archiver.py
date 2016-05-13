@@ -3,6 +3,7 @@ from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagereader import FileSystemStageReader
 from ..lib.filesystempairtreewriter import \
     FileSystemPairTreeWriter
+from ..lib.stagetopairtreetransformer import StageToPairTreeTransformer
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -56,9 +57,13 @@ class Archiver(CLIApp):
         args = self.parser.parse_args()
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
-        writer = FileSystemPairTreeWriter(staging_structure, args.archive_loc,
-                                          args.origin_loc)
-        writer.write()
+        transformer = StageToArchiveTransformer(staging_structure)
+        archive_structure = transformer.transform()
+        print(archive_structure)
+
+        #writer = FileSystemArchiveWriter(archive_structure, args.archive_loc,
+        #args.origin_loc)
+        #writer.write()
 
 
 if __name__ == "__main__":
