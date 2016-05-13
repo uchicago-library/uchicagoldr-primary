@@ -76,7 +76,6 @@ class GenericPREMISRestrictionSetter(object):
 
         new_record = join(self.working_dir_path, str(uuid1()))
         record.write_to_file(new_record)
-        print(record.get_rights_list())
         return_item = LDRPath(new_record)
         return return_item
 
