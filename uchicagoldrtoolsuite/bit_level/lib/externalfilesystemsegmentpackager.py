@@ -23,8 +23,10 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
     how to package it back up as a segment for inclusion in a Staging
     Structure
     """
-    def __init__(self, path, label_text, label_number, root=None):
+    def __init__(self, path, label_text, label_number, root=None,
+                 filter_pattern=None):
         super().__init__()
+        self.filter_pattern = filter_pattern
         self.set_implementation("file system")
         self.set_msuite_packager(ExternalFileSystemMaterialSuitePackager)
         self.set_id_prefix(label_text)
@@ -37,7 +39,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             self.path = path
 
     def package(self):
-        tree = FilePathTree(self.path)
+        tree = FilePathTree(self.path, filter_pattern=self.filter_pattern)
         if self.root:
             for x in tree.get_paths():
                 if not isfile(join(self.root, x)):

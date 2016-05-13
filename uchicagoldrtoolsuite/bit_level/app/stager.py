@@ -1,4 +1,5 @@
 from os.path import join, dirname
+from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagewriter import FileSystemStageWriter
@@ -59,12 +60,12 @@ class Stager(CLIApp):
         self.parser.add_argument("--resume", "-r", help="An integer for a " +
                                  "run that needs to be resumed.",
                                  type=str, action='store', default=0)
-        self.parser.add_argument("--clobber",
-                                 help="Clobber any existing files in the dst.",
-                                 action='store_true',
-                                 default=False)
         self.parser.add_argument("--source_root", help="The root of the  " +
                                  "directory that needs to be staged.",
+                                 type=str, action='store',
+                                 default=None)
+        self.parser.add_argument("--filter-pattern", help="A regex to " +
+                                 "use to exclude files whose paths match.",
                                  type=str, action='store',
                                  default=None)
 
@@ -94,15 +95,20 @@ class Stager(CLIApp):
         else:
             root = dirname(args.directory)
 
-        ext_seg_packager = ExternalFileSystemSegmentPackager(args.directory,
-                                                             args.prefix,
-                                                             seg_num,
-                                                             root=root)
+        ext_seg_packager = ExternalFileSystemSegmentPackager(
+            args.directory,
+            args.prefix,
+            seg_num,
+            root=root,
+            filter_pattern=args.filter_pattern)
 
+        stdout.write(args.directory)
+        stdout.write(args.prefix + str(seg_num))
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
         writer = FileSystemStageWriter(stage, args.destination_root)
-        writer.write(clobber=args.clobber)
+        writer.write()
+        stdout.write("Complete")
 
 
 if __name__ == "__main__":
