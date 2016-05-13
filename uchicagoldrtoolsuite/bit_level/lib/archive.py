@@ -1,7 +1,7 @@
 from .abc.structure import Structure
 from .abc.ldritem import LDRItem
 from .ldritemoperations import get_archivable_identifier
-from .materialsuite import MaterialSuite
+from .segment import Segment
 
 __author__ = "Tyler Danstrom"
 __email__ = "tdanstrom@uchicago.edu"
@@ -16,28 +16,29 @@ class Archive(Structure):
     The structure which holds archival contents in the archive environment.
     """
 
-    requird_parts = ['identifier', 'segment', 'accessionrecord',
-                     'admninnote', 'legalnote']
-
     def __init__(self, defined_id=None, make_noid=False):
+        self.required_parts = ['identifier', 'segment_list',
+                               'accessionrecord_list', 'admninnote_list',
+                               'legalnote_list']
 
         if defined_id:
             self.identifier = defined_id
         else:
             self.identifier = get_archivable_identifier(noid=make_noid)
         self.segment_list = []
-        self.accession_record_list = []
+        self.accessionrecord_list = []
         self.legalnote_list = []
         self.adminnote_list = []
 
     def validate(self):
         super().validate()
-        big_list = self.accessionrecord + self.adminnote + self.legalnote
+        big_list = self.accessionrecord_list + self.adminnote_list +\
+            self.legalnote_list
         for n_thing in big_list:
             if getattr(n_thing, LDRItem):
                 return False
-        for n_thing in self.segment:
-            if not getattr(n_thing, MaterialSuite):
+        for n_thing in self.segment_list:
+            if not isinstance(n_thing, Segment):
                 return False
         return True
 
@@ -81,6 +82,13 @@ class Archive(Structure):
         self.validate_input(value)
         self._data_object = value
 
+    def get_required_parts(self):
+        return self._required_parts
+
+    def set_required_parts(self, value):
+        self._required_parts = value
+
+    required_parts = property(get_required_parts, set_required_parts)
     accession_record = property(get_accession_record, set_accession_record)
     segment_list = property(get_segments_list, set_segments_list)
     premis_list = property(get_premis_list, set_premis_list)

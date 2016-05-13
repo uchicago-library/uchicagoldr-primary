@@ -38,20 +38,31 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.origin_root = origin_loc
         self.archive_loc = archive_loc
 
-    def find_and_pairtree_admin_content(self, segment_id, iterable):
+    def pairtree_an_admin_content(self, segment_id, a_thing):
+        return LDRPath(join(self.archive_loc, self.pairtree,
+                            'admin', segment_id, a_thing.item_name))
+
+    def pairtree_a_data_content(self, segment_id, a_thing):
+        return LDRPath(join(self.archive_loc, self.pairtree,
+                            'data', segment_id, a_thing.item_name))
+
+    def find_and_pairtree_admin_content(self, segment_id,
+                                        iterable):
         for n_thing in iterable:
-            n_thing_destination = LDRPath(
-                self.pairtree.pairtree_path,
-                'admin', segment_id,
-                n_thing.content.item_name)
-            self.pairtree.content = n_thing_destination
+            makedirs(join(self.archive_loc, self.pairtree,
+                          'admin', segment_id, dirname(n_thing.item_name)),
+                     exist_ok=True)
+            n_thing_destination = self.pairtree_an_admin_content(segment_id,
+                                                                 n_thing)
+            copy(n_thing, n_thing_destination, False)
 
     def find_and_pairtree_data_content(self, segment_id, n_thing):
-        n_thing_destination = LDRPath(
-            self.pairtree.pairtree_path,
-            'data', segment_id,
-            n_thing.content.item_name)
-        self.pairtree.content = n_thing_destination
+        makedirs(join(self.archive_loc, self.pairtree,
+                      'data', segment_id, dirname(n_thing.item_name)),
+                 exist_ok=True)
+        n_thing_destination = self.pairtree_a_data_content(segment_id,
+                                                           n_thing)
+        copy(n_thing, n_thing_destination, False)
 
     def write(self):
         """
@@ -59,28 +70,27 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         onto disk
         """
         if self.structure.validate():
-            print("hi")
-            #     for n_segment in self.structure.segment_list:
-            #         segment_id = n_segment.label+str(n_segment.run)
-            #         for n_msuite in n_segment.materialsuite_list:
-            #             self.find_and_pairtree_data_content(
-            #                 segment_id, n_msuite.content)
-            #             self.find_and_pairtree_admin_content(
-            #                 segment_id, n_msuite.technicalmetadata_list)
-            #             self.find_and_pairtree_admin_content(
-            #                 segment_id, n_msuite.premis)
-            #             for n_presform_msuite in n_msuite.presform_list:
-            #                 self.find_and_pairtree_data_content(
-            #                     segment_id, n_presform_msuite.content)
-            #                 self.find_and_pairtree_admin_content(
-            #                     segment_id,
-            #                     n_presform_msuite.technicalmetadata_list)
-            #                 self.find_and_pairtree_admin_content(
-            #                     segment_id, n_presform_msuite.premis)
-            #     for n_item in self.pairtree:
-            #         print(n_item)
+            makedirs(join(self.archive_loc,
+                          self.pairtree), exist_ok=True)
+            for n_segment in self.structure.segment_list:
+                segment_id = n_segment.label+str(n_segment.run)
+                for n_msuite in n_segment.materialsuite_list:
+                    self.find_and_pairtree_data_content(
+                        segment_id, n_msuite.content)
+                    self.find_and_pairtree_admin_content(
+                        segment_id, n_msuite.technicalmetadata_list)
+                    self.find_and_pairtree_admin_content(
+                        segment_id, n_msuite.premis)
+                    for n_presform_msuite in n_msuite.presform_list:
+                        self.find_and_pairtree_data_content(
+                            segment_id, n_presform_msuite.content)
+                        self.find_and_pairtree_admin_content(
+                            segment_id,
+                            n_presform_msuite.technicalmetadata_list)
+                        self.find_and_pairtree_admin_content(
+                            segment_id, n_presform_msuite.premis)
         else:
-            stderr.write("invalid staging directory passed to  the " +
+            stderr.write("invalid archive structure instance passed to  the " +
                          " file system archive structure writer")
 
     def get_structure(self):
