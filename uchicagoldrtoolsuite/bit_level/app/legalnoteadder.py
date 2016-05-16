@@ -34,11 +34,11 @@ def launch():
 
 class LegalNoteAdder(CLIApp):
     """
-    Create an administrative note in a Stage
+    Create a legal note in a Stage
     """
     def main(self):
         # Instantiate boilerplate parser
-        self.spawn_parser(description="Adds a file as an administrative " +
+        self.spawn_parser(description="Adds a file as a legal " +
                           "note to a stage. ",
                           epilog="{}\n".format(self.__copyright__) +
                           "{}\n".format(self.__author__) +
