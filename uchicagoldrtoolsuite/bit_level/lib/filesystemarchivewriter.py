@@ -35,6 +35,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         """
         self.structure = aStructure
         self.pairtree = Pairtree(self.structure.identifier).get_pairtree_path()
+        self.audit_qualification = ArchiveAuditor(aStructure)
         self.origin_root = origin_loc
         self.archive_loc = archive_loc
 
@@ -126,7 +127,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                         basename(n_msuite.premis.item_name))
                     cur_premis_ldrpath = LDRPath(cur_premis_filename)
                     copy(n_msuite.premis, cur_premis_ldrpath, False)
-
 
                     if n_msuite.presform_list:
                         for n_presform_msuite in n_msuite.presform_list:
