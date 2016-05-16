@@ -41,6 +41,9 @@ setup(
             'ldrarchive = uchicagoldrtoolsuite.bit_levelapp.archiver:launch',
             'ldraru = uchicagoldrtoolsuite.core.app.aru:launch',
             'ldrpostinstall = uchicagoldrtoolsuite.core.app.postinstall:launch',
+            'ldraddadminnote = uchicagoldrtoolsuite.bit_level.app.adminnoteadder:launch',
+            'ldraddlegalnote = uchicagoldrtoolsuite.bit_level.app.legalnoteadder:launch',
+            'ldraddaccessionrecord = uchicagoldrtoolsuite.bit_level.app.accessionrecordadder:launch',
             'ldrcreatetechmd = uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator:launch'
         ]
     },

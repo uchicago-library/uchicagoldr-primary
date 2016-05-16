@@ -150,7 +150,7 @@ class FileSystemStageWriter(StageSerializationWriter):
 
         for adminnote in self.get_struct().get_adminnote_list():
             recv_item_path = join(adminnotes_dir, adminnote.item_name)
-            recv_item = LDRPath(recv_item_path, root=adminnote_dir)
+            recv_item = LDRPath(recv_item_path, root=adminnotes_dir)
             copy(adminnote, recv_item)
 
         for accessionrecord in self.get_struct().get_accessionrecord_list():

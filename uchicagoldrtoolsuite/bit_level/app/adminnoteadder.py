@@ -6,6 +6,7 @@ from uuid import uuid1
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagewriter import FileSystemStageWriter
 from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo"
@@ -83,7 +84,6 @@ class AdminNoteAdder(CLIApp):
             stage.add_adminnote(x)
         elif args.text:
             tmpdir = TemporaryDirectory()
-            tmpdir_path = tmpdir.name
             text_file_path = join(tmpdir.name, str(uuid1()))
             with open(text_file_path, 'a') as f:
                 f.write(args.note)

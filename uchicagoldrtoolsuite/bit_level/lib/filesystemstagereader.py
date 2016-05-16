@@ -38,7 +38,7 @@ class FileSystemStageReader(StageSerializationReader):
 
     def read(self):
         if exists(self.serialized_location):
-            tree = AbsoluteFilePathTree(self.serialized_location)
+            tree = AbsoluteFilePathTree(self.serialized_location, leaf_dirs=True)
             data_node_identifier = join(self.serialized_location, 'data')
             data_node_depth = tree.find_depth_of_a_path(data_node_identifier)
             data_node = tree.find_tag_at_depth('data', data_node_depth)[0]
@@ -66,6 +66,7 @@ class FileSystemStageReader(StageSerializationReader):
 
             admin_node_identifier = join(self.serialized_location, 'admin')
             admin_node_depth = tree.find_depth_of_a_path(admin_node_identifier)
+            admin_node = tree.find_tag_at_depth('admin', admin_node_depth)[0]
             legalnotes_node = tree.find_tag_at_depth(
                 'legalnotes', admin_node_depth+1)[0]
             adminnotes_node = tree.find_tag_at_depth(
