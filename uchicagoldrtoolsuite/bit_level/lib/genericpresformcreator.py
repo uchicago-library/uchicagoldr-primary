@@ -1,6 +1,7 @@
 from tempfile import TemporaryDirectory
 from uuid import uuid1
-from os.path import join
+from os import makedirs
+from os.path import join, dirname
 from mimetypes import guess_type
 
 from pypremis.lib import PremisRecord
@@ -57,15 +58,19 @@ class GenericPresformCreator(object):
                 presforms, premis = self.instantiate_and_make_presforms(
                     materialsuite
                 )
-                materialsuite.set_presforms_list(presforms)
-                materialsuite.set_premis(premis)
+                if presforms:
+                    materialsuite.set_presforms_list(presforms)
+                if premis:
+                    materialsuite.set_premis(premis)
                 if presform_presforms:
                     if materialsuite.presform_list is not None:
                         for presform_ms in materialsuite.presform_list:
                             pres_presforms, pres_premis = \
                                 self.instantiate_and_make_presforms(presform_ms)
-                            presform_ms.set_presform_list(pres_presforms)
-                            presform_ms.set_premis(pres_premis)
+                            if pres_presforms:
+                                presform_ms.set_presform_list(pres_presforms)
+                            if pres_premis:
+                                presform_ms.set_premis(pres_premis)
 
     def instantiate_and_make_presforms(self, ms):
         """
@@ -92,15 +97,24 @@ class GenericPresformCreator(object):
         conversion_dir_path = join(self.working_dir_path, str(uuid1()))
         recv_file = join(conversion_dir_path, rec_orig_name)
         recv_item = LDRPath(recv_file)
+        makedirs(dirname(recv_file), exist_ok=True)
         copy(ms.content, recv_item, clobber=True)
 
-        mime_from_ext = guess_type(recv_file)
+        mime_from_ext = guess_type(recv_file)[0]
         try:
             mime_from_magic_no = from_file(recv_file)
         except:
             mime_from_magic_no = None
 
+        presform_mss = []
+        updated_premis = None
+
         for converter in self.converters:
             if mime_from_ext or mime_from_magic_no in converter.claimed_mimes:
-                c = converter(recv_file, premis_rec)
+                c = converter(recv_file, premis_path)
                 presform_materialsuites, updated_premis_fp = c.convert()
+                presform_mss = presform_mss + presform_materialsuites
+                premis_path = updated_premis_fp
+                updated_premis = LDRPath(premis_path)
+        return (presform_mss, updated_premis)
+
