@@ -13,18 +13,26 @@ class StageToArchiveTransformer(Transformer):
         print(self.destination_structure)
         if self.destination_structure is not None:
             raise TypeError("a transformation already occured.")
-        self.destination_structure = Archive(defined_id=defined_id,
-                                             make_noid=make_noid)
+        self.destination_structure = Archive(
+            defined_id=defined_id,
+            make_noid=make_noid
+        )
         for n_segment in self.origin_structure.segment_list:
-            self.destination_structure.segment_list.append(n_segment)
+            self.destination_structure.segment_list.append(
+                n_segment
+            )
         for n_accessionrecord in self.origin_structure.accessionrecord_list:
             self.destination_structure.accession_record_list.append(
                 n_accessionrecord
             )
         for n_legalnote in self.origin_structure.legalnote_list:
-            self.destination_structure.legalnote_list.append(n_legalnote)
+            self.destination_structure.legalnote_list.append(
+                n_legalnote
+            )
         for n_adminnote in self.origin_structure.adminnote_list:
-            self.destination_structure.adminnote_list.append(n_adminnote)
+            self.destination_structure.adminnote_list.append(
+                n_adminnote
+            )
         return self.destination_structure
 
     def get_origin_structure(self):

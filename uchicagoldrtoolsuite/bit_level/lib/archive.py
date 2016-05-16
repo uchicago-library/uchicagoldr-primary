@@ -20,7 +20,6 @@ class Archive(Structure):
         self.required_parts = ['identifier', 'segment_list',
                                'accessionrecord_list', 'admninnote_list',
                                'legalnote_list']
-
         if defined_id:
             self.identifier = defined_id
         else:
