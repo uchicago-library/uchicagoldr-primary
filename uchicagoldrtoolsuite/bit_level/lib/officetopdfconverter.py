@@ -1,10 +1,14 @@
-from os import listdir
-from os.path import splitext, join, basename
-from uuid import uuid1()
+from os import listdir, makedirs
+from os.path import join, dirname
+from uuid import uuid1
+
+from pypremis.lib import PremisRecord
 
 from ...core.lib.bash_cmd import BashCommand
 from .abc.converter import Converter
-from .materialsuite import MaterialSuite
+from .presformmaterialsuite import PresformMaterialSuite
+from .ldritemoperations import copy
+from .ldrpath import LDRPath
 
 
 class OfficeToPDFConverter(Converter):
@@ -14,37 +18,38 @@ class OfficeToPDFConverter(Converter):
     ]
     libre_office_path = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
 
-    def __init__(self, target_path, target_premis_path, working_dir=None,
+    def __init__(self, input_materialsuite, working_dir=None,
                  timeout=None):
-        super().__init__(target_path, target_premis_path,
+        super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
 
     def convert(self):
-        resulting_materialsuites = []
+        initd_premis_file = join(self.working_dir, str(uuid1()))
+        outdir = join(self.working_dir, str(uuid1()))
+        makedirs(outdir)
+        copy(self.source_materialsuite.premis, LDRPath(initd_premis_file))
+        orig_premis = PremisRecord(frompath=initd_premis_file)
+        orig_name = orig_premis.get_object_list()[0].get_originalName()
+        target_containing_dir = join(self.working_dir, str(uuid1()))
+        target_path = join(target_containing_dir, orig_name)
+        makedirs(dirname(target_path), exist_ok=True)
+        copy(self.source_materialsuite.content, LDRPath(target_path))
 
-        outdir = join(self.working_dir, uuid1())
         cmd_out = []
         convert_cmd_args = [self.libre_office_path, '--headless',
-                            '--convert-to', 'pdf' '--outdir', outdir,
-                            self.target_path]
+                            '--convert-to', 'pdf', '--outdir', outdir,
+                            target_path]
         convert_cmd = BashCommand(convert_cmd_args)
         convert_cmd.set_timeout(self.timeout)
         convert_cmd.run_command()
         cmd_out.append(convert_cmd.get_data())
         try:
-            where_it_is = listdir(outdir)[0]
+            where_it_is = join(outdir, listdir(outdir)[0])
         except:
             where_it_is = None
         if where_it_is is not None:
-            where_it_should_be = join(self.working_dir, self.target_path+".presform.pdf")
-            mv_cmd_args = ['mv', where_it_is, where_it_should_be]
-            print(mv_cmd_args)
-            mv_cmd = BashCommand(mv_cmd_args)
-            mv_cmd.set_timeout(self.timeout)
-            mv_cmd.run_command()
-            cmd_out.append(mv_cmd.get_data())
             presform_ldrpath = LDRPath(where_it_is)
-            presform_ms = MaterialSuite()
-            presform_ms.add_content(presform_ldrpath)
-            resulting_materialsuites.append(presform_ms)
-        return (resulting_materialsuites, self.target_premis_path)
+            presform_ms = PresformMaterialSuite()
+            presform_ms.set_extension(".pdf")
+            presform_ms.set_content(presform_ldrpath)
+            self.get_source_materialsuite().add_presform(presform_ms)

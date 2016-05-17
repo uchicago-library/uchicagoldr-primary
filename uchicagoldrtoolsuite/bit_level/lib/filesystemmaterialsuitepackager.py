@@ -3,6 +3,8 @@ from os.path import join, dirname, basename, isfile
 from re import compile as re_compile
 
 from .abc.materialsuitepackager import MaterialSuitePackager
+from .filesystempresformmaterialsuitepackager import \
+    FileSystemPresformMaterialSuitePackager
 from .ldrpath import LDRPath
 
 
@@ -75,7 +77,7 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         for x in siblings:
             if presform_filename_pattern.match(x):
                 presforms.append(
-                    FileSystemMaterialSuitePackager(
+                    FileSystemPresformMaterialSuitePackager(
                         self.stage_env_path,
                         self.stage_id,
                         self.label_text,

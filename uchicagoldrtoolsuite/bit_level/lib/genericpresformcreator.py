@@ -15,6 +15,7 @@ from .ldrpath import LDRPath
 from .materialsuite import MaterialSuite
 from .ldritemoperations import copy
 from .abc.ldritem import LDRItem
+from .officetopdfconverter import OfficeToPDFConverter
 
 
 __author__ = "Brian Balsamo"
@@ -44,7 +45,7 @@ class GenericPresformCreator(object):
         # somewhere before your instance gets garbage collected.
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
-        self.converters = []
+        self.converters = [OfficeToPDFConverter]
 
     def process(self, skip_existing=False, presform_presforms=False):
         for segment in self.stage.segment_list:
@@ -53,24 +54,17 @@ class GenericPresformCreator(object):
                     raise ValueError("All material suites must have a PREMIS " +
                                      "record in order to generate presforms.")
                 if skip_existing:
-                    if isinstance(materialsuite.get_presform(0), MaterialSuite):
-                        continue
-                presforms, premis = self.instantiate_and_make_presforms(
-                    materialsuite
-                )
-                if presforms:
-                    materialsuite.set_presforms_list(presforms)
-                if premis:
-                    materialsuite.set_premis(premis)
+                    try:
+                        if isinstance(materialsuite.get_presform(0), MaterialSuite):
+                            continue
+                    except:
+                        pass
+                self.instantiate_and_make_presforms(materialsuite)
                 if presform_presforms:
                     if materialsuite.presform_list is not None:
                         for presform_ms in materialsuite.presform_list:
                             pres_presforms, pres_premis = \
                                 self.instantiate_and_make_presforms(presform_ms)
-                            if pres_presforms:
-                                presform_ms.set_presform_list(pres_presforms)
-                            if pres_premis:
-                                presform_ms.set_premis(pres_premis)
 
     def instantiate_and_make_presforms(self, ms):
         """
@@ -92,29 +86,17 @@ class GenericPresformCreator(object):
         premis_rec = PremisRecord(frompath=premis_path)
 
         rec_obj = premis_rec.get_object_list()[0]
-        rec_orig_name = rec_obj.get_originalName()
 
-        conversion_dir_path = join(self.working_dir_path, str(uuid1()))
-        recv_file = join(conversion_dir_path, rec_orig_name)
-        recv_item = LDRPath(recv_file)
-        makedirs(dirname(recv_file), exist_ok=True)
-        copy(ms.content, recv_item, clobber=True)
-
-        mime_from_ext = guess_type(recv_file)[0]
-        try:
-            mime_from_magic_no = from_file(recv_file)
-        except:
-            mime_from_magic_no = None
-
-        presform_mss = []
-        updated_premis = None
-
+        mimes = []
+        for rec_obj_chars in rec_obj.get_objectCharacteristics():
+            for rec_format in rec_obj_chars.get_format():
+                fmt_dsg = rec_format.get_formatDesignation()
+                if fmt_dsg:
+                    mimes.append(fmt_dsg.get_formatName())
         for converter in self.converters:
-            if mime_from_ext or mime_from_magic_no in converter.claimed_mimes:
-                c = converter(recv_file, premis_path)
-                presform_materialsuites, updated_premis_fp = c.convert()
-                presform_mss = presform_mss + presform_materialsuites
-                premis_path = updated_premis_fp
-                updated_premis = LDRPath(premis_path)
-        return (presform_mss, updated_premis)
-
+            for x in mimes:
+                if x in converter._claimed_mimes:
+                    c_working_dir = join(self.working_dir_path, str(uuid1()))
+                    makedirs(c_working_dir, exist_ok=True)
+                    c = converter(ms, c_working_dir)
+                    c.convert()

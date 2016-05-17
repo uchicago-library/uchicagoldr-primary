@@ -112,6 +112,7 @@ class FileSystemStageWriter(StageSerializationWriter):
     def _write_ms_presforms(self, ms, data_dir, admin_dir, manifest_flo):
         if ms.get_presform_list():
             for x in ms.get_presform_list():
+                x.content.item_name = ms.content.item_name+".presform"+x.extension
                 self._write_ms_content(x, data_dir, manifest_flo)
                 self._write_ms_premis(x, admin_dir, manifest_flo)
                 self._write_ms_techmd(x, admin_dir, manifest_flo)
