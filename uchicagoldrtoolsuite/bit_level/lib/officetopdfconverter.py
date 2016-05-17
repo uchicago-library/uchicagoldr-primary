@@ -1,6 +1,7 @@
 from os import listdir, makedirs
 from os.path import join, dirname
 from uuid import uuid1
+import mimetypes
 
 from pypremis.lib import PremisRecord
 
@@ -13,10 +14,49 @@ from .ldrpath import LDRPath
 
 class OfficeToPDFConverter(Converter):
 
-    _claimed_mimes = [
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ]
     libre_office_path = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
+
+    _claimed_mimes = [
+        'text/plain',
+        'text/csv',
+        'application/rtf',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ]
+
+    _claimed_extensions = [
+        '.doc',
+        '.docx',
+        '.odt',
+        '.fodt',
+        '.xls',
+        '.xlsx',
+        '.ods',
+        '.fods',
+        '.ppt',
+        '.pptx',
+        '.odp',
+        '.fodp',
+        '.odf',
+        '.odg',
+        '.pdf',
+        '.txt',
+        '.rtf'
+    ]
+
+    mimetypes.init()
+    for x in _claimed_extensions:
+        try:
+            _claimed_mimes.append(mimetypes.types_map[x])
+        except KeyError:
+            pass
+
+    _claimed_mimes = list(set(_claimed_mimes))
 
     def __init__(self, input_materialsuite, working_dir=None,
                  timeout=None):

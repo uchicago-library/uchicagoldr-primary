@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABCMeta
 
 from .abc.packager import Packager
-from ..materialsuite import MaterialSuite
+from ..presformmaterialsuite import PresformMaterialSuite
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -29,7 +29,7 @@ class PresformMaterialSuitePackager(Packager, metaclass=ABCMeta):
     """
     @abstractmethod
     def __init__(self):
-        self.set_struct(MaterialSuite())
+        self.set_struct(PresformMaterialSuite())
 
     @abstractmethod
     def get_content(self):
@@ -79,7 +79,7 @@ class PresformMaterialSuitePackager(Packager, metaclass=ABCMeta):
         try:
             val = self.get_extension()
             if val:
-                ms.set_extesion(valu)
+                ms.set_extension(val)
         except NotImplementedError:
             pass
         return ms
