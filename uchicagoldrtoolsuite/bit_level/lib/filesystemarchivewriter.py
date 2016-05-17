@@ -1,14 +1,14 @@
 
 from os import makedirs
-from os.path import abspath, basename, dirname, exists, join, relpath
+from os.path import dirname, exists, join, split
 from sys import stderr
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
+from .archiveauditor import ArchiveAuditor
 from .ldritemoperations import copy
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
-from .stage import Stage
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
@@ -33,10 +33,12 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         3. origin_loc (str): the root directory of the stage directory
         being archived
         """
+        print(origin_loc)
         self.structure = aStructure
         self.pairtree = Pairtree(self.structure.identifier).get_pairtree_path()
-        self.audit_qualification = ArchiveAuditor(aStructure)
-        self.origin_root = origin_loc
+        self.audit_qualification = ArchiveAuditor(origin_loc, aStructure).\
+            audit()
+        self.origin_root = split(origin_loc)[0]
         self.archive_loc = archive_loc
 
     def pairtree_an_admin_content(self, type_str, segment_id, a_thing):
@@ -75,81 +77,82 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         serializes a staging directory structure into an archive structure
         onto disk
         """
-        if self.structure.validate():
-            data_dir = join(self.archive_loc, self.pairtree, 'data')
-            admin_dir = join(self.archive_loc, self.pairtree, 'admin')
+        self.audit_qualification
+        # if self.structure.validate():
+        #     data_dir = join(self.archive_loc, self.pairtree, 'data')
+        #     admin_dir = join(self.archive_loc, self.pairtree, 'admin')
 
-            makedirs(data_dir, exist_ok=True)
-            makedirs(admin_dir, exist_ok=True)
+        #     makedirs(data_dir, exist_ok=True)
+        #     makedirs(admin_dir, exist_ok=True)
 
-            accrecord_dir = join(admin_dir, 'accessionrecord')
-            legalnote_dir = join(admin_dir, 'legalnotes')
-            adminnote_dir = join(admin_dir, 'adminnotes')
+        #     accrecord_dir = join(admin_dir, 'accessionrecord')
+        #     legalnote_dir = join(admin_dir, 'legalnotes')
+        #     adminnote_dir = join(admin_dir, 'adminnotes')
 
-            makedirs(accrecord_dir, exist_ok=True)
-            makedirs(legalnote_dir, exist_ok=True)
-            makedirs(adminnote_dir, exist_ok=True)
+        #     makedirs(accrecord_dir, exist_ok=True)
+        #     makedirs(legalnote_dir, exist_ok=True)
+        #     makedirs(adminnote_dir, exist_ok=True)
 
-            for n_acc_record in self.structure.accessionrecord_list:
-                acc_filename = basename(n_acc_record.content.item_name)
-                copy(n_acc_record.content, LDRPath(
-                    join(accrecord_dir,
-                         acc_filename)))
+        #     for n_acc_record in self.structure.accessionrecord_list:
+        #         acc_filename = basename(n_acc_record.content.item_name)
+        #         copy(n_acc_record.content, LDRPath(
+        #             join(accrecord_dir,
+        #                  acc_filename)))
 
-            for n_legal_note in self.structure.legalnote_list:
-                legalnote_filename = basename(n_legal_note.content.item_name)
-                copy(n_legal_note.content, LDRPath(
-                    join(legalnote_dir,
-                         legalnote_filename)))
+        #     for n_legal_note in self.structure.legalnote_list:
+        #         legalnote_filename = basename(n_legal_note.content.item_name)
+        #         copy(n_legal_note.content, LDRPath(
+        #             join(legalnote_dir,
+        #                  legalnote_filename)))
 
-            for n_adminnote in self.structure.adminnote_list:
-                adminnote_filename = basename(n_adminnote.content.item_name)
-                copy(n_adminnote.content.itemB, LDRPath(
-                    join(adminnote_dir,
-                         adminnote_filename)))
+        #     for n_adminnote in self.structure.adminnote_list:
+        #         adminnote_filename = basename(n_adminnote.content.item_name)
+        #         copy(n_adminnote.content.itemB, LDRPath(
+        #             join(adminnote_dir,
+        #                  adminnote_filename)))
 
-            for n_segment in self.structure.segment_list:
-                segment_id = n_segment.label+str(n_segment.run)
+        #     for n_segment in self.structure.segment_list:
+        #         segment_id = n_segment.label+str(n_segment.run)
 
-                makedirs(join(admin_dir, segment_id), exist_ok=True)
-                makedirs(join(data_dir, segment_id), exist_ok=True)
-                makedirs(join(admin_dir, segment_id, 'premis'), exist_ok=True)
-                makedirs(join(admin_dir, segment_id, 'techmd'), exist_ok=True)
+        #         makedirs(join(admin_dir, segment_id), exist_ok=True)
+        #         makedirs(join(data_dir, segment_id), exist_ok=True)
+        #         makedirs(join(admin_dir, segment_id, 'premis'), exist_ok=True)
+        #         makedirs(join(admin_dir, segment_id, 'techmd'), exist_ok=True)
 
-                for n_msuite in n_segment.materialsuite_list:
-                    self.find_and_pairtree_data_content(
-                        segment_id, n_msuite.content)
-                    self.find_and_pairtree_admin_content(
-                        segment_id, 'techmd', n_msuite.technicalmetadata_list)
-                    cur_premis_filename = join(
-                        admin_dir,
-                        segment_id, 'premis',
-                        basename(n_msuite.premis.item_name))
-                    cur_premis_ldrpath = LDRPath(cur_premis_filename)
-                    copy(n_msuite.premis, cur_premis_ldrpath, False)
+        #         for n_msuite in n_segment.materialsuite_list:
+        #             self.find_and_pairtree_data_content(
+        #                 segment_id, n_msuite.content)
+        #             self.find_and_pairtree_admin_content(
+        #                 segment_id, 'techmd', n_msuite.technicalmetadata_list)
+        #             cur_premis_filename = join(
+        #                 admin_dir,
+        #                 segment_id, 'premis',
+        #                 basename(n_msuite.premis.item_name))
+        #             cur_premis_ldrpath = LDRPath(cur_premis_filename)
+        #             copy(n_msuite.premis, cur_premis_ldrpath, False)
 
-                    if n_msuite.presform_list:
-                        for n_presform_msuite in n_msuite.presform_list:
-                            self.find_and_pairtree_data_content(
-                                segment_id, n_presform_msuite.content)
-                            self.find_and_pairtree_admin_content(
-                                segment_id, 'techmd',
-                                n_presform_msuite.technicalmetadata_list)
-                            this_premis_filename = join(
-                                admin_dir,
-                                segment_id, 'premis',
-                                basename(
-                                    n_presform_msuite.premis.item_name))
-                            this_premis_filename = LDRPath(
-                                this_premis_filename)
-                            copy(n_presform_msuite.premis,
-                                 this_premis_filename, False)
+        #             if n_msuite.presform_list:
+        #                 for n_presform_msuite in n_msuite.presform_list:
+        #                     self.find_and_pairtree_data_content(
+        #                         segment_id, n_presform_msuite.content)
+        #                     self.find_and_pairtree_admin_content(
+        #                         segment_id, 'techmd',
+        #                         n_presform_msuite.technicalmetadata_list)
+        #                     this_premis_filename = join(
+        #                         admin_dir,
+        #                         segment_id, 'premis',
+        #                         basename(
+        #                             n_presform_msuite.premis.item_name))
+        #                     this_premis_filename = LDRPath(
+        #                         this_premis_filename)
+        #                     copy(n_presform_msuite.premis,
+        #                          this_premis_filename, False)
 
-                    else:
-                        stderr.write("no presform files found\n")
-        else:
-            stderr.write("invalid archive structure instance passed to  the " +
-                         " file system archive structure writer")
+        #             else:
+        #                 stderr.write("no presform files found\n")
+        # else:
+        #     stderr.write("invalid archive structure instance passed to  the " +
+        #                  " file system archive structure writer")
 
     def get_structure(self):
         return self._structure

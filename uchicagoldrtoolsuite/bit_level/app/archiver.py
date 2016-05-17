@@ -61,7 +61,7 @@ class Archiver(CLIApp):
         identifier = get_archivable_identifier(noid=False)
         archive_structure = transformer.transform(defined_id=identifier)
         writer = FileSystemArchiveWriter(archive_structure, args.archive,
-                                         args.origin_root)
+                                         args.directory)
         writer.write()
 
 
