@@ -59,23 +59,34 @@ class GenericPREMISCreator(object):
                     if isinstance(materialsuite.get_premis(), LDRItem):
                         continue
                 materialsuite.set_premis(
-                    self.instantiate_and_make_premis(materialsuite.content)
+                    self.instantiate_and_make_premis(materialsuite.content,
+                                                     self.working_dir_path)
                 )
 
-    def instantiate_and_make_premis(self, item):
+    @classmethod
+    def instantiate_and_make_premis(self, item, working_dir_path):
         """
         Write an item to a tempdir, examine it and make a PREMIS record
 
+        __Args__
+
+        1. item (LDRItem): The LDRItem to create a premis record for
+
         __KWArgs__
 
-        * item (LDRItem): The LDRItem to create a premis record for
+        * working_dir_path (str): Where to write things to disk. Defaults
+            to the current instances working_dir_path
 
         __Returns__
 
         * (LDRPath): The item representing the PREMIS record
         """
-        recv_file = join(self.working_dir_path, str(uuid1()))
-        premis_file = join(self.working_dir_path, str(uuid1()))
+        if working_dir_path is None:
+            recv_file = join(self.working_dir_path, str(uuid1()))
+            premis_file = join(self.working_dir_path, str(uuid1()))
+        else:
+            recv_file = join(working_dir_path, str(uuid1()))
+            premis_file = join(working_dir_path, str(uuid1()))
         with item.open('rb') as src:
             with open(recv_file, 'wb') as dst:
                 dst.write(src.read(1024))
@@ -83,6 +94,7 @@ class GenericPREMISCreator(object):
         rec.write_to_file(premis_file)
         return LDRPath(premis_file)
 
+    @classmethod
     def make_record(self, file_path, item):
         """
         build a PremisNode.Object from a file and use it to instantiate a record
@@ -99,6 +111,7 @@ class GenericPREMISCreator(object):
         obj = self._make_object(file_path, item)
         return PremisRecord(objects=[obj])
 
+    @classmethod
     def _make_object(self, file_path, item):
         """
         make an object entry auto-populated with the required information
@@ -122,6 +135,7 @@ class GenericPREMISCreator(object):
         obj.set_storage(storage)
         return obj
 
+    @classmethod
     def _make_objectIdentifier(self):
         """
         mint a new object identifier
@@ -136,6 +150,7 @@ class GenericPREMISCreator(object):
         # overflow about why this should be fine
         return ObjectIdentifier("DOI", str(uuid1()))
 
+    @classmethod
     def _make_objectCharacteristics(self, file_path, item):
         """
         make a new objectCharacteristics node for a file
@@ -162,6 +177,7 @@ class GenericPREMISCreator(object):
         objChar.set_size(size)
         return objChar
 
+    @classmethod
     def _make_Storage(self, file_path):
         """
         make a new storage node for a file
@@ -179,6 +195,7 @@ class GenericPREMISCreator(object):
         stor.set_contentLocation(contentLocation)
         return stor
 
+    @classmethod
     def _make_fixity(self, file_path):
         """
         make a fixity node for md5 and one for sha256 for a file
@@ -198,6 +215,7 @@ class GenericPREMISCreator(object):
         sha256_fixity.set_messageDigestOriginator('python3 hashlib.sha256')
         return md5_fixity, sha256_fixity
 
+    @classmethod
     def _make_format(self, file_path, item):
         """
         make new format nodes for a file
@@ -243,6 +261,7 @@ class GenericPREMISCreator(object):
             formats.append(premis_unknown_format)
         return formats
 
+    @classmethod
     def _make_contentLocation(self, file_path):
         """
         make a new contentLocation node for a file
@@ -257,6 +276,7 @@ class GenericPREMISCreator(object):
         """
         return ContentLocation("Unix File Path", file_path)
 
+    @classmethod
     def _detect_mime(self, file_path, item):
         """
         use both magic number and file extension mime detection on a file
