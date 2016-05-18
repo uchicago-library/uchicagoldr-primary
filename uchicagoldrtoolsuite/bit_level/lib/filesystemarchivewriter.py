@@ -1,7 +1,10 @@
 
 from os import makedirs
-from os.path import dirname, exists, join, split
+from os.path import basename, dirname, exists, join, split
 from sys import stderr
+from tempfile import TemporaryFile
+
+from pypremis import PremisRecord
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
@@ -33,11 +36,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         3. origin_loc (str): the root directory of the stage directory
         being archived
         """
-        print(origin_loc)
         self.structure = aStructure
         self.pairtree = Pairtree(self.structure.identifier).get_pairtree_path()
-        self.audit_qualification = ArchiveAuditor(origin_loc, aStructure).\
-            audit()
+        self.audit_qualification = ArchiveAuditor(origin_loc, aStructure)
         self.origin_root = split(origin_loc)[0]
         self.archive_loc = archive_loc
 
@@ -77,39 +78,71 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         serializes a staging directory structure into an archive structure
         onto disk
         """
-        self.audit_qualification
-        # if self.structure.validate():
-        #     data_dir = join(self.archive_loc, self.pairtree, 'data')
-        #     admin_dir = join(self.archive_loc, self.pairtree, 'admin')
+        if self.structure.validate():
+            audit_result = self.audit_qualification.audit()
+            if audit_result[0]:
+                data_dir = join(self.archive_loc, self.pairtree, 'data')
+                admin_dir = join(self.archive_loc, self.pairtree, 'admin')
+                print(data_dir)
+                print(admin_dir)
+                makedirs(data_dir, exist_ok=True)
+                makedirs(admin_dir, exist_ok=True)
+                accrecord_dir = join(admin_dir, 'accessionrecord')
+                legalnote_dir = join(admin_dir, 'legalnotes')
+                adminnote_dir = join(admin_dir, 'adminnotes')
+                makedirs(accrecord_dir, exist_ok=True)
+                makedirs(legalnote_dir, exist_ok=True)
+                makedirs(adminnote_dir, exist_ok=True)
+                for n_acc_record in self.structure.accessionrecord_list:
+                    acc_filename = basename(n_acc_record.content.item_name)
+                    copy(n_acc_record.content, LDRPath(
+                        join(accrecord_dir,
+                             acc_filename)))
+                for n_legal_note in self.structure.legalnote_list:
+                    legalnote_filename = basename(n_legal_note.
+                                                  content.item_name)
+                    copy(n_legal_note.content, LDRPath(
+                        join(legalnote_dir,
+                             legalnote_filename)))
+                for n_adminnote in self.structure.adminnote_list:
+                    adminnote_filename = basename(n_adminnote.content.
+                                                  item_name)
+                    copy(n_adminnote.content.itemB, LDRPath(
+                        join(adminnote_dir,
+                             adminnote_filename)))
+                print(dir(self.structure))
+                for n_segment in self.structure.segment_list:
+                    segment_id = n_segment.label+str(n_segment.run)
+                    makedirs(join(admin_dir, segment_id), exist_ok=True)
+                    makedirs(join(data_dir, segment_id), exist_ok=True)
+                    makedirs(join(admin_dir, segment_id, 'PREMIS'),
+                             exist_ok=True)
+                    makedirs(join(admin_dir, segment_id, 'TECHMD'),
+                             exist_ok=True)
 
-        #     makedirs(data_dir, exist_ok=True)
-        #     makedirs(admin_dir, exist_ok=True)
+                    for n_msuite in n_segment.materialsuite_list:
+                        with n_msuite.premis.open('rb') as reading_file:
+                            with TemporaryFile() as writing_file:
+                                while True:
+                                    buf = reading_file.read(1024)
+                                    if buf:
+                                        writing_file.write(buf)
+                                    else:
+                                        break
+                                    writing_file.seek(0)
+                                    precord = PremisRecord(
+                                        frompath=writing_file)
+                                    print(precord)
+                        if getattr(n_msuite, 'presform_list', None):
+                            for n_presform in n_msuite.presform_list:
+                                print(n_presform.premis)
 
-        #     accrecord_dir = join(admin_dir, 'accessionrecord')
-        #     legalnote_dir = join(admin_dir, 'legalnotes')
-        #     adminnote_dir = join(admin_dir, 'adminnotes')
-
-        #     makedirs(accrecord_dir, exist_ok=True)
-        #     makedirs(legalnote_dir, exist_ok=True)
-        #     makedirs(adminnote_dir, exist_ok=True)
-
-        #     for n_acc_record in self.structure.accessionrecord_list:
-        #         acc_filename = basename(n_acc_record.content.item_name)
-        #         copy(n_acc_record.content, LDRPath(
-        #             join(accrecord_dir,
-        #                  acc_filename)))
-
-        #     for n_legal_note in self.structure.legalnote_list:
-        #         legalnote_filename = basename(n_legal_note.content.item_name)
-        #         copy(n_legal_note.content, LDRPath(
-        #             join(legalnote_dir,
-        #                  legalnote_filename)))
-
-        #     for n_adminnote in self.structure.adminnote_list:
-        #         adminnote_filename = basename(n_adminnote.content.item_name)
-        #         copy(n_adminnote.content.itemB, LDRPath(
-        #             join(adminnote_dir,
-        #                  adminnote_filename)))
+            else:
+                for n_message in self.audit_qualification.show_errors():
+                    print("{}\n".format(n_message))
+        else:
+            stderr.write("invalid Archive structure instance passed" +
+                         " to FileSystemArchiveWriter")
 
         #     for n_segment in self.structure.segment_list:
         #         segment_id = n_segment.label+str(n_segment.run)
