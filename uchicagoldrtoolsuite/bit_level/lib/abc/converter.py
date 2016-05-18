@@ -1,7 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from os.path import dirname
+from uuid import uuid1
 
-from pypremis.lib import PremisRecord
+from pypremis.nodes import *
+
+from ....core.lib.convenience import iso8601_dt
+
 
 class Converter(metaclass=ABCMeta):
 
@@ -41,6 +44,198 @@ class Converter(metaclass=ABCMeta):
     @abstractmethod
     def convert(self):
         pass
+
+    def handle_premis(self, cmd_output, orig_premis, conv_premis, converter_name):
+        conv_event = self.build_conv_event(cmd_output, orig_premis, conv_premis, converter_name)
+        orig_premis.add_event(
+            conv_event
+        )
+        orig_premis.get_object_list()[0].add_linkingEventIdentifier(
+            self._build_linkingEventIdentifier(conv_event)
+        )
+
+        if conv_premis:
+            conv_premis.get_object_list()[0].add_linkingEventIdentifier(
+                self._build_linkingEventIdentifier(conv_event)
+            )
+
+            crea_event = self.build_crea_event(cmd_output, orig_premis, conv_premis, converter_name)
+            conv_premis.add_event(
+                crea_event
+            )
+            conv_premis.get_object_list()[0].add_linkingEventIdentifier(
+                self._build_linkingEventIdentifier(crea_event)
+            )
+
+
+            orig_premis.get_object_list()[0].add_relationship(
+                self._build_relationship(
+                    "derivation",
+                    "is Source of",
+                    conv_premis.get_object_list()[0],
+                    crea_event
+                )
+            )
+            conv_premis.get_object_list()[0].add_relationship(
+                self._build_relationship(
+                    "derivation",
+                    "has Source",
+                    orig_premis.get_object_list()[0],
+                    crea_event
+                )
+            )
+
+    def _build_relationship(self, rel_type, rel_subtype, rel_obj, rel_event, seq=None):
+        relationshipType = rel_type
+        relationshipSubType = rel_subtype
+        relatedObjectIdentifier = self._build_relatedObjectIdentifier(rel_obj)
+        relationship = Relationship(relationshipType, relationshipSubType, relatedObjectIdentifier)
+        relationship.add_relatedEventIdentifier(self._build_relatedEventIdentifier(rel_event))
+        return relationship
+
+    def _build_relatedEventIdentifier(self, rel_event, seq=None):
+        relatedEventIdentifierType = rel_event.get_eventIdentifier().get_eventIdentifierType()
+        relatedEventIdentifierValue = rel_event.get_eventIdentifier().get_eventIdentifierValue()
+        relatedEventIdentifier = RelatedEventIdentifier(relatedEventIdentifierType, relatedEventIdentifierValue)
+        if seq:
+            relatedEventIdentifier.set_relatedEventSequence(seq)
+        return relatedEventIdentifier
+
+    def _build_relatedObjectIdentifier(self, obj, seq=None):
+        relatedObjectIdentifierType = obj.get_objectIdentifier()[0].get_objectIdentifierType()
+        relatedObjectIdentifierValue = obj.get_objectIdentifier()[0].get_objectIdentifierValue()
+        relatedObjectIdentifier = RelatedObjectIdentifier(relatedObjectIdentifierType, relatedObjectIdentifierValue)
+        if seq:
+            relatedObjectIdentifier.set_relatedObjectSequence(seq)
+        return relatedObjectIdentifier
+
+    def _build_linkingEventIdentifier(self, event_to_link, seq=None):
+        linkingEventIdentifierType = event_to_link.get_eventIdentifier().get_eventIdentifierType()
+        linkingEventIdentifierValue = event_to_link.get_eventIdentifier().get_eventIdentifierValue()
+        linkingEventIdentifier = LinkingEventIdentifier(linkingEventIdentifierType,
+                                                        linkingEventIdentifierValue)
+        if seq:
+            linkingEventIdentifier.set_relatedEventSequence(seq)
+        return linkingEventIdentifier
+
+    def build_conv_event(self, cmd_output, orig_premis, conv_premis, converter_name):
+        eventIdentifier = self._build_eventIdentifier()
+        eventType = "migration"
+        eventDateTime = iso8601_dt()
+
+        conv_event = Event(eventIdentifier, eventType, eventDateTime)
+
+        conv_event.set_eventDetailInformation(
+            self._build_eventDetailInformation(
+                "Ran a converter ({}) ".format(converter_name) +
+                "against the file in an "
+                "attempt to create a " +
+                "preservation copy."
+            )
+        )
+
+        conv_event.set_eventOutcomeInformation(
+            self._build_eventOutcomeInformation(cmd_output, conv_premis)
+        )
+
+        conv_event.set_linkingAgentIdentifier(
+            self._build_linkingAgentIdentifier("converter", converter_name)
+        )
+
+        conv_event.set_linkingObjectIdentifier(
+            self._build_linkingObjectIdentifier(orig_premis, "conversion source")
+        )
+
+        if conv_premis:
+            conv_event.add_linkingObjectIdentifier(
+                self._build_linkingObjectIdentifier(conv_premis, "converted file")
+            )
+
+        return conv_event
+
+    def build_crea_event(self, cmd_output, orig_premis, conv_premis, converter_name):
+        eventIdentifier = self._build_eventIdentifier()
+        eventType = "creation"
+        eventDateTime = iso8601_dt()
+
+        crea_event = Event(eventIdentifier, eventType, eventDateTime)
+
+        crea_event.set_eventDetailInformation(
+            self._build_eventDetailInformation(
+                "Ran a converter ({}) ".format(converter_name) +
+                "against the file, creating "
+                "this preservation copy "
+            )
+        )
+
+        crea_event.set_eventOutcomeInformation(
+            self._build_eventOutcomeInformation(cmd_output, conv_premis)
+        )
+
+        crea_event.add_linkingAgentIdentifier(
+            self._build_linkingAgentIdentifier("creator", converter_name)
+        )
+
+        crea_event.add_linkingObjectIdentifier(
+            self._build_linkingObjectIdentifier(orig_premis, "conversion source")
+        )
+
+        crea_event.add_linkingObjectIdentifier(
+            self._build_linkingObjectIdentifier(conv_premis, "converted file")
+        )
+
+        return crea_event
+
+    def _build_eventIdentifier(self):
+        eventIdentifierType = "DOI"
+        eventIdentifierValue = str(uuid1())
+        return EventIdentifier(eventIdentifierType, eventIdentifierValue)
+
+    def _build_eventDetailInformation(self, eventDetailInfoStr):
+        eventDetail = eventDetailInfoStr
+        eventDetailInformation = EventDetailInformation(
+            eventDetail=eventDetail
+        )
+        return eventDetailInformation
+
+    def _build_eventOutcomeInformation(self, cmd_output, conv_premis):
+        if conv_premis is not None:
+            eventOutcome = "SUCCESS"
+        else:
+            eventOutcome = "FAIL"
+        eventOutcomeDetail = self._build_eventOutcomeDetail(cmd_output)
+        eventOutcomeInformation = EventOutcomeInformation(
+            eventOutcome=eventOutcome,
+            eventOutcomeDetail=eventOutcomeDetail
+        )
+        return eventOutcomeInformation
+
+    def _build_eventOutcomeDetail(self, cmd_output):
+        eventOutcomeDetailNote = str(cmd_output[1])
+        eventOutcomeDetail = EventOutcomeDetail(
+            eventOutcomeDetailNote=eventOutcomeDetailNote
+        )
+        return eventOutcomeDetail
+
+    def _build_linkingAgentIdentifier(self, agentRole, agent_name):
+        agentID = self.look_up_agent(agent_name)
+        if agentID is None:
+            linkingAgentIdentifierType = "DOI"
+            linkingAgentIdentifierValue = str(uuid1())
+            agentID = LinkingAgentIdentifier(linkingAgentIdentifierType,
+                                             linkingAgentIdentifierValue)
+        agentID.set_linkingAgentRole(agentRole)
+        return agentID
+
+    def _build_linkingObjectIdentifier(self, premis_to_link, linkRole):
+        linkingObjectIdentifierType = premis_to_link.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierType()
+        linkingObjectIdentifierValue = premis_to_link.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+        x = LinkingObjectIdentifier(linkingObjectIdentifierType, linkingObjectIdentifierValue)
+        x.set_linkingObjectRole(linkRole)
+        return x
+
+    def look_up_agent(self, x):
+        return None
 
     claimed_mimes = property(get_claimed_mimes)
     source_materialsuite = property(get_source_materialsuite, set_source_materialsuite)

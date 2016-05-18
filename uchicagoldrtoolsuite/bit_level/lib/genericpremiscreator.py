@@ -1,5 +1,5 @@
 from tempfile import TemporaryDirectory
-from os.path import getsize, split
+from os.path import getsize
 from mimetypes import guess_type
 from uuid import uuid1
 from os.path import join
@@ -64,7 +64,7 @@ class GenericPREMISCreator(object):
                 )
 
     @classmethod
-    def instantiate_and_make_premis(self, item, working_dir_path):
+    def instantiate_and_make_premis(cls, item, working_dir_path):
         """
         Write an item to a tempdir, examine it and make a PREMIS record
 
@@ -81,21 +81,17 @@ class GenericPREMISCreator(object):
 
         * (LDRPath): The item representing the PREMIS record
         """
-        if working_dir_path is None:
-            recv_file = join(self.working_dir_path, str(uuid1()))
-            premis_file = join(self.working_dir_path, str(uuid1()))
-        else:
-            recv_file = join(working_dir_path, str(uuid1()))
-            premis_file = join(working_dir_path, str(uuid1()))
+        recv_file = join(working_dir_path, str(uuid1()))
+        premis_file = join(working_dir_path, str(uuid1()))
         with item.open('rb') as src:
             with open(recv_file, 'wb') as dst:
                 dst.write(src.read(1024))
-        rec = self.make_record(recv_file, item)
+        rec = cls.make_record(recv_file, item)
         rec.write_to_file(premis_file)
         return LDRPath(premis_file)
 
     @classmethod
-    def make_record(self, file_path, item):
+    def make_record(cls, file_path, item):
         """
         build a PremisNode.Object from a file and use it to instantiate a record
 
@@ -108,11 +104,11 @@ class GenericPREMISCreator(object):
 
         1. (PremisRecord): The populated record instance
         """
-        obj = self._make_object(file_path, item)
+        obj = cls._make_object(file_path, item)
         return PremisRecord(objects=[obj])
 
     @classmethod
-    def _make_object(self, file_path, item):
+    def _make_object(cls, file_path, item):
         """
         make an object entry auto-populated with the required information
 
@@ -125,18 +121,18 @@ class GenericPREMISCreator(object):
 
         1. (PremisRecord.Object): The populated Object... object
         """
-        objectIdentifier = self._make_objectIdentifier()
+        objectIdentifier = cls._make_objectIdentifier()
         objectCategory = 'file'
-        objectCharacteristics = self._make_objectCharacteristics(file_path, item)
+        objectCharacteristics = cls._make_objectCharacteristics(file_path, item)
         originalName = item.item_name
-        storage = self._make_Storage(file_path)
+        storage = cls._make_Storage(file_path)
         obj = Object(objectIdentifier, objectCategory, objectCharacteristics)
         obj.set_originalName(originalName)
         obj.set_storage(storage)
         return obj
 
     @classmethod
-    def _make_objectIdentifier(self):
+    def _make_objectIdentifier(cls):
         """
         mint a new object identifier
 
@@ -151,7 +147,7 @@ class GenericPREMISCreator(object):
         return ObjectIdentifier("DOI", str(uuid1()))
 
     @classmethod
-    def _make_objectCharacteristics(self, file_path, item):
+    def _make_objectCharacteristics(cls, file_path, item):
         """
         make a new objectCharacteristics node for a file
 
@@ -165,9 +161,9 @@ class GenericPREMISCreator(object):
         1. (PremisNode.ObjectCharacteristics): a populated ObjectCharacteristics
         node
         """
-        fixity1, fixity2 = self._make_fixity(file_path)
+        fixity1, fixity2 = cls._make_fixity(file_path)
         size = str(getsize(file_path))
-        formats = self._make_format(file_path, item)
+        formats = cls._make_format(file_path, item)
         objChar = ObjectCharacteristics(formats[0])
         if len(formats) > 1:
             for x in formats[1:]:
@@ -178,7 +174,7 @@ class GenericPREMISCreator(object):
         return objChar
 
     @classmethod
-    def _make_Storage(self, file_path):
+    def _make_Storage(cls, file_path):
         """
         make a new storage node for a file
 
@@ -190,13 +186,13 @@ class GenericPREMISCreator(object):
 
         1. (PremisNode.Storage): a populated storage node
         """
-        contentLocation = self._make_contentLocation(file_path)
+        contentLocation = cls._make_contentLocation(file_path)
         stor = Storage()
         stor.set_contentLocation(contentLocation)
         return stor
 
     @classmethod
-    def _make_fixity(self, file_path):
+    def _make_fixity(cls, file_path):
         """
         make a fixity node for md5 and one for sha256 for a file
 
@@ -216,7 +212,7 @@ class GenericPREMISCreator(object):
         return md5_fixity, sha256_fixity
 
     @classmethod
-    def _make_format(self, file_path, item):
+    def _make_format(cls, file_path, item):
         """
         make new format nodes for a file
 
@@ -229,7 +225,7 @@ class GenericPREMISCreator(object):
 
         1. (list): a list of format nodes
         """
-        magic_num, guess = self._detect_mime(file_path, item)
+        magic_num, guess = cls._detect_mime(file_path, item)
         formats = []
         if magic_num:
             premis_magic_format_desig = FormatDesignation(magic_num)
@@ -262,7 +258,7 @@ class GenericPREMISCreator(object):
         return formats
 
     @classmethod
-    def _make_contentLocation(self, file_path):
+    def _make_contentLocation(cls, file_path):
         """
         make a new contentLocation node for a file
 
@@ -277,7 +273,7 @@ class GenericPREMISCreator(object):
         return ContentLocation("Unix File Path", file_path)
 
     @classmethod
-    def _detect_mime(self, file_path, item):
+    def _detect_mime(cls, file_path, item):
         """
         use both magic number and file extension mime detection on a file
 

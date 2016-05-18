@@ -108,7 +108,6 @@ class OfficeToPDFConverter(Converter):
         copy(self.source_materialsuite.premis, LDRPath(initd_premis_file))
         orig_premis = PremisRecord(frompath=initd_premis_file)
         orig_name = orig_premis.get_object_list()[0].get_originalName()
-        orig_obj_premis_node = orig_premis.get_object_list()[0]
         # LibreOffice CLI won't let us just specify an output file name, so make
         # a while directory *just for it*.
         # ...
@@ -136,112 +135,28 @@ class OfficeToPDFConverter(Converter):
         # Alright, we now know whether or not the conversion succeeded. Update
         # the events in the originals PREMIS file.
 
-        conv_event = self._build_conv_event(convert_cmd.get_data(), where_it_is,
-                                            orig_obj_premis_node)
-        orig_premis.add_event(conv_event)
-
         if where_it_is is not None:
             presform_ldrpath = LDRPath(where_it_is)
-            presform_ms = PresformMaterialSuite()
-            presform_ms.set_extension(".pdf")
-            presform_ms.set_content(presform_ldrpath)
-            self.get_source_materialsuite().add_presform(presform_ms)
             conv_file_premis = GenericPREMISCreator.instantiate_and_make_premis(
                 presform_ldrpath,
                 working_dir_path=self.working_dir,
             )
             conv_file_premis_rec = PremisRecord(frompath=str(conv_file_premis.path))
-            conv_file_premis_obj = conv_file_premis_rec.get_object_list()[0]
-            conv_link = self._build_linkingObjectIdentifier(conv_file_premis_obj,
-                                                            "converted file")
-            orig_premis.get_event_list()[-1].add_linkingObjectIdentifier(conv_link)
+        else:
+            conv_file_premis_rec = None
 
+        self.handle_premis(convert_cmd.get_data(), orig_premis, conv_file_premis_rec,
+                            "LibreOffice CLI PDF Converter")
 
         updated_premis_outpath = join(self.working_dir, str(uuid1()))
         orig_premis.write_to_file(updated_premis_outpath)
         self.get_source_materialsuite().set_premis(LDRPath(updated_premis_outpath))
 
-    # Abandon Hope All Ye Who Enter Here
-    # (probably no documentation in the interest of time below this point, all
-    # this stuff builds PREMIS nodes)
-    # (also probably terrible spaghetti code)
-
-    def _build_conv_event(self, cmd_output, where_it_is, orig_obj_node):
-        eventIdentifier = self._build_eventIdentifier()
-        eventType = "migration"
-        eventDateTime = iso8601_dt()
-        event = Event(eventIdentifier, eventType, eventDateTime)
-        event.set_eventDetailInformation(
-            self._build_eventDetailInformation()
-        )
-        event.set_eventOutcomeInformation(
-            self._build_eventOutcomeInformation(cmd_output, where_it_is)
-        )
-        event.set_linkingAgentIdentifier(
-            self._build_linkingAgentIdentifier("converter")
-        )
-        event.set_linkingObjectIdentifier(
-            self._build_linkingObjectIdentifier(orig_obj_node,
-                                                "conversion source")
-        )
-        return event
-
-    def _build_eventIdentifier(self):
-        eventIdentifierType = "DOI"
-        eventIdentifierValue = str(uuid1())
-        eventIdentifier = EventIdentifier(eventIdentifierType,
-                                          eventIdentifierValue)
-        return eventIdentifier
-
-    def _build_eventDetailInformation(self):
-        eventDetail = "Ran the LibreOffice CLI converter against the file " + \
-            "in an attempt to create a PDF-A preservation copy."
-        eventDetailInformation = EventDetailInformation(
-            eventDetail=eventDetail)
-        return eventDetailInformation
-
-    def _build_eventOutcomeInformation(self, com_output, where_it_is):
-        if where_it_is is None:
-            eventOutcome = "FAIL"
-        else:
-            eventOutcome = "SUCCESS"
-        eventOutcomeDetail = self._build_eventOutcomeDetail(com_output)
-        eventOutcomeInformation = EventOutcomeInformation(
-            eventOutcome=eventOutcome,
-            eventOutcomeDetail=eventOutcomeDetail
-        )
-        return eventOutcomeInformation
-
-    def _build_eventOutcomeDetail(self, com_output):
-        eventOutcomeDetailNote = str(com_output[1])
-        eventOutcomeDetail = EventOutcomeDetail(
-            eventOutcomeDetailNote=eventOutcomeDetailNote
-        )
-        return eventOutcomeDetail
-
-    def _build_linkingAgentIdentifier(self, role_str):
-        linkingAgentIdentifier = self.look_for_own_agent_id_in_db()
-        if linkingAgentIdentifier is None:
-            linkingAgentIdentifierValue = str(uuid1())
-            linkingAgentIdentifierType = "DOI"
-            linkingAgentIdentifier = LinkingAgentIdentifier(
-                linkingAgentIdentifierType, linkingAgentIdentifierValue
-            )
-            linkingAgentIdentifier.set_linkingAgentRole(role_str)
-        return linkingAgentIdentifier
-
-    def _build_linkingObjectIdentifier(self, objNode, objRole):
-        linkingObjectRole = objRole
-        linkingObjectIdentifierType = objNode.get_objectIdentifier(0).get_objectIdentifierType()
-        linkingObjectIdentifierValue = objNode.get_objectIdentifier(0).get_objectIdentifierValue()
-        linkingObjectIdentifier = LinkingObjectIdentifier(
-            linkingObjectIdentifierType, linkingObjectIdentifierValue
-        )
-        linkingObjectIdentifier.set_linkingObjectRole(linkingObjectRole)
-        return linkingObjectIdentifier
-
-    def look_for_own_agent_id_in_db(self):
-        return None
-
-    def look_for_libreoffice_agent_id_in_db(self):
-        return None
+        if where_it_is:
+            presform_ms = PresformMaterialSuite()
+            presform_ms.set_extension(".pdf")
+            presform_ms.content = presform_ldrpath
+            presform_premis_path = join(self.working_dir, str(uuid1()))
+            conv_file_premis_rec.write_to_file(presform_premis_path)
+            presform_ms.premis = LDRPath(presform_premis_path)
+            self.source_materialsuite.add_presform(presform_ms)
