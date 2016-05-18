@@ -4,7 +4,7 @@ from os.path import basename, dirname, exists, join, split
 from sys import stderr
 from tempfile import TemporaryFile
 
-from pypremis import PremisRecord
+from pypremis.lib import PremisRecord
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
@@ -110,7 +110,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     copy(n_adminnote.content.itemB, LDRPath(
                         join(adminnote_dir,
                              adminnote_filename)))
-                print(dir(self.structure))
                 for n_segment in self.structure.segment_list:
                     segment_id = n_segment.label+str(n_segment.run)
                     makedirs(join(admin_dir, segment_id), exist_ok=True)
@@ -121,6 +120,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                              exist_ok=True)
 
                     for n_msuite in n_segment.materialsuite_list:
+                        new_filename = ""
                         with n_msuite.premis.open('rb') as reading_file:
                             with TemporaryFile() as writing_file:
                                 while True:
@@ -129,12 +129,51 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                                         writing_file.write(buf)
                                     else:
                                         break
+                                writing_file.seek(0)
+                                manifest_line = []
+                                precord = PremisRecord(
+                                    frompath=writing_file)
+                                for obj in precord.get_object_list():
+                                    for storage in obj.get_storage():
+                                        if not storage.get_contentLocation():
+                                            self.errors.add(
+                                                "premis",
+                                                "no contentLocation " +
+                                                "element found")
+                                        else:
+                                            old_location = storage.get_contentLocation()
+                                            display_segment_id = n_segment.label+str(n_segment.run)
+                                            new_location = join(self.pairtree, 'data', n_msuite.content.item_name)
+                                            old_location.set_contentLocationValue(new_location)
+                                            print(storage.get_contentLocation().get_contentLocationValue())
+
+                                            manifest_line.append(new_location)
+
+                                    for characteristic in obj.get_objectCharacteristics():
+                                        for fixity in characteristic.get_fixity():
+                                            digest_type = fixity.get_messageDigestAlgorithm()
+                                            digest_string = fixity.get_messageDigest()
+
+                                            manifest_line.append(
+                                                (digest_type,
+                                                 digest_string))
+                                    print(manifest_line)
+
+                        if getattr(n_msuite, 'presform_list', None):
+                            for n_presform in n_msuite.presform_list:
+                                with n_msuite.premis.open('rb') \
+                                     as reading_file:
+                                    with TemporaryFile() as writing_file:
+                                        while True:
+                                            buf = reading_file.read(1024)
+                                    if buf:
+                                        writing_file.write(buf)
+                                    else:
+                                        break
                                     writing_file.seek(0)
                                     precord = PremisRecord(
                                         frompath=writing_file)
                                     print(precord)
-                        if getattr(n_msuite, 'presform_list', None):
-                            for n_presform in n_msuite.presform_list:
                                 print(n_presform.premis)
 
             else:
