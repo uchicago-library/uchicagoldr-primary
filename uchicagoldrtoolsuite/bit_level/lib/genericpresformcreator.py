@@ -15,7 +15,10 @@ from .ldrpath import LDRPath
 from .materialsuite import MaterialSuite
 from .ldritemoperations import copy
 from .abc.ldritem import LDRItem
-from .officetopdfconverter import OfficeToPDFConverter
+from .converters.officetopdfconverter import OfficeToPDFConverter
+from .converters.officetocsvconverter import OfficeToCSVConverter
+from .converters.officetotxtconverter import OfficeToTXTConverter
+from .converters.videoconverter import VideoConverter
 
 
 __author__ = "Brian Balsamo"
@@ -45,7 +48,12 @@ class GenericPresformCreator(object):
         # somewhere before your instance gets garbage collected.
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
-        self.converters = [OfficeToPDFConverter]
+        self.converters = [
+            OfficeToPDFConverter,
+            OfficeToCSVConverter,
+            OfficeToTXTConverter,
+            VideoConverter
+        ]
 
     def process(self, skip_existing=False, presform_presforms=False):
         for segment in self.stage.segment_list:

@@ -6,23 +6,18 @@ import mimetypes
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from ...core.lib.bash_cmd import BashCommand
-from ...core.lib.convenience import iso8601_dt
-from .abc.converter import Converter
-from .presformmaterialsuite import PresformMaterialSuite
-from .ldritemoperations import copy
-from .ldrpath import LDRPath
-from .genericpremiscreator import GenericPREMISCreator
+from ....core.lib.bash_cmd import BashCommand
+from ....core.lib.convenience import iso8601_dt
+from ..abc.converter import Converter
+from ..presformmaterialsuite import PresformMaterialSuite
+from ..ldritemoperations import copy
+from ..ldrpath import LDRPath
+from ..genericpremiscreator import GenericPREMISCreator
 
 
-class OfficeToPDFConverter(Converter):
+class OfficeToTXTConverter(Converter):
     """
-    A class for converting a variety of "office" file types to PDF-A
-
-    ********************
-    Note: Libreoffice doesn't currently have a CLI option for PDF-A.
-    You have to flip it in the GUI and then the setting holds.
-    ********************
+    A class for converting a variety of "office" file types to TXT
     """
 
     # Set the libreoffice path we'll be using in the bash command wrapper
@@ -30,16 +25,12 @@ class OfficeToPDFConverter(Converter):
 
     # Explicitly claimed mimes this converter should be able to handle
     _claimed_mimes = [
-        'text/plain',
-        'text/csv',
         'application/rtf',
         'application/pdf',
         'application/msword',
         'application/vnd.ms-powerpoint',
-        'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ]
 
     # Try to look these extensions up in the python mimetypes class
@@ -48,20 +39,13 @@ class OfficeToPDFConverter(Converter):
         '.docx',
         '.odt',
         '.fodt',
-        '.xls',
-        '.xlsx',
-        '.ods',
-        '.fods',
         '.ppt',
         '.pptx',
         '.odp',
         '.fodp',
         '.odf',
-        '.odg',
         '.pdf',
-        '.txt',
         '.rtf',
-        '.csv'
     ]
 
     # Add the stuff we want looked up to the _claimed_mimes array if it's in
@@ -103,8 +87,6 @@ class OfficeToPDFConverter(Converter):
         accordingly
         """
         initd_premis_file = join(self.working_dir, str(uuid1()))
-        outdir = join(self.working_dir, str(uuid1()))
-        makedirs(outdir)
         copy(self.source_materialsuite.premis, LDRPath(initd_premis_file))
         orig_premis = PremisRecord(frompath=initd_premis_file)
         orig_name = orig_premis.get_object_list()[0].get_originalName()
@@ -113,48 +95,57 @@ class OfficeToPDFConverter(Converter):
         # ...
         # It also needs the input filename to be intact, I think, better safe
         # than sorry anyways.
+
+        # Where we are putting our original file
         target_containing_dir = join(self.working_dir, str(uuid1()))
         target_path = join(target_containing_dir, orig_name)
         makedirs(dirname(target_path), exist_ok=True)
         copy(self.source_materialsuite.content, LDRPath(target_path))
 
+        # Where we are aiming the LibreOffice CLI converter
+        outdir = join(self.working_dir, str(uuid1()))
+        makedirs(outdir)
+
+        # Fire 'er up
         convert_cmd_args = [self.libre_office_path, '--headless',
-                            '--convert-to', 'pdf', '--outdir', outdir,
+                            '--convert-to', 'txt:Text', '--outdir', outdir,
                             target_path]
         convert_cmd = BashCommand(convert_cmd_args)
         convert_cmd.set_timeout(self.timeout)
         convert_cmd.run_command()
+
         # If there's anything in the outdir we gave libreoffice thats what we
         # want, if there isn't the conversion failed for some reason
+        # we need to assign presform_ldrpath and conv_file_premis_rec to None
         try:
             where_it_is = join(outdir, listdir(outdir)[0])
             assert(isfile(where_it_is))
-        except:
-            where_it_is = None
-
-        # Alright, we now know whether or not the conversion succeeded. Update
-        # the events in the originals PREMIS file.
-
-        if where_it_is is not None:
             presform_ldrpath = LDRPath(where_it_is)
             conv_file_premis = GenericPREMISCreator.instantiate_and_make_premis(
                 presform_ldrpath,
-                working_dir_path=self.working_dir,
+                working_dir_path = self.working_dir
             )
             conv_file_premis_rec = PremisRecord(frompath=str(conv_file_premis.path))
-        else:
+        except Exception as e:
+            presform_ldrpath = None
             conv_file_premis_rec = None
 
+        # Write a billion things into the PREMIS file(s)
+        # This function handles None in the third arg sensibly, just updating
+        # the original PREMIS file we have to specify a failed conversion
         self.handle_premis(convert_cmd.get_data(), orig_premis, conv_file_premis_rec,
-                            "LibreOffice CLI PDF Converter")
+                            "LibreOffice CLI TXT Converter")
 
+        # Update the original PREMIS regardless
         updated_premis_outpath = join(self.working_dir, str(uuid1()))
         orig_premis.write_to_file(updated_premis_outpath)
         self.get_source_materialsuite().set_premis(LDRPath(updated_premis_outpath))
 
-        if where_it_is:
+        # If the conversion was successful construct our PresformMaterialSuite
+        # and add it to our source MaterialSuite
+        if presform_ldrpath and conv_file_premis_rec:
             presform_ms = PresformMaterialSuite()
-            presform_ms.set_extension(".pdf")
+            presform_ms.set_extension(".txt")
             presform_ms.content = presform_ldrpath
             presform_premis_path = join(self.working_dir, str(uuid1()))
             conv_file_premis_rec.write_to_file(presform_premis_path)

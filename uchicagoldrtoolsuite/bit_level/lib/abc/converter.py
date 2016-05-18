@@ -85,39 +85,6 @@ class Converter(metaclass=ABCMeta):
                 )
             )
 
-    def _build_relationship(self, rel_type, rel_subtype, rel_obj, rel_event, seq=None):
-        relationshipType = rel_type
-        relationshipSubType = rel_subtype
-        relatedObjectIdentifier = self._build_relatedObjectIdentifier(rel_obj)
-        relationship = Relationship(relationshipType, relationshipSubType, relatedObjectIdentifier)
-        relationship.add_relatedEventIdentifier(self._build_relatedEventIdentifier(rel_event))
-        return relationship
-
-    def _build_relatedEventIdentifier(self, rel_event, seq=None):
-        relatedEventIdentifierType = rel_event.get_eventIdentifier().get_eventIdentifierType()
-        relatedEventIdentifierValue = rel_event.get_eventIdentifier().get_eventIdentifierValue()
-        relatedEventIdentifier = RelatedEventIdentifier(relatedEventIdentifierType, relatedEventIdentifierValue)
-        if seq:
-            relatedEventIdentifier.set_relatedEventSequence(seq)
-        return relatedEventIdentifier
-
-    def _build_relatedObjectIdentifier(self, obj, seq=None):
-        relatedObjectIdentifierType = obj.get_objectIdentifier()[0].get_objectIdentifierType()
-        relatedObjectIdentifierValue = obj.get_objectIdentifier()[0].get_objectIdentifierValue()
-        relatedObjectIdentifier = RelatedObjectIdentifier(relatedObjectIdentifierType, relatedObjectIdentifierValue)
-        if seq:
-            relatedObjectIdentifier.set_relatedObjectSequence(seq)
-        return relatedObjectIdentifier
-
-    def _build_linkingEventIdentifier(self, event_to_link, seq=None):
-        linkingEventIdentifierType = event_to_link.get_eventIdentifier().get_eventIdentifierType()
-        linkingEventIdentifierValue = event_to_link.get_eventIdentifier().get_eventIdentifierValue()
-        linkingEventIdentifier = LinkingEventIdentifier(linkingEventIdentifierType,
-                                                        linkingEventIdentifierValue)
-        if seq:
-            linkingEventIdentifier.set_relatedEventSequence(seq)
-        return linkingEventIdentifier
-
     def build_conv_event(self, cmd_output, orig_premis, conv_premis, converter_name):
         eventIdentifier = self._build_eventIdentifier()
         eventType = "migration"
@@ -185,6 +152,39 @@ class Converter(metaclass=ABCMeta):
         )
 
         return crea_event
+
+    def _build_relationship(self, rel_type, rel_subtype, rel_obj, rel_event, seq=None):
+        relationshipType = rel_type
+        relationshipSubType = rel_subtype
+        relatedObjectIdentifier = self._build_relatedObjectIdentifier(rel_obj)
+        relationship = Relationship(relationshipType, relationshipSubType, relatedObjectIdentifier)
+        relationship.add_relatedEventIdentifier(self._build_relatedEventIdentifier(rel_event))
+        return relationship
+
+    def _build_relatedEventIdentifier(self, rel_event, seq=None):
+        relatedEventIdentifierType = rel_event.get_eventIdentifier().get_eventIdentifierType()
+        relatedEventIdentifierValue = rel_event.get_eventIdentifier().get_eventIdentifierValue()
+        relatedEventIdentifier = RelatedEventIdentifier(relatedEventIdentifierType, relatedEventIdentifierValue)
+        if seq:
+            relatedEventIdentifier.set_relatedEventSequence(seq)
+        return relatedEventIdentifier
+
+    def _build_relatedObjectIdentifier(self, obj, seq=None):
+        relatedObjectIdentifierType = obj.get_objectIdentifier()[0].get_objectIdentifierType()
+        relatedObjectIdentifierValue = obj.get_objectIdentifier()[0].get_objectIdentifierValue()
+        relatedObjectIdentifier = RelatedObjectIdentifier(relatedObjectIdentifierType, relatedObjectIdentifierValue)
+        if seq:
+            relatedObjectIdentifier.set_relatedObjectSequence(seq)
+        return relatedObjectIdentifier
+
+    def _build_linkingEventIdentifier(self, event_to_link, seq=None):
+        linkingEventIdentifierType = event_to_link.get_eventIdentifier().get_eventIdentifierType()
+        linkingEventIdentifierValue = event_to_link.get_eventIdentifier().get_eventIdentifierValue()
+        linkingEventIdentifier = LinkingEventIdentifier(linkingEventIdentifierType,
+                                                        linkingEventIdentifierValue)
+        if seq:
+            linkingEventIdentifier.set_relatedEventSequence(seq)
+        return linkingEventIdentifier
 
     def _build_eventIdentifier(self):
         eventIdentifierType = "DOI"
