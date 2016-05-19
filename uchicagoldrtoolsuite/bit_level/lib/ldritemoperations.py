@@ -1,4 +1,6 @@
+
 from hashlib import md5
+from os.path import join, split
 from urllib.request import urlopen, URLError
 from uuid import uuid1
 
@@ -12,34 +14,6 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
-
-
-def get_an_agent_id(id_string):
-    def get_agent_data():
-        agent_file = LDRPath("/home/tdanstrom/premis/agents.txt")
-        all_lines = []
-        with agent_file.open('rb') as read_file:
-            while True:
-                buf = read_file.read(1024)
-                if buf:
-                    lines = buf.split(b"\n")
-                    all_lines.extend(lines)
-                else:
-                    break
-        return all_lines
-
-    data = get_agent_data()
-    for n_line in data:
-        if id_string in n_line:
-            return n_line.split(b",")[0].decode("utf-8")
-    new_id = IDBuilder().build("premisID").show()
-    with LDRPath("/home/tdanstrom/premis/agents.txt").\
-      open('ab') as writing_file:
-        new_line_string = "\n{},{}".\
-                          format(new_id[1], id_string.decode('utf-8'))
-        new_line_string = new_line_string.encode('utf-8')
-        writing_file.write(bytes(new_line_string))
-    return new_id[1]
 
 
 def pairtree_a_string(input_to_pairtree):
@@ -59,20 +33,37 @@ def pairtree_a_string(input_to_pairtree):
     return output
 
 
-def lookup_an_agent_id(id_string):
-    agent_file = LDRPath("/home/tdanstrom/premis/agents.txt")
-    all_lines = []
-    with agent_file.open('rb') as read_file:
-        while True:
-            buf = read_file.read(1024)
-            if buf:
-                if buf.find(id_string):
-                    all_lines.extend(buf.split(b"\n"))
+def get_an_agent_id(id_string):
+    def get_premis_agents_file():
+        this_dir, this_filename = split(__file__)
+        return join(this_dir, 'premis', 'agents.txt')
+
+    def get_agent_data():
+        agent_file = LDRPath(get_premis_agents_file())
+        all_lines = []
+        with agent_file.open('rb') as read_file:
+            while True:
+                buf = read_file.read(1024)
+                if buf:
+                    lines = buf.split(b"\n")
+                    all_lines.extend(lines)
                 else:
-                    pass
-            else:
-                break
-    print(all_lines)
+                    break
+        return all_lines
+
+    id_string = bytes(id_string.encode('utf-8'))
+    data = get_agent_data()
+    for n_line in data:
+        if id_string in n_line:
+            return n_line.split(b",")[0].decode("utf-8")
+    new_id = IDBuilder().build("premisID").show()
+    with LDRPath("/home/tdanstrom/premis/agents.txt").\
+      open('ab') as writing_file:
+        new_line_string = "\n{},{}".\
+                          format(new_id[1], id_string.decode('utf-8'))
+        new_line_string = new_line_string.encode('utf-8')
+        writing_file.write(bytes(new_line_string))
+    return new_id[1]
 
 
 def get_archivable_identifier(noid=False):
@@ -86,7 +77,6 @@ def get_archivable_identifier(noid=False):
     it will return a uuid hex string. If it is False, it will return a
     CDL noid identifier.
     """
-
     if not noid:
         data_output = uuid1()
         data_output = data_output.hex
