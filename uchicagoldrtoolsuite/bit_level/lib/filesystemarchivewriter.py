@@ -1,14 +1,17 @@
 
+from datetime import datetime
 from os import makedirs
 from os.path import basename, dirname, exists, join, split
 from sys import stderr
 from tempfile import TemporaryFile
 
 from pypremis.lib import PremisRecord
+from pypremis.nodes import Event, EventIdentifier, EventDetailInformation
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
 from .archiveauditor import ArchiveAuditor
+from .idbuilder import IDBuilder
 from .ldritemoperations import copy
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
@@ -40,6 +43,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.pairtree = Pairtree(self.structure.identifier).get_pairtree_path()
         self.audit_qualification = ArchiveAuditor(origin_loc, aStructure)
         self.origin_root = split(origin_loc)[0]
+        self.identify = IDBuilder()
         self.archive_loc = archive_loc
 
     def pairtree_an_admin_content(self, type_str, segment_id, a_thing):
@@ -72,6 +76,54 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         n_thing_destination = self.pairtree_a_data_content(segment_id,
                                                            n_thing)
         copy(n_thing, n_thing_destination, False)
+
+    def extract_info_from_premis_record(self, premisrecord,
+                                        display_segment_id):
+        with premisrecord.open('rb') as reading_file:
+            with TemporaryFile() as writing_file:
+                while True:
+                    buf = reading_file.read(1024)
+                    if buf:
+                        writing_file.write(buf)
+                    else:
+                        break
+                writing_file.seek(0)
+                manifest_line = []
+                precord = PremisRecord(
+                    frompath=writing_file)
+                for obj in precord.get_object_list():
+                    objid = obj.get_objectIdentifier()[0].\
+                            get_objectIdentifierValue()
+
+                    for storage in obj.get_storage():
+                        if not storage.get_contentLocation():
+                            self.errors.add(
+                                "premis",
+                                "no contentLocation " +
+                                "element found")
+                        else:
+                            old_location = storage.get_contentLocation()
+                            new_location = join(self.pairtree, 'data',
+                                                display_segment_id,
+                                                premisrecord.item_name.
+                                                split('.premis')[0])
+                            old_location.set_contentLocationValue(new_location)
+                            print(old_location.get_contentLocationValue())
+                            for characteristic in obj.get_objectCharacteristics():
+                                for fixity in characteristic.get_fixity():
+                                    digest_type = fixity.\
+                                                  get_messageDigestAlgorithm()
+                                    digest_string = fixity.get_messageDigest()
+                                    manifest_line.append(
+                                        (digest_type,
+                                         digest_string))
+                        event_id_type, event_id = self.identify.build(
+                            "eventID").show()
+                        event_id_node = EventIdentifier(event_id_type, event_id)
+                        new_event = Event(event_id_node, 'ingestion',
+                                          datetime.now().isoformat())
+                        event_detail = EventDetailInformation(eventDetail="ingested into the ldr")
+                        print(new_event)
 
     def write(self):
         """
@@ -112,6 +164,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                              adminnote_filename)))
                 for n_segment in self.structure.segment_list:
                     segment_id = n_segment.label+str(n_segment.run)
+                    display_segment_id = n_segment.label+str(
+                        n_segment.run)
                     makedirs(join(admin_dir, segment_id), exist_ok=True)
                     makedirs(join(data_dir, segment_id), exist_ok=True)
                     makedirs(join(admin_dir, segment_id, 'PREMIS'),
@@ -121,43 +175,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
                     for n_msuite in n_segment.materialsuite_list:
                         new_filename = ""
-                        with n_msuite.premis.open('rb') as reading_file:
-                            with TemporaryFile() as writing_file:
-                                while True:
-                                    buf = reading_file.read(1024)
-                                    if buf:
-                                        writing_file.write(buf)
-                                    else:
-                                        break
-                                writing_file.seek(0)
-                                manifest_line = []
-                                precord = PremisRecord(
-                                    frompath=writing_file)
-                                for obj in precord.get_object_list():
-                                    for storage in obj.get_storage():
-                                        if not storage.get_contentLocation():
-                                            self.errors.add(
-                                                "premis",
-                                                "no contentLocation " +
-                                                "element found")
-                                        else:
-                                            old_location = storage.get_contentLocation()
-                                            display_segment_id = n_segment.label+str(n_segment.run)
-                                            new_location = join(self.pairtree, 'data', n_msuite.content.item_name)
-                                            old_location.set_contentLocationValue(new_location)
-                                            print(storage.get_contentLocation().get_contentLocationValue())
-
-                                            manifest_line.append(new_location)
-
-                                    for characteristic in obj.get_objectCharacteristics():
-                                        for fixity in characteristic.get_fixity():
-                                            digest_type = fixity.get_messageDigestAlgorithm()
-                                            digest_string = fixity.get_messageDigest()
-
-                                            manifest_line.append(
-                                                (digest_type,
-                                                 digest_string))
-                                    print(manifest_line)
+                        self.extract_info_from_premis_record(
+                            n_msuite.premis,
+                            display_segment_id)
 
                         if getattr(n_msuite, 'presform_list', None):
                             for n_presform in n_msuite.presform_list:
