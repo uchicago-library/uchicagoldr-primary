@@ -1,26 +1,15 @@
 from tempfile import TemporaryDirectory
 from uuid import uuid1
 from os import makedirs
-from os.path import join, dirname
-from mimetypes import guess_type
+from os.path import join
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
-try:
-    from magic import from_file
-except:
-    pass
 
 from .ldrpath import LDRPath
 from .materialsuite import MaterialSuite
 from .ldritemoperations import copy
 from .abc.ldritem import LDRItem
-from .converters.officetopdfconverter import OfficeToPDFConverter
-from .converters.officetocsvconverter import OfficeToCSVConverter
-from .converters.officetotxtconverter import OfficeToTXTConverter
-from .converters.videoconverter import VideoConverter
-from .converters.imageconverter import ImageConverter
-from .converters.audioconverter import AudioConverter
 
 
 __author__ = "Brian Balsamo"
@@ -35,7 +24,7 @@ class GenericPresformCreator(object):
     """
     Ingests a stage structure and produces presforms of files therein
     """
-    def __init__(self, stage):
+    def __init__(self, stage, converters):
         """
         spawn a presform creator that should work regardless of
         what kind of LDRItems are being used
@@ -50,14 +39,15 @@ class GenericPresformCreator(object):
         # somewhere before your instance gets garbage collected.
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
-        self.converters = [
-            OfficeToPDFConverter,
-            OfficeToCSVConverter,
-            OfficeToTXTConverter,
-            VideoConverter,
-            ImageConverter,
-            AudioConverter
-        ]
+        self.converters = converters
+#        self.converters = [
+#            OfficeToPDFConverter,
+#            OfficeToCSVConverter,
+#            OfficeToTXTConverter,
+#            VideoConverter,
+#            ImageConverter,
+#            AudioConverter
+#        ]
 
     def process(self, skip_existing=False, presform_presforms=False):
         for segment in self.stage.segment_list:
@@ -67,7 +57,8 @@ class GenericPresformCreator(object):
                                      "record in order to generate presforms.")
                 if skip_existing:
                     try:
-                        if isinstance(materialsuite.get_presform(0), MaterialSuite):
+                        if isinstance(materialsuite.get_presform(0),
+                                      MaterialSuite):
                             continue
                     except:
                         pass

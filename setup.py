@@ -44,7 +44,8 @@ setup(
             'ldraddadminnote = uchicagoldrtoolsuite.bit_level.app.adminnoteadder:launch',
             'ldraddlegalnote = uchicagoldrtoolsuite.bit_level.app.legalnoteadder:launch',
             'ldraddaccessionrecord = uchicagoldrtoolsuite.bit_level.app.accessionrecordadder:launch',
-            'ldrcreatetechmd = uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator:launch'
+            'ldrcreatetechmd = uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator:launch',
+            'ldrcreatepresforms = uchicagoldrtoolsuite.bit_level.app.presformcreator:launch'
         ]
     },
     package_data = {
