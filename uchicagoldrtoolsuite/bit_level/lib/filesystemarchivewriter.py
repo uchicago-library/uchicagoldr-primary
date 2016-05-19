@@ -122,7 +122,14 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                         event_id_node = EventIdentifier(event_id_type, event_id)
                         new_event = Event(event_id_node, 'ingestion',
                                           datetime.now().isoformat())
-                        event_detail = EventDetailInformation(eventDetail="ingested into the ldr")
+                        event_detail = EventDetailInformation(
+                            eventDetail="ingested into the ldr")
+                        #event_outcome = EventOutcome("SUCCESS")
+                        #event_outcome_info = EventOutcomeInformation()
+                        # event_Detail_info.set_eventOutcome(event_outcome)
+                        # new_event.set_eventOutcomeInformation(event_detail)
+                        # new_event.set_eventOutcomeInformation(event_outcome_info)
+                        new_event.set_eventOutcomeInformation("Success")
                         print(new_event)
 
     def write(self):
