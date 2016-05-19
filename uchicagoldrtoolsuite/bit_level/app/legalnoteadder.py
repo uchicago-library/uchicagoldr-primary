@@ -44,8 +44,6 @@ class LegalNoteAdder(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument("staging_env", help="The path to your " +
-                                 "staging environment directory.")
         self.parser.add_argument("stage_id", help="The id of the stage",
                                  type=str, action='store')
         group = self.parser.add_mutually_exclusive_group(required=True)
@@ -68,12 +66,25 @@ class LegalNoteAdder(CLIApp):
                                  help="Either a file path if you specified " +
                                  "--file or a string of text enclosed in " +
                                  "quotes if you specified --text")
+        self.parser.add_argument("--staging_env", help="The path to your " +
+                                 "staging environment",
+                                 type=str,
+                                 default=None)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
 
+        # Set conf
+        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+
         # App code
-        stage_fullpath = join(args.staging_env, args.stage_id)
+
+        if args.staging_env:
+            staging_env = args.staging_env
+        else:
+            staging_env = self.conf.get("Paths", "staging_environment_path")
+
+        stage_fullpath = join(staging_env, args.stage_id)
         reader = FileSystemStageReader(stage_fullpath)
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
@@ -94,7 +105,7 @@ class LegalNoteAdder(CLIApp):
         else:
             raise AssertionError('Either file or text should be selected')
 
-        writer = FileSystemStageWriter(stage, args.staging_env)
+        writer = FileSystemStageWriter(stage, staging_env)
         writer.write()
         stdout.write("Complete\n")
 

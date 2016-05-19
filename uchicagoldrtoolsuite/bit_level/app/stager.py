@@ -47,16 +47,17 @@ class Stager(CLIApp):
         self.parser.add_argument("directory", help="The directory that " +
                                  "needs to be staged.",
                                  type=str, action='store')
-        self.parser.add_argument("destination_root", help="The location " +
-                                 "that the staging directory should be " +
-                                 "created in",
-                                 type=str, action='store')
         self.parser.add_argument("staging_id", help="The identifying name " +
                                  "for the new staging directory",
                                  type=str, action='store')
         self.parser.add_argument("prefix", help="The prefix defining the " +
                                  "type of run that is being processed",
                                  type=str, action='store')
+        self.parser.add_argument("--destination-root", help="The location " +
+                                 "that the staging directory should be " +
+                                 "created in",
+                                 type=str, action='store',
+                                 default=None)
         self.parser.add_argument("--resume", "-r", help="An integer for a " +
                                  "run that needs to be resumed.",
                                  type=str, action='store', default=0)
@@ -72,8 +73,16 @@ class Stager(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
 
+        # Set conf
+        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+
         # App code
-        stage = FileSystemStageReader(join(args.destination_root,
+        if args.destination_root:
+            destination_root = args.destination_root
+        else:
+            destination_root = self.conf.get("Paths", "staging_environment_path")
+
+        stage = FileSystemStageReader(join(destination_root,
                                            args.staging_id)).read()
         if args.resume:
             seg_num = args.resume
@@ -103,12 +112,12 @@ class Stager(CLIApp):
             filter_pattern=args.filter_pattern)
 
         stdout.write("Source: " + args.directory+"\n")
-        stdout.write("Stage: " + join(args.destination_root, args.staging_id) +
+        stdout.write("Stage: " + join(destination_root, args.staging_id) +
                      "\n")
         stdout.write("Segment: " + args.prefix + "-" + str(seg_num) + "\n")
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
-        writer = FileSystemStageWriter(stage, args.destination_root)
+        writer = FileSystemStageWriter(stage, destination_root)
         writer.write()
         stdout.write("Complete\n")
 

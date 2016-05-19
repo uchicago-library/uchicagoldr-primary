@@ -60,19 +60,34 @@ class Pruner(CLIApp):
                                  help="A flag to set when you really want to" +
                                  " delete the files matching the pattern",
                                  default=False)
-        self.parser.add_argument("directory",
+        self.parser.add_argument("stage_id",
                                  help="Enter a valid directory that needs " +
                                  "to be pruned",
-                                 action=ValidateDirectory)
+                                 action='store')
         self.parser.add_argument("patterns",
                                  help="Enter a list of regular " +
                                  "expressions matching file names that can " +
                                  "be deleted from the staging directory",
                                  action='store', nargs="*")
+        self.parser.add_argument("--staging_env", help="The path to your " +
+                                 "staging environment",
+                                 type=str,
+                                 default=None)
         # Parse arguments into args namespace
         args = self.parser.parse_args()
+
+        # Set conf
+        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+
         # App code
-        staging_directory_reader = FileSystemStageReader(args.directory)
+
+        if args.staging_env:
+            staging_env = args.staging_env
+        else:
+            staging_env = self.conf.get("Paths", "staging_environment_path")
+
+        stage_fullpath = join(staging_env, args.stage_id)
+        staging_directory_reader = FileSystemStageReader(stage_fullpath)
         staging_structure = staging_directory_reader.read()
         try:
             for n_segment in staging_structure.segment:

@@ -98,7 +98,7 @@ def retrieve_resource_filepath(resource_path, pkg_name=None):
     """
     from pkg_resources import Requirement, resource_filename
     if pkg_name is None:
-        pkg_name = 'uchicagoldr'
+        pkg_name = 'uchicagoldrtoolsuite'
     return resource_filename(Requirement.parse(pkg_name), resource_path)
 
 
@@ -120,7 +120,7 @@ def retrieve_resource_string(resource_path, pkg_name=None):
     """
     from pkg_resources import Requirement, resource_string
     if pkg_name is None:
-        pkg_name = 'uchicagoldr'
+        pkg_name = 'uchicagoldrtoolsuite'
     return resource_string(Requirement.parse(pkg_name), resource_path)
 
 
@@ -142,7 +142,7 @@ def retrieve_resource_stream(resource_path, pkg_name=None):
     """
     from pkg_resources import Requirement, resource_stream
     if pkg_name is None:
-        pkg_name = 'uchicagoldr'
+        pkg_name = 'uchicagoldrtoolsuite'
     return resource_stream(Requirement.parse(pkg_name), resource_path)
 
 
