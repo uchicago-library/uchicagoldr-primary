@@ -12,6 +12,7 @@ except:
     pass
 
 from ...core.lib.convenience import sane_hash
+from .ldritemoperations import copy
 from .abc.ldritem import LDRItem
 from .ldrpath import LDRPath
 
@@ -83,9 +84,8 @@ class GenericPREMISCreator(object):
         """
         recv_file = join(working_dir_path, str(uuid1()))
         premis_file = join(working_dir_path, str(uuid1()))
-        with item.open('rb') as src:
-            with open(recv_file, 'wb') as dst:
-                dst.write(src.read(1024))
+        recv_item = LDRPath(recv_file)
+        copy(item, recv_item)
         rec = cls.make_record(recv_file, item)
         rec.write_to_file(premis_file)
         return LDRPath(premis_file)
