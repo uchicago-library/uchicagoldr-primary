@@ -56,6 +56,11 @@ class GenericTechnicalMetadataCreator(object):
                 materialsuite.set_premis(premis)
                 if materialsuite.presform_list is not None:
                     for presform_ms in materialsuite.presform_list:
+                        if not isinstance(presform_ms.get_premis(), LDRItem):
+                            print(presform_ms.content.path)
+                            raise ValueError("All material suites must have a PREMIS " +
+                                            "record in order to generated technical " +
+                                            "metadata records.")
                         pres_techmd, pres_premis = \
                             self.instantiate_and_make_techmd(presform_ms)
                         presform_ms.set_technicalmetadata_list(pres_techmd)

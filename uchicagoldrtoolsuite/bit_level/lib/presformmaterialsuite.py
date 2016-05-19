@@ -9,6 +9,15 @@ class PresformMaterialSuite(MaterialSuite):
         super().__init__()
         self._extension = None
 
+    def __repr__(self):
+        repr_dict = {}
+        repr_dict['content'] = self.get_content()
+        repr_dict['premis'] = self.get_premis()
+        repr_dict['technicalmetadata'] = self.get_technicalmetadata_list()
+        repr_dict['presform'] = self.get_presform_list()
+        repr_dict['extension'] = self.get_extension()
+        return str(repr_dict)
+
     def get_extension(self):
         return self._extension
 

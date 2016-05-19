@@ -1,5 +1,5 @@
 from os import listdir
-from os.path import join, dirname, basename, isfile
+from os.path import join, dirname, basename, isfile, splitext
 from re import compile as re_compile
 
 from .abc.materialsuitepackager import MaterialSuitePackager
@@ -76,13 +76,14 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         siblings = [x for x in listdir(containing_folder_path)]
         for x in siblings:
             if presform_filename_pattern.match(x):
+                presform_extension = splitext(x)[1]
                 presforms.append(
                     FileSystemPresformMaterialSuitePackager(
                         self.stage_env_path,
                         self.stage_id,
                         self.label_text,
                         self.label_number,
-                        join(containing_folder_path, x)
+                        self.rel_content_path+".presform"+presform_extension
                     ).package()
                 )
         if len(presforms) > 0:
