@@ -19,6 +19,8 @@ from .converters.officetopdfconverter import OfficeToPDFConverter
 from .converters.officetocsvconverter import OfficeToCSVConverter
 from .converters.officetotxtconverter import OfficeToTXTConverter
 from .converters.videoconverter import VideoConverter
+from .converters.imageconverter import ImageConverter
+from .converters.audioconverter import AudioConverter
 
 
 __author__ = "Brian Balsamo"
@@ -52,7 +54,9 @@ class GenericPresformCreator(object):
             OfficeToPDFConverter,
             OfficeToCSVConverter,
             OfficeToTXTConverter,
-            VideoConverter
+            VideoConverter,
+            ImageConverter,
+            AudioConverter
         ]
 
     def process(self, skip_existing=False, presform_presforms=False):
