@@ -40,14 +40,6 @@ class GenericPresformCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
         self.converters = converters
-#        self.converters = [
-#            OfficeToPDFConverter,
-#            OfficeToCSVConverter,
-#            OfficeToTXTConverter,
-#            VideoConverter,
-#            ImageConverter,
-#            AudioConverter
-#        ]
 
     def process(self, skip_existing=False, presform_presforms=False):
         for segment in self.stage.segment_list:

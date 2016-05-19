@@ -6,12 +6,6 @@ from ..lib.filesystemstagewriter import FileSystemStageWriter
 from ..lib.filesystemstagereader import FileSystemStageReader
 from ..lib.genericpresformcreator import \
     GenericPresformCreator
-from ..lib.converters.officetopdfconverter import OfficeToPDFConverter
-from ..lib.converters.officetocsvconverter import OfficeToCSVConverter
-from ..lib.converters.officetotxtconverter import OfficeToTXTConverter
-from ..lib.converters.videoconverter import VideoConverter
-from ..lib.converters.imageconverter import ImageConverter
-from ..lib.converters.audioconverter import AudioConverter
 
 
 __author__ = "Brian Balsamo"
@@ -59,6 +53,30 @@ class PresformCreator(CLIApp):
                                  "at least one presform",
                                  action='store_true',
                                  default=False)
+        self.parser.add_argument("--disable-office2pdf",
+                                 help="Disable the OfficeToPDFConverter",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--disable-office2csv",
+                                 help="Disable the OfficeToCSVConverter",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--disable-office2txt",
+                                 help="Disable the OfficeToTXTConverter",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--disable-videoconverter",
+                                 help="Disable the VideoConverter",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--disable-imageconverter",
+                                 help="Disable the ImageConverter",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--disable-audioconverter",
+                                 help="Disable the AudioConverter",
+                                 action='store_true',
+                                 default=False)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -69,14 +87,27 @@ class PresformCreator(CLIApp):
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
 
-        converters = [
-            OfficeToPDFConverter,
-            OfficeToCSVConverter,
-            OfficeToTXTConverter,
-            VideoConverter,
-            ImageConverter,
-            AudioConverter
-        ]
+        converters = []
+
+        if not args.disable_office2pdf:
+            from ..lib.converters.officetopdfconverter import OfficeToPDFConverter
+            converters.append(OfficeToPDFConverter)
+        if not args.disable_office2csv:
+            from ..lib.converters.officetocsvconverter import OfficeToCSVConverter
+            converters.append(OfficeToCSVConverter)
+        if not args.disable_office2txt:
+            from ..lib.converters.officetotxtconverter import OfficeToTXTConverter
+            converters.append(OfficeToTXTConverter)
+        if not args.disable_videoconverter:
+            from ..lib.converters.videoconverter import VideoConverter
+            converters.append(VideoConverter)
+        if not args.disable_imageconverter:
+            from ..lib.converters.imageconverter import ImageConverter
+            converters.append(ImageConverter)
+        if not args.disable_audioconverter:
+            from ..lib.converters.audioconverter import AudioConverter
+            converters.append(AudioConverter)
+
 
         presform_creator = GenericPresformCreator(stage, converters)
         presform_creator.process(skip_existing=args.skip_existing)
