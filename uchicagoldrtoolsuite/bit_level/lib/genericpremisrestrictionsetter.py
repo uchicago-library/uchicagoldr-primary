@@ -10,6 +10,14 @@ from .premisextensionnodes import Restriction
 from .ldritemoperations import copy
 
 
+__author__ = "Brian Balsamo"
+__email__ = "balsamo@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
+
+
 class GenericPREMISRestrictionSetter(object):
     """
     Ingests a Stage which already has PREMIS records in it and sets a
