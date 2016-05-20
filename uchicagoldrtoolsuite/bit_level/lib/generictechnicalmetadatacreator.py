@@ -53,5 +53,5 @@ class GenericTechnicalMetadataCreator(object):
                             raise ValueError("All material suites must have a PREMIS " +
                                              "record in order to generated technical " +
                                              "metadata records.")
-                        c = techmd_creator(materialsuite, self.working_dir_path)
+                        c = techmd_creator(presform_ms, self.working_dir_path)
                         c.process()
