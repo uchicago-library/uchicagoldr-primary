@@ -7,7 +7,8 @@ from tempfile import TemporaryFile
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import Event, EventIdentifier, EventDetailInformation,\
-    EventOutcomeInformation, LinkingAgentIdentifier, LinkingObjectIdentifier
+    EventOutcomeInformation, LinkingAgentIdentifier, LinkingObjectIdentifier,\
+    LinkingEventIdentifier
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
@@ -85,8 +86,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         event_id = EventIdentifier(id_type, id_value)
         event_detail = EventDetailInformation(
             eventDetail="ingested into the ldr")
-        event_outcome_info = EventOutcomeInformation(
-            eventOutcome="<premis:eventOutcome>SUCCESS</premis:eventOutcome>")
+        event_outcome_info = EventOutcomeInformation()
+        event_outcome_info.set_eventOutcome("SUCCESS")
         event_outcome_info.set_eventDetail(event_detail)
         new_event = Event(event_id, 'ingestion', datetime.now().isoformat())
         new_event.get_eventIdentifier.set_eventIdentifierType(id_type)
@@ -95,19 +96,63 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         agent_identifier = LinkingAgentIdentifier()
         agent_identifier.set_linkingAgentIdentifierType(agent_id_type)
         agent_identifier.set_linkingAgentIdentifierValue(agent_id_value)
-        agent_identifier.set_linkingAgentRole("archive")
+        agent_identifier.set_linkingAgentRole("ingestor")
         new_event.set_linkingAgentIdentifier(agent_identifier)
         event_object_id = LinkingObjectIdentifier()
         event_object_id.set_linkingObjectIdentifierType(object_id_type)
         event_object_id.set_linkingObjectIdentifierValue(object_id_value)
-        return new_event
+        return (id_type, id_value, new_event)
+
+    def get_object_id_from_premis_record(self, obj_list):
+        for n_node in obj_list:
+            id_node = n_node.get_objectIdentfier()
+            record_id_value = id_node.get_objectIdentifierValue()
+            record_id_type = id_node.get_objectIdentiferType()
+            return (record_id_value, record_id_type)
+
+    def extract_fixity_info(self, characteristics_list):
+        output = []
+        for characteristic in characteristics_list:
+            for fixity_info in characteristic.get_fixity():
+                digest_type = fixity_info.get_messageDigestAlgorithm()
+                digest_value = fixity_info.get_messageDigest()
+                output.append((digest_type, digest_value))
+        return output
+
+    def modify_record_location_value(self, premisrecord, data):
+        new_loc = join(self.pairtree, 'data', data.get('segment'),
+                       data.get('path_tail'))
+        obj_list = premisrecord.get_object_list()
+        for obj in obj_list:
+            characteristics = obj.get_objectCharacteristics()
+            for characteristic in characteristics:
+                storage_records = characteristic.get_storage()
+                for storage in storage_records:
+                    content_loc = storage.get_contentLocation()
+                    content_loc.set_contentLocationValue(new_loc)
+        return premisrecord
 
     def generate_new_contentLocation(self, segment_id, remainder):
-        return join(self.pairtree, 'data', segment_id, remainder)
+        return join(self.pairtree, 'data',
+                    segment_id, remainder)
 
-    def extract_info_from_premis_record(self, premisrecord,
-                                        display_segment_id):
-        with premisrecord.open('rb') as reading_file:
+    def extract_record_info(self, premisrecord, data):
+        output = []
+        obj_list = premisrecord.get_object_list()
+        objid_type,\
+            objid_value = self.get_object_id_from_premis_record(
+                obj_list)
+        output.append(objid_type)
+        output.append(objid_value)
+        for obj in obj_list:
+            characteristics = obj.get_objectCharacteristics()
+            obj_hash_list = self.extract_fixity_info(
+                characteristics)
+            output.append(obj_hash_list)
+        return output
+
+    def run_func_on_premis(self, premis_file, a_func, data={}):
+        with premis_file.open('rb') as reading_file:
             with TemporaryFile() as writing_file:
                 while True:
                     buf = reading_file.read(1024)
@@ -116,49 +161,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     else:
                         break
                 writing_file.seek(0)
-                manifest_line = []
-                precord = PremisRecord(
+                premis_obj = PremisRecord(
                     frompath=writing_file)
-                for obj in precord.get_object_list():
-                    objid = obj.get_objectIdentifier()[0].\
-                            get_objectIdentifierValue()
-
-                    for storage in obj.get_storage():
-                        if not storage.get_contentLocation():
-                            self.errors.add(
-                                "premis",
-                                "no contentLocation " +
-                                "element found")
-                        else:
-                            old_location = storage.get_contentLocation()
-                            new_location = join(self.pairtree, 'data',
-                                                display_segment_id,
-                                                premisrecord.item_name.
-                                                split('.premis')[0])
-                            old_location.set_contentLocationValue(new_location)
-                            print(old_location.get_contentLocationValue())
-                            for characteristic in obj.get_objectCharacteristics():
-                                for fixity in characteristic.get_fixity():
-                                    digest_type = fixity.\
-                                                  get_messageDigestAlgorithm()
-                                    digest_string = fixity.get_messageDigest()
-                                    manifest_line.append(
-                                        (digest_type,
-                                         digest_string))
-                        event_id_type, event_id = self.identify.build(
-                            "eventID").show()
-                        event_id_node = EventIdentifier(event_id_type, event_id)
-                        new_event = Event(event_id_node, 'ingestion',
-                                          datetime.now().isoformat())
-                        event_detail = EventDetailInformation(
-                            eventDetail="ingested into the ldr")
-                        #event_outcome = EventOutcome("SUCCESS")
-                        #event_outcome_info = EventOutcomeInformation()
-                        # event_Detail_info.set_eventOutcome(event_outcome)
-                        # new_event.set_eventOutcomeInformation(event_detail)
-                        # new_event.set_eventOutcomeInformation(event_outcome_info)
-                        new_event.set_eventOutcomeInformation("Success")
-                        print(new_event)
+                return a_func(premis_obj, data)
 
     def write(self):
         """
@@ -209,28 +214,54 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                              exist_ok=True)
 
                     for n_msuite in n_segment.materialsuite_list:
-                        new_filename = ""
-                        self.extract_info_from_premis_record(
+                        main_output = self.run_func_on_premis(
                             n_msuite.premis,
-                            display_segment_id)
+                            display_segment_id,
+                            self.extract_record_info
+                        )
+                        new_record = self.run_func_on_premis(
+                            n_msuite.premis,
+                            display_segment_id,
+                            self.modify_record_location_value
+                        )
 
+                        new_record.write(join(self.pairtree, 'admin',
+                                              display_segment_id,
+                                              n_msuite.premis.item_name))
                         if getattr(n_msuite, 'presform_list', None):
                             for n_presform in n_msuite.presform_list:
-                                with n_msuite.premis.open('rb') \
-                                     as reading_file:
-                                    with TemporaryFile() as writing_file:
-                                        while True:
-                                            buf = reading_file.read(1024)
-                                    if buf:
-                                        writing_file.write(buf)
-                                    else:
-                                        break
-                                    writing_file.seek(0)
-                                    precord = PremisRecord(
-                                        frompath=writing_file)
-                                    print(precord)
-                                print(n_presform.premis)
+                                cur_output = self.run_func_on_premis(
+                                    n_presform.premis,
+                                    display_segment_id,
+                                    self.extract_record_info
+                                )
+                                cur_new_record = self.run_func_on_premis(
+                                    n_msuite.premis,
+                                    display_segment_id,
+                                    self.modify_record_location_value
+                                )
+                                cur_new_record.write(
+                                    join(self.pairtree,
+                                         'admin',
+                                         display_segment_id,
+                                         n_presform.premis.item_name)
+                                )
 
+                            print(cur_output)
+                        manifest_line = "{}".format(
+                            join(self.pairtree, 'data', display_segment_id,
+                                 n_msuite.contnt.item_name))
+                        for m_bit in main_output:
+                            manifest_line += "\t{}".format(m_bit)
+                        manifest_line += "\n"
+                        manifest_file = LDRPath(self.archive_loc, 'queue.txt')
+                        with manifest_file.open('ab') as writing_file:
+                            writing_file.write(manifest_line)
+                        destination = LDRPath(
+                            self.archive_loc, self.pairtree,
+                            'data', n_msuite.content.item_name
+                        )
+                        copy(n_msuite.content, destination)
             else:
                 for n_message in self.audit_qualification.show_errors():
                     print("{}\n".format(n_message))
