@@ -35,8 +35,10 @@ def pairtree_a_string(input_to_pairtree):
 
 def get_an_agent_id(id_string):
     def get_premis_agents_file():
-        this_dir, this_filename = split(__file__)
-        return join(this_dir, 'premis', 'agents.txt')
+        if in_package:
+            this_dir, this_filename = split(__file__)
+            return join(this_dir, 'premis', 'agents.txt')
+        else:
 
     def get_agent_data():
         agent_file = LDRPath(get_premis_agents_file())
@@ -64,33 +66,6 @@ def get_an_agent_id(id_string):
         new_line_string = new_line_string.encode('utf-8')
         writing_file.write(bytes(new_line_string))
     return new_id[1]
-
-
-def get_archivable_identifier(noid=False):
-    """
-    returns an archive-worthy identifier for a submission into the ldritem
-
-    __KWArgs__
-
-    1. test (bool): a flag that is defaulted to False that determines
-    whether the output id string will be a noid. If the flag is False,
-    it will return a uuid hex string. If it is False, it will return a
-    CDL noid identifier.
-    """
-    if not noid:
-        data_output = uuid1()
-        data_output = data_output.hex
-    else:
-        request = urlopen("https://y1.lib.uchicago.edu/" +
-                          "cgi-bin/minter/noid?action=mint&n=1")
-        if request.status == 200:
-            data = request.readlines()
-            data_output = data.decode('utf-8').split('61001/')[1].rstrip()
-        else:
-            raise URLError("Cannot read noid minter located at" +
-                           "https://y1.lib.uchicago.edu/cgi-bin/minter/" +
-                           "noid?action=mint&n=1")
-    return data_output
 
 
 def move(origin_loc, destination_loc):

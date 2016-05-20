@@ -98,7 +98,7 @@ def retrieve_resource_filepath(resource_path, pkg_name=None):
     """
     from pkg_resources import Requirement, resource_filename
     if pkg_name is None:
-        pkg_name = 'uchicagoldr'
+        pkg_name = __name__.split('.')[0]
     return resource_filename(Requirement.parse(pkg_name), resource_path)
 
 
