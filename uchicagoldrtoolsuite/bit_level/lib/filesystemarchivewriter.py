@@ -6,13 +6,14 @@ from sys import stderr
 from tempfile import TemporaryFile
 
 from pypremis.lib import PremisRecord
-from pypremis.nodes import Event, EventIdentifier, EventDetailInformation
+from pypremis.nodes import Event, EventIdentifier, EventDetailInformation,\
+    EventOutcomeInformation, LinkingAgentIdentifier, LinkingObjectIdentifier
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
 from .archiveauditor import ArchiveAuditor
 from .idbuilder import IDBuilder
-from .ldritemoperations import copy
+from .ldritemoperations import copy, get_an_agent_id
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
 
@@ -76,6 +77,33 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         n_thing_destination = self.pairtree_a_data_content(segment_id,
                                                            n_thing)
         copy(n_thing, n_thing_destination, False)
+
+    def generate_event_record(self, agent_string, object_id_type,
+                              object_id_value):
+        id_type, id_value = self.identify.build('eventID').show()
+        agent_id_type, agent_id_value = get_an_agent_id("premisID")
+        event_id = EventIdentifier(id_type, id_value)
+        event_detail = EventDetailInformation(
+            eventDetail="ingested into the ldr")
+        event_outcome_info = EventOutcomeInformation(
+            eventOutcome="<premis:eventOutcome>SUCCESS</premis:eventOutcome>")
+        event_outcome_info.set_eventDetail(event_detail)
+        new_event = Event(event_id, 'ingestion', datetime.now().isoformat())
+        new_event.get_eventIdentifier.set_eventIdentifierType(id_type)
+        new_event.get_eventIdentifier.set_eventIdentifierValue(event_id)
+        new_event.set_eventOutcomeInformation(event_outcome_info)
+        agent_identifier = LinkingAgentIdentifier()
+        agent_identifier.set_linkingAgentIdentifierType(agent_id_type)
+        agent_identifier.set_linkingAgentIdentifierValue(agent_id_value)
+        agent_identifier.set_linkingAgentRole("archive")
+        new_event.set_linkingAgentIdentifier(agent_identifier)
+        event_object_id = LinkingObjectIdentifier()
+        event_object_id.set_linkingObjectIdentifierType(object_id_type)
+        event_object_id.set_linkingObjectIdentifierValue(object_id_value)
+        return new_event
+
+    def generate_new_contentLocation(self, segment_id, remainder):
+        return join(self.pairtree, 'data', segment_id, remainder)
 
     def extract_info_from_premis_record(self, premisrecord,
                                         display_segment_id):

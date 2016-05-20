@@ -39,6 +39,7 @@ def get_an_agent_id(id_string):
             this_dir, this_filename = split(__file__)
             return join(this_dir, 'premis', 'agents.txt')
         else:
+            return join("")
 
     def get_agent_data():
         agent_file = LDRPath(get_premis_agents_file())
