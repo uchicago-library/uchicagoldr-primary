@@ -6,6 +6,7 @@ from ..lib.filesystemstagewriter import FileSystemStageWriter
 from ..lib.filesystemstagereader import FileSystemStageReader
 from ..lib.generictechnicalmetadatacreator import \
     GenericTechnicalMetadataCreator
+from ..lib.techmdcreators.fitscreator import FITsCreator
 
 
 __author__ = "Brian Balsamo"
@@ -74,7 +75,8 @@ class TechnicalMetadataCreator(CLIApp):
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
 
-        techmd_creator = GenericTechnicalMetadataCreator(stage)
+        techmd_processors = [FITsCreator]
+        techmd_creator = GenericTechnicalMetadataCreator(stage, techmd_processors)
         techmd_creator.process(skip_existing=args.skip_existing)
 
         writer = FileSystemStageWriter(stage, staging_env)
