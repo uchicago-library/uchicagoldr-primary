@@ -58,8 +58,7 @@ class GenericPresformCreator(object):
                 if presform_presforms:
                     if materialsuite.presform_list is not None:
                         for presform_ms in materialsuite.presform_list:
-                            pres_presforms, pres_premis = \
-                                self.instantiate_and_make_presforms(presform_ms)
+                            self.instantiate_and_make_presforms(presform_ms)
 
     def instantiate_and_make_presforms(self, ms):
         """
