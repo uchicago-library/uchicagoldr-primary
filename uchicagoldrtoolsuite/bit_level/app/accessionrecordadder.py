@@ -78,7 +78,6 @@ class AccessionRecordAdder(CLIApp):
         # Set conf
         self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
 
-
         # App code
         if args.staging_env:
             staging_env = args.staging_env
@@ -89,6 +88,8 @@ class AccessionRecordAdder(CLIApp):
         reader = FileSystemStageReader(stage_fullpath)
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
+
+        stdout.write("Processing...\n")
 
         if args.file:
             x = LDRPath(args.note)

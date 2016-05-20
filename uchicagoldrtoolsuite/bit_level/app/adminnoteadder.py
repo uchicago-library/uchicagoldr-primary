@@ -89,6 +89,8 @@ class AdminNoteAdder(CLIApp):
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
 
+        stdout.write("Processing...\n")
+
         if args.file:
             x = LDRPath(args.note)
             x.set_name(args.note_title)

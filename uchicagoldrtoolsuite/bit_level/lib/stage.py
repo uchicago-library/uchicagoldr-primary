@@ -151,7 +151,9 @@ class Stage(Structure):
                 pass
             else:
                 return False
-        big_list = self.accessionrecord_list + self.adminnote_list + self.legalnote_list
+        big_list = self.accessionrecord_list + \
+            self.adminnote_list + \
+            self.legalnote_list
         for n_thing in big_list:
             if isinstance(n_thing, LDRItem):
                 pass

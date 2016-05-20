@@ -1,8 +1,6 @@
-from os.path import isabs, isfile, isdir, split, getsize
-from mimetypes import guess_type
+from os.path import isabs, isfile, isdir, split
 
 from .filepathtree import FilePathTree
-from ...core.lib.convenience import sane_hash
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -155,4 +153,3 @@ class AbsoluteFilePathTree(FilePathTree):
                 if split(y)[1] == filename:
                     matches.append(y)
         return matches
-

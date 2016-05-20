@@ -1,7 +1,6 @@
 from urllib.request import urlopen, URLError
 from uuid import uuid1
 from hashlib import md5, sha256
-from collections import namedtuple
 
 from .abc.ldritem import LDRItem
 
@@ -173,7 +172,7 @@ def duplicate_ldritem(src, dst, dst_mode="wb", buffering=1024, confirm=True):
 
 
 def copy(src, dst, clobber=False, detection="hash", max_retries=3,
-          buffering=1024, confirm=True):
+         buffering=1024, confirm=True):
     """
     copy one LDRItem's byte contents into another
 
@@ -219,7 +218,6 @@ def copy(src, dst, clobber=False, detection="hash", max_retries=3,
         raise ValueError("{} is not a supported clobber " +
                          "detection scheme.".format(str(detection)))
 
-
     cr = CopyReport()
 
     if dst.exists():
@@ -227,11 +225,11 @@ def copy(src, dst, clobber=False, detection="hash", max_retries=3,
             cr.dst_existed = True
             cr.clobbered_dst = False
             return cr
-        else: # Clobber stuff
+        else:  # Clobber stuff
             if detection is "hash":
                 s_hash = hash_ldritem(src)
                 d_hash = hash_ldritem(dst)
-                if s_hash == d_hash: # Its got the same hash, don't copy anything its already the same
+                if s_hash == d_hash:  # Its got the same hash, don't copy anything its already the same
                     cr.src_eq_dst = True
                     cr.copied = False
                     cr.confirmed = True
@@ -241,20 +239,25 @@ def copy(src, dst, clobber=False, detection="hash", max_retries=3,
                     cr.dst_hash = d_hash
                     return cr
             elif detection is "name":
-                if src.item_name == dst.item_name: # Its got the same name, don't copy anything its already the same
+                if src.item_name == dst.item_name:  # Its got the same name, don't copy anything its already the same
                     cr.src_eq_dst = True
                     cr.copied = False
                     cr.confirmed = False
                     cr.dst_existed = True
                     cr.clobbered_st = False
                     return cr
-            else: # Some mismatch between these impl ifs and the array at the top
+            else:  # Some mismatch between these impl ifs and the array at the top
                 raise AssertionError("ldr item copy func error")
 
             while max_retries > -1:
                 max_retries = max_retries - 1
-                if not confirm: # Fly by the seat of our pants, don't check anything just copy the bytes
-                    duplicate_ldritem(src, dst, buffering=buffering, confirm=False)
+                if not confirm:  # Fly by the seat of our pants, don't check anything just copy the bytes
+                    duplicate_ldritem(
+                        src,
+                        dst,
+                        buffering=buffering,
+                        confirm=False
+                    )
                     cr.copied = True
                     cr.dst_existed = True
                     cr.clobbered_dst = True
@@ -270,17 +273,22 @@ def copy(src, dst, clobber=False, detection="hash", max_retries=3,
                         cr.src_hash = c
                         cr.dst_hash = c
                         return cr
-    else: # The dst doesn't exist
+    else:  # The dst doesn't exist
         while max_retries > -1:
             max_retries = max_retries - 1
-            if not confirm: # Fly by the seat of our pants, don't check anything just copy the bytes
+            if not confirm:  # Fly by the seat of our pants, don't check anything just copy the bytes
                 duplicate_ldritem(src, dst, buffering=buffering, confirm=False)
                 cr.copied = True
                 cr.dst_existed = False
                 cr.clobbered_dst = False
                 return cr
             else:
-                c = duplicate_ldritem(src, dst, buffering=buffering, confirm=True)
+                c = duplicate_ldritem(
+                    src,
+                    dst,
+                    buffering=buffering,
+                    confirm=True
+                )
                 if c is not None:
                     cr.src_eq_dst = True
                     cr.copied = True

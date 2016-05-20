@@ -73,6 +73,8 @@ class PremisCreator(CLIApp):
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
 
+        stdout.write("Processing...\n")
+
         premis_creator = GenericPREMISCreator(stage)
         premis_creator.process(skip_existing=args.skip_existing)
 

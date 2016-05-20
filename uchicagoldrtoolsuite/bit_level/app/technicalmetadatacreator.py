@@ -75,8 +75,11 @@ class TechnicalMetadataCreator(CLIApp):
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
 
+        stdout.write("Processing...\n")
+
         techmd_processors = [FITsCreator]
-        techmd_creator = GenericTechnicalMetadataCreator(stage, techmd_processors)
+        techmd_creator = GenericTechnicalMetadataCreator(stage,
+                                                         techmd_processors)
         techmd_creator.process(skip_existing=args.skip_existing)
 
         writer = FileSystemStageWriter(stage, staging_env)

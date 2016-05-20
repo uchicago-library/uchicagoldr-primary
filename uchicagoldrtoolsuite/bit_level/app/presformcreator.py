@@ -99,16 +99,21 @@ class PresformCreator(CLIApp):
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
 
+        stdout.write("Processing...\n")
+
         converters = []
 
         if not args.disable_office2pdf:
-            from ..lib.converters.officetopdfconverter import OfficeToPDFConverter
+            from ..lib.converters.officetopdfconverter import \
+                OfficeToPDFConverter
             converters.append(OfficeToPDFConverter)
         if not args.disable_office2csv:
-            from ..lib.converters.officetocsvconverter import OfficeToCSVConverter
+            from ..lib.converters.officetocsvconverter import \
+                OfficeToCSVConverter
             converters.append(OfficeToCSVConverter)
         if not args.disable_office2txt:
-            from ..lib.converters.officetotxtconverter import OfficeToTXTConverter
+            from ..lib.converters.officetotxtconverter import \
+                OfficeToTXTConverter
             converters.append(OfficeToTXTConverter)
         if not args.disable_videoconverter:
             from ..lib.converters.videoconverter import VideoConverter
@@ -119,7 +124,6 @@ class PresformCreator(CLIApp):
         if not args.disable_audioconverter:
             from ..lib.converters.audioconverter import AudioConverter
             converters.append(AudioConverter)
-
 
         presform_creator = GenericPresformCreator(stage, converters)
         presform_creator.process(skip_existing=args.skip_existing)

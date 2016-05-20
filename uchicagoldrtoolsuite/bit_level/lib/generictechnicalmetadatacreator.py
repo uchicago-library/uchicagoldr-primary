@@ -42,7 +42,8 @@ class GenericTechnicalMetadataCreator(object):
                                      "record in order to generated technical " +
                                      "metadata records.")
                 if skip_existing:
-                    if isinstance(materialsuite.get_technicalmetadata(0), LDRItem):
+                    if isinstance(materialsuite.get_technicalmetadata(0),
+                                  LDRItem):
                         continue
                 for techmd_creator in self.techmd_creators:
                     c = techmd_creator(materialsuite, self.working_dir_path)

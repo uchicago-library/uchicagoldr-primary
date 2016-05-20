@@ -72,7 +72,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
                 if not isfile(join(self.root, x)):
                     continue
                 ms = self.get_msuite_packager()(join(self.root, x),
-                                              root=self.root).package()
+                                                root=self.root).package()
                 self.get_struct().add_materialsuite(ms)
         else:
             for x in tree.get_paths():

@@ -1,4 +1,4 @@
-from os import listdir, makedirs
+from os import makedirs
 from os.path import join, dirname, isfile
 from uuid import uuid1
 import mimetypes
@@ -7,7 +7,6 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from ....core.lib.bash_cmd import BashCommand
-from ....core.lib.convenience import iso8601_dt
 from ..abc.converter import Converter
 from ..presformmaterialsuite import PresformMaterialSuite
 from ..ldritemoperations import copy
@@ -125,23 +124,29 @@ class AudioConverter(Converter):
             presform_ldrpath = LDRPath(where_it_is)
             conv_file_premis = GenericPREMISCreator.instantiate_and_make_premis(
                 presform_ldrpath,
-                working_dir_path = self.working_dir
+                working_dir_path=self.working_dir
             )
-            conv_file_premis_rec = PremisRecord(frompath=str(conv_file_premis.path))
-        except Exception as e:
+            conv_file_premis_rec = PremisRecord(
+                frompath=str(conv_file_premis.path)
+            )
+        except Exception:
             presform_ldrpath = None
             conv_file_premis_rec = None
 
         # Write a billion things into the PREMIS file(s)
         # This function handles None in the third arg sensibly, just updating
         # the original PREMIS file we have to specify a failed conversion
-        self.handle_premis(convert_cmd.get_data(), orig_premis, conv_file_premis_rec,
-                            "ffmpeg CLI FLAC Converter")
+        self.handle_premis(convert_cmd.get_data(),
+                           orig_premis,
+                           conv_file_premis_rec,
+                           "ffmpeg CLI FLAC Converter")
 
         # Update the original PREMIS regardless
         updated_premis_outpath = join(self.working_dir, str(uuid1()))
         orig_premis.write_to_file(updated_premis_outpath)
-        self.get_source_materialsuite().set_premis(LDRPath(updated_premis_outpath))
+        self.get_source_materialsuite().set_premis(
+            LDRPath(updated_premis_outpath)
+        )
 
         # If the conversion was successful construct our PresformMaterialSuite
         # and add it to our source MaterialSuite

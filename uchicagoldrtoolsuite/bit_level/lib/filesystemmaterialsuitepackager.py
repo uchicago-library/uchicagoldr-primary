@@ -61,7 +61,11 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
                          "TECHMD",
                          self.rel_content_path+".fits.xml")
         if isfile(fits_path):
-            return [LDRPath(fits_path, root=join(self.admin_fullpath, "TECHMD"))]
+            return [
+                LDRPath(
+                    fits_path, root=join(self.admin_fullpath, "TECHMD")
+                )
+            ]
         return None
 
     def get_presform_list(self):

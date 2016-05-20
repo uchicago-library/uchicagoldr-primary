@@ -118,12 +118,16 @@ class GenericPREMISRestrictionSetter(object):
                                     linkingAgentIds=None,
                                     active=True):
         rights_extension = RightsExtension()
-        rights_extension.add_to_field('Restriction', self.build_restriction_node(
-            restriction_code=restriction_code,
-            restriction_reason=restriction_reasons,
-            donor_stipulation=donor_stipulations,
-            linkingAgentIds=linkingAgentIds,
-            active=active))
+        rights_extension.add_to_field(
+            'Restriction',
+            self.build_restriction_node(
+                restriction_code=restriction_code,
+                restriction_reason=restriction_reasons,
+                donor_stipulation=donor_stipulations,
+                linkingAgentIds=linkingAgentIds,
+                active=active
+            )
+        )
         return rights_extension
 
     def build_restriction_node(self,

@@ -84,6 +84,8 @@ class PremisRestrictionSetter(CLIApp):
         stage = reader.read()
         stdout.write("Stage: " + stage_fullpath + "\n")
 
+        stdout.write("Processing...\n")
+
         premis_restriction_setter = GenericPREMISRestrictionSetter(
             stage,
             args.restriction,

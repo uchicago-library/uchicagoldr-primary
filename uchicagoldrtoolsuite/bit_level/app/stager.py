@@ -80,7 +80,8 @@ class Stager(CLIApp):
         if args.destination_root:
             destination_root = args.destination_root
         else:
-            destination_root = self.conf.get("Paths", "staging_environment_path")
+            destination_root = self.conf.get("Paths",
+                                             "staging_environment_path")
 
         stage = FileSystemStageReader(join(destination_root,
                                            args.staging_id)).read()
@@ -115,6 +116,9 @@ class Stager(CLIApp):
         stdout.write("Stage: " + join(destination_root, args.staging_id) +
                      "\n")
         stdout.write("Segment: " + args.prefix + "-" + str(seg_num) + "\n")
+
+        stdout.write("Processing...\n")
+
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
         writer = FileSystemStageWriter(stage, destination_root)

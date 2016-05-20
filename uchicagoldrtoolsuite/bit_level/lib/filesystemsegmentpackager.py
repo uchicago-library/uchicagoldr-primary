@@ -50,7 +50,9 @@ class FileSystemSegmentPackager(SegmentPackager):
         self.set_struct(Segment(label_text, int(label_number)))
 
     def package(self):
-        presform_filename_pattern = re_compile("^.*\.presform(\.[a-zA-Z0-9]*)?$")
+        presform_filename_pattern = re_compile(
+            "^.*\.presform(\.[a-zA-Z0-9]*)?$"
+        )
         segment_rooted_path = RootedPath(
             self.segment_data_root+"/",
             root=self.segment_data_root

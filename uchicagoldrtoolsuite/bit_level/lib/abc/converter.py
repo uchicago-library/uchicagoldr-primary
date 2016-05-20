@@ -6,6 +6,14 @@ from pypremis.nodes import *
 from ....core.lib.convenience import iso8601_dt
 
 
+__author__ = "Brian Balsamo"
+__email__ = "balsamo@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
+
+
 class Converter(metaclass=ABCMeta):
 
     _claimed_mimes = []
