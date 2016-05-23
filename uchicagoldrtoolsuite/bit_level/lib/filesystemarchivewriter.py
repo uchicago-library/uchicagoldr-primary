@@ -82,26 +82,29 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def generate_event_record(self, agent_string, object_id_type,
                               object_id_value):
         id_type, id_value = self.identify.build('eventID').show()
-        agent_id_type, agent_id_value = get_an_agent_id("premisID")
+        print(id_value)
+        print('booya')
+        agent_id_type, agent_id_value = (
+            "DOI", get_an_agent_id("premisID"))
         event_id = EventIdentifier(id_type, id_value)
+        print(event_id)
         event_detail = EventDetailInformation(
             eventDetail="ingested into the ldr")
-        event_outcome_info = EventOutcomeInformation()
-        event_outcome_info.set_eventOutcome("SUCCESS")
-        event_outcome_info.set_eventDetail(event_detail)
+        print(event_detail)
+
         new_event = Event(event_id, 'ingestion', datetime.now().isoformat())
-        new_event.get_eventIdentifier.set_eventIdentifierType(id_type)
-        new_event.get_eventIdentifier.set_eventIdentifierValue(event_id)
-        new_event.set_eventOutcomeInformation(event_outcome_info)
-        agent_identifier = LinkingAgentIdentifier()
-        agent_identifier.set_linkingAgentIdentifierType(agent_id_type)
-        agent_identifier.set_linkingAgentIdentifierValue(agent_id_value)
-        agent_identifier.set_linkingAgentRole("ingestor")
-        new_event.set_linkingAgentIdentifier(agent_identifier)
-        event_object_id = LinkingObjectIdentifier()
-        event_object_id.set_linkingObjectIdentifierType(object_id_type)
-        event_object_id.set_linkingObjectIdentifierValue(object_id_value)
-        return (id_type, id_value, new_event)
+        print(new_event)
+        # new_event.get_eventIdentifier().set_eventIdentifierType(id_type)
+        # new_event.get_eventIdentifier().set_eventIdentifierValue(event_id)
+
+        # new_event.set_eventOutcomeInformation(event_outcome_info)
+        # agent_identifier = LinkingAgentIdentifier(
+        #     agent_id_type, agent_id_value)
+        # agent_identifier.set_linkingAgentRole("ingestor")
+        # new_event.set_linkingAgentIdentifier(agent_identifier)
+        # event_object_id = LinkingObjectIdentifier(
+        #     object_id_type, object_id_value)
+        return event_detail
 
     def get_object_id_from_premis_record(self, obj_list):
         for n_node in obj_list:
@@ -120,8 +123,19 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 output.append((digest_type, digest_value))
         return output
 
-    def add_new_Event(self, premisrecord, data):
+    def add_new_event(self, premisrecord, data):
         new_loc = join(self.pairtree, 'data', data.get('segment'))
+        obj_list = premisrecord.get_object_list()
+        objid = None
+        objid_type = None
+        for obj in obj_list:
+            objid = obj.get_objectIdentifier()[0].get_objectIdentifierValue()
+            objid_type = obj.get_objectIdentifier()[0].get_objectIdentifierType()
+        archive_event = self.generate_event_record(
+            'archiver', objid_type, objid
+        )
+        for obj in premisrecord.get_object_list():
+            print(obj.add_linkingEventIdentifier(obj))
 
 
     def modify_record_location_value(self, premisrecord, data):
@@ -131,7 +145,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         for obj in obj_list:
             for storage in obj.get_storage():
                 content_loc = storage.get_contentLocation()
-                print(content_loc)
                 content_loc.set_contentLocationValue(new_loc)
         return premisrecord
 
@@ -166,7 +179,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 writing_file.seek(0)
                 premis_obj = PremisRecord(
                     frompath=writing_file)
-                print(a_func)
                 return a_func(premis_obj, data)
 
     def write(self):
@@ -179,8 +191,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             if audit_result[0]:
                 data_dir = join(self.archive_loc, self.pairtree, 'data')
                 admin_dir = join(self.archive_loc, self.pairtree, 'admin')
-                print(data_dir)
-                print(admin_dir)
                 makedirs(data_dir, exist_ok=True)
                 makedirs(admin_dir, exist_ok=True)
                 accrecord_dir = join(admin_dir, 'accessionrecord')
@@ -266,7 +276,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                                          n_presform.premis.item_name)
                                 )
 
-                            print(cur_output)
                         manifest_line = "{}".format(
                             join(self.pairtree, 'data', display_segment_id,
                                  n_msuite.content.item_name))
