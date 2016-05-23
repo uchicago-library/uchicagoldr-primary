@@ -82,29 +82,21 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def generate_event_record(self, agent_string, object_id_type,
                               object_id_value):
         id_type, id_value = self.identify.build('eventID').show()
-        print(id_value)
-        print('booya')
         agent_id_type, agent_id_value = (
             "DOI", get_an_agent_id("premisID"))
         event_id = EventIdentifier(id_type, id_value)
-        print(event_id)
-        event_detail = EventDetailInformation(
-            eventDetail="ingested into the ldr")
-        print(event_detail)
-
         new_event = Event(event_id, 'ingestion', datetime.now().isoformat())
-        print(new_event)
-        # new_event.get_eventIdentifier().set_eventIdentifierType(id_type)
-        # new_event.get_eventIdentifier().set_eventIdentifierValue(event_id)
-
-        # new_event.set_eventOutcomeInformation(event_outcome_info)
-        # agent_identifier = LinkingAgentIdentifier(
-        #     agent_id_type, agent_id_value)
-        # agent_identifier.set_linkingAgentRole("ingestor")
-        # new_event.set_linkingAgentIdentifier(agent_identifier)
-        # event_object_id = LinkingObjectIdentifier(
-        #     object_id_type, object_id_value)
-        return event_detail
+        event_outcome = "SUCCESS"
+        event_outcome_info = EventOutcomeInformation(eventOutcome=event_outcome)
+        new_event.set_eventOutcomeInformation(event_outcome_info)
+        agent_identifier = LinkingAgentIdentifier(
+            agent_id_type, agent_id_value)
+        agent_identifier.set_linkingAgentRole("ingestor")
+        new_event.set_linkingAgentIdentifier(agent_identifier)
+        event_object_id = LinkingObjectIdentifier(
+            object_id_type, object_id_value)
+        new_event.set_linkingObjectIdentifier(event_object_id)
+        return event_id, 'DOI', new_event
 
     def get_object_id_from_premis_record(self, obj_list):
         for n_node in obj_list:
@@ -131,12 +123,14 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         for obj in obj_list:
             objid = obj.get_objectIdentifier()[0].get_objectIdentifierValue()
             objid_type = obj.get_objectIdentifier()[0].get_objectIdentifierType()
-        archive_event = self.generate_event_record(
+        event_id_value, event_id_type, archive_event = self.generate_event_record(
             'archiver', objid_type, objid
         )
         for obj in premisrecord.get_object_list():
-            print(obj.add_linkingEventIdentifier(obj))
-
+            newLinkingEventID = LinkingEventIdentifier(event_id_type, event_id_value)
+            obj.add_linkingEventIdentifier(newLinkingEventID)
+        premisrecord.events_list.append(archive_event)
+        return premisrecord
 
     def modify_record_location_value(self, premisrecord, data):
         new_loc = join(self.pairtree, 'data', data.get('segment'),
