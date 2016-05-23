@@ -105,9 +105,10 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
     def get_object_id_from_premis_record(self, obj_list):
         for n_node in obj_list:
-            id_node = n_node.get_objectIdentfier()
-            record_id_value = id_node.get_objectIdentifierValue()
-            record_id_type = id_node.get_objectIdentiferType()
+
+            id_node = n_node.get_objectIdentifier()
+            record_id_value = id_node[0].get_objectIdentifierValue()
+            record_id_type = id_node[0].get_objectIdentifierType()
             return (record_id_value, record_id_type)
 
     def extract_fixity_info(self, characteristics_list):
@@ -119,17 +120,19 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 output.append((digest_type, digest_value))
         return output
 
+    def add_new_Event(self, premisrecord, data):
+        new_loc = join(self.pairtree, 'data', data.get('segment'))
+
+
     def modify_record_location_value(self, premisrecord, data):
         new_loc = join(self.pairtree, 'data', data.get('segment'),
                        data.get('path_tail'))
         obj_list = premisrecord.get_object_list()
         for obj in obj_list:
-            characteristics = obj.get_objectCharacteristics()
-            for characteristic in characteristics:
-                storage_records = characteristic.get_storage()
-                for storage in storage_records:
-                    content_loc = storage.get_contentLocation()
-                    content_loc.set_contentLocationValue(new_loc)
+            for storage in obj.get_storage():
+                content_loc = storage.get_contentLocation()
+                print(content_loc)
+                content_loc.set_contentLocationValue(new_loc)
         return premisrecord
 
     def generate_new_contentLocation(self, segment_id, remainder):
@@ -163,6 +166,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 writing_file.seek(0)
                 premis_obj = PremisRecord(
                     frompath=writing_file)
+                print(a_func)
                 return a_func(premis_obj, data)
 
     def write(self):
@@ -204,7 +208,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                              adminnote_filename)))
                 for n_segment in self.structure.segment_list:
                     segment_id = n_segment.label+str(n_segment.run)
-                    display_segment_id = n_segment.label+str(
+                    display_segment_id = n_segment.label+'-'+str(
                         n_segment.run)
                     makedirs(join(admin_dir, segment_id), exist_ok=True)
                     makedirs(join(data_dir, segment_id), exist_ok=True)
@@ -216,29 +220,44 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     for n_msuite in n_segment.materialsuite_list:
                         main_output = self.run_func_on_premis(
                             n_msuite.premis,
-                            display_segment_id,
-                            self.extract_record_info
+                            self.extract_record_info,
+                            {'segment': display_segment_id}
                         )
                         new_record = self.run_func_on_premis(
                             n_msuite.premis,
-                            display_segment_id,
-                            self.modify_record_location_value
+                            self.modify_record_location_value,
+                            {'segment': display_segment_id,
+                             'path_tail': n_msuite.content.item_name}
                         )
-
-                        new_record.write(join(self.pairtree, 'admin',
-                                              display_segment_id,
-                                              n_msuite.premis.item_name))
+                        new_record = self.run_func_on_premis(
+                            n_msuite.premis,
+                            self.add_new_event,
+                            {'segment': display_segment_id,
+                             'path_tail': n_msuite.content.item_name})
+                        base_premis_directory = join(
+                            self.archive_loc,
+                            self.pairtree,
+                            'admin', display_segment_id,
+                            'PREMIS', dirname(n_msuite.content.item_name))
+                        makedirs(base_premis_directory, exist_ok=True)
+                        new_record.write_to_file(join(
+                            self.archive_loc,
+                            self.pairtree, 'admin',
+                            display_segment_id, 'PREMIS',
+                            n_msuite.premis.item_name))
                         if getattr(n_msuite, 'presform_list', None):
                             for n_presform in n_msuite.presform_list:
                                 cur_output = self.run_func_on_premis(
                                     n_presform.premis,
-                                    display_segment_id,
-                                    self.extract_record_info
+                                    self.extract_record_info,
+                                    {'segment': display_segment_id}
                                 )
                                 cur_new_record = self.run_func_on_premis(
                                     n_msuite.premis,
                                     display_segment_id,
-                                    self.modify_record_location_value
+                                    self.modify_record_location_value,
+                                    {'segment': display_segment_id,
+                                     'path_tail': n_presform.content.item_name}
                                 )
                                 cur_new_record.write(
                                     join(self.pairtree,
@@ -250,18 +269,30 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                             print(cur_output)
                         manifest_line = "{}".format(
                             join(self.pairtree, 'data', display_segment_id,
-                                 n_msuite.contnt.item_name))
+                                 n_msuite.content.item_name))
                         for m_bit in main_output:
                             manifest_line += "\t{}".format(m_bit)
                         manifest_line += "\n"
-                        manifest_file = LDRPath(self.archive_loc, 'queue.txt')
+                        manifest_line = manifest_line.encode('utf-8')
+                        manifest_line = bytes(manifest_line)
+                        manifest_file = LDRPath(
+                            join(self.archive_loc, 'queue.txt'))
+
                         with manifest_file.open('ab') as writing_file:
                             writing_file.write(manifest_line)
-                        destination = LDRPath(
+                        destination_dir = join(
                             self.archive_loc, self.pairtree,
-                            'data', n_msuite.content.item_name
+                            'data', display_segment_id,
+                            dirname(n_msuite.content.item_name))
+                        makedirs(destination_dir, exist_ok=True)
+                        destination = LDRPath(
+                            join(
+                                self.archive_loc, self.pairtree,
+                                'data', display_segment_id,
+                                n_msuite.content.item_name)
                         )
-                        copy(n_msuite.content, destination)
+
+                        copy(n_msuite.content, destination, False)
             else:
                 for n_message in self.audit_qualification.show_errors():
                     print("{}\n".format(n_message))
