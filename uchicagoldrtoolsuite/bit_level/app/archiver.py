@@ -55,9 +55,9 @@ class Archiver(CLIApp):
                                  default="/data/repository/archive")
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-        print(args)
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
+        StageAuditor(staging_structure).audit()
         transformer = StageToArchiveTransformer(staging_structure)
         id_type, identifier = IDBuilder().build('premisID').show()
         archive_structure = transformer.transform(defined_id=identifier)

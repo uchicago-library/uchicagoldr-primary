@@ -1,8 +1,11 @@
 
 from hashlib import md5
 from os.path import join, split
+from tempfile import TemporaryFile
 from urllib.request import urlopen, URLError
 from uuid import uuid1
+
+from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
 from .abc.ldritem import LDRItem
 from .idbuilder import IDBuilder
@@ -30,6 +33,48 @@ def pairtree_a_string(input_to_pairtree):
     else:
         output = input_to_pairtree
     output = [output[i:i+2] for i in range(0, len(output), 2)]
+    return output
+
+
+def read_metadata_from_file_object(self, attribute_string,
+                                   parser_object, msuite=None, ldritem=None):
+    """
+    returns an instantiated parser object containing data read
+    from a ldritem object
+    """
+    if msuite:
+        a_file_object = getattr(msuite, attribute_string, None)
+    elif ldritem:
+        a_file_object = ldritem
+
+    output = None
+    if a_file_object is not None:
+        pass
+    else:
+        raise ValueError(
+            "a materialsuite is missing the attribute {}".
+            format(attribute_string))
+    with TemporaryFile() as tempfile:
+        with a_file_object.open('rb') as read_file:
+            while True:
+                buf = read_file.read(1024)
+                if buf:
+                    tempfile.write(buf)
+                else:
+                    break
+            tempfile.seek(0)
+            try:
+                if parser_object.__name__ == 'PremisRecord':
+                    output = parser_object(frompath=tempfile)
+                elif parser_object.__name__ == 'HierarhcicalRecord':
+                    output = parser_object(fromfile=tempfile)
+                else:
+                    output = parser_object(tempfile)
+            except Exception as e:
+                raise e(
+                    "something went wrong in read_metadata_from_file_object" +
+                    "and couldn't create an instance of {}".format(
+                        parser_object.__name___))
     return output
 
 
