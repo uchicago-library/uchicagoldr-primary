@@ -182,7 +182,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         """
         if self.structure.validate():
             audit_result = self.audit_qualification.audit()
-            if audit_result[0]:
+            if audit_result:
                 data_dir = join(self.archive_loc, self.pairtree, 'data')
                 admin_dir = join(self.archive_loc, self.pairtree, 'admin')
                 makedirs(data_dir, exist_ok=True)
@@ -238,6 +238,19 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                             self.add_new_event,
                             {'segment': display_segment_id,
                              'path_tail': n_msuite.content.item_name})
+
+                        with TemporaryFile() as tempfile:
+                            with n_msuite.techmd.open('rb') as read_file:
+                                while True:
+                                    buf = read_file.read(1024)
+                                    if buf:
+                                        tempfile.write(buf)
+                            tempfile.seek(0)
+                            techrecord = ElementTree.parse(tempfile)
+                            techrecord_root = techrecord.getroot()
+                            print(techrecord_root)
+
+
                         base_premis_directory = join(
                             self.archive_loc,
                             self.pairtree,

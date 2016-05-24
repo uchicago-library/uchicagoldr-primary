@@ -1,7 +1,7 @@
 
 from pypremis.lib import PremisRecord
-from xml.etreet import ElementTree
-from tempfile import TemporaryFile
+from xml.etree import ElementTree
+
 
 from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
@@ -122,7 +122,6 @@ class ArchiveAuditor(Auditor):
         audit_results = []
         for n_record in self.subject.accessionrecord_list:
             audit_results.append(self.audit_accessionrecord(n_record))
-
 
         for n_segment in self.subject.segment_list:
             for n_msuite in n_segment.materialsuite_list:
