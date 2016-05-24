@@ -61,7 +61,8 @@ setup(
             'controlledvocabs/restriction_codes.json'
         ]),
         ('record_configs', [
-            'record_configs/AccessionRecordFields.csv'
+            'record_configs/DEFAULT_Complete_Accession_Record_Fields.csv',
+            'record_configs/DEFAULT_Staging_Accession_Record_Fields.csv'
         ])
     ],
     classifiers = [

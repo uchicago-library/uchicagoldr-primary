@@ -20,7 +20,7 @@ class SerializationReader(metaclass=ABCMeta):
     _implementation = None
 
     @abstractmethod
-    def read(self, aStructure, aString):
+    def read(self):
         pass
 
     def set_struct(self, struct):
