@@ -4,16 +4,18 @@ from os import makedirs
 from os.path import basename, dirname, exists, join, split
 from sys import stderr
 from tempfile import TemporaryFile
+from xml.etree import ElementTree
 
 from pypremis.lib import PremisRecord
-from pypremis.nodes import Event, EventIdentifier, EventDetailInformation,\
+from pypremis.nodes import Event, EventIdentifier,\
     EventOutcomeInformation, LinkingAgentIdentifier, LinkingObjectIdentifier,\
     LinkingEventIdentifier
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
 from .archiveauditor import ArchiveAuditor
-from .idbuilder import IDBuilder
+
 from .ldritemoperations import copy, get_an_agent_id
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
@@ -87,7 +89,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         event_id = EventIdentifier(id_type, id_value)
         new_event = Event(event_id, 'ingestion', datetime.now().isoformat())
         event_outcome = "SUCCESS"
-        event_outcome_info = EventOutcomeInformation(eventOutcome=event_outcome)
+        event_outcome_info = EventOutcomeInformation(
+            eventOutcome=event_outcome)
         new_event.set_eventOutcomeInformation(event_outcome_info)
         agent_identifier = LinkingAgentIdentifier(
             agent_id_type, agent_id_value)
@@ -116,7 +119,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         return output
 
     def add_new_event(self, premisrecord, data):
-        new_loc = join(self.pairtree, 'data', data.get('segment'))
         obj_list = premisrecord.get_object_list()
         objid = None
         objid_type = None
@@ -127,7 +129,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             'archiver', objid_type, objid
         )
         for obj in premisrecord.get_object_list():
-            newLinkingEventID = LinkingEventIdentifier(event_id_type, event_id_value)
+            newLinkingEventID = LinkingEventIdentifier(
+                event_id_type,
+                event_id_value)
             obj.add_linkingEventIdentifier(newLinkingEventID)
         premisrecord.events_list.append(archive_event)
         return premisrecord
@@ -175,6 +179,33 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     frompath=writing_file)
                 return a_func(premis_obj, data)
 
+    def write_new_techmd_file(self, segment_id, a_file_object):
+        new_techmd_filename = basename(
+            a_file_object.item_name)
+        new_techmd_path = join(
+            self.archive_loc, self.pairtree, 'data',
+            segment_id,
+            dirname(a_file_object.item_name))
+        makedirs(new_techmd_path, exist_ok=True)
+
+        with TemporaryFile() as tempfile:
+            with a_file_object.open('rb') as read_file:
+                while True:
+                    buf = read_file.read(1024)
+                    if buf:
+                        tempfile.write(buf)
+                tempfile.seek(0)
+                techrecord = ElementTree.parse(tempfile)
+                techrecord_root = techrecord.getroot()
+                filepath_node = techrecord_root.find(
+                    "{http://hul.harvard.edu/ois/xml/ns/fits/" +
+                    "fits_output}fileInfo/" +
+                    "{http://hul.harvard.edu/ois/xml/ns/fits/" +
+                    "fits_output}filePath")
+                filepath_node.text = join(
+                    techmd_path, techmd_filename)
+                new_techmd_file = LDRPath(join(techmd_path, techmd_filename))
+
     def write(self):
         """
         serializes a staging directory structure into an archive structure
@@ -220,7 +251,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                              exist_ok=True)
                     makedirs(join(admin_dir, segment_id, 'TECHMD'),
                              exist_ok=True)
-
                     for n_msuite in n_segment.materialsuite_list:
                         main_output = self.run_func_on_premis(
                             n_msuite.premis,
@@ -239,16 +269,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                             {'segment': display_segment_id,
                              'path_tail': n_msuite.content.item_name})
 
-                        with TemporaryFile() as tempfile:
-                            with n_msuite.techmd.open('rb') as read_file:
-                                while True:
-                                    buf = read_file.read(1024)
-                                    if buf:
-                                        tempfile.write(buf)
-                            tempfile.seek(0)
-                            techrecord = ElementTree.parse(tempfile)
-                            techrecord_root = techrecord.getroot()
-                            print(techrecord_root)
+                        if getattr(n_msuite, 'technicalmetadata_list', None):
+                            for n_techmd in n_msuite.technicalmetadata_list:
+                                self.modify_technical_metadata(n_techmd)
 
 
                         base_premis_directory = join(

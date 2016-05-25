@@ -29,8 +29,9 @@ class Pairtree(object):
         return self._pairtree_root
 
     def get_pairtree_path(self):
-        return join(self.pairtree_root, *self.pairtree_parts,
-                    self.object_encapsulation)
+        a_list = self.pairtree_parts
+        first_part = join(self.pairtree_root, *a_list)
+        return join(first_part, self.object_encapsulation)
 
     def __repr__(self):
         return "<{} ({} byte streams)>".format(self.pairtree_path)

@@ -29,16 +29,17 @@ class ArchiveAuditor(Auditor):
 
     def audit_premis(self, a_msuite):
         instantiated_object = read_metadata_from_file_object(
-            'premis', PremisRecord, msuite=a_msuite)
+            'premis',
+            PremisRecord, msuite=a_msuite)
         if instantiated_object is None:
             self.errors.add(
                 "file",
                 "premis record for {}".format(a_msuite.content.item_name) +
                 " is missing")
             return False
-
-        record_events = instantiated_object.get_events_list
-        if len(record_events) < 2:
+        record_events = instantiated_object.get_event_list()
+        count_event = 0
+        if len(record_events) < 1:
             self.errors.add(
                 "premis",
                 "premis record for {} ".format(a_msuite.content.item_name) +
@@ -51,66 +52,79 @@ class ArchiveAuditor(Auditor):
                         "premis record for {}".format(
                             a_msuite.content.item_name) +
                         " is missing a contentLocation")
-            for characteristic in obj.getCharacteristics():
-                fixities = [characteristic.get_fixitiy()]
+            for characteristic in obj.get_objectCharacteristics():
+                fixities = [characteristic.get_fixity()]
                 if len(fixities) == 0:
                     self.errors.add(
                         "premis",
                         "premis record for {}".format(
                             a_msuite.content.item_name) +
                         " is missing fixity information")
-        if len(self.errors) > 0:
+        if len(self.errors.errors) > 0:
             return False
         else:
             return True
 
     def audit_fitsmd(self, a_msuite):
-        instantiated_object = read_metadata_from_file_object(
-            'techmd', ElementTree.parse, msuite=a_msuite)
-        if instantiated_object is None:
-            self.errors.add(
-                "file",
-                "no fits record {}".format(a_msuite.content.item_name))
-        root_of_xml_object = instantiated_object.get_root()
-        filePath = root_of_xml_object.find(
-            '{http://hul.harvard.edu/ois/xml/ns/fits/fits_output}fileInfo/' +
-            '{ http://hul.harvard.edu/ois/xml/ns/fits/fits_output}filePath')
-        metadata = root_of_xml_object.find(
-            '{http://hul.harvard.edu/ois/xml/ns/fits/fits_output}metadata')
-        if metadata is None:
-            self.errors.add(
-                "fits",
-                "fits metadata record for {}".format(
-                    a_msuite.content.item_name) +
-                " is missing a metadata node")
-        if filePath is None:
-            self.errors.add(
-                "fits",
-                "fits record for {} ".format(a_msuite.content.item_name) +
-                " is missing a filePath element")
-        if len(self.errors) > 0:
-            return False
-        else:
-            return True
+        for n_record in a_msuite.technicalmetadata_list:
+            instantiated_object = read_metadata_from_file_object(
+                'techmd', ElementTree.parse, ldritem=n_record)
+            if instantiated_object is None:
+                self.errors.add(
+                    "file",
+                    "no fits record {}".format(a_msuite.content.item_name))
+            root_of_xml_object = instantiated_object.getroot()
+            filePath = root_of_xml_object.find(
+                '{http://hul.harvard.edu/ois/xml/ns/fits/fits_output}fileinfo/'+
+                '{http://hul.harvard.edu/ois/xml/ns/fits/fits_output}filepath')
+            metadata = root_of_xml_object.find(
+                '{http://hul.harvard.edu/ois/xml/ns/fits/fits_output}metadata')
+            if metadata is None:
+                self.errors.add(
+                    "fits",
+                    "fits metadata record for {}".format(
+                        a_msuite.content.item_name) +
+                    " is missing a metadata node")
+            if filePath is None:
+                    self.errors.add(
+                        "fits",
+                        "fits record for {} ".format(
+                            a_msuite.content.item_name) +
+                        " is missing a filePath element")
+            if len(self.errors.errors) > 0:
+                return False
+            else:
+                return True
 
     def audit_accessionrecord(self, an_ldr_item):
         instantiated_object = read_metadata_from_file_object(
             'accessionrecord', HierarchicalRecord, ldritem=an_ldr_item)
-        required_fields = [
-            'AccessionNumber', 'OrganizatioName', 'Summary', 'CollectionTitle',
-            'EADID', 'Rights', 'Restrictions', 'RestrictionComments', 'Origin',
-            'Access', 'Discover', 'AdministrativeComments', 'AccessDescription'
+        minimum_required_fields = [
+            'Accession Number',
+            'Organization Name'
+            'Summary',
+            'Collection Title',
+            'EADID',
+            'Rights',
+            'Restrictions',
+            'RestrictionComments',
+            'Origin',
+            'Access',
+            'Discover',
+            'Administrative Comments',
+            'Access Description'
         ]
         fields_in_record = instantiated_object.keys()
         check_field_existence = [
-            x for x in fields_in_record if x not in required_fields
+            x for x in fields_in_record if x not in
+            minimum_required_fields
         ]
         if len(check_field_existence) > 0:
             self.errors.add("accessionrecord",
                             "accession record is missing " +
                             "the following fields " +
                             "{}".format(', '.join(check_field_existence)))
-        if len(self.errors) > 0:
+        if len(self.errors.errors) > 0:
             return False
         else:
             return True
@@ -138,7 +152,6 @@ class ArchiveAuditor(Auditor):
             return True
 
     def show_errors(self):
-
         return self.errors.display()
 
     subject = property(get_subject, set_subject)

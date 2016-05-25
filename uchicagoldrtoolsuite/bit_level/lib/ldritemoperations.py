@@ -2,13 +2,10 @@
 from hashlib import md5
 from os.path import join, split
 from tempfile import TemporaryFile
-from urllib.request import urlopen, URLError
-from uuid import uuid1
 
-from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
-
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from .abc.ldritem import LDRItem
-from .idbuilder import IDBuilder
+
 from .ldrpath import LDRPath
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -36,12 +33,13 @@ def pairtree_a_string(input_to_pairtree):
     return output
 
 
-def read_metadata_from_file_object(self, attribute_string,
+def read_metadata_from_file_object(attribute_string,
                                    parser_object, msuite=None, ldritem=None):
     """
     returns an instantiated parser object containing data read
     from a ldritem object
     """
+
     if msuite:
         a_file_object = getattr(msuite, attribute_string, None)
     elif ldritem:
