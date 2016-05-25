@@ -10,6 +10,70 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+class linkingRightsExtensionIdentifier(ExtensionNode):
+    def __init__(self, linkingRightsExtensionIdentifierType,
+                 linkingRightsExtensionIdentifierValue,
+                 linkingRightsExtensionIdentifierRole=None):
+
+        ExtensionNode.__init__(self)
+        self.set_linkingRightsExtensionIdentifierType(
+            linkingRightsExtensionIdentifierType
+        )
+        self.set_linkingRightsExtensionIdentifierValue(
+            linkingRightsExtensionIdentifierValue
+        )
+        if linkingRightsExtensionIdentifierRole is not None:
+            self.set_linkingRightsExtensionIdentifierRole(
+                linkingRightsExtensionIdentifierRole
+            )
+
+    def set_linkingRightsExtensionIdentifierType(self, linkingRightsExtensionIdentifierType):
+        self.set_field('linkingRightsExtensionIdentifierType', linkingRightsExtensionIdentifierType)
+
+    def get_linkingRightsExtensionIdentifierType(self):
+        return self.get_field('linkingRightsExtensionIdentifierType')
+
+    def set_linkingRightsExtensionIdentifierValue(self, linkingRightsExtensionIdentifierValue):
+        self.set_field('linkingRightsExtensionIdentifierValue', linkingRightsExtensionIdentifierValue)
+
+    def get_linkingRightsExtensionIdentifierValue(self):
+        return self.get_field('linkingRightsExtensionIdentifierValue')
+
+    def set_linkingRightsExtensionIdentifierRole(self, linkingRightsExtensionIdentifierRole):
+        self.set_field('linkingRightsExtensionIdentifierRole', linkingRightsExtensionIdentifierRole)
+
+    def add_linkingRightsExtensionIdentifierRole(self, linkingRightsExtensionIdentifierRole):
+        self.add_to_field('linkingRightsExtensionIdentifierRole', linkingRightsExtensionIdentifierRole)
+
+    def get_linkingRightsExtensionIdentifierRole(self):
+        return self.get_field('linkingRightsExtensionIdentifierRole')
+
+
+class RightsExtensionIdentifier(ExtensionNode):
+    """
+    A node to meant to mimic the rightsStatementIdentifier node
+    ...
+    but for rightsExtension nodes
+    """
+    def __init__(self, rightsExtensionIdentifierType,
+                 rightsExtensionIdentifierValue):
+        ExtensionNode.__init__(self)
+        self.set_rightsExtensionIdentifierType(rightsExtensionIdentifierType)
+        self.set_rightsExtensionIdentifierValue(rightsExtensionIdentifierValue)
+
+    def set_rightsExtensionIdentifierType(self, rightsExtensionIdentifierType):
+        self.set_field('rightsExtensionIdentifierType', rightsExtensionIdentifierType)
+
+    def get_rightsExtensionIdentifierType(self):
+        return self.get_field('rightsExtensionIdentifierType')
+
+    def set_rightsExtensionIdentifierValue(self, rightsExtensionIdentifierValue):
+        self.set_field('rightsExtensionIdentifierValue', rightsExtensionIdentifierValue)
+
+    def get_rightsExtensionIdentifierValue(self):
+        return self.get_field('rightsExtensionIdentifierValue')
+
+
 class Restriction(ExtensionNode):
     """
     A restriction node for use in PREMIS records describing LDR Items
@@ -37,7 +101,7 @@ class Restriction(ExtensionNode):
     restriction_code_cv = CV(contains=restriction_codes_strs,
                              patterns=restriction_code_patterns)
 
-    def __init__(self, restrictionCode, active):
+    def __init__(self, restrictionCode, active, linkingObjectIdentifier):
         """
         create a minimal restriction node
 
@@ -50,6 +114,7 @@ class Restriction(ExtensionNode):
         ExtensionNode.__init__(self)
         self.set_restrictionCode(restrictionCode)
         self.set_active(active)
+        self.set_linkingObjectIdentifier(linkingObjectIdentifier)
 
     def set_restrictionCode(self, restrictionCode):
         """
@@ -63,16 +128,8 @@ class Restriction(ExtensionNode):
             raise ValueError('That is not a valid restriction code')
         self.set_field('restrictionCode', restrictionCode)
 
-    def set_active(self, active):
-        """
-        set the instances active attribute
-
-        __Args__
-
-        1. active (str||bool): "True" or "False" to denote whether
-        the restriction is active
-        """
-        self.set_field('active', str(active))
+    def get_restrictionCode(self):
+        return self.get_field('restrictionCode')
 
     def set_restrictionReason(self, restrictionReason):
         """
@@ -96,6 +153,9 @@ class Restriction(ExtensionNode):
         """
         self.add_to_field('restrictionReason', restrictionReason)
 
+    def get_restrictionReason(self):
+        return self.get_field('restrictionReason')
+
     def set_donorStipulation(self, donorStipulation):
         """
         set the files donor stipulation
@@ -118,6 +178,18 @@ class Restriction(ExtensionNode):
         """
         self.add_to_field('donorStipulation', donorStipulation)
 
+    def get_donorStipulation(self):
+        return self.get_field('donorStipulation')
+
+    def set_linkingObjectIdentifier(self, linkingObjectIdentifier):
+        self.set_field('linkingObjectIdentifier', linkingObjectIdentifier)
+
+    def add_linkingObjectIdentifier(self, linkingObjectIdentifier):
+        self.add_to_field('linkingObjectIdentifier', linkingObjectIdentifier)
+
+    def get_linkingObjectIdentifier(self):
+        return self.get_field('linkingObjectIdentifier')
+
     def set_linkingAgentIdentifier(self, linkingAgentIdentifier):
         """
         set the LinkingAgentIdentifier associated with this restriction
@@ -139,3 +211,29 @@ class Restriction(ExtensionNode):
             with the restriction.
         """
         self.add_to_field('linkingAgentIdentifier', linkingAgentIdentifier)
+
+    def get_linkingAgentIdentifier(self):
+        return self.get_field('linkingAgentIdentifier')
+
+    def set_linkingRightsExtensionIdentifier(self, linkingRightsExtensionIdentifier):
+        self.set_field('linkingRightsExtensionIdentifier', linkingRightsExtensionIdentifier)
+
+    def add_linkingRightsExtensionIdentifier(self, linkingRightsExtensionIdentifier):
+        self.add_to_field('linkingRightsExtensionIdentifier', linkingRightsExtensionIdentifier)
+
+    def get_linkingRightsExtensionIdentifier(self):
+        return self.get_field('linkingRightsExtensionIdentifier')
+
+    def set_active(self, active):
+        """
+        set the instances active attribute
+
+        __Args__
+
+        1. active (str||bool): "True" or "False" to denote whether
+        the restriction is active
+        """
+        self.set_field('active', str(active))
+
+    def get_active(self):
+        return self.get_field('active')
