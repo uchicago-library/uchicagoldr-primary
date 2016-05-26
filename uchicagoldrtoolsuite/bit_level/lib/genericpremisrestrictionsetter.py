@@ -41,7 +41,7 @@ class GenericPREMISRestrictionSetter(object):
         * reasons (list [of strs]): Reasons the restriction was applied
         * donor_stipulations (list [of strs]): Any donor stipulations that
             are pertinent to this restriction
-        * linkingAgentIds (list [of strs]): Any linkingAgentIdentifiers that
+        * restrictingAgentIds (list [of strs]): Any linkingAgentIdentifiers that
             are relevant to this restriction
         * active (bool): Whether or not this restriction is currently active
         """
