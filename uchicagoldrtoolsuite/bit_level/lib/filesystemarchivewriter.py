@@ -14,9 +14,10 @@ from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
+from .archivefitsmodifier import ArchiveFitsModifier
+from .archivepremismodifier import ArchivePremisModifier
 from .archiveauditor import ArchiveAuditor
-
-from .ldritemoperations import copy, get_an_agent_id
+from .ldritemoperations import copy
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
 
@@ -47,67 +48,125 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.pairtree = Pairtree(self.structure.identifier).get_pairtree_path()
         self.audit_qualification = ArchiveAuditor(origin_loc, aStructure)
         self.origin_root = split(origin_loc)[0]
-        self.identify = IDBuilder()
+        self.identifier = IDBuilder().build('premisID')
+        self.premis_modifier = ArchivePremisModifier
+        self.fits_modifier = ArchiveFitsModifier
         self.archive_loc = archive_loc
 
-    def pairtree_an_admin_content(self, type_str, segment_id, a_thing):
-        return LDRPath(join(self.archive_loc, self.pairtree,
-                            'admin', type_str, segment_id, a_thing.item_name))
+    def write(self):
+        if self.structure.validate() and self.audit_qualification.audit():
+            data_dir = join(self.archive_loc, self.pairtree, 'data')
+            admin_dir = join(self.archive_loc, self.pairtree, 'admin')
+            makedirs(data_dir, exist_ok=True)
+            makedirs(admin_dir, exist_ok=True)
+            accrecord_dir = join(admin_dir, 'accessionrecord')
+            legalnote_dir = join(admin_dir, 'legalnotes')
+            adminnote_dir = join(admin_dir, 'adminnotes')
+            makedirs(accrecord_dir, exist_ok=True)
+            makedirs(legalnote_dir, exist_ok=True)
+            makedirs(adminnote_dir, exist_ok=True)
+            for n_acc_record in self.structure.accessionrecord_list:
+                acc_filename = basename(n_acc_record.content.item_name)
+                copy(n_acc_record.content, LDRPath(
+                    join(accrecord_dir,
+                         acc_filename)))
+            for n_legal_note in self.structure.legalnote_list:
+                legalnote_filename = basename(n_legal_note.
+                                              content.item_name)
+                copy(n_legal_note.content, LDRPath(
+                    join(legalnote_dir,
+                         legalnote_filename)))
+            for n_adminnote in self.structure.adminnote_list:
+                adminnote_filename = basename(n_adminnote.content.
+                                              item_name)
+                copy(n_adminnote.content.itemB, LDRPath(
+                    join(adminnote_dir,
+                         adminnote_filename)))
+            for n_segment in self.structure.segment_list:
+                segment_id = n_segment.label+'-'+str(n_segment.run)
+                techmd_dir = join(admin_dir, segment_id, 'TECHMD')
+                premis_dir = join(admin_dir, segment_id, 'PREMIS')
+                makedirs(
+                    join(
+                        admin_dir, segment_id), exist_ok=True)
+                makedirs(
+                    join(data_dir, segment_id), exist_ok=True)
+                makedirs(
+                    join(
+                        premis_dir), exist_ok=True)
+                makedirs(
+                    join(
+                        techmd_dir), exist_ok=True)
 
-    def pairtree_a_data_content(self, segment_id, a_thing):
-        return LDRPath(join(self.archive_loc, self.pairtree,
-                            'data', segment_id, a_thing.item_name))
+                for n_msuite in n_segment.materialsuite_list:
+                    n_content_destination_fullpath = join(
+                        data_dir, segment_id, n_msuite.content.item_name)
+                    new_premis_record = self.premis_modifier(
+                        n_msuite.premis, n_content_destination_fullpath).\
+                        modify_record
 
-    def find_and_pairtree_admin_content(self, segment_id, type_str,
-                                        iterable):
-        if iterable:
-            for n_thing in iterable:
-                makedirs(join(self.archive_loc, self.pairtree,
-                              'admin', type_str, segment_id,
-                              dirname(n_thing.item_name)),
-                         exist_ok=True)
-                n_thing_destination = self.pairtree_an_admin_content(
-                    type_str, segment_id,
-                    n_thing)
-                copy(n_thing, n_thing_destination, False)
+                    makedirs(
+                        join(data_dir, dirname(
+                            n_msuite.content.item_name)), exist_ok=True)
+                    makedirs(
+                        join(premis_dir, dirname(
+                            n_msuite.content.item_name)), exist_ok=True)
+                    makedirs(
+                        join(techmd_dir, dirname(
+                            n_msuite.content.item_name)), exist_ok=True)
+
+                    new_premis_path = join(
+                        premis_dir, n_msuite.premis.item_name)
+                    new_content_path = join(
+                        data_dir, n_msuite.content.item_name)
+                    new_content_ldrpath = LDRPath(new_content_path)
+                    new_premis_record.write(new_premis_path)
+                    copy(n_msuite.content, new_content_ldrpath)
+
+                    for n_techmd in n_msuite.technicalmetadata_list:
+                        new_tech_record_loc = join(
+                            techmd_dir, n_techmd.content.item_name)
+                        new_tech_record = self.fits_modifier(
+                            n_techmd, new_tech_record_loc).modify_record()
+                        new_tech_path = join(
+                            techmd_dir, n_techmd.item_name)
+                        new_tech_record.write(new_tech_path)
+
+                    for n_presform in n_msuite.presform:
+                        n_destination_fullpath = join(
+                            data_dir, segment_id, n_presform.content.item_name)
+                        new_premis_record = self.premis_modifier(
+                            n_presform.premis, n_destination_fullpath).\
+                            modify_record()
+                        makedirs(
+                            join(data_dir, dirname(
+                                n_presform.content.item_name)), exist_ok=True)
+                        makedirs(
+                            join(premis_dir, dirname(
+                                n_presform.content.item_name)), exist_ok=True)
+                        makedirs(
+                            join(techmd_dir, dirname(
+                                n_presform.content.item_name)), exist_ok=True)
+                        new_premis_path = join(
+                            premis_dir, n_presform.premis.item_name)
+                        new_presform_content_path = join(
+                            data_dir, n_presform.content.item_name)
+                        new_presform_content_ldrpath = LDRPath(
+                            new_presform_content_path)
+                        new_premis_record.write(new_premis_path)
+                        copy(n_presform.content, new_presform_content_ldrpath)
+
+                        for n_techmd in n_presform.technicalmetadata_list:
+                            new_tech_record_loc = join(
+                                techmd_dir, n_techmd.content.item_name)
+                            new_tech_record = self.fits_modifier(
+                                n_techmd, new_tech_record_loc).modify_record()
+                            new_tech_path = join(
+                                techmd_dir, n_techmd.item_name)
+                            new_tech_record.write(new_tech_path)
         else:
-            stderr.write("nothing found\n")
-
-    def find_and_pairtree_data_content(self, segment_id, n_thing):
-        makedirs(join(self.archive_loc, self.pairtree,
-                      'data', segment_id, dirname(n_thing.item_name)),
-                 exist_ok=True)
-        n_thing_destination = self.pairtree_a_data_content(segment_id,
-                                                           n_thing)
-        copy(n_thing, n_thing_destination, False)
-
-    def generate_event_record(self, agent_string, object_id_type,
-                              object_id_value):
-        id_type, id_value = self.identify.build('eventID').show()
-        agent_id_type, agent_id_value = (
-            "DOI", get_an_agent_id("premisID"))
-        event_id = EventIdentifier(id_type, id_value)
-        new_event = Event(event_id, 'ingestion', datetime.now().isoformat())
-        event_outcome = "SUCCESS"
-        event_outcome_info = EventOutcomeInformation(
-            eventOutcome=event_outcome)
-        new_event.set_eventOutcomeInformation(event_outcome_info)
-        agent_identifier = LinkingAgentIdentifier(
-            agent_id_type, agent_id_value)
-        agent_identifier.set_linkingAgentRole("ingestor")
-        new_event.set_linkingAgentIdentifier(agent_identifier)
-        event_object_id = LinkingObjectIdentifier(
-            object_id_type, object_id_value)
-        new_event.set_linkingObjectIdentifier(event_object_id)
-        return event_id, 'DOI', new_event
-
-    def get_object_id_from_premis_record(self, obj_list):
-        for n_node in obj_list:
-
-            id_node = n_node.get_objectIdentifier()
-            record_id_value = id_node[0].get_objectIdentifierValue()
-            record_id_type = id_node[0].get_objectIdentifierType()
-            return (record_id_value, record_id_type)
+            stderr.write(self.structure.explain_results())
+            stderr.write(self.audit_qualification.show_errors())
 
     def extract_fixity_info(self, characteristics_list):
         output = []
@@ -116,53 +175,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 digest_type = fixity_info.get_messageDigestAlgorithm()
                 digest_value = fixity_info.get_messageDigest()
                 output.append((digest_type, digest_value))
-        return output
-
-    def add_new_event(self, premisrecord, data):
-        obj_list = premisrecord.get_object_list()
-        objid = None
-        objid_type = None
-        for obj in obj_list:
-            objid = obj.get_objectIdentifier()[0].get_objectIdentifierValue()
-            objid_type = obj.get_objectIdentifier()[0].get_objectIdentifierType()
-        event_id_value, event_id_type, archive_event = self.generate_event_record(
-            'archiver', objid_type, objid
-        )
-        for obj in premisrecord.get_object_list():
-            newLinkingEventID = LinkingEventIdentifier(
-                event_id_type,
-                event_id_value)
-            obj.add_linkingEventIdentifier(newLinkingEventID)
-        premisrecord.events_list.append(archive_event)
-        return premisrecord
-
-    def modify_record_location_value(self, premisrecord, data):
-        new_loc = join(self.pairtree, 'data', data.get('segment'),
-                       data.get('path_tail'))
-        obj_list = premisrecord.get_object_list()
-        for obj in obj_list:
-            for storage in obj.get_storage():
-                content_loc = storage.get_contentLocation()
-                content_loc.set_contentLocationValue(new_loc)
-        return premisrecord
-
-    def generate_new_contentLocation(self, segment_id, remainder):
-        return join(self.pairtree, 'data',
-                    segment_id, remainder)
-
-    def extract_record_info(self, premisrecord, data):
-        output = []
-        obj_list = premisrecord.get_object_list()
-        objid_type,\
-            objid_value = self.get_object_id_from_premis_record(
-                obj_list)
-        output.append(objid_type)
-        output.append(objid_value)
-        for obj in obj_list:
-            characteristics = obj.get_objectCharacteristics()
-            obj_hash_list = self.extract_fixity_info(
-                characteristics)
-            output.append(obj_hash_list)
         return output
 
     def run_func_on_premis(self, premis_file, a_func, data={}):

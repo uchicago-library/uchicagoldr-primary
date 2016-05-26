@@ -1,21 +1,21 @@
-
-from pypremis.lib import PremisRecord
-from xml.etree import ElementTree
-
-
-from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
+from sys import stderr
 
 from .archive import Archive
 from .abc.auditor import Auditor
+from .accessionrecordauditor import AccessionRecordAuditor
 from .errorpackager import ErrorPackager
-from .ldritemoperations import read_metadata_from_file_object
+from .fitsauditor import FitsAuditor
+from .premis import PremisAuditor
 
 
 class ArchiveAuditor(Auditor):
     def __init__(self, source_directory, the_subject):
         self.source = source_directory
         self.subject = the_subject
-        self.errors = ErrorPackager()
+        self.errorpackager = ErrorPackager()
+        self.fitsauditor = FitsAuditor
+        self.premisauditor = PremisAuditor
+        self.accessionrecordauditor = AccessionRecordAuditor
 
     def get_subject(self):
         return self._subject
@@ -27,131 +27,57 @@ class ArchiveAuditor(Auditor):
             raise ValueError("ArchiveAuditor can only audit a subject " +
                              "that is an Archive instance")
 
-    def audit_premis(self, a_msuite):
-        instantiated_object = read_metadata_from_file_object(
-            'premis',
-            PremisRecord, msuite=a_msuite)
-        if instantiated_object is None:
-            self.errors.add(
-                "file",
-                "premis record for {}".format(a_msuite.content.item_name) +
-                " is missing")
-            return False
-        record_events = instantiated_object.get_event_list()
-        count_event = 0
-        if len(record_events) < 1:
-            self.errors.add(
-                "premis",
-                "premis record for {} ".format(a_msuite.content.item_name) +
-                " has less than 2 events.")
-        for obj in instantiated_object.get_object_list():
-            for storage in obj.get_storage():
-                if not storage.get_contentLocation():
-                    self.errors.add(
-                        "premis",
-                        "premis record for {}".format(
-                            a_msuite.content.item_name) +
-                        " is missing a contentLocation")
-            for characteristic in obj.get_objectCharacteristics():
-                fixities = [characteristic.get_fixity()]
-                if len(fixities) == 0:
-                    self.errors.add(
-                        "premis",
-                        "premis record for {}".format(
-                            a_msuite.content.item_name) +
-                        " is missing fixity information")
-        if len(self.errors.errors) > 0:
-            return False
-        else:
-            return True
+    def get_errorpackager(self):
+        return self._errorpackager
 
-    def audit_fitsmd(self, a_msuite):
-        for n_record in a_msuite.technicalmetadata_list:
-            instantiated_object = read_metadata_from_file_object(
-                'techmd', ElementTree.parse, ldritem=n_record)
-            if instantiated_object is None:
-                self.errors.add(
-                    "file",
-                    "no fits record {}".format(a_msuite.content.item_name))
-            root_of_xml_object = instantiated_object.getroot()
-            filePath = root_of_xml_object.find(
-                '{http://hul.harvard.edu/ois/xml/ns/fits/fits_output}fileinfo/'+
-                '{http://hul.harvard.edu/ois/xml/ns/fits/fits_output}filepath')
-            metadata = root_of_xml_object.find(
-                '{http://hul.harvard.edu/ois/xml/ns/fits/fits_output}metadata')
-            if metadata is None:
-                self.errors.add(
-                    "fits",
-                    "fits metadata record for {}".format(
-                        a_msuite.content.item_name) +
-                    " is missing a metadata node")
-            if filePath is None:
-                    self.errors.add(
-                        "fits",
-                        "fits record for {} ".format(
-                            a_msuite.content.item_name) +
-                        " is missing a filePath element")
-            if len(self.errors.errors) > 0:
-                return False
-            else:
-                return True
-
-    def audit_accessionrecord(self, an_ldr_item):
-        instantiated_object = read_metadata_from_file_object(
-            'accessionrecord', HierarchicalRecord, ldritem=an_ldr_item)
-        minimum_required_fields = [
-            'Accession Number',
-            'Organization Name'
-            'Summary',
-            'Collection Title',
-            'EADID',
-            'Rights',
-            'Restrictions',
-            'RestrictionComments',
-            'Origin',
-            'Access',
-            'Discover',
-            'Administrative Comments',
-            'Access Description'
-        ]
-        fields_in_record = instantiated_object.keys()
-        check_field_existence = [
-            x for x in fields_in_record if x not in
-            minimum_required_fields
-        ]
-        if len(check_field_existence) > 0:
-            self.errors.add("accessionrecord",
-                            "accession record is missing " +
-                            "the following fields " +
-                            "{}".format(', '.join(check_field_existence)))
-        if len(self.errors.errors) > 0:
-            return False
-        else:
-            return True
+    def set_errorpackager(self, value):
+        self._errorpackager = value
 
     def audit(self):
-        if getattr(self.subject, 'accessionrecord_list', None) == []:
-            self.errors.add("record", "missing accession record")
-
-        audit_results = []
         for n_record in self.subject.accessionrecord_list:
-            audit_results.append(self.audit_accessionrecord(n_record))
-
+            accession_audit = self.accessionrecordauditor(n_record).audit()
+            if not accession_audit:
+                stderr.write(accession_audit.show_errors())
+                raise ValueError(
+                    "{} is not a valid accession record".format(
+                        n_record.item_name)
+                    )
         for n_segment in self.subject.segment_list:
             for n_msuite in n_segment.materialsuite_list:
+                premisaudit = self.premisauditor(n_msuite.premis)
+                if not premisaudit.audit():
+                    stderr.write(premisaudit.show())
+                    raise ValueError(
+                        "{} is not a valid premis record".format(
+                            n_msuite.premis.item_name))
+                for n_techmd in n_msuite.technicalmetadata_list:
+                    fitsaudit = self.fitsauditor(n_techmd).audit()
+                    if not fitsaudit:
+                        stderr.write(fitsaudit.show())
+                        raise ValueError(
+                            "{} is not a valid fits record".format(
+                                n_techmd.item_name))
 
-                audit_results.append(self.audit_premis(n_msuite))
-                audit_results.append(self.audit_fitsmd(n_msuite))
                 if getattr(n_msuite, 'presform_list', None) is not None:
                     for n_presform in n_msuite.presform_list:
-                        audit_results.append(self.audit_premis(n_presform))
-                        audit_results.append(self.audit_fitsmd(n_presform))
-        if len([x for x in audit_results if x is False]) > 0:
-            return False
-        else:
-            return True
+                        premisaudit = self.premisauditor(n_presform.premis)
+                        if not premisaudit.audit():
+                            stderr.write(premisaudit.show_errors())
+                            raise ValueError(
+                                "{} is not valid premis".format(
+                                    n_presform.premis.item_name))
+                        n_presform_tmd_list = n_presform.technicalmetadata_list
+                        for tmd in n_presform_tmd_list:
+                            fitsaudit = self.fitsauditor(tmd).audit()
+                            if not fitsaudit:
+                                stderr.write(fitsaudit.show_errors())
+                                raise ValueError(
+                                    "{} is not valid fits".format(
+                                        tmd.item_name))
+        return True
 
     def show_errors(self):
         return self.errors.display()
 
     subject = property(get_subject, set_subject)
+    errorpackager = property(get_errorpackager, set_errorpackager)
