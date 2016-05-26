@@ -1,4 +1,4 @@
-from os.path import join, dirname
+from os.path import join, dirname, expanduser, expandvars
 from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
@@ -83,6 +83,9 @@ class Stager(CLIApp):
             destination_root = self.conf.get("Paths",
                                              "staging_environment_path")
 
+        destination_root = expandvars(expanduser(destination_root))
+        args.directory = expandvars(expanduser(args.directory))
+
         stage = FileSystemStageReader(join(destination_root,
                                            args.staging_id)).read()
         if args.resume:
@@ -113,6 +116,7 @@ class Stager(CLIApp):
             filter_pattern=args.filter_pattern)
 
         stdout.write("Source: " + args.directory+"\n")
+        stdout.write("Source Root: " + root+"\n")
         stdout.write("Stage: " + join(destination_root, args.staging_id) +
                      "\n")
         stdout.write("Segment: " + args.prefix + "-" + str(seg_num) + "\n")
