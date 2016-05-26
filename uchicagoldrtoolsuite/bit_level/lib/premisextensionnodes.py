@@ -101,7 +101,7 @@ class Restriction(ExtensionNode):
     restriction_code_cv = CV(contains=restriction_codes_strs,
                              patterns=restriction_code_patterns)
 
-    def __init__(self, restrictionCode, active, linkingObjectIdentifier):
+    def __init__(self, restrictionCode, active, restrictedObjectIdentifier):
         """
         create a minimal restriction node
 
@@ -114,7 +114,7 @@ class Restriction(ExtensionNode):
         ExtensionNode.__init__(self)
         self.set_restrictionCode(restrictionCode)
         self.set_active(active)
-        self.set_linkingObjectIdentifier(linkingObjectIdentifier)
+        self.set_restrictedObjectIdentifier(restrictedObjectIdentifier)
 
     def set_restrictionCode(self, restrictionCode):
         """
@@ -181,39 +181,20 @@ class Restriction(ExtensionNode):
     def get_donorStipulation(self):
         return self.get_field('donorStipulation')
 
-    def set_linkingObjectIdentifier(self, linkingObjectIdentifier):
-        self.set_field('linkingObjectIdentifier', linkingObjectIdentifier)
+    def set_restrictedObjectIdentifier(self, restrictedObjectIdentifier):
+        self.set_field('restrictedObjectIdentifier', restrictedObjectIdentifier)
 
-    def add_linkingObjectIdentifier(self, linkingObjectIdentifier):
-        self.add_to_field('linkingObjectIdentifier', linkingObjectIdentifier)
+    def get_restrictedObjectIdentifier(self):
+        return self.get_field('restrictedObjectIdentifier')
 
-    def get_linkingObjectIdentifier(self):
-        return self.get_field('linkingObjectIdentifier')
+    def set_restrictingAgentIdentifier(self, restrictingAgentIdentifier):
+        self.set_field('restrictingAgentIdentifier', restrictingAgentIdentifier)
 
-    def set_linkingAgentIdentifier(self, linkingAgentIdentifier):
-        """
-        set the LinkingAgentIdentifier associated with this restriction
+    def add_restrictingAgentIdentifier(self, restrictingAgentIdentifier):
+        self.add_to_field('restrictingAgentIdentifier', restrictingAgentIdentifier)
 
-        __Args__
-
-        1. linkingAgentIdentifier(PremisNode.LinkingAgentIdentifier):
-            the linking agent identifier node of the agent associated
-            with the restriction.
-        """
-        self.set_field('linkingAgentIdentifier', linkingAgentIdentifier)
-
-    def add_linkingAgentIdentifier(self, linkingAgentIdentifier):
-        """
-        Add to the file's restriction's existing linkingAgentIdentifiers
-
-        1. linkingAgentIdentifier(PremisNode.LinkingAgentIdentifier):
-            the linking agent identifier node of the agent associated
-            with the restriction.
-        """
-        self.add_to_field('linkingAgentIdentifier', linkingAgentIdentifier)
-
-    def get_linkingAgentIdentifier(self):
-        return self.get_field('linkingAgentIdentifier')
+    def get_restrictingAgentIdentifier(self):
+        return self.get_field('restrictingAgentIdentifier')
 
     def set_linkingRightsExtensionIdentifier(self, linkingRightsExtensionIdentifier):
         self.set_field('linkingRightsExtensionIdentifier', linkingRightsExtensionIdentifier)
@@ -237,3 +218,50 @@ class Restriction(ExtensionNode):
 
     def get_active(self):
         return self.get_field('active')
+
+
+class RestrictedObjectIdentifier(ExtensionNode):
+    def __init__(self, restrictedObjectIdentifierType, restrictedObjectIdentifierValue):
+        ExtensionNode.__init__(self)
+        self.set_restrictedObjectIdentifierType(restrictedObjectIdentifierType)
+        self.set_restrictedObjectIdentifierValue(restrictedObjectIdentifierValue)
+
+    def set_restrictedObjectIdentifierType(self, restrictedObjectIdentifierType):
+        self.set_field('restrictedObjectIdentifierType', restrictedObjectIdentifierType)
+
+    def get_restrictedObjectIdentifierType(self):
+        return self.get_field('restrictedObjectIdentifierType')
+
+    def set_restrictedObjectIdentifierValue(self, restrictedObjectIdentifierValue):
+        self.set_field('restrictedObjectIdentifierValue', restrictedObjectIdentifierValue)
+
+    def get_restrictedObjectIdentifierValue(self):
+        return self.get_field('restrictedObjectIdentifierValue')
+
+
+class RestrictingAgentIdentifier(ExtensionNode):
+    def __init__(self, restrictingAgentIdentifierType, restrictingAgentIdentifierValue):
+        ExtensionNode.__init__(self)
+        self.set_restrictingAgentIdentifierType(restrictingAgentIdentifierType)
+        self.set_restrictionAgentIdentifierValue(restrictingAgentIdentifierValue)
+
+    def set_restrictingAgentIdentifierType(self, restrictingAgentIdentifierType):
+        self.set_field('restrictingAgentIdentifierType', restrictingAgentIdentifierType)
+
+    def get_restrictingAgentIdentifierType(self):
+        return self.get_field('restrictingAgentIdentifierType')
+
+    def set_restrictingAgentIdentifierValue(self, restrictingAgentIdentifierValue):
+        self.set_field('restrictingAgentIdentifierValue', restrictingAgentIdentifierValue)
+
+    def get_restrictingAgentIdentifierValue(self):
+        return self.get_field('restrictingAgentIdentifierValue')
+
+    def set_restrictingAgentIdentifierRole(self, restrictingAgentIdentifierRole):
+        self.set_field('restrictingAgentIdentifierRole', restrictingAgentIdentifierRole)
+
+    def add_restrictingAgentIdentifierRole(self, restrictingAgentIdentifierRole):
+        self.add_to_field('restrictingAgentIdentifierRole', restrictingAgentIdentifierRole)
+
+    def get_restrictingAgentIdentifierRole(self):
+        return self.get_field('restrictingAgentIdentifierRole')

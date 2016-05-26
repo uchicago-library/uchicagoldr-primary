@@ -7,6 +7,9 @@ from pypremis.nodes import *
 
 from .ldrpath import LDRPath
 from .premisextensionnodes import Restriction
+from .premisextensionnodes import RightsExtensionIdentifier
+from .premisextensionnodes import RestrictedObjectIdentifier
+from .premisextensionnodes import RestrictingAgentIdentifier
 from .ldritemoperations import copy
 
 
@@ -24,7 +27,7 @@ class GenericPREMISRestrictionSetter(object):
     restriction node in each of their records
     """
     def __init__(self, stage, restriction, reasons=None,
-                 donor_stipulations=None, linkingAgentIds=None, active=True):
+                 donor_stipulations=None, restrictingAgentIds=None, active=True):
         """
         spawn a restriction setter
 
@@ -48,7 +51,7 @@ class GenericPREMISRestrictionSetter(object):
         self.restriction = restriction
         self.reasons = reasons
         self.donor_stipulations = donor_stipulations
-        self.linkingAgentIds = linkingAgentIds
+        self.restrictingAgentIds = restrictingAgentIds
         self.active = active
 
     def process(self):
@@ -81,35 +84,30 @@ class GenericPREMISRestrictionSetter(object):
         copy(item, recv_item)
 
         record = PremisRecord(frompath=recv_file)
+
+        # Pull the object id out here
+        obj_to_link = record.get_object_list()[0]
+
         if record.get_rights_list():
             rights = record.get_rights_list()[0]
-            try:
-                rights_extension = rights.get_rightsExtension(0)
-                rights_extension.add_to_field('Restriction',
-                                              self.build_restriction_node(
-                                                  self.restriction,
-                                                  self.active,
-                                                  self.reasons,
-                                                  self.donor_stipulations,
-                                                  self.linkingAgentIds
-                                              )
-                                              )
-            except KeyError:
-                rights.add_rightsExtension(build_rights_extension_node(
+            rights.add_rightsExtension(
+                self.build_rights_extension_node(
                     self.restriction,
+                    obj_to_link,
                     self.active,
                     self.reasons,
                     self.donor_stipulations,
-                    self.linkingagentIds
+                    self.restrictingAgentIds
                 )
-                )
+            )
         else:
             rights = Rights(rightsExtension=self.build_rights_extension_node(
                 self.restriction,
+                obj_to_link,
+                self.active,
                 self.reasons,
                 self.donor_stipulations,
-                self.linkingAgentIds,
-                self.active
+                self.restrictingAgentIds
             )
             )
             record.add_rights(rights)
@@ -121,37 +119,68 @@ class GenericPREMISRestrictionSetter(object):
 
     def build_rights_extension_node(self,
                                     restriction_code,
+                                    obj_to_link,
+                                    active=True,
                                     restriction_reasons=None,
                                     donor_stipulations=None,
-                                    linkingAgentIds=None,
-                                    active=True):
+                                    restrictingAgentIds=None):
         rights_extension = RightsExtension()
-        rights_extension.add_to_field(
-            'Restriction',
+
+        rights_extension.set_field(
+            'rightsExtensionIdentifier',
+            self.build_rightsExtensionIdentifier()
+        )
+
+        rights_extension.set_field(
+            'restriction',
             self.build_restriction_node(
-                restriction_code=restriction_code,
+                restriction_code,
+                obj_to_link,
+                active=active,
                 restriction_reason=restriction_reasons,
                 donor_stipulation=donor_stipulations,
-                linkingAgentIds=linkingAgentIds,
-                active=active
+                restrictingAgentIds=restrictingAgentIds,
             )
         )
         return rights_extension
 
+    def build_rightsExtensionIdentifier(self):
+        return RightsExtensionIdentifier("DOI", str(uuid1()))
+
+    def build_restrictingAgentIdentifier(self):
+        return RestrictingAgentIdentifier("DOI", str(uuid1()))
+
     def build_restriction_node(self,
                                restriction_code,
+                               obj_to_link,
                                active=True,
                                restriction_reason=None,
                                donor_stipulation=None,
-                               linkingAgentIds=None):
-        restrictionNode = Restriction(restriction_code, active)
+                               restrictingAgentIds=None):
+
+        restrictedObjectIdentifier = self.build_restrictedObjectIdentifierFromObj(
+            obj_to_link
+        )
+
+
+        restrictionNode = Restriction(restriction_code, str(active),
+                                      restrictedObjectIdentifier)
         if restriction_reason:
             for x in restriction_reason:
                 restrictionNode.add_restrictionReason(x)
         if donor_stipulation:
             for x in donor_stipulation:
                 restrictionNode.add_donorStipulation(x)
-        if linkingAgentIds:
-            for x in linkingAgentIds:
-                restrictionNode.add_linkingAgentIdentifier(x)
+        if restrictingAgentIds:
+            for x in restrictingAgentIds:
+                restrictionNode.add_restrictingAgentIdentifier(x)
         return restrictionNode
+
+    def build_restrictedObjectIdentifierFromObj(self, obj_to_link):
+        objIDType = obj_to_link.get_objectIdentifier(0).get_objectIdentifierType()
+        objIDValue = obj_to_link.get_objectIdentifier(0).get_objectIdentifierValue()
+        restrictedObjectIdentifier = RestrictedObjectIdentifier(
+            objIDType,
+            objIDValue
+        )
+        return restrictedObjectIdentifier
