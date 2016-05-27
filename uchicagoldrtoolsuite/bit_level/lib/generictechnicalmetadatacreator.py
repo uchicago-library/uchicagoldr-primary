@@ -1,9 +1,7 @@
 from tempfile import TemporaryDirectory
-from uuid import uuid1
-from os.path import join
 
-from .ldrpath import LDRPath
-from ...core.lib.bash_cmd import BashCommand
+
+from .abc.ldritem import LDRItem
 
 
 __author__ = "Brian Balsamo"
@@ -19,35 +17,42 @@ class GenericTechnicalMetadataCreator(object):
     Ingests a stage structure and produces a FITS xml record for every
     file in it.
     """
-    def __init__(self, stage):
+    def __init__(self, stage, techmd_creators):
+        """
+        spawn a technical metadata creator that should work regardless of
+        what kind of LDRItems are being used
+
+        __Args__
+
+        stage (Stage): the Stage to operate on
+        """
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
         # somewhere before your instance gets garbage collected.
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
+        self.techmd_creators = techmd_creators
 
-    def process(self):
+    def process(self, skip_existing=False):
         for segment in self.stage.segment_list:
             for materialsuite in segment.materialsuite_list:
-                materialsuite.set_technicalmetadata_list(
-                    self.instantiate_and_make_techmd(materialsuite.content)
-                )
+                if not isinstance(materialsuite.get_premis(), LDRItem):
+                    raise ValueError("All material suites must have a PREMIS " +
+                                     "record in order to generated technical " +
+                                     "metadata records.")
+                if skip_existing:
+                    if isinstance(materialsuite.get_technicalmetadata(0),
+                                  LDRItem):
+                        continue
+                for techmd_creator in self.techmd_creators:
+                    c = techmd_creator(materialsuite, self.working_dir_path)
+                    c.process()
                 if materialsuite.presform_list is not None:
                     for presform_ms in materialsuite.presform_list:
-                        presform_ms.set_technicalmetadata_list(
-                            self.instantiate_and_make_techmd(presform_ms.content)
-                        )
-
-    def instantiate_and_make_techmd(self, item):
-        recv_file = join(self.working_dir_path, str(uuid1()))
-        fits_file = join(self.working_dir_path, str(uuid1()))
-        with item.open('rb') as src:
-            with open(recv_file, 'wb') as dst:
-                dst.write(src.read(1024))
-
-        com = BashCommand(['fits', '-i', recv_file, '-o', fits_file])
-        com.set_timeout(43200)
-        com.run_command()
-
-        return [LDRPath(fits_file)]
+                        if not isinstance(presform_ms.get_premis(), LDRItem):
+                            raise ValueError("All material suites must have a PREMIS " +
+                                             "record in order to generated technical " +
+                                             "metadata records.")
+                        c = techmd_creator(presform_ms, self.working_dir_path)
+                        c.process()

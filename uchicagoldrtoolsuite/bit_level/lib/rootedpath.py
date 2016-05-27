@@ -1,5 +1,5 @@
 from pathlib import Path
-from os.path import split, relpath
+from os.path import split
 
 
 __author__ = "Brian Balsamo"

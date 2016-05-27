@@ -72,7 +72,7 @@ class MaterialSuite(Structure):
         self.get_technicalmetadata_list().insert(index, technicalmetadata)
 
     def get_technicalmetadata(self, index):
-        return self.get_technicalmetadata_list[index]
+        return self.get_technicalmetadata_list()[index]
 
     def pop_technicalmetadata(self, index=None):
         if index is None:
@@ -100,7 +100,7 @@ class MaterialSuite(Structure):
         self.get_presform_list().insert(index, presform)
 
     def get_presform(self, index):
-        return self.get_presform_list[index]
+        return self.get_presform_list()[index]
 
     def pop_presform(self, index=None):
         if index is None:

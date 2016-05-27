@@ -56,6 +56,14 @@ def validate(recorder):
     stdout.write("\n")
 
 
+def make_minimal(recorder):
+    recorder.generate_minimal_record()
+
+
+def make_full(recorder):
+    recorder.generate_full_record()
+
+
 def write(recorder, args):
     with open(args.out, 'w') as f:
         f.write(recorder.get_record().toJSON())
@@ -65,7 +73,10 @@ def build_accession_recorder(args):
     if args.record:
         record = HierarchicalRecord(from_file=args.record)
     else:
-        record = HierarchicalRecord()
+        if args.make_new:
+            record = HierarchicalRecord()
+        else:
+            record = None
     if args.conf:
         config = AccessionRecordConfig(args.conf)
     else:
@@ -87,8 +98,10 @@ def set_out(args):
 def make_bools(args):
     if args.value == "False":
         return False
-    if args.value == "True":
+    elif args.value == "True":
         return True
+    else:
+        return args.value
 
 
 def launch():
@@ -125,7 +138,7 @@ class AccessionRecordEditor(CLIApp):
                             "--key",
                             help="Specify a key to act on, when appropriate",
                             default=None)
-        self.parser.add_argument("-v",
+        self.parser.add_argument(
                             "--value",
                             help="Specify a value, when appropriate.",
                             default=None)
@@ -174,11 +187,28 @@ class AccessionRecordEditor(CLIApp):
                             help="Validate the specified [record] against the specified [conf]iguration.",
                             action='store_true',
                             default=False)
+        self.parser.add_argument("--make-minimal",
+                                 help="Spawn a minimal record from the provided conf.",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--make-full",
+                                 help="Spawn a full record from the provided conf.",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--make-new",
+                                 help="Spawn a new record without using a conf.",
+                                 action='store_true',
+                                 default=False)
+
         args = self.parser.parse_args()
         # App code
         a = build_accession_recorder(args)
         args.out = set_out(args)
         args.value = make_bools(args)
+        if args.make_minimal:
+            make_minimal(a)
+        if args.make_full:
+            make_full(a)
         if args.set:
             set(a, args)
         if args.add:
@@ -195,7 +225,7 @@ class AccessionRecordEditor(CLIApp):
             values(a)
         if args.validate:
             validate(a)
-        if args.set or args.add or args.delete:
+        if args.set or args.add or args.delete or args.out:
             write(a, args)
         if args.stdout:
             print(str(a.get_record()) + '\n')

@@ -2,9 +2,7 @@ from os import listdir
 from os.path import join, dirname, basename, isfile, splitext
 from re import compile as re_compile
 
-from .abc.materialsuitepackager import MaterialSuitePackager
-from .filesystempresformmaterialsuitepackager import \
-    FileSystemPresformMaterialSuitePackager
+from .abc.presformmaterialsuitepackager import PresformMaterialSuitePackager
 from .ldrpath import LDRPath
 
 
@@ -16,7 +14,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class FileSystemMaterialSuitePackager(MaterialSuitePackager):
+class FileSystemPresformMaterialSuitePackager(PresformMaterialSuitePackager):
     """
     Reads a file system MaterialSuite serialization and knows how to package
     material suites from the contents for inclusion in segment structures
@@ -62,9 +60,7 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
                          self.rel_content_path+".fits.xml")
         if isfile(fits_path):
             return [
-                LDRPath(
-                    fits_path, root=join(self.admin_fullpath, "TECHMD")
-                )
+                LDRPath(fits_path, root=join(self.admin_fullpath, "TECHMD"))
             ]
         return None
 
@@ -80,14 +76,13 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         siblings = [x for x in listdir(containing_folder_path)]
         for x in siblings:
             if presform_filename_pattern.match(x):
-                presform_extension = splitext(x)[1]
                 presforms.append(
                     FileSystemPresformMaterialSuitePackager(
                         self.stage_env_path,
                         self.stage_id,
                         self.label_text,
                         self.label_number,
-                        self.rel_content_path+".presform"+presform_extension
+                        join(containing_folder_path, x)
                     ).package()
                 )
         if len(presforms) > 0:
@@ -102,3 +97,6 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
             return LDRPath(premis_path,
                            root=join(self.admin_fullpath, "PREMIS"))
         return None
+
+    def get_extension(self):
+        return splitext(self.rel_content_path)[1]

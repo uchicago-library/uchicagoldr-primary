@@ -1,10 +1,11 @@
 import re
 from sys import stderr
-from os.path import exists, join, split as dirsplit
+from os.path import exists, join, isfile, split as dirsplit
 
 from .abc.stageserializationreader import StageSerializationReader
 from .absolutefilepathtree import AbsoluteFilePathTree
 from .filesystemsegmentpackager import FileSystemSegmentPackager
+from .ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -20,6 +21,13 @@ class FileSystemStageReader(StageSerializationReader):
     Repackages files written to disk as a Staging Structure
     """
     def __init__(self, staging_directory):
+        """
+        spawn a reader
+
+        __Args__
+
+        1. staging_directory (str): The path to the Stage on disk
+        """
         super().__init__()
         self.set_implementation('file system')
         self.stage_id = staging_directory.split('/')[-1]
@@ -30,7 +38,9 @@ class FileSystemStageReader(StageSerializationReader):
 
     def read(self):
         if exists(self.serialized_location):
-            tree = AbsoluteFilePathTree(self.serialized_location)
+            tree = AbsoluteFilePathTree(
+                self.serialized_location, leaf_dirs=True
+            )
             data_node_identifier = join(self.serialized_location, 'data')
             data_node_depth = tree.find_depth_of_a_path(data_node_identifier)
             data_node = tree.find_tag_at_depth('data', data_node_depth)[0]
@@ -55,5 +65,39 @@ class FileSystemStageReader(StageSerializationReader):
                     else:
                         stderr.write("the path for {} is wrong.\n".format(
                             label))
-            # Go on to handle adminnote, legalnote, acc rec
+
+            admin_node_identifier = join(self.serialized_location, 'admin')
+            admin_node_depth = tree.find_depth_of_a_path(admin_node_identifier)
+            legalnotes_node = tree.find_tag_at_depth(
+                'legalnotes', admin_node_depth+1)[0]
+            adminnotes_node = tree.find_tag_at_depth(
+                'adminnotes', admin_node_depth+1)[0]
+            accessionrecords_node = tree.find_tag_at_depth(
+                'accessionrecords', admin_node_depth+1)[0]
+
+            adminnotes_files = adminnotes_node.fpointer
+            legalnotes_files = legalnotes_node.fpointer
+            accessionrecords_files = accessionrecords_node.fpointer
+
+            for x in adminnotes_files:
+                if not isfile(x):
+                    raise OSError("The contents of the adminnote dir must " +
+                                  "be just files")
+                i = LDRPath(x, root=adminnotes_node.identifier)
+                self.get_struct().add_adminnote(i)
+
+            for x in legalnotes_files:
+                if not isfile(x):
+                    raise OSError("The contents of the legalnote dir must " +
+                                  "be just files")
+                i = LDRPath(x, root=legalnotes_node.identifier)
+                self.get_struct().add_legalnote(i)
+
+            for x in accessionrecords_files:
+                if not isfile(x):
+                    raise OSError("The contents of the accessionrecord dir " +
+                                  "must be just files")
+                i = LDRPath(x, root=accessionrecords_node.identifier)
+                self.get_struct().add_accessionrecord(i)
+
         return self.get_struct()

@@ -4,9 +4,7 @@ from os.path import join
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagewriter import FileSystemStageWriter
 from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.generictechnicalmetadatacreator import \
-    GenericTechnicalMetadataCreator
-from ..lib.techmdcreators.fitscreator import FITsCreator
+from ..lib.genericpremiscreator import GenericPREMISCreator
 
 
 __author__ = "Brian Balsamo"
@@ -21,7 +19,7 @@ def launch():
     """
     entry point launch hook
     """
-    app = TechnicalMetadataCreator(
+    app = PremisCreator(
             __author__=__author__,
             __email__=__email__,
             __company__=__company__,
@@ -32,9 +30,9 @@ def launch():
     app.main()
 
 
-class TechnicalMetadataCreator(CLIApp):
+class PremisCreator(CLIApp):
     """
-    Creates technical metadata (FITs) for all the material suites in a stage.
+    Creates PREMIS object records for all the material suites in a stage.
     """
     def main(self):
         # Instantiate boilerplate parser
@@ -45,11 +43,11 @@ class TechnicalMetadataCreator(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument("stage_id", help="The id of the stage",
+        self.parser.add_argument("stage_id", help="The stage identifier",
                                  type=str, action='store')
         self.parser.add_argument("--skip-existing", help="Skip material " +
                                  "suites which already claim to have " +
-                                 "technical metadata",
+                                 "premis records",
                                  action='store_true',
                                  default=False)
         self.parser.add_argument("--staging_env", help="The path to your " +
@@ -77,10 +75,8 @@ class TechnicalMetadataCreator(CLIApp):
 
         stdout.write("Processing...\n")
 
-        techmd_processors = [FITsCreator]
-        techmd_creator = GenericTechnicalMetadataCreator(stage,
-                                                         techmd_processors)
-        techmd_creator.process(skip_existing=args.skip_existing)
+        premis_creator = GenericPREMISCreator(stage)
+        premis_creator.process(skip_existing=args.skip_existing)
 
         writer = FileSystemStageWriter(stage, staging_env)
         writer.write()
@@ -88,5 +84,5 @@ class TechnicalMetadataCreator(CLIApp):
 
 
 if __name__ == "__main__":
-    s = TechnicalMetadataCreator()
+    s = PremisCreator()
     s.main()

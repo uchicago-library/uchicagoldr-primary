@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+from ....lib.confreader import ConfReader
+
 
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
@@ -22,6 +24,9 @@ class App(metaclass=ABCMeta):
     * __publication__ (str): A publication date (ISO8601)
     * __version__ (str): A version number
     """
+
+    _conf = None
+
     def __init__(self, __author__=None, __email__=None, __company__=None,
                  __copyright__=None, __publication__=None, __version__=None):
         self.__author__ = __author__
@@ -30,8 +35,20 @@ class App(metaclass=ABCMeta):
         self.__copyright__ = __copyright__
         self.__publication__ = __publication__
         self.__version__ = __version__
-        self.config = None
+
+    def set_conf(self, conf_dir=None, conf_filename=None, and_default=True,
+                 and_builtin=True):
+        self._conf = ConfReader(config_directory=conf_dir,
+                                config_file=conf_filename,
+                                and_default=and_default,
+                                and_builtin=and_builtin
+                                )
+
+    def get_conf(self):
+        return self._conf
 
     @abstractmethod
     def main(self):
         pass
+
+    conf = property(get_conf, set_conf)

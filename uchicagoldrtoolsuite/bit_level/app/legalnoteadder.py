@@ -1,12 +1,12 @@
 from sys import stdout
 from os.path import join
+from tempfile import TemporaryDirectory
+from uuid import uuid1
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagewriter import FileSystemStageWriter
 from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.generictechnicalmetadatacreator import \
-    GenericTechnicalMetadataCreator
-from ..lib.techmdcreators.fitscreator import FITsCreator
+from ..lib.ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo"
@@ -21,7 +21,7 @@ def launch():
     """
     entry point launch hook
     """
-    app = TechnicalMetadataCreator(
+    app = LegalNoteAdder(
             __author__=__author__,
             __email__=__email__,
             __company__=__company__,
@@ -32,26 +32,40 @@ def launch():
     app.main()
 
 
-class TechnicalMetadataCreator(CLIApp):
+class LegalNoteAdder(CLIApp):
     """
-    Creates technical metadata (FITs) for all the material suites in a stage.
+    Create a legal note in a Stage
     """
     def main(self):
         # Instantiate boilerplate parser
-        self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
-                          "creating technical metadata for materials in " +
-                          "a stage.",
+        self.spawn_parser(description="Adds a file as a legal " +
+                          "note to a stage. ",
                           epilog="{}\n".format(self.__copyright__) +
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
         self.parser.add_argument("stage_id", help="The id of the stage",
                                  type=str, action='store')
-        self.parser.add_argument("--skip-existing", help="Skip material " +
-                                 "suites which already claim to have " +
-                                 "technical metadata",
-                                 action='store_true',
-                                 default=False)
+        group = self.parser.add_mutually_exclusive_group(required=True)
+        group.add_argument("--file",
+                           help='Add a file as a note',
+                           action='store_true',
+                           default=False)
+        group.add_argument("--text",
+                           help='Add text as a note',
+                           action='store_true',
+                           default=False)
+        self.parser.add_argument("note_title",
+                                 type=str,
+                                 action='store',
+                                 help="What the note will be titled in the " +
+                                 "stage.")
+        self.parser.add_argument("note",
+                                 type=str,
+                                 action='store',
+                                 help="Either a file path if you specified " +
+                                 "--file or a string of text enclosed in " +
+                                 "quotes if you specified --text")
         self.parser.add_argument("--staging_env", help="The path to your " +
                                  "staging environment",
                                  type=str,
@@ -77,10 +91,21 @@ class TechnicalMetadataCreator(CLIApp):
 
         stdout.write("Processing...\n")
 
-        techmd_processors = [FITsCreator]
-        techmd_creator = GenericTechnicalMetadataCreator(stage,
-                                                         techmd_processors)
-        techmd_creator.process(skip_existing=args.skip_existing)
+        if args.file:
+            x = LDRPath(args.note)
+            x.set_name(args.note_title)
+            stage.add_legalnote(x)
+        elif args.text:
+            tmpdir = TemporaryDirectory()
+            text_file_path = join(tmpdir.name, str(uuid1()))
+            with open(text_file_path, 'a') as f:
+                f.write(args.note)
+                f.write('\n')
+            x = LDRPath(text_file_path)
+            x.set_name(args.note_title)
+            stage.add_legalnote(x)
+        else:
+            raise AssertionError('Either file or text should be selected')
 
         writer = FileSystemStageWriter(stage, staging_env)
         writer.write()
@@ -88,5 +113,5 @@ class TechnicalMetadataCreator(CLIApp):
 
 
 if __name__ == "__main__":
-    s = TechnicalMetadataCreator()
+    s = LegalNoteAdder()
     s.main()

@@ -1,7 +1,9 @@
-
 from hashlib import md5
 from os.path import join, split
 from tempfile import TemporaryFile
+from urllib.request import urlopen, URLError
+from uuid import uuid1
+from hashlib import md5, sha256
 
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from .abc.ldritem import LDRItem
@@ -131,56 +133,225 @@ def move(origin_loc, destination_loc):
         return False
 
 
-def copy(origin_loc, destination_loc, clobber):
+def hash_ldritem(ldritem, algo="md5", buffering=1024):
     """
+    hash any flavor of LDRItem
+
     __Args__
 
-    1. origin_loc (LDRPathRegular): the file object that is the source that
-    needs to be copied
-    2. detination_loc (LDRPathRegularFile): the file object that is the
-    destiatination for the source that needs to be copied
+    1. ldritem (LDRItem): The item to compute the hash of
+
+    __KWArgs__
+
+    * algo (str): The hashing algorithm to use
+    * buffering (int): The amount of the file to read at a time
 
     __Returns__
 
-    * if copy occurs: a tuple containing truth and an md5 hash string of the
-        new file
-    * if copy does not occur: a tuple containing false and the Nonetype
+    hash_str (str): The str-ified hash hexdigest
     """
-    if not isinstance(origin_loc, LDRItem) or not \
-            isinstance(destination_loc, LDRItem):
-        raise TypeError("must pass two instances of LDRPathRegularFile" +
-                        " to the copy function.")
-    if clobber is False:
-        if destination_loc.exists():
-            return (True, False, "already present", None)
 
-    origin_hash = md5()
-    destination_hash = md5()
-    origin_checksum = None
-    destination_checksum = None
+    supported_hashes = [
+        "md5",
+        "sha256"
+    ]
 
-    with origin_loc.open('rb') as reading_file:
-        with destination_loc.open('wb') as writing_file:
-            while True:
-                buf = reading_file.read(1024)
-                if buf:
-                    origin_hash.update(buf)
-                    writing_file.write(buf)
-                else:
-                    origin_checksum = str(origin_hash.hexdigest())
-                    break
-    if destination_loc.exists():
-        with destination_loc.open('rb') as dst:
-            while True:
-                buf = dst.read(1024)
-                if buf:
-                    destination_hash.update(buf)
-                else:
-                    destination_checksum = str(destination_hash.hexdigest())
-                    break
-        if destination_checksum == origin_checksum:
-            return (True, True, "copied", destination_checksum)
-        else:
-            return (True, False, "copied", None)
+    if algo not in supported_hashes:
+        raise ValueError("{} is not a supported hash.".format(str(algo)) +
+                         "Supported Hashes include:\n"
+                         "{}".format(", ".join(supported_hashes)))
+
+    if algo == "md5":
+        hasher = md5()
+    elif algo == "sha256":
+        hasher = sha256()
     else:
-        return (False, False, "not copied", None)
+        raise AssertionError("Implementation goofs in the LDR Item hasher.")
+
+    hash_str = None
+
+    with ldritem.open() as f:
+        data = f.read(buffering)
+        while data:
+            hasher.update(data)
+            data = f.read(buffering)
+        hash_hex = hasher.hexdigest()
+        hash_str = str(hash_hex)
+
+    return hash_str
+
+
+def duplicate_ldritem(src, dst, dst_mode="wb", buffering=1024, confirm=True):
+    """
+    Copy an LDRItem's byte contents from one to another
+
+    __Args__
+
+    1. src (LDRItem): The source LDRItem
+    2. dst (LDRItem): The destination LDRItem
+
+    __KWArgs__
+
+    * dst_mode (str): The mode to pass to .open() on the dst
+    * buffering (int): The amount of data to load into RAM at a time
+    * confirm (bool): Whether or not to confirm the duplication was successful
+        via hashing the write stream and the result
+
+    __Returns__
+
+    * confirmation (str||None): Either the matched hash or None
+    """
+    if not isinstance(src, LDRItem) or not isinstance(dst, LDRItem):
+        raise ValueError("src and dst must be LDRItems")
+
+    confirmation = None
+
+    if confirm:
+        write_hasher = md5()
+
+    with src.open('rb') as src_flo:
+        with dst.open(dst_mode) as dst_flo:
+            data = src_flo.read(buffering)
+            while data:
+                if confirm:
+                    write_hasher.update(data)
+                dst_flo.write(data)
+                data = src_flo.read(buffering)
+
+    if confirm:
+        write_hash = str(write_hasher.hexdigest())
+        read_hash = hash_ldritem(dst)
+        if write_hash == read_hash:
+            confirmation = write_hash
+
+    return confirmation
+
+
+def copy(src, dst, clobber=False, detection="hash", max_retries=3,
+         buffering=1024, confirm=True):
+    """
+    copy one LDRItem's byte contents into another
+
+    __Args__
+
+    1. src (LDRItem): The source LDRItem
+    2. dst (LDRItem): The destination LDRItem
+
+    __KWArgs__
+
+    * detection (str): What metric to use to determine equivalence
+    * max_retries (int): How many times to retry at max on a bad copy
+    * buffering (int): How much of anything to load into RAM at once
+    * confirm (bool): Whether or not to confirm the copy by hashing
+        the write stream and the resulting copy
+
+    __Returns__
+
+    * cr (CopyReport): A stub class loaded with fields
+    * _OR_
+    * "BADCOPY" if things went really wrong
+    """
+
+    class CopyReport(object):
+        """
+        stub class to carry info out of this function
+        """
+        def __init__(self):
+            self.src_eq_dst = None
+            self.copied = False
+            self.confirmed = False
+            self.dst_existed = None
+            self.clobbered_dst = None
+            self.src_hash = None
+            self.dst_hash = None
+
+    supported_detections = [
+        "hash",
+        "name"
+    ]
+
+    if detection not in supported_detections:
+        raise ValueError("{} is not a supported clobber " +
+                         "detection scheme.".format(str(detection)))
+
+    cr = CopyReport()
+
+    if dst.exists():
+        if not clobber:
+            cr.dst_existed = True
+            cr.clobbered_dst = False
+            return cr
+        else:  # Clobber stuff
+            if detection is "hash":
+                s_hash = hash_ldritem(src)
+                d_hash = hash_ldritem(dst)
+                if s_hash == d_hash:  # Its got the same hash, don't copy anything its already the same
+                    cr.src_eq_dst = True
+                    cr.copied = False
+                    cr.confirmed = True
+                    cr.dst_existed = True
+                    cr.clobbered_dst = False
+                    cr.src_hash = s_hash
+                    cr.dst_hash = d_hash
+                    return cr
+            elif detection is "name":
+                if src.item_name == dst.item_name:  # Its got the same name, don't copy anything its already the same
+                    cr.src_eq_dst = True
+                    cr.copied = False
+                    cr.confirmed = False
+                    cr.dst_existed = True
+                    cr.clobbered_st = False
+                    return cr
+            else:  # Some mismatch between these impl ifs and the array at the top
+                raise AssertionError("ldr item copy func error")
+
+            while max_retries > -1:
+                max_retries = max_retries - 1
+                if not confirm:  # Fly by the seat of our pants, don't check anything just copy the bytes
+                    duplicate_ldritem(
+                        src,
+                        dst,
+                        buffering=buffering,
+                        confirm=False
+                    )
+                    cr.copied = True
+                    cr.dst_existed = True
+                    cr.clobbered_dst = True
+                    return cr
+                else:
+                    c = duplicate_ldritem(src, dst, buffering=buffering, confirm=True)
+                    if c is not None:
+                        cr.src_eq_dst = True
+                        cr.copied = True
+                        cr.confirmed = True
+                        cr.dst_existed = True
+                        cr.clobbered_dst = True
+                        cr.src_hash = c
+                        cr.dst_hash = c
+                        return cr
+    else:  # The dst doesn't exist
+        while max_retries > -1:
+            max_retries = max_retries - 1
+            if not confirm:  # Fly by the seat of our pants, don't check anything just copy the bytes
+                duplicate_ldritem(src, dst, buffering=buffering, confirm=False)
+                cr.copied = True
+                cr.dst_existed = False
+                cr.clobbered_dst = False
+                return cr
+            else:
+                c = duplicate_ldritem(
+                    src,
+                    dst,
+                    buffering=buffering,
+                    confirm=True
+                )
+                if c is not None:
+                    cr.src_eq_dst = True
+                    cr.copied = True
+                    cr.confirmed = True
+                    cr.dst_existed = False
+                    cr.clobbered_dst = False
+                    cr.src_hash = c
+                    cr.dst_hash = c
+                    return cr
+    return "BADCOPY"

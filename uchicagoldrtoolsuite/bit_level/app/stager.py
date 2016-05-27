@@ -1,4 +1,5 @@
-from os.path import join, dirname
+from os.path import join, dirname, expanduser, expandvars
+from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.filesystemstagewriter import FileSystemStageWriter
@@ -46,33 +47,46 @@ class Stager(CLIApp):
         self.parser.add_argument("directory", help="The directory that " +
                                  "needs to be staged.",
                                  type=str, action='store')
-        self.parser.add_argument("destination_root", help="The location " +
-                                 "that the staging directory should be " +
-                                 "created in",
-                                 type=str, action='store')
         self.parser.add_argument("staging_id", help="The identifying name " +
                                  "for the new staging directory",
                                  type=str, action='store')
         self.parser.add_argument("prefix", help="The prefix defining the " +
                                  "type of run that is being processed",
                                  type=str, action='store')
+        self.parser.add_argument("--destination-root", help="The location " +
+                                 "that the staging directory should be " +
+                                 "created in",
+                                 type=str, action='store',
+                                 default=None)
         self.parser.add_argument("--resume", "-r", help="An integer for a " +
                                  "run that needs to be resumed.",
                                  type=str, action='store', default=0)
-        self.parser.add_argument("--clobber",
-                                 help="Clobber any existing files in the dst.",
-                                 action='store_true',
-                                 default=False)
         self.parser.add_argument("--source_root", help="The root of the  " +
                                  "directory that needs to be staged.",
+                                 type=str, action='store',
+                                 default=None)
+        self.parser.add_argument("--filter-pattern", help="A regex to " +
+                                 "use to exclude files whose paths match.",
                                  type=str, action='store',
                                  default=None)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
 
+        # Set conf
+        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+
         # App code
-        stage = FileSystemStageReader(join(args.destination_root,
+        if args.destination_root:
+            destination_root = args.destination_root
+        else:
+            destination_root = self.conf.get("Paths",
+                                             "staging_environment_path")
+
+        destination_root = expandvars(expanduser(destination_root))
+        args.directory = expandvars(expanduser(args.directory))
+
+        stage = FileSystemStageReader(join(destination_root,
                                            args.staging_id)).read()
         if args.resume:
             seg_num = args.resume
@@ -94,15 +108,26 @@ class Stager(CLIApp):
         else:
             root = dirname(args.directory)
 
-        ext_seg_packager = ExternalFileSystemSegmentPackager(args.directory,
-                                                             args.prefix,
-                                                             seg_num,
-                                                             root=root)
+        ext_seg_packager = ExternalFileSystemSegmentPackager(
+            args.directory,
+            args.prefix,
+            seg_num,
+            root=root,
+            filter_pattern=args.filter_pattern)
+
+        stdout.write("Source: " + args.directory+"\n")
+        stdout.write("Source Root: " + root+"\n")
+        stdout.write("Stage: " + join(destination_root, args.staging_id) +
+                     "\n")
+        stdout.write("Segment: " + args.prefix + "-" + str(seg_num) + "\n")
+
+        stdout.write("Processing...\n")
 
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
-        writer = FileSystemStageWriter(stage, args.destination_root)
-        writer.write(clobber=args.clobber)
+        writer = FileSystemStageWriter(stage, destination_root)
+        writer.write()
+        stdout.write("Complete\n")
 
 
 if __name__ == "__main__":
