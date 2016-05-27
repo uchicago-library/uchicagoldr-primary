@@ -6,7 +6,6 @@ from sys import stderr
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
-from .abc.identifier import Identifier
 from .archive import Archive
 from .archivefitsmodifier import ArchiveFitsModifier
 from .archivemanifestwriter import ArchiveManifestWriter
@@ -241,11 +240,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         return self._identifier
 
     def set_identifier(self, value):
-        if isinstance(value, Identifier):
-            self._identifier = value
-        else:
-            raise ValueError(
-                "{} is not an identifier".format(value))
+        self._identifier = value
 
     def set_premis_modifier(self):
         return self._premis_modifier

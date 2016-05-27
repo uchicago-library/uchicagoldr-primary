@@ -1,6 +1,5 @@
 
-from os import exists
-from os.path import join
+from os.path import exists, join
 
 from .ldrpath import LDRPath
 

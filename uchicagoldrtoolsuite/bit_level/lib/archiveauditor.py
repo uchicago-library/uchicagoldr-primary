@@ -5,7 +5,7 @@ from .abc.auditor import Auditor
 from .accessionrecordauditor import AccessionRecordAuditor
 from .errorpackager import ErrorPackager
 from .fitsauditor import FitsAuditor
-from .premis import PremisAuditor
+from .premisauditor import PremisAuditor
 
 
 class ArchiveAuditor(Auditor):
@@ -42,6 +42,7 @@ class ArchiveAuditor(Auditor):
                     "{} is not a valid accession record".format(
                         n_record.item_name)
                     )
+
         for n_segment in self.subject.segment_list:
             for n_msuite in n_segment.materialsuite_list:
                 premisaudit = self.premisauditor(n_msuite.premis)

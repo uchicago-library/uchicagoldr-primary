@@ -4,7 +4,7 @@ from tempfile import TemporaryFile
 from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
 from .abc.auditor import Auditor
-from .abc import LDRItem
+from .abc.ldritem import LDRItem
 
 
 class AccessionRecordAuditor(Auditor):

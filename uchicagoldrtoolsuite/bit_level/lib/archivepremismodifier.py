@@ -1,7 +1,7 @@
 
 from pypremis.lib import PremisRecord
 
-from .archivepremis import ArchivePremisEvent
+from .archivepremisevent import ArchivePremisEvent
 
 
 class ArchivePremisModifier(object):
