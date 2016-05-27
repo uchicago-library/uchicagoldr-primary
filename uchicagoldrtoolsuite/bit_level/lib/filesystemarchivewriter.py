@@ -9,11 +9,14 @@ from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .abc.identifier import Identifier
 from .archive import Archive
 from .archivefitsmodifier import ArchiveFitsModifier
+from .archivemanifestwriter import ArchiveManifestWriter
 from .archivepremismodifier import ArchivePremisModifier
+
 from .archiveauditor import ArchiveAuditor
 from .ldritemoperations import copy
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
+from .premisdigestextractor import PremisDigestExtractor
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
@@ -37,6 +40,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         2. archive_loc (str): the root directory for the archive of the ldr
         3. origin_loc (str): the root directory of the stage directory
         being archived
+
         """
         self.structure = aStructure
         self.pairtree = Pairtree(self.structure.identifier).get_pairtree_path()
@@ -45,9 +49,31 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.identifier = IDBuilder().build('premisID')
         self.premis_modifier = ArchivePremisModifier
         self.fits_modifier = ArchiveFitsModifier
+        self.file_digest_extraction = PremisDigestExtractor
+        self.manifest_writer = ArchiveManifestWriter(archive_loc)
         self.archive_loc = archive_loc
 
     def write(self):
+        """
+        checks of the structure is validate and audits the contents of the
+        structure for errors.
+
+        If the structure is valid and there are no errors in the audit it
+        serializes the structure to disk which includes the following steps
+
+        1. modifies premis records in the structure to include archive
+        information
+
+        2. modifies fits technical metadata records to include archive
+        information
+
+        3. sets up archive file serialization structure and copies contents
+        of the structure into the serialization structure
+
+        4. extracts message digests for the resource files from premis records
+        and appends them with the new file location to the archive manifest
+
+        """
         if self.structure.validate() and self.audit_qualification.audit():
             data_dir = join(self.archive_loc, self.pairtree, 'data')
             admin_dir = join(self.archive_loc, self.pairtree, 'admin')
@@ -90,7 +116,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     new_premis_record = self.premis_modifier(
                         n_msuite.premis, n_content_destination_fullpath).\
                         modify_record
-
+                    digest_data = self.file_digest_extraction(n_msuite.premis)
+                    self.manifest_writer(
+                        n_content_destination_fullpath, digest_data)
                     makedirs(
                         join(data_dir, dirname(
                             n_msuite.content.item_name)), exist_ok=True)
@@ -124,6 +152,10 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                         new_premis_record = self.premis_modifier(
                             n_presform.premis, n_destination_fullpath).\
                             modify_record()
+                        digest_data = self.file_digest_extraction(
+                            n_msuite.premis)
+                        self.manifest_writer(
+                            n_destination_fullpath, digest_data)
                         makedirs(
                             join(data_dir, dirname(
                                 n_presform.content.item_name)), exist_ok=True)
