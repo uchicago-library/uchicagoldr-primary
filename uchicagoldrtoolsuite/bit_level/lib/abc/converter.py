@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
-from uuid import uuid1
 
 from pypremis.nodes import *
 
 from ....core.lib.convenience import iso8601_dt
+from ....core.lib.idbuilder import IDBuilder
 
 
 __author__ = "Brian Balsamo"
@@ -195,8 +195,9 @@ class Converter(metaclass=ABCMeta):
         return linkingEventIdentifier
 
     def _build_eventIdentifier(self):
-        eventIdentifierType = "DOI"
-        eventIdentifierValue = str(uuid1())
+        id_tup = IDBuilder().build('premisID').show()
+        eventIdentifierType = id_tup[0]
+        eventIdentifierValue = id_tup[1]
         return EventIdentifier(eventIdentifierType, eventIdentifierValue)
 
     def _build_eventDetailInformation(self, eventDetailInfoStr):
@@ -228,8 +229,9 @@ class Converter(metaclass=ABCMeta):
     def _build_linkingAgentIdentifier(self, agentRole, agent_name):
         agentID = self.look_up_agent(agent_name)
         if agentID is None:
-            linkingAgentIdentifierType = "DOI"
-            linkingAgentIdentifierValue = str(uuid1())
+            id_tup = IDBuilder().build('premisID').show()
+            linkingAgentIdentifierType = id_tup[0]
+            linkingAgentIdentifierValue = id_tup[1]
             agentID = LinkingAgentIdentifier(linkingAgentIdentifierType,
                                              linkingAgentIdentifierValue)
         agentID.set_linkingAgentRole(agentRole)

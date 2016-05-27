@@ -7,6 +7,7 @@ from pypremis.nodes import *
 
 from ..ldrpath import LDRPath
 from ....core.lib.convenience import iso8601_dt
+from ....core.lib.idbuilder import IDBuilder
 from ..ldritemoperations import copy
 
 
@@ -94,8 +95,9 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
         return event
 
     def _build_eventIdentifier(self):
-        eventIdentifierType = "DOI"
-        eventIdentifierValue = str(uuid1())
+        id_tup = IDBuilder().build('premisID').show()
+        eventIdentifierType = id_tup[0]
+        eventIdentifierValue = id_tup[1]
         return EventIdentifier(eventIdentifierType, eventIdentifierValue)
 
     def _build_eventDetailInformation(self, techmdcreator_name):
@@ -120,8 +122,9 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
     def _build_linkingAgentIdentifier(self, techmdcreator_name, role):
         agent_id = self.look_up_agent(techmdcreator_name)
         if agent_id is None:
-            linkingAgentIdentifierType = "DOI"
-            linkingAgentIdentifierValue = str(uuid1())
+            id_tup = IDBuilder().build('premisID').show()
+            linkingAgentIdentifierType = id_tup[0]
+            linkingAgentIdentifierValue = id_tup[1]
             agent_id = LinkingAgentIdentifier(linkingAgentIdentifierType,
                                               linkingAgentIdentifierValue)
         agent_id.set_linkingAgentRole(role)

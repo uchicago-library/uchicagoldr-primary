@@ -12,6 +12,7 @@ except:
     pass
 
 from ...core.lib.convenience import sane_hash
+from ...core.lib.idbuilder import IDBuilder
 from .ldritemoperations import copy
 from .abc.ldritem import LDRItem
 from .ldrpath import LDRPath
@@ -144,7 +145,9 @@ class GenericPREMISCreator(object):
         # hardware mac and time down to whatever accuracy time.time() has
         # plus some entropy. There's really fancy sounding posts on stack
         # overflow about why this should be fine
-        return ObjectIdentifier("DOI", str(uuid1()))
+        idb = IDBuilder()
+        identifier_tup = idb.build('premisID').show()
+        return ObjectIdentifier(identifier_tup[0], identifier_tup[1])
 
     @classmethod
     def _make_objectCharacteristics(cls, file_path, item):
