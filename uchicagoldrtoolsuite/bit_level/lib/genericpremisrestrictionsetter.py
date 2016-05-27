@@ -5,6 +5,7 @@ from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from ...core.lib.idbuilder import IDBuilder
 from .ldrpath import LDRPath
 from .premisextensionnodes import Restriction
 from .premisextensionnodes import RightsExtensionIdentifier
@@ -156,10 +157,14 @@ class GenericPREMISRestrictionSetter(object):
         return rights_extension
 
     def build_rightsExtensionIdentifier(self):
-        return RightsExtensionIdentifier("DOI", str(uuid1()))
+        idb = IDBuilder()
+        id_tup = idb.build("premisID").show()
+        return RightsExtensionIdentifier(id_tup[0], id_tup[1])
 
     def build_restrictingAgentIdentifier(self):
-        return RestrictingAgentIdentifier("DOI", str(uuid1()))
+        idb = IDBuilder()
+        id_tup = idb.build("premisID").show()
+        return RestrictingAgentIdentifier(id_tup[0], id_tup[1])
 
     def build_restriction_node(self,
                                restriction_code,
