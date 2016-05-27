@@ -2,7 +2,6 @@ import unittest
 
 class TestImports(unittest.TestCase):
     def test_bit_level_imports(self):
-        from uchicagoldrtoolsuite.bit_level.lib.filesystemarchivestructurewriter import FileSystemArchiveStructureWriter
         from uchicagoldrtoolsuite.bit_level.lib.filesystemmaterialsuitepackager import FileSystemMaterialSuitePackager
         from uchicagoldrtoolsuite.bit_level.lib.filesystemsegmentpackager import FileSystemSegmentPackager
         from uchicagoldrtoolsuite.bit_level.lib.filesystemstagereader import FileSystemStageReader

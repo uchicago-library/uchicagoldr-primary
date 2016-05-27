@@ -1,6 +1,5 @@
 import unittest
 
-from uchicagoldrtoolsuite.bit_level.lib.filesystemarchivestructurewriter import FileSystemArchiveStructureWriter
 from uchicagoldrtoolsuite.bit_level.lib.filesystemmaterialsuitepackager import FileSystemMaterialSuitePackager
 from uchicagoldrtoolsuite.bit_level.lib.filesystemsegmentpackager import FileSystemSegmentPackager
 from uchicagoldrtoolsuite.bit_level.lib.filesystemstagereader import FileSystemStageReader
