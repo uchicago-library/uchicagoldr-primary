@@ -1,10 +1,13 @@
-from uuid import uuid1
+
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.filesystemarchivestructurewriter import \
-    FileSystemArchiveStructureWriter
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
+
+from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.filesystemarchivewriter import FileSystemArchiveWriter
+from ..lib.stageauditor import StageAuditor
+from ..lib.stagetoarchivetransformer import StageToArchiveTransformer
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -35,6 +38,7 @@ class Archiver(CLIApp):
     resulting Staging Structure into an Archive Structure and writes that
     Archive Structure to a location.
     """
+
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
@@ -46,6 +50,9 @@ class Archiver(CLIApp):
         self.parser.add_argument("directory", type=str, action='store',
                                  help="Enter the stage directory that is" +
                                  " ready to be archived")
+        self.parser.add_argument("origin_root", type=str, action='store',
+                                 help="Enter the root of the directory " +
+                                 "entered")
         self.parser.add_argument("--archive", type=str, action='store',
                                  help="Use this to specify a non-default " +
                                  "archive location",
@@ -54,8 +61,12 @@ class Archiver(CLIApp):
         args = self.parser.parse_args()
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
-        writer = FileSystemArchiveStructureWriter(staging_structure,
-                                                  args.archive)
+        transformer = StageToArchiveTransformer(staging_structure)
+        id_type, identifier = IDBuilder().build('premisID').show()
+        archive_structure = transformer.transform(defined_id=identifier)
+        writer = FileSystemArchiveWriter(archive_structure, args.archive,
+                                         args.directory)
+        print(writer)
         writer.write()
 
 

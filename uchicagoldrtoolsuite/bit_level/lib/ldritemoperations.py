@@ -1,9 +1,14 @@
+from hashlib import md5
+from os.path import join, split
+from tempfile import TemporaryFile
 from urllib.request import urlopen, URLError
 from uuid import uuid1
 from hashlib import md5, sha256
 
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from .abc.ldritem import LDRItem
 
+from .ldrpath import LDRPath
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -30,32 +35,83 @@ def pairtree_a_string(input_to_pairtree):
     return output
 
 
-def get_archivable_identifier(noid=False):
+def read_metadata_from_file_object(attribute_string,
+                                   parser_object, msuite=None, ldritem=None):
     """
-    returns an archive-worthy identifier for a submission into the ldritem
-
-    __KWArgs__
-
-    1. test (bool): a flag that is defaulted to False that determines
-    whether the output id string will be a noid. If the flag is False,
-    it will return a uuid hex string. If it is False, it will return a
-    CDL noid identifier.
+    returns an instantiated parser object containing data read
+    from a ldritem object
     """
 
-    if not noid:
-        data_output = uuid1()
-        data_output = data_output.hex
+    if msuite:
+        a_file_object = getattr(msuite, attribute_string, None)
+    elif ldritem:
+        a_file_object = ldritem
+
+    output = None
+    if a_file_object is not None:
+        pass
     else:
-        request = urlopen("https://y1.lib.uchicago.edu/" +
-                          "cgi-bin/minter/noid?action=mint&n=1")
-        if request.status == 200:
-            data = request.readlines()
-            data_output = data.decode('utf-8').split('61001/')[1].rstrip()
+        raise ValueError(
+            "a materialsuite is missing the attribute {}".
+            format(attribute_string))
+    with TemporaryFile() as tempfile:
+        with a_file_object.open('rb') as read_file:
+            while True:
+                buf = read_file.read(1024)
+                if buf:
+                    tempfile.write(buf)
+                else:
+                    break
+            tempfile.seek(0)
+            try:
+                if parser_object.__name__ == 'PremisRecord':
+                    output = parser_object(frompath=tempfile)
+                elif parser_object.__name__ == 'HierarhcicalRecord':
+                    output = parser_object(fromfile=tempfile)
+                else:
+                    output = parser_object(tempfile)
+            except Exception as e:
+                raise e(
+                    "something went wrong in read_metadata_from_file_object" +
+                    "and couldn't create an instance of {}".format(
+                        parser_object.__name___))
+    return output
+
+
+def get_an_agent_id(id_string, in_package=True):
+    def get_premis_agents_file():
+        if in_package:
+            this_dir, this_filename = split(__file__)
+            return join(this_dir, 'premis', 'agents.txt')
         else:
-            raise URLError("Cannot read noid minter located at" +
-                           "https://y1.lib.uchicago.edu/cgi-bin/minter/" +
-                           "noid?action=mint&n=1")
-    return data_output
+            return join("")
+
+    def get_agent_data():
+        agent_file = LDRPath(get_premis_agents_file())
+        all_lines = []
+        with agent_file.open('rb') as read_file:
+            while True:
+                buf = read_file.read(1024)
+                if buf:
+                    lines = buf.split(b"\n")
+                    all_lines.extend(lines)
+                else:
+                    break
+        return all_lines
+
+    id_string = bytes(id_string.encode('utf-8'))
+    data = get_agent_data()
+    for n_line in data:
+        if id_string in n_line:
+            return n_line.split(b",")[0].decode("utf-8")
+    new_id = IDBuilder().build("premisID").show()
+    with LDRPath("/home/tdanstrom/premis/agents.txt").\
+      open('ab') as writing_file:
+        new_line_string = "\n{},{}".\
+                          format(new_id[1], id_string.decode('utf-8'))
+        new_line_string = new_line_string.encode('utf-8')
+        writing_file.write(bytes(new_line_string))
+    return new_id[1]
 
 
 def move(origin_loc, destination_loc):
