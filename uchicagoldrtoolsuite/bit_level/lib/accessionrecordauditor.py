@@ -1,15 +1,18 @@
 
+import json
 from tempfile import TemporaryFile
 
 from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
 from .abc.auditor import Auditor
 from .abc.ldritem import LDRItem
+from .errorpackager import ErrorPackager
 
 
 class AccessionRecordAuditor(Auditor):
     def __init__(self, subject):
         self.subject = subject
+        self.errorpackager = ErrorPackager()
         self.minimum_required_fields = [
             'Accession Number',
             'Organization Name'
@@ -35,13 +38,12 @@ class AccessionRecordAuditor(Auditor):
             x for x in fields_in_record if x not in
             self.minimum_required_fields
         ]
-
         if len(check_field_existence) > 0:
-            self.errors.add("accessionrecord",
+            self.errorpackager.add("accessionrecord",
                             "accession record is missing " +
                             "the following fields " +
                             "{}".format(', '.join(check_field_existence)))
-        if len(self.errors.errors) > 0:
+        if len(self.errorpackager.errors) > 0:
             return False
         else:
             return True
@@ -60,12 +62,20 @@ class AccessionRecordAuditor(Auditor):
                         else:
                             break
                     tempfile.seek(0)
-                    try:
-                        self.subject = HierarchicalRecord(fromfile=tempfile)
-                    except Exception as e:
-                        raise e("AccessionRecordAuditor couldn't instantiate" +
-                                " a HierarchicalRecord from the input")
-
+                    hrecord = HierarchicalRecord()
+                    data = tempfile.read().decode('utf-8')
+                    data = json.loads(data)
+                    hrecord.data_object = data
+                    self._subject = hrecord
         else:
             raise ValueError(
                 "AccessionRecordAuditor can only take an ldritem as subject")
+
+    def get_errorpackager(self):
+        return self._errorpackager
+
+    def set_errorpackager(self, value):
+        self._errorpackager = value
+
+    subject = property(get_subject, set_subject)
+    errorpackager = property(get_errorpackager, set_errorpackager)
