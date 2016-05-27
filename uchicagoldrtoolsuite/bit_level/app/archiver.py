@@ -61,12 +61,12 @@ class Archiver(CLIApp):
         args = self.parser.parse_args()
         staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
-        StageAuditor(staging_structure).audit()
         transformer = StageToArchiveTransformer(staging_structure)
         id_type, identifier = IDBuilder().build('premisID').show()
         archive_structure = transformer.transform(defined_id=identifier)
         writer = FileSystemArchiveWriter(archive_structure, args.archive,
                                          args.directory)
+        print(writer)
         writer.write()
 
 

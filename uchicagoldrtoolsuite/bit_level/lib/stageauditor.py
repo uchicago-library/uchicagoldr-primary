@@ -10,10 +10,9 @@ from .stage import Stage
 
 
 class StageAuditor(Auditor):
-    def __init__(self, source_directory, the_subject):
-        self.source = source_directory
+    def __init__(self, the_subject):
         self.subject = the_subject
-        self.errors = ErrorPackager()
+        self.errorpackager = ErrorPackager()
         self.accessionrecordauditor = AccessionRecordAuditor
         self.premisauditor = PremisAuditor
         self.fitsauditor = FitsAuditor
@@ -28,6 +27,12 @@ class StageAuditor(Auditor):
             raise ValueError("StageAuditor can only audit a subject " +
                              "that is an Archive instance")
 
+    def get_errorpackager(self):
+        return self._errorpackager
+
+    def set_errorpackager(self, value):
+        self._errorpackager = value
+
     def audit(self):
         for n_record in self.subject.accessionrecord_list:
             accession_audit = self.accessionrecordauditor(n_record).audit()
@@ -39,8 +44,10 @@ class StageAuditor(Auditor):
                     )
         for n_segment in self.subject.segment_list:
             for n_msuite in n_segment.materialsuite_list:
+                print(n_msuite.premis)
                 premisaudit = self.premisauditor(n_msuite.premis)
                 if not premisaudit.audit():
+
                     stderr.write(premisaudit.show())
                     raise ValueError(
                         "{} is not a valid premis record".format(
@@ -74,3 +81,4 @@ class StageAuditor(Auditor):
         return self.errors.display()
 
     subject = property(get_subject, set_subject)
+    errorpackager = property(get_errorpackager, set_errorpackager)

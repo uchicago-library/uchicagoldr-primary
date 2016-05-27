@@ -28,7 +28,7 @@ class ArchiveManifestWriter(object):
                 "{} archive loc for ArchiveManifestWriter".format(value) +
                 " does not exist on the filesystem")
         else:
-            manifest_filepath = join(self.archive_loc, 'manifest.txt')
+            manifest_filepath = join(value, 'manifest.txt')
             self._manifest = LDRPath(manifest_filepath)
 
     manifest = property(get_manifest, set_manifest)

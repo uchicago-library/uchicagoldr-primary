@@ -2,16 +2,14 @@ from tempfile import TemporaryFile
 
 from pypremis.lib import PremisRecord
 
-
 from .abc.auditor import Auditor
 from .errorpackager import ErrorPackager
-from .abc.ldritem import LDRItem
 
 
 class PremisAuditor(Auditor):
     def __init__(self, subject):
         self.subject = subject
-        self.errors = ErrorPackager
+        self.errors = ErrorPackager()
 
     def audit(self):
         record_events = self.subject.get_event_list()
@@ -47,19 +45,22 @@ class PremisAuditor(Auditor):
         return self._subject
 
     def set_subject(self, value):
-        if isinstance(value, LDRItem):
-            with TemporaryFile() as tempfile:
-                with value.open('rb') as read_file:
-                    while True:
-                        buf = read_file.read(1024)
-                        if buf:
-                            tempfile.write(buf)
-                        else:
-                            break
+        with TemporaryFile() as tempfile:
+            with value.open('rb') as read_file:
+                while True:
+                    buf = read_file.read(1024)
+                    if buf:
+                        tempfile.write(buf)
+                    else:
+                        break
                 tempfile.seek(0)
                 self._subject = PremisRecord(frompath=tempfile)
-        else:
-            raise ValueError("PremisAuditor can only take an " +
-                             "ldritem as subject")
+
+    def get_errorpackager(self):
+        return self._errorpackager
+
+    def set_errorpackager(self, value):
+        self._errorpackager = value
 
     subject = property(get_subject, set_subject)
+    errorpackager = property(get_errorpackager, set_errorpackager)
