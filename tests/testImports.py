@@ -9,7 +9,6 @@ class TestImports(unittest.TestCase):
         from uchicagoldrtoolsuite.bit_level.lib.ldrpath import LDRPath
         from uchicagoldrtoolsuite.bit_level.lib.ldrurl import LDRURL
         from uchicagoldrtoolsuite.bit_level.lib.absolutefilepathtree import AbsoluteFilePathTree
-        from uchicagoldrtoolsuite.bit_level.lib.archivestructure import ArchiveStructure
         from uchicagoldrtoolsuite.bit_level.lib.filepathtree import FilePathTree
         from uchicagoldrtoolsuite.bit_level.lib.filewalker import FileWalker
         from uchicagoldrtoolsuite.bit_level.lib.ldritemoperations import copy
