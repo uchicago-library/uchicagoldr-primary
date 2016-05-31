@@ -32,9 +32,7 @@ class Archive(Structure):
         super().validate()
         big_list = self.accessionrecord_list + self.adminnote_list +\
             self.legalnote_list
-        for n_thing in big_list:
-            if getattr(n_thing, LDRItem):
-                return False
+
         for n_thing in self.segment_list:
             if not isinstance(n_thing, Segment):
                 return False

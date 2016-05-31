@@ -1,4 +1,6 @@
 
+from tempfile import TemporaryFile
+
 from pypremis.lib import PremisRecord
 
 from .archivepremisevent import ArchivePremisEvent
@@ -13,7 +15,7 @@ class ArchivePremisModifier(object):
     def change_record(self):
         objid_types = []
         objid_values = []
-        for obj in self.get_object_list():
+        for obj in self.record.get_object_list():
             for storage in obj.get_storage():
                 content_loc = storage.get_contentLocation()
                 content_loc.set_contentLocationValue(self.new_location)
@@ -34,12 +36,17 @@ class ArchivePremisModifier(object):
         return self._record
 
     def set_record(self, value):
-        if isinstance(self, PremisRecord):
-            self._record = value
-        else:
-            raise ValueError(
-                "ArchivePremisModifier can only modify an intance" +
-                " of a PremisRecord")
+        with TemporaryFile() as tempfile:
+            with value.open('rb') as read_file:
+                while True:
+                    buf = read_file.read(1024)
+                    if buf:
+                        tempfile.write(buf)
+                    else:
+                        break
+                tempfile.seek(0)
+                self._subject = PremisRecord(frompath=tempfile)
+
 
     def get_location(self):
         return self._new_location

@@ -73,63 +73,60 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         and appends them with the new file location to the archive manifest
 
         """
-        print(self.audit_qualification.audit())
-        # if self.structure.validate() and self.audit_qualification.audit():
-
-        #     pairtree_path = self.pairtree.get_pairtree_path()
-        #     data_dir = join(self.archive_loc, pairtree_path, 'data')
-        #     admin_dir = join(self.archive_loc, pairtree_path, 'admin')
-        #     makedirs(data_dir, exist_ok=True)
-        #     makedirs(admin_dir, exist_ok=True)
-        #     accrecord_dir = join(admin_dir, 'accessionrecord')
-        #     legalnote_dir = join(admin_dir, 'legalnotes')
-        #     adminnote_dir = join(admin_dir, 'adminnotes')
-        #     makedirs(accrecord_dir, exist_ok=True)
-        #     makedirs(legalnote_dir, exist_ok=True)
-        #     makedirs(adminnote_dir, exist_ok=True)
-        #     for n_acc_record in self.structure.accessionrecord_list:
-        #         acc_filename = basename(n_acc_record.content.item_name)
-        #         copy(n_acc_record.content, LDRPath(
-        #             join(accrecord_dir,
-        #                  acc_filename)))
-        #     for n_legal_note in self.structure.legalnote_list:
-        #         legalnote_filename = basename(n_legal_note.
-        #                                       content.item_name)
-        #         copy(n_legal_note.content, LDRPath(
-        #             join(legalnote_dir,
-        #                  legalnote_filename)))
-        #     for n_adminnote in self.structure.adminnote_list:
-        #         adminnote_filename = basename(n_adminnote.content.
-        #                                       item_name)
-        #         copy(n_adminnote.content.itemB, LDRPath(
-        #             join(adminnote_dir,
-        #                  adminnote_filename)))
-        #     for n_segment in self.structure.segment_list:
-        #         segment_id = n_segment.label+'-'+str(n_segment.run)
-        #         techmd_dir = join(admin_dir, segment_id, 'TECHMD')
-        #         premis_dir = join(admin_dir, segment_id, 'PREMIS')
-        #         segment_data_dir = join(data_dir, segment_id)
-        #         makedirs(techmd_dir, exist_ok=True)
-        #         makedirs(premis_dir, exist_ok=True)
-        #         makedirs(segment_data_dir, exist_ok=True)
-        #         for n_msuite in n_segment.materialsuite_list:
-        #             n_content_destination_fullpath = join(
-        #                 data_dir, segment_id, n_msuite.content.item_name)
-        #             new_premis_record = self.premis_modifier(
-        #                 n_msuite.premis, n_content_destination_fullpath).\
-        #                 modify_record
-        #             digest_data = self.file_digest_extraction(n_msuite.premis)
-        #             self.manifest_writer(
-        #                 n_content_destination_fullpath, digest_data)
-        #             makedirs(
-        #                 join(data_dir, dirname(
-        #                     n_msuite.content.item_name)), exist_ok=True)
-        #             makedirs(
-        #                 join(premis_dir, dirname(
-        #                     n_msuite.content.item_name)), exist_ok=True)
-        #             makedirs(
-        #                 join(techmd_dir, dirname(
-        #                     n_msuite.content.item_name)), exist_ok=True)
+        if self.structure.validate() and self.audit_qualification.audit():
+            pairtree_path = self.pairtree.get_pairtree_path()
+            data_dir = join(self.archive_loc, pairtree_path, 'data')
+            admin_dir = join(self.archive_loc, pairtree_path, 'admin')
+            makedirs(data_dir, exist_ok=True)
+            makedirs(admin_dir, exist_ok=True)
+            accrecord_dir = join(admin_dir, 'accessionrecord')
+            legalnote_dir = join(admin_dir, 'legalnotes')
+            adminnote_dir = join(admin_dir, 'adminnotes')
+            makedirs(accrecord_dir, exist_ok=True)
+            makedirs(legalnote_dir, exist_ok=True)
+            makedirs(adminnote_dir, exist_ok=True)
+            for n_acc_record in self.structure.accessionrecord_list:
+                acc_filename = basename(n_acc_record.item_name)
+                copy(n_acc_record, LDRPath(
+                    join(accrecord_dir,
+                         acc_filename)))
+            for n_legal_note in self.structure.legalnote_list:
+                legalnote_filename = basename(n_legal_note.item_name)
+                copy(n_legal_note, LDRPath(
+                    join(legalnote_dir,
+                         legalnote_filename)))
+            for n_adminnote in self.structure.adminnote_list:
+                adminnote_filename = basename(n_adminnote.item_name)
+                copy(n_adminnote, LDRPath(
+                    join(adminnote_dir,
+                         adminnote_filename)))
+            for n_segment in self.structure.segment_list:
+                segment_id = n_segment.label+'-'+str(n_segment.run)
+                techmd_dir = join(admin_dir, segment_id, 'TECHMD')
+                premis_dir = join(admin_dir, segment_id, 'PREMIS')
+                segment_data_dir = join(data_dir, segment_id)
+                makedirs(techmd_dir, exist_ok=True)
+                makedirs(premis_dir, exist_ok=True)
+                makedirs(segment_data_dir, exist_ok=True)
+                for n_msuite in n_segment.materialsuite_list:
+                    n_content_destination_fullpath = join(
+                        data_dir, segment_id, n_msuite.content.item_name)
+                    new_premis_record = self.premis_modifier(
+                        n_msuite.premis, n_content_destination_fullpath).\
+                        modify_record
+                    digest_data = self.file_digest_extraction(
+                        n_msuite.premis).extract_digests()
+                    self.manifest_writer.write_a_line(
+                        n_content_destination_fullpath, digest_data)
+                    makedirs(
+                        join(data_dir, dirname(
+                            n_msuite.content.item_name)), exist_ok=True)
+                    makedirs(
+                        join(premis_dir, dirname(
+                            n_msuite.content.item_name)), exist_ok=True)
+                    makedirs(
+                        join(techmd_dir, dirname(
+                            n_msuite.content.item_name)), exist_ok=True)
 
         #             new_premis_path = join(
         #                 premis_dir, n_msuite.premis.item_name)
@@ -184,9 +181,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         #                     new_tech_path = join(
         #                         techmd_dir, n_techmd.item_name)
         #                     new_tech_record.write(new_tech_path)
-        # else:
-        #     stderr.write(self.structure.explain_results())
-        #     stderr.write(self.audit_qualification.show_errors())
+        else:
+            stderr.write(self.structure.explain_results())
+            stderr.write(self.audit_qualification.show_errors())
 
     def get_structure(self):
         return self._structure

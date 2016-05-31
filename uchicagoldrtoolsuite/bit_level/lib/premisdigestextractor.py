@@ -20,17 +20,16 @@ class PremisDigestExtractor(object):
                     digestAlgo = fixity.get_messageDigestAlgorithm()
                     digest_data = namedtuple("digestdata", "algo digest")
                     record = digest_data(digestAlgo, digest)
-                    output.append(record)
+                    output.data.append(record)
         return output
 
     def get_record(self):
         return self._record
 
     def set_record(self, value):
-        if self._record:
+        if getattr(self,'_record', None):
             raise ValueError("record is already set")
-        elif isinstance(value, LDRItem):
-            raise ValueError("record must be a ldritem")
+
         else:
             with TemporaryFile() as tempfile:
                 with value.open('rb') as read_file:
@@ -41,6 +40,6 @@ class PremisDigestExtractor(object):
                         else:
                             break
                 tempfile.seek(0)
-                self._subject = PremisRecord(frompath=tempfile)
+                self._record = PremisRecord(frompath=tempfile)
 
     record = property(get_record, set_record)

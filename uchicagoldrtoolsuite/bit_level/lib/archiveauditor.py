@@ -37,58 +37,41 @@ class ArchiveAuditor(Auditor):
 
         for n_segment in self.subject.segment_list:
             print(n_segment.identifier)
+            for n_record in self.subject.accessionrecord_list:
+                accession_audit = self.accessionrecordauditor(n_record).audit()
+                if not accession_audit:
+                    stderr.write(accession_audit.show_errors())
+                    raise ValueError(
+                        "{} is not a valid accession record".format(
+                            n_record.item_name)
+                    )
             for n_msuite in n_segment.materialsuite_list:
-                premis_auditor = self.premisauditor(n_msuite.premis).audit()
+                premisaudit = self.premisauditor(
+                    n_msuite.premis).audit()
+                if not premisaudit:
+                    stderr.write(premisaudit.show_errors())
+                    raise ValueError(
+                        "{} is not a valid premis record".format(
+                            n_msuite.premis.item_name))
                 for n_techmd in n_msuite.technicalmetadata_list:
-                    tech_auditor = self.fitsauditor(n_techmd).audit()
-                    print(tech_auditor)
-                print(n_msuite.presform_list)
+                    fitsaudit = self.fitsauditor(n_techmd).audit()
+                    if not fitsaudit:
+                        stderr.write(fitsaudit.show())
+                        raise ValueError(
+                            "{} is not a valid fits record".format(
+                                n_techmd.item_name))
 
-
-        # for n_record in self.subject.accessionrecord_list:
-
-        #     accession_audit = self.accessionrecordauditor(n_record).audit()
-        #     if not accession_audit:
-        #         stderr.write(accession_audit.show_errors())
-        #         raise ValueError(
-        #             "{} is not a valid accession record".format(
-        #                 n_record.item_name)
-        #             )
-        #     else:
-        #         print("hi")
-
-        # for n_segment in self.subject.segment_list:
-        #     for n_msuite in n_segment.materialsuite_list:
-        #         premisaudit = self.premisauditor(n_msuite.premis)
-        #         if not premisaudit.audit():
-        #             stderr.write(premisaudit.show())
-        #             raise ValueError(
-        #                 "{} is not a valid premis record".format(
-        #                     n_msuite.premis.item_name))
-        #         for n_techmd in n_msuite.technicalmetadata_list:
-        #             fitsaudit = self.fitsauditor(n_techmd).audit()
-        #             if not fitsaudit:
-        #                 stderr.write(fitsaudit.show())
-        #                 raise ValueError(
-        #                     "{} is not a valid fits record".format(
-        #                         n_techmd.item_name))
-
-        #         if getattr(n_msuite, 'presform_list', None) is not None:
-        #             for n_presform in n_msuite.presform_list:
-        #                 premisaudit = self.premisauditor(n_presform.premis)
-        #                 if not premisaudit.audit():
-        #                     stderr.write(premisaudit.show_errors())
-        #                     raise ValueError(
-        #                         "{} is not valid premis".format(
-        #                             n_presform.premis.item_name))
-        #                 n_presform_tmd_list = n_presform.technicalmetadata_list
-        #                 for tmd in n_presform_tmd_list:
-        #                     fitsaudit = self.fitsauditor(tmd).audit()
-        #                     if not fitsaudit:
-        #                         stderr.write(fitsaudit.show_errors())
-        #                         raise ValueError(
-        #                             "{} is not valid fits".format(
-        #                                 tmd.item_name))
+                if getattr(n_msuite, 'presform_list', None):
+                    for n_presform in n_msuite.presform_list:
+                        premisaudit = self.premisauditor(
+                            n_presform.premis).audit()
+                        for n_techmd in n_presform.technicalmetadata_list:
+                            fitsaudit = self.fitsauditor(n_techmd).audit()
+                            if not fitsaudit:
+                                stderr.write(fitsaudit.show_errors())
+                                raise ValueError(
+                                    "{} is not valid fits".format(
+                                        tmd.item_name))
         return True
 
     def show_errors(self):

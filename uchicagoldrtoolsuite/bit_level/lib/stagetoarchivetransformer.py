@@ -22,7 +22,7 @@ class StageToArchiveTransformer(Transformer):
                 n_segment
             )
         for n_accessionrecord in self.origin_structure.accessionrecord_list:
-            self.destination_structure.accession_record_list.append(
+            self.destination_structure.accessionrecord_list.append(
                 n_accessionrecord
             )
         for n_legalnote in self.origin_structure.legalnote_list:
