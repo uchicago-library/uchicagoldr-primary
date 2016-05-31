@@ -117,8 +117,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     modifier.change_record()
                     digest_data = self.file_digest_extraction(
                         n_msuite.premis).extract_digests()
-                    self.manifest_writer.write_a_line(
+                    self.manifest_writer.add_a_line(
                         n_content_destination_fullpath, digest_data)
+
                     makedirs(
                         join(data_dir, dirname(
                             n_msuite.content.item_name)), exist_ok=True)
@@ -169,7 +170,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                                 exist_ok=True)
                             digest_data = self.file_digest_extraction(
                                 n_presform.premis).extract_digests()
-                            self.manifest_writer.write_a_line(
+                            self.manifest_writer.add_a_line(
                                 n_destination_fullpath, digest_data)
 
                             new_premis_path = join(
@@ -185,11 +186,11 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                         for n_techmd in n_presform.technicalmetadata_list:
                             new_tech_record_loc = join(
                                 techmd_dir, n_techmd.item_name)
-                            print(new_tech_record_loc)
                             new_tech_record = self.fits_modifier(
                                 n_techmd, new_tech_record_loc).modify_record()
 
                             new_tech_record.write(new_tech_record_loc)
+                self.manifest_writer.write()
         else:
             stderr.write(self.structure.explain_results())
             stderr.write(self.audit_qualification.show_errors())

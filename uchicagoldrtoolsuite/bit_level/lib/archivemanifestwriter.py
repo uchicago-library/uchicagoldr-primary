@@ -7,17 +7,19 @@ from .ldrpath import LDRPath
 class ArchiveManifestWriter(object):
     def __init__(self, archive_location):
         self.manifest = archive_location
+        self.lines = []
 
-    def write(self, filepath, digestdata):
+    def write(self):
         with self.manifest.open('ab') as writing_file:
-            writing_file.write(self.write_a_line(filepath, digestdata))
+            for line in self.lines:
+                writing_file.write(bytes(line.encode('utf-8')))
 
-    def write_a_line(self, filepath, digestdata):
+    def add_a_line(self, filepath, digestdata):
         output_string = ""
         output_string += filepath
         for n_digest in digestdata.data:
-            output_string += '\t' + n_digest.digest
-        return output_string
+            output_string += '\t' + n_digest.digest+'\n'
+        self.lines.append(output_string)
 
     def get_manifest(self):
         return self._manifest
