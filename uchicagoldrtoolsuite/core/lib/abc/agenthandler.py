@@ -24,15 +24,11 @@ class AgentHandler(metaclass=ABCMeta):
     def retrieve_agent_record(self):
         if self.get_target_agentIdentifier() is not None:
             self.set_agent_record(
-                self.retrieve_agent_by_identifier(
-                    self.get_target_agentIdentifier()
-                )
+                self.retrieve_agent_by_identifier()
             )
         else:
             self.set_agent_record(
-                self.search_for_agent_by_name(
-                    self.get_target_agentName()
-                )
+                self.search_for_agent_by_name()
             )
         return self.get_agent_record()
 
@@ -56,11 +52,11 @@ class AgentHandler(metaclass=ABCMeta):
         return names
 
     @abstractmethod
-    def retrieve_agent_by_identifier(self, id):
+    def retrieve_agent_by_identifier(self):
         raise NotImplementedError()
 
     @abstractmethod
-    def search_for_agent_by_name(self, name):
+    def search_for_agent_by_name(self):
         raise NotImplementedError()
 
     @abstractmethod

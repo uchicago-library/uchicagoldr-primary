@@ -4,17 +4,21 @@ from os.path import join
 
 from pypremis.lib import PremisRecord
 
-class DirectoryAgentHandler(AgentHandler)
+
+class DirectoryAgentHandler(AgentHandler):
 
     _agents_dir = None
 
     def __init__(self, agents_dir, agentIdentifier=None, agentName=None):
-        self.set_agents_dir = agents_dir
+        self.agents_dir = agents_dir
         super().__init__(agentIdentifier, agentName)
 
     def retrieve_agent_by_identifier(self):
+        print(self.agents_dir)
         for x in listdir(self.agents_dir):
             look_for = self.target_agentIdentifier + ".premis.xml"
+            print(x)
+            print(look_for)
             if x == look_for:
                 pr = PremisRecord(frompath=join(self.agents_dir, look_for))
                 assert(len(pr.get_agent_list()) == 1)
@@ -24,14 +28,17 @@ class DirectoryAgentHandler(AgentHandler)
         raise ValueError("That identifier doesn't appear to exist " +
                          "in {}".format(self.agents_dir))
 
-    def search_for_agent_by_name(self, name):
+    def search_for_agent_by_name(self):
         for x in listdir(self.agents_dir):
             file_name = join(self.agents_dir, x)
             pr = PremisRecord(frompath=file_name)
             for a in pr.get_agent_list():
-                if a.get_agentName() == name:
-                    return a
-        raise ValueError("That agentName doesn't appear to exist " +
+                names = a.get_agentName()
+                for n in names:
+                    if n == self.target_agentName:
+                        return a
+        raise ValueError("That agentName ({}) ".format(self.target_agentName) +
+                         "doesn't appear to exist " +
                          "in {}".format(self.agents_dir))
 
     def write_agent_record(self):
