@@ -100,6 +100,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 copy(n_adminnote, LDRPath(
                     join(adminnote_dir,
                          adminnote_filename)))
+            accession_restrictions = set([])
             for n_segment in self.structure.segment_list:
                 segment_id = n_segment.label+'-'+str(n_segment.run)
                 techmd_dir = join(admin_dir, segment_id, 'TECHMD')
@@ -117,6 +118,10 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     modifier.change_record()
                     digest_data = self.file_digest_extraction(
                         n_msuite.premis).extract_digests()
+                    restrictions = self.file_restriction_extraction(
+                        n_presform.premis).extract_restrictions()
+                    for n_restriction in restrictions:
+                        accession_restrictions.add(n_restriction)
                     self.manifest_writer.add_a_line(
                         n_content_destination_fullpath, digest_data)
 
@@ -170,6 +175,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                                 exist_ok=True)
                             digest_data = self.file_digest_extraction(
                                 n_presform.premis).extract_digests()
+                            restrictions = self.file_restriction_extraction(
+                                n_presform.premis).extract_restrictions()
                             self.manifest_writer.add_a_line(
                                 n_destination_fullpath, digest_data)
 
