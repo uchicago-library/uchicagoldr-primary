@@ -19,18 +19,16 @@ class ArchivePremisModifier(object):
             for storage in obj.get_storage():
                 content_loc = storage.get_contentLocation()
                 content_loc.set_contentLocationValue(self.new_location)
-            for characteristic in obj.get_objectCharacteristics():
-                objid = characteristic.get_objectIdentifier()
+            objids = obj.get_objectIdentifier()
+            for objid in objids:
                 objid_types.append(objid.get_objectIdentifierType())
                 objid_values.append(objid.get_objectIdentifierValue())
-        objids = zip(objid_types, objid_values)
-        new_event = self.archive_event(objids)
-        self.record.event_list.append(new_event)
+                objids = zip(objid_types, objid_values)
+        new_event = self.archive_event(objids).build_event()
+        self.record.events_list.append(new_event)
 
-    def modify_record(self):
-        new_event = self.archive_event.build_event()
-        self.record.event_list.append(new_event)
-        self.enter_new_contentLocation()
+    def show_record(self):
+        return self._record
 
     def get_record(self):
         return self._record
@@ -45,7 +43,7 @@ class ArchivePremisModifier(object):
                     else:
                         break
                 tempfile.seek(0)
-                self._subject = PremisRecord(frompath=tempfile)
+                self._record = PremisRecord(frompath=tempfile)
 
 
     def get_location(self):
