@@ -7,6 +7,7 @@ from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
+from .accessrecord_modifier import AccessionRecordModifier
 from .archivefitsmodifier import ArchiveFitsModifier
 from .archivemanifestwriter import ArchiveManifestWriter
 from .archivepremismodifier import ArchivePremisModifier
@@ -16,6 +17,9 @@ from .ldritemoperations import copy
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
 from .premisdigestextractor import PremisDigestExtractor
+
+from .premisrestrictionextractor import PremisRestrictionsExtractor
+
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
@@ -49,9 +53,10 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.premis_modifier = ArchivePremisModifier
         self.fits_modifier = ArchiveFitsModifier
         self.file_digest_extraction = PremisDigestExtractor
+        self.file_restriction_extraction = PremisRestrictionsExtractor
         self.manifest_writer = ArchiveManifestWriter(archive_loc)
         self.archive_loc = archive_loc
-
+        self.accessrecord_modifier = AccessionRecordModifier
     def write(self):
         """
         checks of the structure is validate and audits the contents of the
@@ -85,11 +90,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             makedirs(accrecord_dir, exist_ok=True)
             makedirs(legalnote_dir, exist_ok=True)
             makedirs(adminnote_dir, exist_ok=True)
+            accrececords = []
             for n_acc_record in self.structure.accessionrecord_list:
                 acc_filename = basename(n_acc_record.item_name)
                 copy(n_acc_record, LDRPath(
                     join(accrecord_dir,
                          acc_filename)))
+                accrecords.append(join(accrecord_dir, acc_filename))
             for n_legal_note in self.structure.legalnote_list:
                 legalnote_filename = basename(n_legal_note.item_name)
                 copy(n_legal_note, LDRPath(
@@ -119,7 +126,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     digest_data = self.file_digest_extraction(
                         n_msuite.premis).extract_digests()
                     restrictions = self.file_restriction_extraction(
-                        n_presform.premis).extract_restrictions()
+                        n_msuite.premis).extract_restrictions()
                     for n_restriction in restrictions:
                         accession_restrictions.add(n_restriction)
                     self.manifest_writer.add_a_line(
@@ -198,6 +205,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
                             new_tech_record.write(new_tech_record_loc)
                 self.manifest_writer.write()
+                for a_record in accrececords:
+                    self.accessrecord_modifier(LDRPath(a_record)).add_restriction_info(list(restrictions
+                self.accessrecord
         else:
             stderr.write(self.structure.explain_results())
             stderr.write(self.audit_qualification.show_errors())
