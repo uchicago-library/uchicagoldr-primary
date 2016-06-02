@@ -12,7 +12,6 @@ from .ldritemoperations import get_an_agent_id
 class ArchivePremisEvent(object):
     def __init__(self, objid_nodes):
         self.linkable_objects = objid_nodes
-        print(get_an_agent_id('archiver'))
         self.linkable_agent_type = 'DOI'
         self.linkable_agent_value = get_an_agent_id('archiver')
         self.identifier = IDBuilder().build('eventID')

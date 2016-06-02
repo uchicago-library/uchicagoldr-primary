@@ -10,25 +10,29 @@ from .abc.ldritem import LDRItem
 
 class AccessionRecordModifier(object):
     def __init__(self, subject):
-        self.record = record
-
-
-    def get_subject(self):
-        return self._subject
+        self.record = subject
 
     def add_restriction_info(self, restriction_list):
-        if self.record.get('Restrictions'):
+
+        restrictionfields = [x for x in self.record.keys() if 'Restriction' in x]
+        if restrictionfields:
             orig = set(self.record['Restrictions'])
-            for n_restriction in restriction_list:
-                orig.add(n_restriction)
-            self.record['Restrictions'] = list(orig)
         else:
-            self.record['Restrictions'] = restriction_list
+            orig = set([])
+        for n_restriction in restriction_list:
+            orig.add(n_restriction)
+
+        for n_item in orig:
+            self.record.add_to_field('Restrictions', n_item)
+
 
     def write(self, file_location):
-        jsonified_hrecord = json.loads(str(self.record))
+        jsonified_hrecord = self.record.toJSON()
         with open(file_location, 'wb') as writing_file:
-            json.dump(bytes(jsonified_hrecord.encode('utf-8')))
+            writing_file.write(bytes(jsonified_hrecord.encode('utf-8')))
+
+    def get_record(self):
+        return self._record
 
     def set_record(self, value):
         if isinstance(value, LDRItem):
@@ -44,11 +48,11 @@ class AccessionRecordModifier(object):
                     hrecord = HierarchicalRecord()
                     data = tempfile.read().decode('utf-8')
                     data = json.loads(data)
-                    hrecord.data_object = data
+                    hrecord.set_data(data)
                     self._record = hrecord
         else:
             raise ValueError(
                 "AccessionRecordAuditor can only take an ldritem as subject")
 
 
-    record = property(get_subject, set_subject)
+    record = property(get_record, set_record)

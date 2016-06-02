@@ -7,7 +7,7 @@ from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
-from .accessrecord_modifier import AccessionRecordModifier
+from .accessionrecordmodifier import AccessionRecordModifier
 from .archivefitsmodifier import ArchiveFitsModifier
 from .archivemanifestwriter import ArchiveManifestWriter
 from .archivepremismodifier import ArchivePremisModifier
@@ -90,7 +90,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             makedirs(accrecord_dir, exist_ok=True)
             makedirs(legalnote_dir, exist_ok=True)
             makedirs(adminnote_dir, exist_ok=True)
-            accrececords = []
+            accrecords = []
             for n_acc_record in self.structure.accessionrecord_list:
                 acc_filename = basename(n_acc_record.item_name)
                 copy(n_acc_record, LDRPath(
@@ -205,9 +205,12 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
                             new_tech_record.write(new_tech_record_loc)
                 self.manifest_writer.write()
-                for a_record in accrececords:
-                    self.accessrecord_modifier(LDRPath(a_record)).add_restriction_info(list(restrictions
-                self.accessrecord
+                for a_record in accrecords:
+                    acc_modifier = self.accessrecord_modifier(
+                        LDRPath(a_record))
+                    acc_modifier.add_restriction_info(list(restrictions))
+                    acc_modifier.write(a_record)
+
         else:
             stderr.write(self.structure.explain_results())
             stderr.write(self.audit_qualification.show_errors())

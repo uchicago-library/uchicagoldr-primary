@@ -10,7 +10,6 @@ class StageToArchiveTransformer(Transformer):
         self.destination_structure = None
 
     def transform(self, defined_id=None, make_noid=False):
-        print(self.destination_structure)
         if self.destination_structure is not None:
             raise TypeError("a transformation already occured.")
         self.destination_structure = Archive(

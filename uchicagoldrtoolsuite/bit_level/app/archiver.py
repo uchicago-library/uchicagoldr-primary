@@ -1,4 +1,6 @@
 
+from os.path import join
+from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
@@ -66,9 +68,10 @@ class Archiver(CLIApp):
         archive_structure = transformer.transform(defined_id=identifier)
         writer = FileSystemArchiveWriter(archive_structure, args.archive,
                                          args.directory)
-        print(writer)
         writer.write()
-
+        stdout.write("new arf located at {}\n".format(
+            join(writer.archive_loc,
+                 writer.pairtree.get_pairtree_path())))
 
 if __name__ == "__main__":
     a = Archiver()
