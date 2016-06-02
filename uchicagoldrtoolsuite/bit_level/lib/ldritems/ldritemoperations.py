@@ -81,6 +81,7 @@ def read_metadata_from_file_object(attribute_string,
 def get_an_agent_id(id_string, in_package=True):
     def get_premis_agents_file():
         if in_package:
+
             this_dir, this_filename = split(__file__)
             return join(this_dir, 'premis', 'agents.txt')
         else:
