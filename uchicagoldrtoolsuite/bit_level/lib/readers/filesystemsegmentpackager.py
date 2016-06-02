@@ -2,9 +2,9 @@ from os.path import join
 from os.path import isfile
 from re import compile as re_compile
 
-from .rootedpath import RootedPath
-from .filepathtree import FilePathTree
-from .segment import Segment
+from ..fstools.rootedpath import RootedPath
+from ..fstools.filepathtree import FilePathTree
+from ..structures.segment import Segment
 from .abc.segmentpackager import SegmentPackager
 from .filesystemmaterialsuitepackager import\
     FileSystemMaterialSuitePackager
