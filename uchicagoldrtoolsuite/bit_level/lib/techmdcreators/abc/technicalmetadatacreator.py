@@ -6,8 +6,8 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from ...ldritems.ldrpath import LDRPath
-from ....core.lib.convenience import iso8601_dt
-from ....core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from ...ldritems.ldritemoperations import copy
 
 

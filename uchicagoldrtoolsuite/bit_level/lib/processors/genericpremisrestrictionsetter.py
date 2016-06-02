@@ -5,7 +5,7 @@ from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from ...core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from ..ldritems.ldrpath import LDRPath
 from ..misc.premisextensionnodes import Restriction
 from ..misc.premisextensionnodes import RightsExtensionIdentifier

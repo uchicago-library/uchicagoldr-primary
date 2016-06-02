@@ -9,7 +9,7 @@ from ..ldritems.ldrpath import LDRPath
 from ..ldritems.abc.ldritem import LDRItem
 from .abc.technicalmetadatacreator import TechnicalMetadataCreator
 from ..ldritems.ldritemoperations import copy
-from ....core.lib.bash_cmd import BashCommand
+from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 
 
 __author__ = "Brian Balsamo"

@@ -11,8 +11,8 @@ try:
 except:
     pass
 
-from ...core.lib.convenience import sane_hash
-from ...core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from ..ldritems.ldritemoperations import copy
 from ..ldritems.abc.ldritem import LDRItem
 from ..ldritems.ldrpath import LDRPath
