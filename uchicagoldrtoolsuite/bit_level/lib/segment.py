@@ -1,5 +1,3 @@
-import re
-
 from .abc.structure import Structure
 from .materialsuite import MaterialSuite
 
@@ -30,12 +28,48 @@ class Segment(Structure):
 
     """
 
-    def __init__(self, param1, param2):
-        self.label = param1
-        self.run = param2
-        self.identifier = param1+'-'+str(param2)
-        self.required_parts = ['identifier', 'materialsuite', 'identifier']
-        self.materialsuite = []
+    required_parts = ['identifier', 'materialsuite', 'label', 'run']
+
+    def __init__(self, label, run_no):
+
+        self._label = None
+        self._run = None
+        self._materialsuite = []
+
+        self.set_label(label)
+        self.set_run(run_no)
+        self.set_materialsuite_list([])
+
+    def __repr__(self):
+        repr_str = "<{}".format(self.get_identifier())
+        for x in self.get_materialsuite_list():
+            repr_str = repr_str + str(x)
+        repr_str = repr_str + ">"
+        return repr_str
+
+    def get_materialsuite_list(self):
+        return self._materialsuite
+
+    def set_materialsuite_list(self, materialsuite_list):
+        self.del_materialsuite_list()
+        for x in materialsuite_list:
+            self.add_materialsuite(x)
+
+    def del_materialsuite_list(self):
+        while self.get_materialsuite_list():
+            self.pop_materialsuite()
+
+    def add_materialsuite(self, x):
+        self._materialsuite.append(x)
+
+    def get_materialsuite(self, index):
+        return self.get_materialsuite_list()[index]
+
+    def pop_materialsuite(self, index=None):
+        if index is None:
+            return self.get_materialsuite_list().pop()
+        else:
+            return self.get_materialsuite_list().pop(index)
 
     def validate(self):
         for n_thing in self.materialsuite:
@@ -66,15 +100,11 @@ class Segment(Structure):
                              "must be an integer")
 
     def get_identifier(self):
-        return self._identifier
+        return self.get_label() + "-" + str(self.get_run())
 
-    def set_identifier(self, value):
-        if re.compile('^(\w{1,})[-](\d{1,})$').match(value):
-            self._identifier = value
-        else:
-            raise ValueError("identifier for segment structure is not valid " +
-                             "according to spec of [a-c]+-[0-9]+")
-
+    materialsuite_list = property(get_materialsuite_list,
+                                  set_materialsuite_list,
+                                  del_materialsuite_list)
     label = property(get_label, set_label)
     run = property(get_run, set_run)
-    identifier = property(get_identifier, set_identifier)
+    identifier = property(get_identifier)

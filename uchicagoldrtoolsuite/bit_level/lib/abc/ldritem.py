@@ -48,6 +48,9 @@ class LDRItem(metaclass=ABCMeta):
     def __exit__(self, type, value, traceback):
         self.close()
 
+    def __repr__(self):
+        return self.get_name()
+
     def get_name(self):
         return self._item_name
 

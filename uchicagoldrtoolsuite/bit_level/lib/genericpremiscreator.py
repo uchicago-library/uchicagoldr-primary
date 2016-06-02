@@ -1,16 +1,21 @@
-from os.path import getsize, split
+from tempfile import TemporaryDirectory
+from os.path import getsize
 from mimetypes import guess_type
 from uuid import uuid1
+from os.path import join
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
-
-from ...core.lib.convenience import sane_hash
-
 try:
     from magic import from_file
 except:
     pass
+
+from ...core.lib.convenience import sane_hash
+from ...core.lib.idbuilder import IDBuilder
+from .ldritemoperations import copy
+from .abc.ldritem import LDRItem
+from .ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo"
@@ -21,69 +26,114 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-class PremisObjectRecordCreator(object):
+class GenericPREMISCreator(object):
     """
-    This class is meant to automate the construction of standard minimal
-    LDR object PREMIS records from some input file.
-
-    __Attributes__
-
-    1. file_path (str): The abspath to a file for which a record will be created
-    2. record (PremisRecord): The associated PREMIS record instance, which
-    will contain one object entry populated with the files information.
+    Ingests a stage structure and produces a PREMIS stub object
+    record for everything in it
     """
-    def __init__(self, path):
+    def __init__(self, stage):
         """
-        initialize an LDR PREMIS object record.
+        spawn a premis creator that should work for any LDRItems
 
         __Args__
 
-        1. path (str): the abspath to a file to create a record for
+        1. stage (Stage): The Stage to generate PREMIS object records for
         """
-        self.file_path = path
-        self.record = self.make_record(self.file_path)
+        self.stage = stage
+        # This instance var should hold the dir open until the instance is
+        # deleted from whatever script spawned it. Aka move this stuff
+        # somewhere before your instance gets garbage collected.
+        self.working_dir = TemporaryDirectory()
+        self.working_dir_path = self.working_dir.name
 
-    def make_record(self, file_path):
+    def process(self, skip_existing=False):
+        """
+        make the premis records for everything
+
+        __KWArgs__
+
+        * skip_existing (bool): If True: Skip all materialsuites which claim
+            to already have PREMIS records as a part of them.
+        """
+        for segment in self.stage.segment_list:
+            for materialsuite in segment.materialsuite_list:
+                if skip_existing:
+                    if isinstance(materialsuite.get_premis(), LDRItem):
+                        continue
+                materialsuite.set_premis(
+                    self.instantiate_and_make_premis(materialsuite.content,
+                                                     self.working_dir_path)
+                )
+
+    @classmethod
+    def instantiate_and_make_premis(cls, item, working_dir_path):
+        """
+        Write an item to a tempdir, examine it and make a PREMIS record
+
+        __Args__
+
+        1. item (LDRItem): The LDRItem to create a premis record for
+
+        __KWArgs__
+
+        * working_dir_path (str): Where to write things to disk. Defaults
+            to the current instances working_dir_path
+
+        __Returns__
+
+        * (LDRPath): The item representing the PREMIS record
+        """
+        recv_file = join(working_dir_path, str(uuid1()))
+        premis_file = join(working_dir_path, str(uuid1()))
+        recv_item = LDRPath(recv_file)
+        copy(item, recv_item)
+        rec = cls.make_record(recv_file, item)
+        rec.write_to_file(premis_file)
+        return LDRPath(premis_file)
+
+    @classmethod
+    def make_record(cls, file_path, item):
         """
         build a PremisNode.Object from a file and use it to instantiate a record
 
         __Args__
 
         1. file_path (str): The full path to a file
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
         1. (PremisRecord): The populated record instance
         """
-        obj = self._make_object(file_path)
+        obj = cls._make_object(file_path, item)
         return PremisRecord(objects=[obj])
 
-    def get_record(self):
-        return self.record
-
-    def _make_object(self, file_path):
+    @classmethod
+    def _make_object(cls, file_path, item):
         """
         make an object entry auto-populated with the required information
 
         __Args__
 
         1. file_path (str): The path to the file
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
         1. (PremisRecord.Object): The populated Object... object
         """
-        objectIdentifier = self._make_objectIdentifier()
+        objectIdentifier = cls._make_objectIdentifier()
         objectCategory = 'file'
-        objectCharacteristics = self._make_objectCharacteristics(file_path)
-        originalName = split(file_path)[1]
-        storage = self._make_Storage(file_path)
+        objectCharacteristics = cls._make_objectCharacteristics(file_path, item)
+        originalName = item.item_name
+        storage = cls._make_Storage(file_path)
         obj = Object(objectIdentifier, objectCategory, objectCharacteristics)
         obj.set_originalName(originalName)
         obj.set_storage(storage)
         return obj
 
-    def _make_objectIdentifier(self):
+    @classmethod
+    def _make_objectIdentifier(cls):
         """
         mint a new object identifier
 
@@ -95,24 +145,28 @@ class PremisObjectRecordCreator(object):
         # hardware mac and time down to whatever accuracy time.time() has
         # plus some entropy. There's really fancy sounding posts on stack
         # overflow about why this should be fine
-        return ObjectIdentifier("DOI", str(uuid1()))
+        idb = IDBuilder()
+        identifier_tup = idb.build('premisID').show()
+        return ObjectIdentifier(identifier_tup[0], identifier_tup[1])
 
-    def _make_objectCharacteristics(self, file_path):
+    @classmethod
+    def _make_objectCharacteristics(cls, file_path, item):
         """
         make a new objectCharacteristics node for a file
 
         __Args__
 
         1. file_path (str): The path to a file to generate info for
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
         1. (PremisNode.ObjectCharacteristics): a populated ObjectCharacteristics
         node
         """
-        fixity1, fixity2 = self._make_fixity(file_path)
+        fixity1, fixity2 = cls._make_fixity(file_path)
         size = str(getsize(file_path))
-        formats = self._make_format(file_path)
+        formats = cls._make_format(file_path, item)
         objChar = ObjectCharacteristics(formats[0])
         if len(formats) > 1:
             for x in formats[1:]:
@@ -122,7 +176,8 @@ class PremisObjectRecordCreator(object):
         objChar.set_size(size)
         return objChar
 
-    def _make_Storage(self, file_path):
+    @classmethod
+    def _make_Storage(cls, file_path):
         """
         make a new storage node for a file
 
@@ -134,12 +189,13 @@ class PremisObjectRecordCreator(object):
 
         1. (PremisNode.Storage): a populated storage node
         """
-        contentLocation = self._make_contentLocation(file_path)
+        contentLocation = cls._make_contentLocation(file_path)
         stor = Storage()
         stor.set_contentLocation(contentLocation)
         return stor
 
-    def _make_fixity(self, file_path):
+    @classmethod
+    def _make_fixity(cls, file_path):
         """
         make a fixity node for md5 and one for sha256 for a file
 
@@ -158,19 +214,21 @@ class PremisObjectRecordCreator(object):
         sha256_fixity.set_messageDigestOriginator('python3 hashlib.sha256')
         return md5_fixity, sha256_fixity
 
-    def _make_format(self, file_path):
+    @classmethod
+    def _make_format(cls, file_path, item):
         """
         make new format nodes for a file
 
         __Args__
 
         1. file_path (str): The path to the file to generate info for
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
         1. (list): a list of format nodes
         """
-        magic_num, guess = self._detect_mime(file_path)
+        magic_num, guess = cls._detect_mime(file_path, item)
         formats = []
         if magic_num:
             premis_magic_format_desig = FormatDesignation(magic_num)
@@ -202,7 +260,8 @@ class PremisObjectRecordCreator(object):
             formats.append(premis_unknown_format)
         return formats
 
-    def _make_contentLocation(self, file_path):
+    @classmethod
+    def _make_contentLocation(cls, file_path):
         """
         make a new contentLocation node for a file
 
@@ -216,13 +275,15 @@ class PremisObjectRecordCreator(object):
         """
         return ContentLocation("Unix File Path", file_path)
 
-    def _detect_mime(self, file_path):
+    @classmethod
+    def _detect_mime(cls, file_path, item):
         """
         use both magic number and file extension mime detection on a file
 
         __Args__
 
         1. file_path (str): The path to the file in question
+        2. item (LDRItem): The LDRItem representative of the file contents
 
         __Returns__
 
@@ -234,7 +295,7 @@ class PremisObjectRecordCreator(object):
         except:
             magic_num = None
         try:
-            guess = guess_type(file_path)[0]
+            guess = guess_type(item.item_name)[0]
         except:
             guess = None
         return magic_num, guess

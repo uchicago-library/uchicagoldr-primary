@@ -1,5 +1,6 @@
 from sys import stderr
-
+from urllib.request import urlopen, URLError
+from uuid import uuid1
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -97,7 +98,7 @@ def retrieve_resource_filepath(resource_path, pkg_name=None):
     """
     from pkg_resources import Requirement, resource_filename
     if pkg_name is None:
-        pkg_name = 'uchicagoldr'
+        pkg_name = __name__.split('.')[0]
     return resource_filename(Requirement.parse(pkg_name), resource_path)
 
 
@@ -119,7 +120,7 @@ def retrieve_resource_string(resource_path, pkg_name=None):
     """
     from pkg_resources import Requirement, resource_string
     if pkg_name is None:
-        pkg_name = 'uchicagoldr'
+        pkg_name = __name__.split('.')[0]
     return resource_string(Requirement.parse(pkg_name), resource_path)
 
 
@@ -141,7 +142,7 @@ def retrieve_resource_stream(resource_path, pkg_name=None):
     """
     from pkg_resources import Requirement, resource_stream
     if pkg_name is None:
-        pkg_name = 'uchicagoldr'
+        pkg_name = __name__.split('.')[0]
     return resource_stream(Requirement.parse(pkg_name), resource_path)
 
 

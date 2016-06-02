@@ -16,9 +16,12 @@ class LDRPath(LDRItem):
     """
     Allows a file path to a file on the file system to be treated as an LDRItem
     """
-    def __init__(self, param1):
-        self.item_name = param1
-        self.path = Path(self.item_name)
+    def __init__(self, param1, root=None):
+        self.path = Path(param1)
+        if root is None:
+            self.item_name = str(self.path)
+        else:
+            self.item_name = str(self.path.relative_to(root))
         self.pipe = None
         self.is_flo = True
 
@@ -51,7 +54,7 @@ class LDRPath(LDRItem):
     def delete(self, final=False):
         if final:
             if self.exists():
-                remove(self.item_name)
+                remove(str(self.path))
             if not self.exists():
                 return (True, "{} no longer exists.".format(self.item_name))
             else:

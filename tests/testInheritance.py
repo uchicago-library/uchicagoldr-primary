@@ -1,6 +1,5 @@
 import unittest
 
-from uchicagoldrtoolsuite.bit_level.lib.filesystemarchivestructurewriter import FileSystemArchiveStructureWriter
 from uchicagoldrtoolsuite.bit_level.lib.filesystemmaterialsuitepackager import FileSystemMaterialSuitePackager
 from uchicagoldrtoolsuite.bit_level.lib.filesystemsegmentpackager import FileSystemSegmentPackager
 from uchicagoldrtoolsuite.bit_level.lib.filesystemstagereader import FileSystemStageReader
@@ -13,16 +12,29 @@ from uchicagoldrtoolsuite.bit_level.lib.filepathtree import FilePathTree
 from uchicagoldrtoolsuite.bit_level.lib.filewalker import FileWalker
 from uchicagoldrtoolsuite.bit_level.lib.ldritemoperations import copy
 from uchicagoldrtoolsuite.bit_level.lib.abc.materialsuitepackager import MaterialSuitePackager
+from uchicagoldrtoolsuite.bit_level.lib.abc.presformmaterialsuitepackager import PresformMaterialSuitePackager
 from uchicagoldrtoolsuite.bit_level.lib.materialsuite import MaterialSuite
+from uchicagoldrtoolsuite.bit_level.lib.presformmaterialsuite import PresformMaterialSuite
 from uchicagoldrtoolsuite.bit_level.lib.premisextensionnodes import Restriction
 from uchicagoldrtoolsuite.bit_level.lib.premisobjectrecordcreator import PremisObjectRecordCreator
 from uchicagoldrtoolsuite.bit_level.lib.rootedpath import RootedPath
 from uchicagoldrtoolsuite.bit_level.lib.abc.segmentpackager import SegmentPackager
 from uchicagoldrtoolsuite.bit_level.lib.abc.stageserializationreader import StageSerializationReader
 from uchicagoldrtoolsuite.bit_level.lib.abc.stageserializationwriter import StageSerializationWriter
+from uchicagoldrtoolsuite.bit_level.lib.abc.converter import Converter
+from uchicagoldrtoolsuite.bit_level.lib.abc.technicalmetadatacreator import TechnicalMetadataCreator
 from uchicagoldrtoolsuite.bit_level.lib.stage import Stage
 from uchicagoldrtoolsuite.bit_level.lib.segment import Segment
 from uchicagoldrtoolsuite.bit_level.lib.technicalmetadatarecordcreator import TechnicalMetadataRecordCreator
+
+from uchicagoldrtoolsuite.bit_level.lib.converters.audioconverter import AudioConverter
+from uchicagoldrtoolsuite.bit_level.lib.converters.imageconverter import ImageConverter
+from uchicagoldrtoolsuite.bit_level.lib.converters.officetocsvconverter import OfficeToCSVConverter
+from uchicagoldrtoolsuite.bit_level.lib.converters.officetopdfconverter import OfficeToPDFConverter
+from uchicagoldrtoolsuite.bit_level.lib.converters.officetotxtconverter import OfficeToTXTConverter
+from uchicagoldrtoolsuite.bit_level.lib.converters.videoconverter import VideoConverter
+
+from uchicagoldrtoolsuite.bit_level.lib.techmdcreators.fitscreator import FITsCreator
 
 from uchicagoldrtoolsuite.bit_level.lib.abc.ldritem import LDRItem
 from uchicagoldrtoolsuite.bit_level.lib.abc.abc.packager import Packager
@@ -75,10 +87,21 @@ class TestStructures(unittest.TestCase):
         self.assertTrue(type(x) == inheritance_tree[-1])
 
     def testMaterialSuite(self):
-        x = MaterialSuite('someid')
+        x = MaterialSuite()
         inheritance_tree = [
             Structure,
             MaterialSuite
+        ]
+        for parent in inheritance_tree:
+            self.assertTrue(isinstance(x, parent))
+        self.assertTrue(type(x) == inheritance_tree[-1])
+
+    def testPresformMaterialSuite(self):
+        x = PresformMaterialSuite()
+        inheritance_tree = [
+            Structure,
+            MaterialSuite,
+            PresformMaterialSuite
         ]
         for parent in inheritance_tree:
             self.assertTrue(isinstance(x, parent))
@@ -119,7 +142,7 @@ class TestLDRItems(unittest.TestCase):
 
 class TestPackagers(unittest.TestCase):
     def testFileSystemMaterialSuitePackager(self):
-        x = FileSystemMaterialSuitePackager()
+        x = FileSystemMaterialSuitePackager("", "", "", "", "")
         inheritance_tree = [
             Packager,
             MaterialSuitePackager,
@@ -130,7 +153,7 @@ class TestPackagers(unittest.TestCase):
         self.assertTrue(type(x) == inheritance_tree[-1])
 
     def testFileSystemSegmentPackager(self):
-        x = FileSystemSegmentPackager('label', 6)
+        x = FileSystemSegmentPackager("", "", "", "1")
         inheritance_tree = [
             Packager,
             SegmentPackager,
@@ -156,7 +179,7 @@ class TestSerializationReaders(unittest.TestCase):
 
 class TestSerializationWriters(unittest.TestCase):
     def testFileSystemStageWriter(self):
-        x = FileSystemStageWriter(FileSystemStageReader('/not/real/').read())
+        x = FileSystemStageWriter(FileSystemStageReader('/not/real/').read(), '/not/real')
         inheritance_tree = [
             SerializationWriter,
             StageSerializationWriter,
@@ -191,6 +214,7 @@ class testRetrievers(unittest.TestCase):
             self.assertTrue(isinstance(x, parent))
         self.assertTrue(isinstance(x, DatabaseEnvironmentMixin))
         self.assertTrue(type(x) == inheritance_tree[-1])
+
 
 class testResolvers(unittest.TestCase):
     def testDatabaseContentPointerResolver(self):
@@ -260,6 +284,45 @@ class TestApplications(unittest.TestCase):
         for parent in inheritance_tree:
             self.assertTrue(isinstance(x, parent))
         self.assertTrue(type(x) == inheritance_tree[-1])
+
+    def testConverters(self):
+        converters = [
+            AudioConverter,
+            ImageConverter,
+            OfficeToCSVConverter,
+            OfficeToPDFConverter,
+            OfficeToTXTConverter,
+            VideoConverter
+        ]
+
+        for x in converters:
+            conv = x(MaterialSuite(), "/not/real")
+            inheritance_tree = [
+                Converter,
+                x
+            ]
+            for parent in inheritance_tree:
+                self.assertTrue(isinstance(conv, parent))
+            self.assertTrue(type(conv) == inheritance_tree[-1])
+
+    def testTechnicalMetadataCreators(self):
+        x = FITsCreator(MaterialSuite(), "/not/real")
+        self.assertTrue(type(x) == FITsCreator)
+        self.assertTrue(isinstance(x, TechnicalMetadataCreator))
+#        techmd_creators = [
+#            FITsCreator
+#        ]
+#
+#        for x in techmd_creators:
+#            techmd_creator = x(MaterialSuite(), "/not/real")
+#            inheritance_tree = [
+#                TechnicalMetadataCreator,
+#                x
+#            ]
+#            for parent in inheritance_tree:
+#                print("Checking inheritance from {}".format(str(parent)))
+#                self.assertTrue(isinstance(techmd_creator, parent))
+#            self.assertTrue(type(techmd_creator) == inheritance_tree[-1])
 
 
 #    def testArchiver(self):

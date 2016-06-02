@@ -1,14 +1,12 @@
-from os.path import isdir, abspath, split, join
-from os import makedirs
-from xml.etree.ElementTree import register_namespace
-
-from pypremis.lib import PremisRecord
+from sys import stdout
+from os.path import join
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-#from uchicagoldrtoolsuite.lib.stagereader import StageReader
-from ..lib.technicalmetadatarecordcreator \
-    import TechnicalMetadataRecordCreator
-from .premisobjectcreator import build_stage_reader
+from ..lib.filesystemstagewriter import FileSystemStageWriter
+from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.generictechnicalmetadatacreator import \
+    GenericTechnicalMetadataCreator
+from ..lib.techmdcreators.fitscreator import FITsCreator
 
 
 __author__ = "Brian Balsamo"
@@ -21,9 +19,9 @@ __version__ = "0.0.1dev"
 
 def launch():
     """
-    the hook for setuptools console scripts
+    entry point launch hook
     """
-    app = TechnicalMetadataRecordUtility(
+    app = TechnicalMetadataCreator(
             __author__=__author__,
             __email__=__email__,
             __company__=__company__,
@@ -34,145 +32,61 @@ def launch():
     app.main()
 
 
-def build_record(path, premisfp, timeout):
-    """
-    build a new FITS record. Update the corresponding PREMIS record
-    in place
-
-    __Args__
-
-    1) path (str): the path to the file to be examined
-    2) premisfp (str): The path to the files PREMIS object record
-    3) timeout (int): How long to give FITS with the files before aborting
-
-    __Returns__
-
-    record (xml.etree.ElementTree): The FITS record
-    """
-    premis = PremisRecord(frompath=premisfp)
-    builder = TechnicalMetadataRecordCreator(path, premis, timeout=timeout)
-    record = builder.get_record()
-    premis = builder.get_premis()
-    # dump all the ns0 prints
-    register_namespace('', 'http://hul.harvard.edu/ois/xml/ns/fits/fits_output')
-    premis.write_to_file(premisfp)
-    return record
-
-
-def write_records(records):
-    """
-    write a stack of record tuples to their specified locations
-
-    __Args__
-
-    1) records (list): A list of tuples in the format (FITS Record instance,
-    proposed path)
-    """
-    while records:
-        x = records.pop()
-        target_path = x[1]
-        record = x[0]
-        if not isdir(split(target_path)[0]):
-            makedirs(split(target_path)[0])
-        record.write(target_path)
-
-
 class TechnicalMetadataCreator(CLIApp):
     """
-    The CLI App for generating FITS records for staged materials
+    Creates technical metadata (FITs) for all the material suites in a stage.
     """
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
-                          "for creating original technical metadata records " +
-                          "for materials in staging structures.",
+                          "creating technical metadata for materials in " +
+                          "a stage.",
                           epilog="{}\n".format(self.__copyright__) +
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument(
-            'path',
-            help='Specify the path to the staging id'
-        )
+        self.parser.add_argument("stage_id", help="The id of the stage",
+                                 type=str, action='store')
+        self.parser.add_argument("--skip-existing", help="Skip material " +
+                                 "suites which already claim to have " +
+                                 "technical metadata",
+                                 action='store_true',
+                                 default=False)
+        self.parser.add_argument("--staging_env", help="The path to your " +
+                                 "staging environment",
+                                 type=str,
+                                 default=None)
 
-        self.parser.add_argument(
-            '-r', '--root',
-            default=None,
-            help='Specify the root path for the staging directory, if not ' +
-            'the immediate containing directory.'
-        )
-
-        self.parser.add_argument(
-            '--batch-size',
-            type=int,
-            default=0,
-            help='The maximum batch to store before writing into the staging ' +
-            'environment. Set to 0 for no maximum batch size.'
-        )
-
-        self.parser.add_argument(
-            '--overwrite',
-            default=False,
-            action='store_true',
-            help='A flag to specify overwriting existing PREMIS records. ' +
-            'Defaults to False.'
-        )
-
-        self.parser.add_argument(
-            '--premis',
-            default=False,
-            action='store_true',
-            help='Create premis records for files ending in .premis.xml.' +
-            'Defaults to False.'
-        )
-
-        self.parser.add_argument(
-            '--fits',
-            default=False,
-            action='store_true',
-            help='Create premis records for files ending in .fits.xml.' +
-            'Defaults to False.'
-        )
-        self.parser.add_argument(
-            '--timeout',
-            default=43200,
-            type=int,
-            help='Specify how many seconds can elapse while a single ' +
-            'fits record is being produced. Default is 12 hours'
-        )
+        # Parse arguments into args namespace
         args = self.parser.parse_args()
 
-        path = abspath(args.path)
-        if args.root:
-            root = abspath(args.root)
+        # Set conf
+        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+
+        # App code
+
+        if args.staging_env:
+            staging_env = args.staging_env
         else:
-            root = args.root
-        stagereader = build_stage_reader(path, root)
-        file_suites = stagereader.file_suites_paths
+            staging_env = self.conf.get("Paths", "staging_environment_path")
 
-        records = []
+        stage_fullpath = join(staging_env, args.stage_id)
+        reader = FileSystemStageReader(stage_fullpath)
+        stage = reader.read()
+        stdout.write("Stage: " + stage_fullpath + "\n")
 
-        for x in file_suites:
-            if x.fits and not args.overwrite:
-                continue
-#            if not args.fits and \
-#                    StageReader.re_trailing_fits.search(x.original):
-                continue
-#            if not args.premis and \
-#                    StageReader.re_trailing_premis.search(x.original):
-                continue
+        stdout.write("Processing...\n")
 
-            record = build_record(join(stagereader.root_fullpath, x.original),
-                                  join(stagereader.root_fullpath, x.premis[0]),
-                                  args.timeout)
-            path = join(stagereader.root_fullpath,
-                        stagereader.hypothesize_fits_from_orig_node(
-                            stagereader.fpt.tree.get_node(x.original)
-                        )
-                        )
-            tup = (record, path)
-            records.append(tup)
-            if args.batch_size:
-                if len(records) >= args.batch_size:
-                    write_records(records)
-        write_records(records)
+        techmd_processors = [FITsCreator]
+        techmd_creator = GenericTechnicalMetadataCreator(stage,
+                                                         techmd_processors)
+        techmd_creator.process(skip_existing=args.skip_existing)
+
+        writer = FileSystemStageWriter(stage, staging_env)
+        writer.write()
+        stdout.write("Complete\n")
+
+
+if __name__ == "__main__":
+    s = TechnicalMetadataCreator()
+    s.main()

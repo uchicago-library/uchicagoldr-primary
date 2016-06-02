@@ -1,11 +1,10 @@
-from datetime import datetime
-from os import makedirs, mkdir
-from os.path import exists, join, relpath, dirname
-from sys import stderr, stdout
+from os import makedirs
+from os.path import join, dirname, isfile
 
 from .abc.stageserializationwriter import StageSerializationWriter
-from .ldritemoperations import copy
+from .ldritemoperations import copy, hash_ldritem
 from .ldrpath import LDRPath
+from ...core.lib.convenience import iso8601_dt
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -20,105 +19,145 @@ class FileSystemStageWriter(StageSerializationWriter):
     """
     writes a Staging Structure to disk as a series of directories and files
     """
-    def __init__(self, aStructure):
-        super().__init__()
+    def __init__(self, aStructure, aRoot):
+        """
+        spawn a writer
+
+        __Args__
+
+        1. aStructure (Stage): The Stage to write to disk
+        2. aRoot (str): The path to your staging environment
+        """
+        super().__init__(aStructure)
+        self.stage_env_path = aRoot
         self.set_implementation('file system')
-        self.structure = aStructure
 
-    def write(self, stage_directory, origin_root):
+    def _make_containing_dir(self, path):
+        some_dir = dirname(path)
+        makedirs(some_dir, exist_ok=True)
 
-        validated = self.structure.validate()
+    def _make_dir(self, dir_path):
+        makedirs(dir_path, exist_ok=True)
+
+    def _write_seg(self, seg, data_path, admin_path):
+        seg_data_path = join(data_path, seg.identifier)
+        seg_admin_path = join(admin_path, seg.identifier)
+
+        self._make_dir(seg_data_path)
+        self._make_dir(seg_admin_path)
+
+        manifest_path = join(seg_admin_path, 'manifest.txt')
+        if isfile(manifest_path):
+            with open(manifest_path, 'a') as f:
+                f.write('# manifest appended to at {}\n'.format(iso8601_dt()))
+        else:
+            with open(manifest_path, 'w') as f:
+                f.write('# manifest created at {}\n'.format(iso8601_dt()))
+
+        with open(manifest_path, 'a') as f:
+            for ms in seg.materialsuite_list:
+                self._write_materialsuite(
+                    ms,
+                    seg_data_path,
+                    seg_admin_path,
+                    f
+                )
+
+    def _write_materialsuite(self, ms, seg_data_path, seg_admin_path,
+                             manifest_flo):
+        self._write_ms_content(ms, seg_data_path, manifest_flo)
+        self._write_ms_premis(ms, seg_admin_path, manifest_flo)
+        self._write_ms_techmd(ms, seg_admin_path, manifest_flo)
+        self._write_ms_presforms(ms, seg_data_path, seg_admin_path,
+                                 manifest_flo)
+
+    def _write_ms_content(self, ms, data_dir, manifest_flo):
+        dst_path = join(data_dir, ms.get_content().item_name)
+        self._make_containing_dir(dst_path)
+        dst = LDRPath(dst_path, root=self.stage_env_path)
+        cr = copy(ms.get_content(), dst, clobber=True)
+        if cr.dst_hash is None:
+            cr.dst_hash = hash_ldritem(dst)
+        mf_line_str = "{}\t{}\n".format(dst.item_name, cr.dst_hash)
+        manifest_flo.write(mf_line_str)
+
+    def _write_ms_premis(self, ms, admin_dir, manifest_flo):
+        if ms.get_premis():
+            dst_path = join(admin_dir, "PREMIS",
+                            ms.get_content().item_name+".premis.xml")
+            self._make_containing_dir(dst_path)
+            dst = LDRPath(dst_path, root=self.stage_env_path)
+            cr = copy(ms.get_premis(), dst, clobber=True)
+            if cr.dst_hash is None:
+                cr.dst_hash = hash_ldritem(dst)
+            mf_line_str = "{}\t{}\n".format(dst.item_name, cr.dst_hash)
+            manifest_flo.write(mf_line_str)
+
+    def _write_ms_techmd(self, ms, admin_dir, manifest_flo):
+        if ms.get_technicalmetadata_list():
+            if len(ms.get_technicalmetadata_list()) > 1:
+                raise NotImplementedError("Currently the serializer only " +
+                                          "handles a single FITS record in " +
+                                          "the techmd array.")
+            dst_path = join(admin_dir, "TECHMD",
+                            ms.get_content().item_name+".fits.xml")
+            self._make_containing_dir(dst_path)
+            dst = LDRPath(dst_path, root=self.stage_env_path)
+            cr = copy(ms.get_technicalmetadata(0), dst, clobber=True)
+            if cr.dst_hash is None:
+                cr.dst_hash = hash_ldritem(dst)
+            mf_line_str = "{}\t{}\n".format(dst.item_name, cr.dst_hash)
+            manifest_flo.write(mf_line_str)
+
+    def _write_ms_presforms(self, ms, data_dir, admin_dir, manifest_flo):
+        if ms.get_presform_list():
+            for x in ms.get_presform_list():
+                x.content.item_name = ms.content.item_name + \
+                    ".presform" + \
+                    x.extension
+                self._write_ms_content(x, data_dir, manifest_flo)
+                self._write_ms_premis(x, admin_dir, manifest_flo)
+                self._write_ms_techmd(x, admin_dir, manifest_flo)
+                self._write_ms_presforms(x, data_dir, admin_dir, manifest_flo)
+
+    def write(self):
+
+        validated = self.get_struct().validate()
         if not validated:
             raise ValueError("Cannot serialize an invalid " +
                              " structure of type {}".
-                             format(type(self.structure).__name__))
-        else:
-            data_dir = join(stage_directory, 'data')
-            admin_dir = join(stage_directory, 'admin')
-            if not exists(stage_directory):
-                mkdir(stage_directory)
-            if not exists(admin_dir):
-                mkdir(admin_dir)
-            if not exists(data_dir):
-                mkdir(data_dir)
-            adminnotes_dir = join(admin_dir, 'adminnotes')
-            accessionrecords_dir = join(admin_dir, 'accessionrecords')
-            legalnotes_dir = join(admin_dir, 'legalnotes')
-            if not exists(data_dir):
-                mkdir(data_dir)
-            if not exists(admin_dir):
-                mkdir(admin_dir)
-            if not exists(data_dir):
-                mkdir(data_dir)
-            if not exists(admin_dir):
-                mkdir(admin_dir)
-            if not exists(adminnotes_dir):
-                mkdir(adminnotes_dir)
-            if not exists(accessionrecords_dir):
-                mkdir(accessionrecords_dir)
-            if not exists(legalnotes_dir):
-                mkdir(legalnotes_dir)
-            for n_item in self.structure.segment:
-                cur_data_dir = join(data_dir, n_item.identifier)
-                cur_admin_dir = join(admin_dir, n_item.identifier)
-                if not exists(cur_data_dir):
-                    mkdir(cur_data_dir)
-                if not exists(cur_admin_dir):
-                    mkdir(cur_admin_dir)
-                manifest = join(cur_admin_dir, 'manifest.txt')
-                manifest = LDRPath(manifest)
-                if not exists(manifest.item_name):
-                    with manifest.open('wb') as mf:
-                        today = datetime.today()
+                             format(type(self.get_struct()).__name__))
 
-                        today_str = "# manifest generated on {}\n".\
-                                    format(str(today.year) + '-' +
-                                           str(today.month) + '-' +
-                                           str(today.day))
-                        today_str = bytes(today_str.encode('utf-8'))
-                        mf.write(today_str)
+        stage_directory = join(self.stage_env_path,
+                               self.get_struct().get_identifier())
 
-                for n_suite in n_item.materialsuite:
-                    for req_part in n_suite.required_parts:
-                        if type(getattr(n_suite, req_part, None)) == list:
-                            for n_file in getattr(n_suite, req_part):
-                                if stage_directory in n_file.item_name:
-                                    pass
-                                else:
-                                    relevant_path = relpath(n_file.item_name,
-                                                            origin_root)
-                                    new_file_name = join(cur_data_dir,
-                                                         relevant_path)
-                                    new_file = LDRPath(
-                                        new_file_name)
-                                    makedirs(dirname(new_file.item_name),
-                                             exist_ok=True)
-                                    success = False
-                                    success, checksum_matched, copy_status,\
-                                        checksum1 = copy(n_file,
-                                                         new_file)
-                                    if not success:
-                                        stderr.write("{} could not ".
-                                                     format(n_file.item_name +
-                                                            "be copied to {}".
-                                                            format(
-                                                                new_file.
-                                                                item_name)))
-                                    if copy_status == 'copied':
-                                        if checksum_matched:
-                                            manifest_line = "{}\t{}\n".\
-                                                            format(relevant_path,
-                                                                   checksum1)
-                                            manifest_line = bytes(
-                                                manifest_line.encode('utf-8'))
-                                            with manifest.open('ab') as f:
-                                                f.write(manifest_line)
-                                        elif copy_status == 'already moved':
-                                            stderr.write("no checksum for {}\n".
-                                                         format(new_file.
-                                                                item_name))
-                                    else:
-                                        stdout.write("{} was "
-                                                     .format(relevant_path) +
-                                                     " already present" +
-                                                     " in the segment\n")
+        self._make_dir(stage_directory)
+
+        data_dir = join(stage_directory, 'data')
+        admin_dir = join(stage_directory, 'admin')
+        adminnotes_dir = join(admin_dir, 'adminnotes')
+        accessionrecords_dir = join(admin_dir, 'accessionrecords')
+        legalnotes_dir = join(admin_dir, 'legalnotes')
+
+        for x in [stage_directory, data_dir, admin_dir, adminnotes_dir,
+                  accessionrecords_dir, legalnotes_dir]:
+            self._make_dir(x)
+
+        for seg in self.get_struct().segment_list:
+            self._write_seg(seg, data_dir, admin_dir)
+
+        for legalnote in self.get_struct().get_legalnote_list():
+            recv_item_path = join(legalnotes_dir, legalnote.item_name)
+            recv_item = LDRPath(recv_item_path, root=legalnotes_dir)
+            copy(legalnote, recv_item)
+
+        for adminnote in self.get_struct().get_adminnote_list():
+            recv_item_path = join(adminnotes_dir, adminnote.item_name)
+            recv_item = LDRPath(recv_item_path, root=adminnotes_dir)
+            copy(adminnote, recv_item)
+
+        for accessionrecord in self.get_struct().get_accessionrecord_list():
+            recv_item_path = join(accessionrecords_dir,
+                                  accessionrecord.item_name)
+            recv_item = LDRPath(recv_item_path, root=accessionrecords_dir)
+            copy(accessionrecord, recv_item)

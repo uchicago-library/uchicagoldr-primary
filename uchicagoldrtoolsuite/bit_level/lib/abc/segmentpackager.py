@@ -26,7 +26,7 @@ class SegmentPackager(Packager, metaclass=ABCMeta):
 
     @abstractmethod
     def __init__(self):
-        self.set_struct(Segment)
+        super().__init__()
 
     def set_msuite_packager(self, value):
         self._msuite_packager = value

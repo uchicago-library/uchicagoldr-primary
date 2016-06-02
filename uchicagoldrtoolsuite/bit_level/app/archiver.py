@@ -1,10 +1,18 @@
-from uuid import uuid1
+
+from grp import getgrnam
+from os import chmod, chown
+from os.path import join
+from pwd import getpwnam
+from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.archivestructure import ArchiveStructure
-from ..lib.filesystemarchivestructurewriter import FileSystemArchiverStructureWriter
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
+from ..lib.absolutefilepathtree import AbsoluteFilePathTree
+from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.filesystemarchivewriter import FileSystemArchiveWriter
+from ..lib.stageauditor import StageAuditor
+from ..lib.stagetoarchivetransformer import StageToArchiveTransformer
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -35,43 +43,59 @@ class Archiver(CLIApp):
     resulting Staging Structure into an Archive Structure and writes that
     Archive Structure to a location.
     """
+
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
-                          "for moving materials into staging structures.",
+                          "for moving materials into the archive.",
                           epilog="{}\n".format(self.__copyright__) +
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument("directory", type=str, action='store')
-        self.parser.add_argument("source_root", type=str, action='store')
-        self.parser.add_argument("destination_root", type=str, action='store')
-
+        self.parser.add_argument("directory", type=str, action='store',
+                                 help="Enter the stage directory that is" +
+                                 " ready to be archived")
+        self.parser.add_argument("origin_root", type=str, action='store',
+                                 help="Enter the root of the directory " +
+                                 "entered")
+        self.parser.add_argument("--archive", type=str, action='store',
+                                 help="Use this to specify a non-default " +
+                                 "archive location",
+                                 default="/data/repository/archive")
+        self.parser.add_argument("--group", type=str, action='store',
+                                 help="Enter the name of the group that" +
+                                 " should own the files in the archive.", default="repository")
+        self.parser.add_argument("--user", type=str, action='store',
+                                 help="Enter the name of the user who " +
+                                 "should own the files in the archive.", default="repository")
+        self.parser.add_argument(
+            "--dry-run", help="Use this flag if you don't actually want to " +
+            "change ownership of the files", action='store_true', default=False)
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-        staging_reader = StagingDirectoryReader(args.directory)
-        archive_structure = ArchiveStructure(uuid1())
+        staging_reader = FileSystemStageReader(args.directory)
         staging_structure = staging_reader.read()
-        archivable_premisrecords = []
-        archivable_dataobjects = []
-        archivable_techmdrecords = []
-        archivable_accessionrecords = []
-        for n_segment in staging_structure.segment:
-            for n_msuite in n_segment.materialsuite:
-                archivable_premisrecords.extend(n_msuite.premis)
-                archivable_techmdrecords.extend(n_msuite.technicalmetadata)
-                archivable_dataobjects.extend(n_msuite.original)
-                archivable_dataobjects.extend(n_msuite.presform)
+        transformer = StageToArchiveTransformer(staging_structure)
+        id_type, identifier = IDBuilder().build('premisID').show()
+        archive_structure = transformer.transform(defined_id=identifier)
+        writer = FileSystemArchiveWriter(archive_structure, args.archive,
+                                         args.directory)
+        writer.write()
+        stdout.write("new arf located at {}\n".format(
+            join(writer.archive_loc,
+                 writer.pairtree.get_pairtree_path())))
+        file_tree = AbsoluteFilePathTree(
+            join(args.archive, writer.pairtree.get_pairtree_path()))
 
-        for n_record in staging_structure.accessionrecord:
-            archivable_accessionrecords.extend(n_record)
-        archive_structure.accession_record = archivable_accessionrecords
-        archive_structure.premis_object = archivable_premisrecords
-        archive_structure.data_object = archivable_dataobjects
-        archive_structure.technical_metadata = archivable_techmdrecords
-
-        archiver_writer = FileSystemArchiverStructureWriter(archive_structure)
-        archiver_writer.write()
+        if not args.dry_run:
+            gid = getpwnam(args.user).pw_uid
+            uid = getgrnam(args.group).gr_gid
+            for f in file_tree:
+                if len(f.split('pairtree_root')) <= 1:
+                    pass
+                else:
+                    chown(f, uid, gid)
+                    chmod(f, 0x0750)
 
 if __name__ == "__main__":
     a = Archiver()

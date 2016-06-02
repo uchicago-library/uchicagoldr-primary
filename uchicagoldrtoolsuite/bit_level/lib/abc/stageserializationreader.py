@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from uuid import uuid1
 
 from .abc.serializationreader import SerializationReader
 from ..stage import Stage
@@ -21,7 +22,7 @@ class StageSerializationReader(SerializationReader, metaclass=ABCMeta):
 
     @abstractmethod
     def __init__(self):
-        self.set_struct(Stage)
+        self.set_struct(Stage(str(uuid1())))
 
     def get_stage_id(self):
         return self._stage_id

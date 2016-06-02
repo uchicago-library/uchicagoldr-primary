@@ -1,4 +1,5 @@
-from os.path import split, relpath
+from pathlib import Path
+from os.path import split
 
 
 __author__ = "Brian Balsamo"
@@ -33,12 +34,11 @@ class RootedPath(object):
         dir of the leaf of the fullpath
         """
         self.fullpath = path
+        _path = Path(self.fullpath)
         if root is None:
             self.root = split(path)[0]
         else:
             self.root = root
-        if self.root not in split(path)[0]:
-            raise ValueError('The root is not a subset of the path\n' +
-                             'Path: {}\n'.format(path) +
-                             'Root: {}'.format(root))
-        self.path = relpath(path, start=self.root)
+        self.path = _path.relative_to(self.root)
+        if self.path == ".":
+            self.path = ""

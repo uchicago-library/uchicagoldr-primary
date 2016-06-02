@@ -17,22 +17,63 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     ABC for all MaterialSuitePackagers
 
     mandates:
+        # .get_original()
         * .get_premis()
         * .get_techmd()
         * .get_presform()
+
+    all of which should return iters of LDRItem subclasses
+    if an implementation doesn't implement any of these by choice it should
+    raise a NotImplementedError. The default .package() implementation
+    simply eats these.
     """
     @abstractmethod
     def __init__(self):
-        self.set_struct(MaterialSuite)
+        self.set_struct(MaterialSuite())
+
+    @abstractmethod
+    def get_content(self):
+        pass
 
     @abstractmethod
     def get_premis(self):
         pass
 
     @abstractmethod
-    def get_techmd(self):
+    def get_techmd_list(self):
         pass
 
     @abstractmethod
-    def get_presform(self):
+    def get_presform_list(self):
         pass
+
+    def package(self):
+        """
+        default package implementation
+        """
+        ms = self.get_struct()
+        try:
+            val = self.get_content()
+            if val:
+                ms.set_content(val)
+        except NotImplementedError:
+            pass
+        try:
+            val = self.get_premis()
+            if val:
+                ms.set_premis(val)
+        except NotImplementedError:
+            pass
+        try:
+            val = self.get_presform_list()
+            if val:
+                ms.set_presform_list(val)
+        except NotImplementedError:
+            pass
+        try:
+            val = self.get_techmd_list()
+            if val:
+                ms.set_technicalmetadata_list(val)
+        except NotImplementedError:
+            pass
+        return ms

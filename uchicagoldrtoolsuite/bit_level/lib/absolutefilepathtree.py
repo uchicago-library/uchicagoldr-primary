@@ -1,8 +1,6 @@
-from os.path import isabs, isfile, isdir, split, getsize
-from mimetypes import guess_type
+from os.path import isabs, isfile, isdir, split
 
 from .filepathtree import FilePathTree
-from ...core.lib.convenience import sane_hash
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -27,12 +25,6 @@ class AbsoluteFilePathTree(FilePathTree):
         if path is not None:
             if not isabs(path):
                 raise ValueError()
-        self.shas = None
-        self.md5s = None
-        self.ext_mimes = None
-        self.magic_mimes = None
-        self.file_sizes = None
-        self.total_size = None
 
         FilePathTree.__init__(self, path=path, filter_pattern=filter_pattern,
                               leaf_dirs=leaf_dirs)
@@ -161,4 +153,3 @@ class AbsoluteFilePathTree(FilePathTree):
                 if split(y)[1] == filename:
                     matches.append(y)
         return matches
-
