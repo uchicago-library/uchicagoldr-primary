@@ -1,7 +1,7 @@
 
 from os.path import exists, join
 
-from .ldrpath import LDRPath
+from ..ldritems.ldrpath import LDRPath
 
 
 class ArchiveManifestWriter(object):

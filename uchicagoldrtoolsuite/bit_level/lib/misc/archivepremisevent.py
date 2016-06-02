@@ -6,7 +6,7 @@ from pypremis.nodes import Event, EventIdentifier, EventOutcomeInformation,\
 
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
-from .ldritemoperations import get_an_agent_id
+from ..ldritems.ldritemoperations import get_an_agent_id
 
 
 class ArchivePremisEvent(object):
