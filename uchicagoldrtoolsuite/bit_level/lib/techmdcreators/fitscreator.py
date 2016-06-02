@@ -5,10 +5,10 @@ from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from ..ldrpath import LDRPath
-from ..abc.ldritem import LDRItem
-from ..abc.technicalmetadatacreator import TechnicalMetadataCreator
-from ..ldritemoperations import copy
+from ..ldritems.ldrpath import LDRPath
+from ..ldritems.abc.ldritem import LDRItem
+from .abc.technicalmetadatacreator import TechnicalMetadataCreator
+from ..ldritems.ldritemoperations import copy
 from ....core.lib.bash_cmd import BashCommand
 
 

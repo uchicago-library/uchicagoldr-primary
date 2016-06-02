@@ -5,10 +5,10 @@ from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from ..ldrpath import LDRPath
+from ...ldritems.ldrpath import LDRPath
 from ....core.lib.convenience import iso8601_dt
 from ....core.lib.idbuilder import IDBuilder
-from ..ldritemoperations import copy
+from ...ldritems.ldritemoperations import copy
 
 
 __author__ = "Brian Balsamo"
