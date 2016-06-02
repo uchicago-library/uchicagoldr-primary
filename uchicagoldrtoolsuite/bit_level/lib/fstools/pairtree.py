@@ -1,6 +1,6 @@
 from os.path import join
 
-from .ldritemoperations import pairtree_a_string
+from ..ldritems.ldritemoperations import pairtree_a_string
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
