@@ -5,7 +5,7 @@ from xml.etree import ElementTree
 
 from .abc.auditor import Auditor
 from .errorpackager import ErrorPackager
-from .abc.ldritem import LDRItem
+from ..ldritems.abc.ldritem import LDRItem
 
 
 class FitsAuditor(Auditor):

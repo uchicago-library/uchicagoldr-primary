@@ -1,6 +1,6 @@
 from sys import stderr
 
-from .archive import Archive
+from ..structures.archive import Archive
 from .abc.auditor import Auditor
 from .accessionrecordauditor import AccessionRecordAuditor
 from .errorpackager import ErrorPackager

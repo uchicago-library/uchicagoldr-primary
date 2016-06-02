@@ -5,7 +5,7 @@ from tempfile import TemporaryFile
 from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
 from .abc.auditor import Auditor
-from .abc.ldritem import LDRItem
+from ..ldritems.abc.ldritem import LDRItem
 from .errorpackager import ErrorPackager
 
 
