@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from .abc.serializationwriter import SerializationWriter
-from ..stage import Stage
+from ...structures.stage import Stage
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
