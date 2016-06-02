@@ -1,5 +1,5 @@
-from .abc.materialsuitepackager import MaterialSuitePackager
-from .ldrpath import LDRPath
+from ..readers.abc.materialsuitepackager import MaterialSuitePackager
+from ..ldritems.ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo"
