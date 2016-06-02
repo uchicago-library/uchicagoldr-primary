@@ -1,11 +1,14 @@
 
+from grp import getgrnam
+from os import chmod, chown
 from os.path import join
+from pwd import getpwnam
 from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
-
+from ..lib.absolutefilepathtree import AbsoluteFilePathTree
 from ..lib.filesystemstagereader import FileSystemStageReader
 from ..lib.filesystemarchivewriter import FileSystemArchiveWriter
 from ..lib.stageauditor import StageAuditor
@@ -59,6 +62,15 @@ class Archiver(CLIApp):
                                  help="Use this to specify a non-default " +
                                  "archive location",
                                  default="/data/repository/archive")
+        self.parser.add_argument("--group", type=str, action='store',
+                                 help="Enter the name of the group that" +
+                                 " should own the files in the archive.", default="repository")
+        self.parser.add_argument("--user", type=str, action='store',
+                                 help="Enter the name of the user who " +
+                                 "should own the files in the archive.", default="repository")
+        self.parser.add_argument(
+            "--dry-run", help="Use this flag if you don't actually want to " +
+            "change ownership of the files", action='store_true', default=False)
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         staging_reader = FileSystemStageReader(args.directory)
@@ -72,6 +84,18 @@ class Archiver(CLIApp):
         stdout.write("new arf located at {}\n".format(
             join(writer.archive_loc,
                  writer.pairtree.get_pairtree_path())))
+        file_tree = AbsoluteFilePathTree(
+            join(args.archive, writer.pairtree.get_pairtree_path()))
+
+        if not args.dry_run:
+            gid = getpwnam(args.user).pw_uid
+            uid = getgrnam(args.group).gr_gid
+            for f in file_tree:
+                if len(f.split('pairtree_root')) <= 1:
+                    pass
+                else:
+                    chown(f, uid, gid)
+                    chmod(f, 0x0750)
 
 if __name__ == "__main__":
     a = Archiver()
