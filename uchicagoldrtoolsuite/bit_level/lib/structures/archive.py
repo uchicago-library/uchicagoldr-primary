@@ -1,5 +1,5 @@
 from .abc.structure import Structure
-from .abc.ldritem import LDRItem
+from ..ldritems.abc.ldritem import LDRItem
 from .segment import Segment
 
 __author__ = "Tyler Danstrom"
