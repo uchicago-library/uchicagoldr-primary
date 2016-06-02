@@ -2,9 +2,9 @@ from sys import stdout
 from os.path import join
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filesystemstagewriter import FileSystemStageWriter
-from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.genericpremiscreator import GenericPREMISCreator
+from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
+from ..lib.readers.filesystemstagereader import FileSystemStageReader
+from ..lib.processors.genericpremiscreator import GenericPREMISCreator
 
 
 __author__ = "Brian Balsamo"

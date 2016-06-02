@@ -2,9 +2,9 @@ from os.path import join, dirname, expanduser, expandvars
 from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filesystemstagewriter import FileSystemStageWriter
-from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.externalfilesystemsegmentpackager import \
+from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
+from ..lib.readers.filesystemstagereader import FileSystemStageReader
+from ..lib.externalpackagers.externalfilesystemsegmentpackager import \
     ExternalFileSystemSegmentPackager
 
 
