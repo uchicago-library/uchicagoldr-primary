@@ -7,6 +7,7 @@ from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from .archive import Archive
+from .accessionrecordmodifier import AccessionRecordModifier
 from .archivefitsmodifier import ArchiveFitsModifier
 from .archivemanifestwriter import ArchiveManifestWriter
 from .archivepremismodifier import ArchivePremisModifier
@@ -16,6 +17,9 @@ from .ldritemoperations import copy
 from .ldrpath import LDRPath
 from .pairtree import Pairtree
 from .premisdigestextractor import PremisDigestExtractor
+
+from .premisrestrictionextractor import PremisRestrictionsExtractor
+
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
@@ -49,9 +53,10 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.premis_modifier = ArchivePremisModifier
         self.fits_modifier = ArchiveFitsModifier
         self.file_digest_extraction = PremisDigestExtractor
+        self.file_restriction_extraction = PremisRestrictionsExtractor
         self.manifest_writer = ArchiveManifestWriter(archive_loc)
         self.archive_loc = archive_loc
-
+        self.accessrecord_modifier = AccessionRecordModifier
     def write(self):
         """
         checks of the structure is validate and audits the contents of the
@@ -85,11 +90,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             makedirs(accrecord_dir, exist_ok=True)
             makedirs(legalnote_dir, exist_ok=True)
             makedirs(adminnote_dir, exist_ok=True)
+            accrecords = []
             for n_acc_record in self.structure.accessionrecord_list:
                 acc_filename = basename(n_acc_record.item_name)
                 copy(n_acc_record, LDRPath(
                     join(accrecord_dir,
                          acc_filename)))
+                accrecords.append(join(accrecord_dir, acc_filename))
             for n_legal_note in self.structure.legalnote_list:
                 legalnote_filename = basename(n_legal_note.item_name)
                 copy(n_legal_note, LDRPath(
@@ -100,6 +107,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 copy(n_adminnote, LDRPath(
                     join(adminnote_dir,
                          adminnote_filename)))
+            accession_restrictions = set([])
             for n_segment in self.structure.segment_list:
                 segment_id = n_segment.label+'-'+str(n_segment.run)
                 techmd_dir = join(admin_dir, segment_id, 'TECHMD')
@@ -111,13 +119,19 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 for n_msuite in n_segment.materialsuite_list:
                     n_content_destination_fullpath = join(
                         data_dir, segment_id, n_msuite.content.item_name)
-                    new_premis_record = self.premis_modifier(
-                        n_msuite.premis, n_content_destination_fullpath).\
-                        modify_record
+
+                    modifier = self.premis_modifier(
+                        n_msuite.premis, n_content_destination_fullpath)
+                    modifier.change_record()
                     digest_data = self.file_digest_extraction(
                         n_msuite.premis).extract_digests()
-                    self.manifest_writer.write_a_line(
+                    restrictions = self.file_restriction_extraction(
+                        n_msuite.premis).extract_restrictions()
+                    for n_restriction in restrictions:
+                        accession_restrictions.add(n_restriction)
+                    self.manifest_writer.add_a_line(
                         n_content_destination_fullpath, digest_data)
+
                     makedirs(
                         join(data_dir, dirname(
                             n_msuite.content.item_name)), exist_ok=True)
@@ -128,59 +142,75 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                         join(techmd_dir, dirname(
                             n_msuite.content.item_name)), exist_ok=True)
 
-        #             new_premis_path = join(
-        #                 premis_dir, n_msuite.premis.item_name)
-        #             new_content_path = join(
-        #                 data_dir, n_msuite.content.item_name)
-        #             new_content_ldrpath = LDRPath(new_content_path)
-        #             new_premis_record.write(new_premis_path)
-        #             copy(n_msuite.content, new_content_ldrpath)
+                    new_premis_path = join(
+                        premis_dir, n_msuite.premis.item_name)
+                    new_content_path = join(
+                        data_dir, segment_id,
+                        n_msuite.content.item_name)
 
-        #             for n_techmd in n_msuite.technicalmetadata_list:
-        #                 new_tech_record_loc = join(
-        #                     techmd_dir, n_techmd.content.item_name)
-        #                 new_tech_record = self.fits_modifier(
-        #                     n_techmd, new_tech_record_loc).modify_record()
-        #                 new_tech_path = join(
-        #                     techmd_dir, n_techmd.item_name)
-        #                 new_tech_record.write(new_tech_path)
+                    makedirs(new_content_path, exist_ok=True)
 
-        #             for n_presform in n_msuite.presform:
-        #                 n_destination_fullpath = join(
-        #                     data_dir, segment_id, n_presform.content.item_name)
-        #                 new_premis_record = self.premis_modifier(
-        #                     n_presform.premis, n_destination_fullpath).\
-        #                     modify_record()
-        #                 digest_data = self.file_digest_extraction(
-        #                     n_msuite.premis)
-        #                 self.manifest_writer(
-        #                     n_destination_fullpath, digest_data)
-        #                 makedirs(
-        #                     join(data_dir, dirname(
-        #                         n_presform.content.item_name)), exist_ok=True)
-        #                 makedirs(
-        #                     join(premis_dir, dirname(
-        #                         n_presform.content.item_name)), exist_ok=True)
-        #                 makedirs(
-        #                     join(techmd_dir, dirname(
-        #                         n_presform.content.item_name)), exist_ok=True)
-        #                 new_premis_path = join(
-        #                     premis_dir, n_presform.premis.item_name)
-        #                 new_presform_content_path = join(
-        #                     data_dir, n_presform.content.item_name)
-        #                 new_presform_content_ldrpath = LDRPath(
-        #                     new_presform_content_path)
-        #                 new_premis_record.write(new_premis_path)
-        #                 copy(n_presform.content, new_presform_content_ldrpath)
+                    new_content_ldrpath = LDRPath(new_content_path)
+                    modifier.record.write_to_file(new_premis_path)
+                    copy(n_msuite.content, new_content_ldrpath)
 
-        #                 for n_techmd in n_presform.technicalmetadata_list:
-        #                     new_tech_record_loc = join(
-        #                         techmd_dir, n_techmd.content.item_name)
-        #                     new_tech_record = self.fits_modifier(
-        #                         n_techmd, new_tech_record_loc).modify_record()
-        #                     new_tech_path = join(
-        #                         techmd_dir, n_techmd.item_name)
-        #                     new_tech_record.write(new_tech_path)
+                    for n_techmd in n_msuite.technicalmetadata_list:
+                        new_tech_record_loc = join(
+                            techmd_dir, n_techmd.item_name)
+                        new_tech_record = self.fits_modifier(
+                            n_techmd, new_tech_record_loc).modify_record()
+                        new_tech_record.write(new_tech_record_loc)
+                    if getattr(n_msuite, 'presform_list', None):
+                        for n_presform in n_msuite.presform_list:
+                            n_destination_fullpath = join(
+                                data_dir, segment_id,
+                                n_presform.content.item_name)
+                            modifier = self.premis_modifier(
+                            n_presform.premis, n_destination_fullpath)
+                            modifier.change_record()
+                            makedirs(
+                                join(data_dir, dirname(
+                                    n_presform.content.item_name)),
+                                exist_ok=True)
+                            makedirs(
+                                join(premis_dir, dirname(
+                                    n_presform.content.item_name)),
+                                exist_ok=True)
+                            makedirs(
+                                join(techmd_dir, dirname(
+                                    n_presform.content.item_name)),
+                                exist_ok=True)
+                            digest_data = self.file_digest_extraction(
+                                n_presform.premis).extract_digests()
+                            restrictions = self.file_restriction_extraction(
+                                n_presform.premis).extract_restrictions()
+                            self.manifest_writer.add_a_line(
+                                n_destination_fullpath, digest_data)
+
+                            new_premis_path = join(
+                                premis_dir, n_presform.premis.item_name)
+                            new_presform_content_path = join(
+                                data_dir, segment_id,
+                                n_presform.content.item_name)
+                            new_presform_content_ldrpath = LDRPath(
+                                new_presform_content_path)
+                            modifier.record.write_to_file(new_premis_path)
+                            copy(n_presform.content,
+                                 new_presform_content_ldrpath)
+                        for n_techmd in n_presform.technicalmetadata_list:
+                            new_tech_record_loc = join(
+                                techmd_dir, n_techmd.item_name)
+                            new_tech_record = self.fits_modifier(
+                                n_techmd, new_tech_record_loc).modify_record()
+
+                            new_tech_record.write(new_tech_record_loc)
+                self.manifest_writer.write()
+                for a_record in accrecords:
+                    acc_modifier = self.accessrecord_modifier(
+                        LDRPath(a_record))
+                    acc_modifier.add_restriction_info(list(restrictions))
+                    acc_modifier.write(a_record)
+
         else:
             stderr.write(self.structure.explain_results())
             stderr.write(self.audit_qualification.show_errors())

@@ -36,7 +36,6 @@ class ArchiveAuditor(Auditor):
     def audit(self):
 
         for n_segment in self.subject.segment_list:
-            print(n_segment.identifier)
             for n_record in self.subject.accessionrecord_list:
                 accession_audit = self.accessionrecordauditor(n_record).audit()
                 if not accession_audit:
