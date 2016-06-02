@@ -13,9 +13,9 @@ except:
 
 from ...core.lib.convenience import sane_hash
 from ...core.lib.idbuilder import IDBuilder
-from .ldritemoperations import copy
-from .abc.ldritem import LDRItem
-from .ldrpath import LDRPath
+from ..ldritems.ldritemoperations import copy
+from ..ldritems.abc.ldritem import LDRItem
+from ..ldritems.ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo"

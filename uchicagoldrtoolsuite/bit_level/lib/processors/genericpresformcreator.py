@@ -6,10 +6,10 @@ from os.path import join
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from .ldrpath import LDRPath
-from .materialsuite import MaterialSuite
-from .ldritemoperations import copy
-from .abc.ldritem import LDRItem
+from ..ldritems.ldrpath import LDRPath
+from ..structures.materialsuite import MaterialSuite
+from ..ldritems.ldritemoperations import copy
+from ..ldritems.abc.ldritem import LDRItem
 
 
 __author__ = "Brian Balsamo"
