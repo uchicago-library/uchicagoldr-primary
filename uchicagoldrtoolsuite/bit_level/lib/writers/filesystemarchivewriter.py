@@ -11,7 +11,6 @@ from .accessionrecordmodifier import AccessionRecordModifier
 from .archivefitsmodifier import ArchiveFitsModifier
 from .archivemanifestwriter import ArchiveManifestWriter
 from .archivepremismodifier import ArchivePremisModifier
-
 from .archiveauditor import ArchiveAuditor
 from .ldritemoperations import copy
 from .ldrpath import LDRPath
@@ -31,7 +30,13 @@ __version__ = "0.0.1dev"
 
 class FileSystemArchiveWriter(ArchiveSerializationWriter):
     """
-    writes an archive structure to the file system as a directory
+    writes an archive structure to the file system as a directory.
+
+    It is instantited with an instance of an ArchiveStructure,
+    the archive root directory, and the origin root directory,
+
+    Once instantiated, the write() method should be called when ready
+    to serialize the archive structure to disk.
     """
     def __init__(self, aStructure, archive_loc, origin_loc):
         """
@@ -43,11 +48,10 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         2. archive_loc (str): the root directory for the archive of the ldr
         3. origin_loc (str): the root directory of the stage directory
         being archived
-
         """
         self.structure = aStructure
         self.pairtree = Pairtree(self.structure.identifier)
-        self.audit_qualification = ArchiveAuditor(origin_loc, aStructure)
+        self.audit_qualification = ArchiveAuditor(aStructure)
         self.origin_root = split(origin_loc)[0]
         self.identifier = IDBuilder().build('premisID')
         self.premis_modifier = ArchivePremisModifier
@@ -57,6 +61,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.manifest_writer = ArchiveManifestWriter(archive_loc)
         self.archive_loc = archive_loc
         self.accessrecord_modifier = AccessionRecordModifier
+
     def write(self):
         """
         checks of the structure is validate and audits the contents of the
@@ -166,7 +171,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                                 data_dir, segment_id,
                                 n_presform.content.item_name)
                             modifier = self.premis_modifier(
-                            n_presform.premis, n_destination_fullpath)
+                                n_presform.premis, n_destination_fullpath)
                             modifier.change_record()
                             makedirs(
                                 join(data_dir, dirname(
@@ -216,10 +221,14 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             stderr.write(self.audit_qualification.show_errors())
 
     def get_structure(self):
+        """returns the structure that this writer serializes
+        """
         return self._structure
 
     def set_structure(self, value):
-
+        """ sets the structure attribute for this writer. It will reject any structure
+        object that it not an Archive structure.
+        """
         if isinstance(value, Archive):
             self._structure = value
         else:
@@ -228,28 +237,44 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 " in the structure attribute")
 
     def get_pairtree(self):
+        """returns the pairtree object for the writer
+        """
         return self._pairtree
 
     def set_pairtree(self, value):
+        """sets the pairtree object for the writer. It will only accept
+        a Pairtree object
+        """
         if isinstance(value, Pairtree):
             self._pairtree = value
         else:
             raise ValueError(
-                "FileSystemArchiveWriter must take an instance of a Pairtree in the pairtree attribute")
+                "FileSystemArchiveWriter must take an instance of a " +
+                "Pairtree in the pairtree attribute")
 
     def get_origin_root(self):
+        """returns the origin root string for the writer
+        """
         return self._origin_root
 
     def set_origin_root(self, value):
+        """sets the origin root for the writer. It will only accept a file
+        path that exists on the machine that the code is running on
+        """
         if exists(value):
             self._origin_root = value
         else:
             raise ValueError("{} origin root does not exist.".format(value))
 
     def get_archive_loc(self):
+        """returns the archive root of the writer
+        """
         return self._archive_loc
 
     def set_archive_loc(self, value):
+        """ sets the archive root for the writer. It will only accept a filepath that
+        exists on the machine that the application is running on
+        """
         if exists(value):
             self._archive_loc = value
         else:
@@ -257,21 +282,33 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 "{} archive loc does not exist".format(value))
 
     def get_identifier(self):
+        """ returns the identifer for the writer
+        """
         return self._identifier
 
     def set_identifier(self, value):
+        """sets the identifier factory for the writer
+        """
         self._identifier = value
 
     def get_premis_modifier(self):
+        """ returns the premis modifier for the writer
+        """
         return self._premis_modifier
 
     def set_premis_modifier(self, value):
+        """sets the premis modifier for the writer
+        """
         self._premis_modifier = value
 
     def get_fits_modifier(self):
+        """sets the fits modifier for the writer
+        """
         return self._fits_modifier
 
     def set_fits_modifier(self, value):
+        """returns the fits modifier for the factory
+        """
         self._fits_modifier = value
 
     structure = property(get_structure, set_structure)

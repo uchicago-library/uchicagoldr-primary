@@ -5,11 +5,19 @@ from .identifier import Identifier
 
 
 class Ark(Identifier):
+    """Is a LDR version of a DOI identifier. The identifer value is a uuid1
+    the cateeogry is DOI
+    """
     def __init__(self):
+        """returns a DOI identifer subclass
+        It calls the init for the super class identifier to set the category
+        """
         super().__init__('noid')
         self.value = self.generate()
 
     def generate(self):
+        """returns a noid instance as an ascii string
+        """
         request = urlopen("https://y1.lib.uchicago.edu/" +
                           "cgi-bin/minter/noid?action=mint&n=1")
         if request.status == 200:
@@ -22,9 +30,13 @@ class Ark(Identifier):
         return data_output
 
     def get_value(self):
+        """returns the identifier value of the DOI object instance
+        """
         return self._value
 
     def set_value(self, value):
+        """sets the identifier value for the DOI object
+        """
         self._value = value
 
     value = property(get_value, set_value)

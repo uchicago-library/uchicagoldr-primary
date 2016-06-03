@@ -11,7 +11,6 @@ from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from ..lib.absolutefilepathtree import AbsoluteFilePathTree
 from ..lib.filesystemstagereader import FileSystemStageReader
 from ..lib.filesystemarchivewriter import FileSystemArchiveWriter
-from ..lib.stageauditor import StageAuditor
 from ..lib.stagetoarchivetransformer import StageToArchiveTransformer
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
