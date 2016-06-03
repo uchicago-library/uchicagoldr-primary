@@ -1,6 +1,5 @@
 from os.path import join
 
-
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"

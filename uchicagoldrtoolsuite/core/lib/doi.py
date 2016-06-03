@@ -3,6 +3,13 @@ from uuid import uuid1
 
 from .identifier import Identifier
 
+__author__ = "Tyler Danstrom"
+__email__ = " tdanstrom@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
+
 
 class DOI(Identifier):
     """Is a LDR version of a DOI identifier. The identifer value is a uuid1
