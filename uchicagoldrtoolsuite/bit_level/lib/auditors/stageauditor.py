@@ -61,7 +61,8 @@ class StageAuditor(Auditor):
         """returns a boolean value
 
         checks if the accessionrecord is complete, checks that the
-        materialsuites contain valid premis, and contain valid technical metadata,
+        materialsuites contain valid premis, and contain valid technical
+        metadata,
 
         """
         for n_record in self.subject.accessionrecord_list:
