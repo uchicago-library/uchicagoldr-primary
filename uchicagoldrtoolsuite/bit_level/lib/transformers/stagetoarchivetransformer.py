@@ -28,7 +28,7 @@ class StageToArchiveTransformer(Transformer):
         self.origin_structure = origin_structure
         self.destination_structure = None
 
-    def transform(self):
+    def transform(self, defined_id=None, make_noid=False):
         """returns a fully realized Archive structure containing the contents
         of the origin Stage structure.
 

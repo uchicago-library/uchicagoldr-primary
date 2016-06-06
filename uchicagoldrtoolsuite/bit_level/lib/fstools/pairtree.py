@@ -79,8 +79,7 @@ class Pairtree(object):
         else:
             output = value
         output = [output[i:i+2] for i in range(0, len(output), 2)]
-        return output
-        self._pairtree_parts = value
+        self._pairtree_parts = output
 
     def __repr__(self):
         return "<{} ({} byte streams)>".format(self.pairtree_path)

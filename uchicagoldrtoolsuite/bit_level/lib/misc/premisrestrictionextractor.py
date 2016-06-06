@@ -16,13 +16,12 @@ class PremisRestrictionsExtractor(object):
     for a given resource in the PREMIS record so that the information can be used 
     elsewhere in the system
     """
-    
+
     def __init__(self, record):
         """initializes a PremisRestrictionExtractor object
-        
+
         __Args__
         1. record (LDRItem): a file-like object pointing to a PREMIS record
-        
         """
         self.record = record
         self.restrictions = []
