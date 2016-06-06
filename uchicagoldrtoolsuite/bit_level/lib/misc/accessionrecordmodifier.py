@@ -83,7 +83,7 @@ class AccessionRecordModifier(object):
                     self._record = hrecord
         else:
             raise ValueError(
-                "AccessionRecordAuditor can only take an ldritem as subject")
+                "AccessionRecordAuditor can only take an LDRItem as subject")
 
 
     record = property(get_record, set_record)
