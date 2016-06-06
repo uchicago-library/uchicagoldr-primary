@@ -18,21 +18,6 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-def pairtree_a_string(input_to_pairtree):
-    """
-    returns a list of pairtree parts
-
-    __Args__
-
-    1. input_to_pairtree (str): a string that needs to be converted
-    into pairtree parts
-    """
-    if len(input_to_pairtree) % 2 > 0:
-        output = input_to_pairtree+'1'
-    else:
-        output = input_to_pairtree
-    output = [output[i:i+2] for i in range(0, len(output), 2)]
-    return output
 
 
 def read_metadata_from_file_object(attribute_string,

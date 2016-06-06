@@ -5,9 +5,25 @@ from pypremis.lib import PremisRecord
 from .abc.auditor import Auditor
 from .errorpackager import ErrorPackager
 
+__author__ = "Tyler Danstrom"
+__email__ = " tdanstrom@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
+
 
 class PremisAuditor(Auditor):
+    """The PremisAuditor class is meant to audit a premis record
+    for usefulness to the LDR
+    """
+
     def __init__(self, subject):
+        """returns an instance of a PremisAuditor
+
+        __Args__
+        1. subject (Structure): the PremisRecord that needs to audited
+        """
         self.subject = subject
         self.errors = ErrorPackager()
 
@@ -42,9 +58,23 @@ class PremisAuditor(Auditor):
         return self.errors.display()
 
     def get_subject(self):
+        """returns the subject data attribute of the PremisAuditor
+        """
         return self._subject
 
     def set_subject(self, value):
+        """sets the subject data attribute of the PremisAuditor
+
+        This function opens a temporary file and the value parameter
+        and writes the bytes content of the value parameter into a
+        temporary file then sets the subject data attribute as an
+        instance of PremisRecord containing the data in the
+        temporary file
+
+        __Args__
+        1. value (LDRPath): the LDR file-like object that points
+        to a serialized premis record
+        """
         with TemporaryFile() as tempfile:
             with value.open('rb') as read_file:
                 while True:
@@ -57,9 +87,13 @@ class PremisAuditor(Auditor):
                 self._subject = PremisRecord(frompath=tempfile)
 
     def get_errorpackager(self):
+        """returns the errorpackager of the auditor
+        """
         return self._errorpackager
 
     def set_errorpackager(self, value):
+        """sets the errorpackager delegate for the auditor
+        """
         self._errorpackager = value
 
     subject = property(get_subject, set_subject)
