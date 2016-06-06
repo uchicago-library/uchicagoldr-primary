@@ -47,7 +47,7 @@ class ArchiveManifestWriter(object):
         output_string = ""
         output_string += filepath
         for n_digest in digestdata.data:
-            output_string += '\t' + n_digest.digest+'\n'
+            output_string += '|' + n_digest.algo + '|' + n_digest.digest+'\n'
         self.lines.append(output_string)
 
     def get_manifest(self):
