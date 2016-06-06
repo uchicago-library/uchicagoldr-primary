@@ -2,6 +2,7 @@
 from os.path import exists, join
 
 from .ldrpath import LDRPath
+
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
@@ -11,6 +12,8 @@ __version__ = "0.0.1dev"
 
 
 class ArchiveManifestWriter(object):
+    """The ArchiveManifestWriter class is in charge of
+    """
     def __init__(self, archive_location):
         self.manifest = archive_location
         self.lines = []
