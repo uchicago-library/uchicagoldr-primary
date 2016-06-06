@@ -8,10 +8,10 @@ from sys import stdout
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
-from ..lib.absolutefilepathtree import AbsoluteFilePathTree
-from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.filesystemarchivewriter import FileSystemArchiveWriter
-from ..lib.stagetoarchivetransformer import StageToArchiveTransformer
+from ..lib.fstools.absolutefilepathtree import AbsoluteFilePathTree
+from ..lib.readers.filesystemstagereader import FileSystemStageReader
+from ..lib.writers.filesystemarchivewriter import FileSystemArchiveWriter
+from ..lib.transformers.stagetoarchivetransformer import StageToArchiveTransformer
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"

@@ -4,8 +4,8 @@ from tempfile import TemporaryFile
 
 from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
-from .abc.auditor import Auditor
-from .abc.ldritem import LDRItem
+from ..auditors.abc.auditor import Auditor
+from ..ldritems.abc.ldritem import LDRItem
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"

@@ -3,7 +3,7 @@ from datetime import datetime
 from tempfile import TemporaryFile
 from xml.etree import ElementTree
 
-from .ldrpath import LDRPath
+from ..ldritems.ldrpath import LDRPath
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"

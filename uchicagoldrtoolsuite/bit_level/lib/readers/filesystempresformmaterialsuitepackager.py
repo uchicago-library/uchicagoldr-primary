@@ -3,7 +3,7 @@ from os.path import join, dirname, basename, isfile, splitext
 from re import compile as re_compile
 
 from .abc.presformmaterialsuitepackager import PresformMaterialSuitePackager
-from .ldrpath import LDRPath
+from ..ldritems.ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

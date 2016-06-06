@@ -6,18 +6,19 @@ from sys import stderr
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
-from .archive import Archive
-from .accessionrecordmodifier import AccessionRecordModifier
-from .archivefitsmodifier import ArchiveFitsModifier
-from .archivemanifestwriter import ArchiveManifestWriter
-from .archivepremismodifier import ArchivePremisModifier
-from .archiveauditor import ArchiveAuditor
-from .ldritemoperations import copy
-from .ldrpath import LDRPath
-from .pairtree import Pairtree
-from .premisdigestextractor import PremisDigestExtractor
+from ..structures.archive import Archive
+from ..misc.accessionrecordmodifier import AccessionRecordModifier
+from ..misc.archivefitsmodifier import ArchiveFitsModifier
+from ..misc.archivemanifestwriter import ArchiveManifestWriter
+from ..misc.archivepremismodifier import ArchivePremisModifier
 
-from .premisrestrictionextractor import PremisRestrictionsExtractor
+from ..auditors.archiveauditor import ArchiveAuditor
+from ..ldritems.ldritemoperations import copy
+from ..ldritems.ldrpath import LDRPath
+from ..fstools.pairtree import Pairtree
+from ..misc.premisdigestextractor import PremisDigestExtractor
+
+from ..misc.premisrestrictionextractor import PremisRestrictionsExtractor
 
 
 __author__ = "Tyler Danstrom"

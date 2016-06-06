@@ -2,8 +2,8 @@ from abc import ABCMeta, abstractmethod
 
 from pypremis.nodes import *
 
-from ....core.lib.convenience import iso8601_dt
-from ....core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 
 
 __author__ = "Brian Balsamo"

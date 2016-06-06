@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABCMeta
 
 from .abc.packager import Packager
-from ..presformmaterialsuite import PresformMaterialSuite
+from ...structures.presformmaterialsuite import PresformMaterialSuite
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

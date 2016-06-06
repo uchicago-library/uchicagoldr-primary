@@ -1,7 +1,7 @@
 
-from .archive import Archive
+from ..structures.archive import Archive
 from .abc.transformer import Transformer
-from .stage import Stage
+from ..structures.stage import Stage
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"

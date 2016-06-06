@@ -6,7 +6,7 @@ import mimetypes
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from ....core.lib.bash_cmd import BashCommand
+from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from .abc.converter import Converter
 from ..structures.presformmaterialsuite import PresformMaterialSuite
 from ..ldritems.ldritemoperations import copy

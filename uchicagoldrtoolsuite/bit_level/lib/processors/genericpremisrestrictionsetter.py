@@ -5,13 +5,13 @@ from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from ...core.lib.idbuilder import IDBuilder
-from .ldrpath import LDRPath
-from .premisextensionnodes import Restriction
-from .premisextensionnodes import RightsExtensionIdentifier
-from .premisextensionnodes import RestrictedObjectIdentifier
-from .premisextensionnodes import RestrictingAgentIdentifier
-from .ldritemoperations import copy
+from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from ..ldritems.ldrpath import LDRPath
+from ..misc.premisextensionnodes import Restriction
+from ..misc.premisextensionnodes import RightsExtensionIdentifier
+from ..misc.premisextensionnodes import RestrictedObjectIdentifier
+from ..misc.premisextensionnodes import RestrictingAgentIdentifier
+from ..ldritems.ldritemoperations import copy
 
 
 __author__ = "Brian Balsamo"

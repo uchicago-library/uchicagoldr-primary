@@ -1,12 +1,12 @@
 from os.path import isfile
 from os.path import join
 
-from .segment import Segment
-from .abc.segmentpackager import SegmentPackager
+from ..structures.segment import Segment
+from ..readers.abc.segmentpackager import SegmentPackager
 from .externalfilesystemmaterialsuitepackager import\
     ExternalFileSystemMaterialSuitePackager
-from .rootedpath import RootedPath
-from .filepathtree import FilePathTree
+from ..fstools.rootedpath import RootedPath
+from ..fstools.filepathtree import FilePathTree
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

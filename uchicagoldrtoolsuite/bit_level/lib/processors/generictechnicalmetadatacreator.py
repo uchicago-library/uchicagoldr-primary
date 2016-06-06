@@ -1,7 +1,7 @@
 from tempfile import TemporaryDirectory
 
 
-from .abc.ldritem import LDRItem
+from ..ldritems.abc.ldritem import LDRItem
 
 
 __author__ = "Brian Balsamo"

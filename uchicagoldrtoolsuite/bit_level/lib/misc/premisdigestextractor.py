@@ -4,7 +4,7 @@ from tempfile import TemporaryFile
 
 from pypremis.lib import PremisRecord
 
-from .abc.ldritem import LDRItem
+from ..ldritems.abc.ldritem import LDRItem
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"

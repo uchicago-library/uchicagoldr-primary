@@ -5,7 +5,7 @@ from re import compile as re_compile
 from .abc.materialsuitepackager import MaterialSuitePackager
 from .filesystempresformmaterialsuitepackager import \
     FileSystemPresformMaterialSuitePackager
-from .ldrpath import LDRPath
+from ..ldritems.ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

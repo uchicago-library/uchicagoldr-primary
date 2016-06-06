@@ -1,7 +1,7 @@
 
 from os.path import exists, join
 
-from .ldrpath import LDRPath
+from ..ldritems.ldrpath import LDRPath
 
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
