@@ -34,14 +34,19 @@ setup(
     ),
     entry_points = {
         'console_scripts':[
-            'ldrstage = uchicagoldrtoolsuite.apps.stager:launch',
-            'ldrprune = uchicagoldrtoolsuite.apps.pruner:launch',
-            'ldrcreatepremis = uchicagoldrtoolsuite.apps.premiscreator:launch',
-            'ldrsetrestriction = uchicagoldrtoolsuite.apps.premisrestrictionsetter:launch',
-            'ldrarchive = uchicagoldrtoolsuite.apps.archiver:launch',
-            'ldraru = uchicagoldrtoolsuite.apps.aru:launch',
-            'ldrpostinstall = uchicagoldrtoolsuite.apps.postinstall:launch',
-            'ldrcreatetechmd = uchicagoldrtoolsuite.apps.technicalmetadatacreator:launch'
+            'ldrstage = uchicagoldrtoolsuite.bit_level.app.stager:launch',
+            'ldrprune = uchicagoldrtoolsuite.bit_level.app.pruner:launch',
+            'ldrcreatepremis = uchicagoldrtoolsuite.bit_level.app.premiscreator:launch',
+            'ldrsetrestriction = uchicagoldrtoolsuite.bit_level.app.premisrestrictionsetter:launch',
+            'ldrarchive = uchicagoldrtoolsuite.bit_levelapp.archiver:launch',
+            'ldraru = uchicagoldrtoolsuite.core.app.aru:launch',
+            'ldrpostinstall = uchicagoldrtoolsuite.core.app.postinstall:launch',
+            'ldraddadminnote = uchicagoldrtoolsuite.bit_level.app.adminnoteadder:launch',
+            'ldraddlegalnote = uchicagoldrtoolsuite.bit_level.app.legalnoteadder:launch',
+            'ldraddaccessionrecord = uchicagoldrtoolsuite.bit_level.app.accessionrecordadder:launch',
+            'ldrcreatetechmd = uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator:launch',
+            'ldrcreatepresforms = uchicagoldrtoolsuite.bit_level.app.presformcreator:launch',
+            'ldrmakeagent = uchicagoldrtoolsuite.core.app.premisagentmaker:launch'
         ]
     },
     package_data = {
@@ -57,7 +62,8 @@ setup(
             'controlledvocabs/restriction_codes.json'
         ]),
         ('record_configs', [
-            'record_configs/AccessionRecordFields.csv'
+            'record_configs/DEFAULT_Complete_Accession_Record_Fields.csv',
+            'record_configs/DEFAULT_Staging_Accession_Record_Fields.csv'
         ])
     ],
     classifiers = [
