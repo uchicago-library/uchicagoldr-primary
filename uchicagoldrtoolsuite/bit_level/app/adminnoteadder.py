@@ -4,9 +4,9 @@ from tempfile import TemporaryDirectory
 from uuid import uuid1
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filesystemstagewriter import FileSystemStageWriter
-from ..lib.filesystemstagereader import FileSystemStageReader
-from ..lib.ldrpath import LDRPath
+from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
+from ..lib.readers.filesystemstagereader import FileSystemStageReader
+from ..lib.ldritems.ldrpath import LDRPath
 
 
 __author__ = "Brian Balsamo"

@@ -6,12 +6,12 @@ import mimetypes
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from ....core.lib.bash_cmd import BashCommand
-from ..abc.converter import Converter
-from ..presformmaterialsuite import PresformMaterialSuite
-from ..ldritemoperations import copy
-from ..ldrpath import LDRPath
-from ..genericpremiscreator import GenericPREMISCreator
+from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
+from .abc.converter import Converter
+from ..structures.presformmaterialsuite import PresformMaterialSuite
+from ..ldritems.ldritemoperations import copy
+from ..ldritems.ldrpath import LDRPath
+from ..processors.genericpremiscreator import GenericPREMISCreator
 
 
 __author__ = "Brian Balsamo"
