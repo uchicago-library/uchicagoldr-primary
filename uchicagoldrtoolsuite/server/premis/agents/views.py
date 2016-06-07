@@ -19,7 +19,8 @@ blueprint = Blueprint('agents', __name__,
 @blueprint.route("/linkAgent", methods=['POST'])
 def linkEventToAgent():
     agentid = request.args.get('agentid', '')
-    agentidtype = request.args.get('agentidtype')
+    eventid = request.args.get('eventid', '')
+    eventidtype = request.args.get('eventidtype', '')
     new_link = namedtuple("newlink", "id type")(agentid, agentype)
     spooler = AgentSpooler().append(agentid, new_link)
     return spooler.status
@@ -44,4 +45,3 @@ def searchForAnAgent(term):
     return render_template_template('searchresult.json', 
                                     result=a.data,
                                     errors=a.errors)
-    
