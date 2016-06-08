@@ -25,7 +25,7 @@ class LDRPath(LDRItem):
         self.pipe = None
         self.is_flo = True
 
-    def read(self, blocksize=1024):
+    def read(self, blocksize=1024*1000*100):
         if not self.pipe:
             raise OSError('{} not open for reading'.format(str(self.path)))
         return self.pipe.read(blocksize)

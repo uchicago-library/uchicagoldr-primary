@@ -27,7 +27,7 @@ class LDRURL(LDRItem):
         self.tmpdir = None
         self.is_flo = True
 
-    def read(self, blocksize=1024):
+    def read(self, blocksize=1024*1000*100):
         if not self.pipe:
             raise OSError('{} not open for reading'.format(str(self.item_name)))
         return self.pipe.read(blocksize)
@@ -46,7 +46,7 @@ class LDRURL(LDRItem):
                 mode == 'a':
             mode = mode + "b"
         if buffering < 1:
-            buffering = 1024
+            buffering = 1024*1000*100
         r = rget(self.item_name, stream=True)
         self.tmpdir = TemporaryDirectory()
         tmpfile_name = join(self.tmpdir.name, str(uuid1()))

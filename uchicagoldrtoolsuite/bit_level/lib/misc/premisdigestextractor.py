@@ -20,17 +20,17 @@ class PremisDigestExtractor(object):
     """
     def __init__(self, record):
         """initializes a PremisDigestExtractor
-        
+
         __Args__
-        
-        1. record (LDRITem): an LDR file-like object pointing to a PREMIS record for a 
-        particular resource, 
+
+        1. record (LDRITem): an LDR file-like object pointing to a PREMIS record for a
+        particular resource,
         """
         self.record = record
 
     def extract_digests(self):
         """returns a list of named tuple called digests data which has a data attribute
-        that is a list of named tuple objects called "digestdata that have a algo attribute and 
+        that is a list of named tuple objects called "digestdata that have a algo attribute and
         a digest attribute. The algo attribute is the hashing algorithm used to derive the value
         in the digest attribute.
         """
@@ -52,9 +52,9 @@ class PremisDigestExtractor(object):
 
     def set_record(self, value):
         """sets the record data attribute
-        
+
         __Args__
-        
+
         1. value (LDRItem): a file-like object pointing to a PREMIS record
         """
         if getattr(self,'_record', None):
@@ -64,7 +64,7 @@ class PremisDigestExtractor(object):
             with TemporaryFile() as tempfile:
                 with value.open('rb') as read_file:
                     while True:
-                        buf = read_file.read(1024)
+                        buf = read_file.read(1024 * 1000 * 100)
                         if buf:
                             tempfile.write(buf)
                         else:

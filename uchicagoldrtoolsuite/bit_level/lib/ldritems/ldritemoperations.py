@@ -42,7 +42,7 @@ def read_metadata_from_file_object(attribute_string,
     with TemporaryFile() as tempfile:
         with a_file_object.open('rb') as read_file:
             while True:
-                buf = read_file.read(1024)
+                buf = read_file.read(1024 * 1000 * 100)
                 if buf:
                     tempfile.write(buf)
                 else:
@@ -77,7 +77,7 @@ def get_an_agent_id(id_string, in_package=True):
         all_lines = []
         with agent_file.open('rb') as read_file:
             while True:
-                buf = read_file.read(1024)
+                buf = read_file.read(1024 * 1000 * 100)
                 if buf:
                     lines = buf.split(b"\n")
                     all_lines.extend(lines)
@@ -119,7 +119,7 @@ def move(origin_loc, destination_loc):
         return False
 
 
-def hash_ldritem(ldritem, algo="md5", buffering=1024):
+def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
     """
     hash any flavor of LDRItem
 
@@ -167,7 +167,7 @@ def hash_ldritem(ldritem, algo="md5", buffering=1024):
     return hash_str
 
 
-def duplicate_ldritem(src, dst, dst_mode="wb", buffering=1024, confirm=True):
+def duplicate_ldritem(src, dst, dst_mode="wb", buffering=1024*1000*100, confirm=True):
     """
     Copy an LDRItem's byte contents from one to another
 
@@ -214,7 +214,7 @@ def duplicate_ldritem(src, dst, dst_mode="wb", buffering=1024, confirm=True):
 
 
 def copy(src, dst, clobber=False, detection="hash", max_retries=3,
-         buffering=1024, confirm=True):
+         buffering=1024*1000*100, confirm=True):
     """
     copy one LDRItem's byte contents into another
 

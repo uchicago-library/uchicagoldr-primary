@@ -20,7 +20,7 @@ class ArchiveFitsModifier(object):
     """
     def __init__(self, record, location_string):
         """initializes an ArchiveFitsModifier object to be ready to modify the record
-        
+
         __Args__
         1. record (LDRItem): an LDR file-like object pointing to a FITS xml record
         2. location_string (str): a string representing a location to save the modified
@@ -30,7 +30,7 @@ class ArchiveFitsModifier(object):
         self.location_string = location_string
 
     def modify_record(self):
-        """returns an XML node with a modified filePath and lastmodified 
+        """returns an XML node with a modified filePath and lastmodified
         element text
         """
         root_of_xml_object = self.record.getroot()
@@ -62,14 +62,14 @@ class ArchiveFitsModifier(object):
 
     def set_record(self, value):
         """sets the record data attribute value
-        
+
         __Args__
         1. value (LDRItem): a file-like object pointing to a FITS record
         """
         with TemporaryFile() as tempfile:
             with value.open('rb') as read_file:
                 while True:
-                    buf = read_file.read(1024)
+                    buf = read_file.read(1024 * 1000 * 100)
                     if buf:
                         tempfile.write(buf)
                     else:
