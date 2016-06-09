@@ -1,9 +1,7 @@
+from collections import namedtuple
+from flask import Blueprint, render_template, request
 
-from flask import Blueprint, render_template
 
-from .controllers.agentcreator import AgentCreator
-from .controllers.agentsearcher import AgentSearcher
-from .controllers.agentspool import AgentSpool
 
 __author__ = "Tyler Danstrom"
 __email__ = "tdanstrom@uchicago.edu"
@@ -13,35 +11,47 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-blueprint = Blueprint('agents', __name__, 
+agent = Blueprint('agents', __name__, 
                       template_folder='templates')
 
-@blueprint.route("/linkAgent", methods=['POST'])
+
+@agent.route("/linkAgent", methods=['POST', 'GET'])
 def linkEventToAgent():
-    agentid = request.args.get('agentid', '')
-    eventid = request.args.get('eventid', '')
-    eventidtype = request.args.get('eventidtype', '')
-    new_link = namedtuple("newlink", "id type")(agentid, agentype)
-    spooler = AgentSpooler().append(agentid, new_link)
-    return spooler.status
+    from .controllers.agentspooler import AgentSpooler
+    from .database import db
+    print(request.form)
+    agentid = request.form.get('agentid')
+    eventid = request.form.get('eventid')
+    eventidtype = request.form.get('eventidtype')
+    new_link = namedtuple("newlink", "id eventid, type")(agentid, 
+                                                         eventid, 
+                                                         eventidtype)
+    spooler = AgentSpooler(agentid, 
+                           eventid, 
+                           eventidtype)
+    new_item = spooler.spool_data()
+    db.session.add(new_item)
+    db.session.commit()
+    return "success"
 
-@blueprint.route("/newAgent", methods=['POST'])
-def addNewAgentRecord():
-    agendata = request.form
-    creator = AgentCreator(agentdata)
-    return agentcreator.status
-
-@blueprint.route("/retrieveAgent", methods=['GET'])
-def getAnAgentRecord(agentid):
+# @blueprint.route("/newAgent", methods=['POST'])
+# def addNewAgentRecord():
+#     agendata = request.form
+#     creator = AgentCreator(agentdata)
+#     return agentcreator.status
+# 
+@agent.route("/retrieveAgent", methods=['GET'])
+def getAnAgentRecord():
+    from .controllers.agentretriever import AgentRetriever
     searchid = request.args.get('agentid', '')
     retriever = AgentRetriever(searchid)
-    return render_template('fullagent.json', result=a.data, 
-                           errors=a.errors)
-
-@blueprint.route('/searchAgent', methods=['GET'])
-def searchForAnAgent(term):
+    return retriever.show_agent()
+ 
+@agent.route('/searchAgent', methods=['GET'])
+def searchForAnAgent():
+    from .controllers.agentsearcher import AgentSearcher
     searchword = request.args.get('term', '')
-    a = AgentSearcher(term)
-    return render_template_template('searchresult.json', 
-                                    result=a.data,
-                                    errors=a.errors)
+    print(searchword)
+    a = AgentSearcher(searchword)
+    a.search()
+    return str(a.result)
