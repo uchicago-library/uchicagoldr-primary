@@ -1,8 +1,6 @@
 from collections import namedtuple
 from flask import Blueprint, render_template, request
 
-
-
 __author__ = "Tyler Danstrom"
 __email__ = "tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
@@ -10,10 +8,8 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
-
 agent = Blueprint('agents', __name__, 
                       template_folder='templates')
-
 
 @agent.route("/linkAgent", methods=['POST', 'GET'])
 def linkEventToAgent():
@@ -34,12 +30,16 @@ def linkEventToAgent():
     db.session.commit()
     return "success"
 
-# @blueprint.route("/newAgent", methods=['POST'])
-# def addNewAgentRecord():
-#     agendata = request.form
-#     creator = AgentCreator(agentdata)
-#     return agentcreator.status
-# 
+@blueprint.route("/newAgent", methods=['POST'])
+def addNewAgentRecord():
+    agendata = request.form
+    creator = AgentCreator(agentdata)
+    creation_result = creator.create_agent()
+    if creation_result:
+        return "success"
+    else:
+        return "failed"
+ 
 @agent.route("/retrieveAgent", methods=['GET'])
 def getAnAgentRecord():
     from .controllers.agentretriever import AgentRetriever

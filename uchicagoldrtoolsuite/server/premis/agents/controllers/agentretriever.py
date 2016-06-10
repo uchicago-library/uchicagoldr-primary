@@ -1,4 +1,6 @@
 
+from pypremis.nodes import Agent, AgentIdentifier
+
 class AgentRetriever(object):
     def __init__(self, term_id):
         self.agent_id = term_id
@@ -8,13 +10,19 @@ class AgentRetriever(object):
     
     def set_agent_id(self, value):
         from ..models.PremisAgent import db, PremisAgent
-        print(db)
-        if isinstance(value, str):
-            print(db)
-            print(value)
-            result = db.session.query(PremisAgent).filter(PremisAgent.identifier==value)
-            print([x for x in result])
-            self._agent_id = value
+        matching_agent = db.session.query(PremisAgent).filter(PremisAgent.identifier==self.agent_id)
+        if matching_agent.count() < 1 or matching_agent.count() > 1:
+            return False
+        else:
+            result = None
+            for n_agent in matching_agent:
+                result = n_agent
+            id_element = AgentIdentifier('DOI', n_agent.identifier)
+            agent_premis = Agent(id_element)
+            agent_premis.add_agentName(n_agent.name)
+            self.agent_id = value
+            self_agent_record = agent_premis.toXML()
+            return agent_premis.toXML()
             
     def show_agent(self):
         return "hi there"
