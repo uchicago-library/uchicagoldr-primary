@@ -13,6 +13,8 @@ agent = Blueprint('agents', __name__,
 
 @agent.route("/linkAgent", methods=['POST', 'GET'])
 def linkEventToAgent():
+    """returns 
+    """
     from .controllers.agentspooler import AgentSpooler
     from .database import db
     print(request.form)
@@ -26,27 +28,34 @@ def linkEventToAgent():
                            eventid, 
                            eventidtype)
     new_item = spooler.spool_data()
-    db.session.add(new_item)
-    db.session.commit()
-    return "success"
+    try:
+        db.session.add(new_item)
+        db.session.commit()
+        output = {'spooled':'True'}
+    except:
+        output = {'spooled':'False'}
+    return output
 
-@blueprint.route("/newAgent", methods=['POST'])
+@agent.route("/newAgent", methods=['POST'])
 def addNewAgentRecord():
+    import json
     agendata = request.form
     creator = AgentCreator(agentdata)
     creation_result = creator.create_agent()
     if creation_result:
-        return "success"
+        ouput = {'added':'True'}
     else:
-        return "failed"
+        output = {'added':'False'}
+    return json.dumps(output)
  
 @agent.route("/retrieveAgent", methods=['GET'])
 def getAnAgentRecord():
     from .controllers.agentretriever import AgentRetriever
-    searchid = request.args.get('agentid', '')
+    searchid = request.args.get('agentId', '')
     retriever = AgentRetriever(searchid)
-    return retriever.show_agent()
- 
+    print(retriever.stringify_agent_record())
+    return "hi"
+
 @agent.route('/searchAgent', methods=['GET'])
 def searchForAnAgent():
     from .controllers.agentsearcher import AgentSearcher
@@ -54,4 +63,9 @@ def searchForAnAgent():
     print(searchword)
     a = AgentSearcher(searchword)
     a.search()
-    return str(a.result)
+    output_list = []
+    for n in a,result:
+        new_dict = {'agent':n.identifier}
+        output_list.append(new_dict)
+    output = {'result':output}
+    return json.dumps(output)
