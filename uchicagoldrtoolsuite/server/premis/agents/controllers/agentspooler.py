@@ -23,12 +23,17 @@ class AgentSpooler(object):
         self.status = 0
         
     def spool_data(self):
-        from ..models.Spool import Spool
+        from ..models.Spool import db, Spool
         new_spool_item = Spool()
         new_spool_item.agentID = self.agentid 
         new_spool_item.eventID = self.eventid 
         new_spool_item.eventIDType = self.eventidtype
-        return new_spool_item
+        try:
+            db.session.add(new_spool_item)
+            db.session.commit()
+            return  True
+        except:
+            return False
     
     def get_agentid(self):
         return self._agentid
@@ -43,6 +48,8 @@ class AgentSpooler(object):
         return self._eventid
     
     def set_eventid(self, value):
+        print(value)
+        print(len(value))
         if isinstance(value, str) and len(value) == 32:
             self._eventid = value
         else:

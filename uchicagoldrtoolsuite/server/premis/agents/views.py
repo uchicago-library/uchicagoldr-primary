@@ -1,5 +1,7 @@
 from collections import namedtuple
-from flask import Blueprint, render_template, request
+from xml.etree import  ElementTree
+from flask import Blueprint, render_template, Response, request
+import json
 
 __author__ = "Tyler Danstrom"
 __email__ = "tdanstrom@uchicago.edu"
@@ -13,31 +15,36 @@ agent = Blueprint('agents', __name__,
 
 @agent.route("/linkAgent", methods=['POST', 'GET'])
 def linkEventToAgent():
-    """returns 
+    """returns a JSON output with key 'spooled' and value either 
+    True or False
     """
     from .controllers.agentspooler import AgentSpooler
     from .database import db
     print(request.form)
     agentid = request.form.get('agentid')
     eventid = request.form.get('eventid')
+    print(eventid)
+    print(agentid)
     eventidtype = request.form.get('eventidtype')
-    new_link = namedtuple("newlink", "id eventid, type")(agentid, 
-                                                         eventid, 
-                                                         eventidtype)
+    new_link = namedtuple(
+                    "newlink", "id eventid, type")(agentid, 
+                                                   eventid, 
+                                                   eventidtype)
     spooler = AgentSpooler(agentid, 
                            eventid, 
                            eventidtype)
-    new_item = spooler.spool_data()
-    try:
-        db.session.add(new_item)
-        db.session.commit()
-        output = {'spooled':'True'}
-    except:
-        output = {'spooled':'False'}
-    return output
+    answer = spooler.spool_data()
+    print(answer)
+    if answer:
+        return json.dumps({'spooled':'True'})
+    else:
+        return json.dumps({'spooled':'False'})
 
 @agent.route("/newAgent", methods=['POST'])
 def addNewAgentRecord():
+    """returns a JSON output with key result and value either 
+    'SUCCESS or 'FAILURE'
+    """
     import json
     agendata = request.form
     creator = AgentCreator(agentdata)
@@ -50,14 +57,21 @@ def addNewAgentRecord():
  
 @agent.route("/retrieveAgent", methods=['GET'])
 def getAnAgentRecord():
+    """returns an XML record describing a particular PREMIS agent
+    """
+    from tempfile import TemporaryFile
     from .controllers.agentretriever import AgentRetriever
     searchid = request.args.get('agentId', '')
     retriever = AgentRetriever(searchid)
-    print(retriever.stringify_agent_record())
-    return "hi"
+    data = retriever.get_agent_output()
+    ElementTree.register_namespace('premis', 'http://www.loc.gov/premis/v3')
+    return Response(ElementTree.tostring(data, encoding='utf-8', method='xml'), 'text/xml')
+    
 
 @agent.route('/searchAgent', methods=['GET'])
 def searchForAnAgent():
+    """returns a JSON output with a list of agent identifiers
+    """
     from .controllers.agentsearcher import AgentSearcher
     searchword = request.args.get('term', '')
     print(searchword)

@@ -18,11 +18,9 @@ class AgentRetriever(object):
         agent_premis.add_agentName(agent_record.name)
         self.agent_record = PremisRecord(agents=[agent_premis])
     
-    def stringify_agent_record(self):
-        with TemporaryFile() as writing_file:
-            self.agent_record.write_to_file(bytes(writing_file))
-            print(writing_file)
-    
+    def get_agent_output(self):
+        return self.agent_record.get_agent_list()[0].toXML()
+        
     def get_agent_id(self):
         return self._agent_id
     
@@ -38,7 +36,6 @@ class AgentRetriever(object):
         return self._agent_record
     
     def set_agent_record(self, value):
-        print(type(value))
         if isinstance(value, PremisRecord):
             self._agent_record = value
         else:
