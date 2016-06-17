@@ -2,7 +2,8 @@ from os import makedirs
 from os.path import join, dirname, isfile
 
 from .abc.stageserializationwriter import StageSerializationWriter
-from ..ldritems.ldritemoperations import copy, hash_ldritem
+from ..ldritems.ldritemoperations import hash_ldritem
+from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldrpath import LDRPath
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 
@@ -75,10 +76,10 @@ class FileSystemStageWriter(StageSerializationWriter):
         dst_path = join(data_dir, ms.get_content().item_name)
         self._make_containing_dir(dst_path)
         dst = LDRPath(dst_path, root=self.stage_env_path)
-        cr = copy(ms.get_content(), dst, clobber=True)
-        if cr.dst_hash is None:
-            cr.dst_hash = hash_ldritem(dst)
-        mf_line_str = "{}\t{}\n".format(dst.item_name, cr.dst_hash)
+        c = LDRItemCopier(ms.get_content(), dst, clobber=True)
+        c.copy()
+        h = hash_ldritem(dst)
+        mf_line_str = "{}\t{}\n".format(dst.item_name, h)
         manifest_flo.write(mf_line_str)
 
     def _write_ms_premis(self, ms, admin_dir, manifest_flo):
@@ -87,10 +88,10 @@ class FileSystemStageWriter(StageSerializationWriter):
                             ms.get_content().item_name+".premis.xml")
             self._make_containing_dir(dst_path)
             dst = LDRPath(dst_path, root=self.stage_env_path)
-            cr = copy(ms.get_premis(), dst, clobber=True)
-            if cr.dst_hash is None:
-                cr.dst_hash = hash_ldritem(dst)
-            mf_line_str = "{}\t{}\n".format(dst.item_name, cr.dst_hash)
+            c = LDRItemCopier(ms.get_premis(), dst, clobber=True)
+            c.copy()
+            h = hash_ldritem(dst)
+            mf_line_str = "{}\t{}\n".format(dst.item_name, h)
             manifest_flo.write(mf_line_str)
 
     def _write_ms_techmd(self, ms, admin_dir, manifest_flo):
@@ -103,10 +104,10 @@ class FileSystemStageWriter(StageSerializationWriter):
                             ms.get_content().item_name+".fits.xml")
             self._make_containing_dir(dst_path)
             dst = LDRPath(dst_path, root=self.stage_env_path)
-            cr = copy(ms.get_technicalmetadata(0), dst, clobber=True)
-            if cr.dst_hash is None:
-                cr.dst_hash = hash_ldritem(dst)
-            mf_line_str = "{}\t{}\n".format(dst.item_name, cr.dst_hash)
+            c = LDRItemCopier(ms.get_technicalmetadata(0), dst, clobber=True)
+            c.copy()
+            h = hash_ldritem(dst)
+            mf_line_str = "{}\t{}\n".format(dst.item_name, h)
             manifest_flo.write(mf_line_str)
 
     def _write_ms_presforms(self, ms, data_dir, admin_dir, manifest_flo):
@@ -149,15 +150,18 @@ class FileSystemStageWriter(StageSerializationWriter):
         for legalnote in self.get_struct().get_legalnote_list():
             recv_item_path = join(legalnotes_dir, legalnote.item_name)
             recv_item = LDRPath(recv_item_path, root=legalnotes_dir)
-            copy(legalnote, recv_item)
+            c = LDRItemCopier(legalnote, recv_item)
+            c.copy()
 
         for adminnote in self.get_struct().get_adminnote_list():
             recv_item_path = join(adminnotes_dir, adminnote.item_name)
             recv_item = LDRPath(recv_item_path, root=adminnotes_dir)
-            copy(adminnote, recv_item)
+            c = LDRItemCopier(adminnote, recv_item)
+            c.copy()
 
         for accessionrecord in self.get_struct().get_accessionrecord_list():
             recv_item_path = join(accessionrecords_dir,
                                   accessionrecord.item_name)
             recv_item = LDRPath(recv_item_path, root=accessionrecords_dir)
-            copy(accessionrecord, recv_item)
+            c = LDRItemCopier(accessionrecord, recv_item)
+            c.copy()
