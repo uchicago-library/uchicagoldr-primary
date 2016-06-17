@@ -1,5 +1,6 @@
 
 from tempfile import TemporaryFile
+from xml.etree import ElementTree
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import Agent, AgentIdentifier
@@ -19,7 +20,11 @@ class AgentRetriever(object):
         self.agent_record = PremisRecord(agents=[agent_premis])
     
     def get_agent_output(self):
-        return self.agent_record.get_agent_list()[0].toXML()
+        ElementTree.register_namespace('premis', 'http://www.loc.gov/premis/v3')
+        output = self.agent_record.get_agent_list()
+        output = output[0].toXML()
+        output = ElementTree.tostring(output, encoding='utf-8', method='xml')
+        return output
         
     def get_agent_id(self):
         return self._agent_id

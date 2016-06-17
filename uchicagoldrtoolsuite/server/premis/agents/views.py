@@ -1,5 +1,4 @@
 from collections import namedtuple
-from xml.etree import  ElementTree
 from flask import Blueprint, render_template, Response, request
 import json
 
@@ -36,9 +35,10 @@ def linkEventToAgent():
     answer = spooler.spool_data()
     print(answer)
     if answer:
-        return json.dumps({'spooled':'True'})
+        output = json.dumps({'spooled':'True'})
     else:
-        return json.dumps({'spooled':'False'})
+        ouput = json.dumps({'spooled':'False'})
+    return Response(output, 'text/json')
 
 @agent.route("/newAgent", methods=['POST'])
 def addNewAgentRecord():
@@ -53,7 +53,7 @@ def addNewAgentRecord():
         ouput = {'added':'True'}
     else:
         output = {'added':'False'}
-    return json.dumps(output)
+    return Response(json.dumps(output), 'text/json')
  
 @agent.route("/retrieveAgent", methods=['GET'])
 def getAnAgentRecord():
@@ -64,22 +64,20 @@ def getAnAgentRecord():
     searchid = request.args.get('agentId', '')
     retriever = AgentRetriever(searchid)
     data = retriever.get_agent_output()
-    ElementTree.register_namespace('premis', 'http://www.loc.gov/premis/v3')
-    return Response(ElementTree.tostring(data, encoding='utf-8', method='xml'), 'text/xml')
+    return Response(data.decode('utf-8'), 'text/xml')
     
-
 @agent.route('/searchAgent', methods=['GET'])
 def searchForAnAgent():
     """returns a JSON output with a list of agent identifiers
     """
     from .controllers.agentsearcher import AgentSearcher
     searchword = request.args.get('term', '')
-    print(searchword)
     a = AgentSearcher(searchword)
     a.search()
     output_list = []
-    for n in a,result:
-        new_dict = {'agent':n.identifier}
+    for n in a.result:
+        new_dict = {'agent':n}
         output_list.append(new_dict)
-    output = {'result':output}
-    return json.dumps(output)
+    output = {'result':output_list}
+    output = json.dumps(output)
+    return Response(output, 'text/json')
