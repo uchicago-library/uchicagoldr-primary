@@ -13,7 +13,7 @@ from ..misc.archivemanifestwriter import ArchiveManifestWriter
 from ..misc.archivepremismodifier import ArchivePremisModifier
 
 from ..auditors.archiveauditor import ArchiveAuditor
-from ..ldritems.ldritemoperations import copy
+from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldrpath import LDRPath
 from ..fstools.pairtree import Pairtree
 from ..misc.premisdigestextractor import PremisDigestExtractor
@@ -99,20 +99,20 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             accrecords = []
             for n_acc_record in self.structure.accessionrecord_list:
                 acc_filename = basename(n_acc_record.item_name)
-                copy(n_acc_record, LDRPath(
+                LDRItemCopier(n_acc_record, LDRPath(
                     join(accrecord_dir,
-                         acc_filename)))
+                         acc_filename))).copy()
                 accrecords.append(join(accrecord_dir, acc_filename))
             for n_legal_note in self.structure.legalnote_list:
                 legalnote_filename = basename(n_legal_note.item_name)
-                copy(n_legal_note, LDRPath(
+                LDRItemCopier(n_legal_note, LDRPath(
                     join(legalnote_dir,
-                         legalnote_filename)))
+                         legalnote_filename))).copy()
             for n_adminnote in self.structure.adminnote_list:
                 adminnote_filename = basename(n_adminnote.item_name)
-                copy(n_adminnote, LDRPath(
+                LDRItemCopier(n_adminnote, LDRPath(
                     join(adminnote_dir,
-                         adminnote_filename)))
+                         adminnote_filename))).copy()
             accession_restrictions = set([])
             for n_segment in self.structure.segment_list:
                 segment_id = n_segment.label+'-'+str(n_segment.run)
@@ -158,7 +158,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
                     new_content_ldrpath = LDRPath(new_content_path)
                     modifier.record.write_to_file(new_premis_path)
-                    copy(n_msuite.content, new_content_ldrpath)
+                    LDRItemCopier(n_msuite.content, new_content_ldrpath).copy()
 
                     for n_techmd in n_msuite.technicalmetadata_list:
                         new_tech_record_loc = join(
@@ -201,8 +201,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                             new_presform_content_ldrpath = LDRPath(
                                 new_presform_content_path)
                             modifier.record.write_to_file(new_premis_path)
-                            copy(n_presform.content,
-                                 new_presform_content_ldrpath)
+                            LDRItemCopier(n_presform.content,
+                                 new_presform_content_ldrpath).copy()
                         for n_techmd in n_presform.technicalmetadata_list:
                             new_tech_record_loc = join(
                                 techmd_dir, n_techmd.item_name)
