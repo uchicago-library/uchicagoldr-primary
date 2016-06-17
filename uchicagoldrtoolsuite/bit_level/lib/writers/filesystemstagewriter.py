@@ -77,10 +77,11 @@ class FileSystemStageWriter(StageSerializationWriter):
         self._make_containing_dir(dst_path)
         dst = LDRPath(dst_path, root=self.stage_env_path)
         c = LDRItemCopier(ms.get_content(), dst, clobber=True)
-        c.copy()
-        h = hash_ldritem(dst)
-        mf_line_str = "{}\t{}\n".format(dst.item_name, h)
-        manifest_flo.write(mf_line_str)
+        r = c.copy()
+        if r['copied']:
+            h = hash_ldritem(dst)
+            mf_line_str = "{}\t{}\n".format(dst.item_name, h)
+            manifest_flo.write(mf_line_str)
 
     def _write_ms_premis(self, ms, admin_dir, manifest_flo):
         if ms.get_premis():
@@ -89,10 +90,11 @@ class FileSystemStageWriter(StageSerializationWriter):
             self._make_containing_dir(dst_path)
             dst = LDRPath(dst_path, root=self.stage_env_path)
             c = LDRItemCopier(ms.get_premis(), dst, clobber=True)
-            c.copy()
-            h = hash_ldritem(dst)
-            mf_line_str = "{}\t{}\n".format(dst.item_name, h)
-            manifest_flo.write(mf_line_str)
+            r = c.copy()
+            if r['copied']:
+                h = hash_ldritem(dst)
+                mf_line_str = "{}\t{}\n".format(dst.item_name, h)
+                manifest_flo.write(mf_line_str)
 
     def _write_ms_techmd(self, ms, admin_dir, manifest_flo):
         if ms.get_technicalmetadata_list():
@@ -105,10 +107,11 @@ class FileSystemStageWriter(StageSerializationWriter):
             self._make_containing_dir(dst_path)
             dst = LDRPath(dst_path, root=self.stage_env_path)
             c = LDRItemCopier(ms.get_technicalmetadata(0), dst, clobber=True)
-            c.copy()
-            h = hash_ldritem(dst)
-            mf_line_str = "{}\t{}\n".format(dst.item_name, h)
-            manifest_flo.write(mf_line_str)
+            r = c.copy()
+            if r['copied']:
+                h = hash_ldritem(dst)
+                mf_line_str = "{}\t{}\n".format(dst.item_name, h)
+                manifest_flo.write(mf_line_str)
 
     def _write_ms_presforms(self, ms, data_dir, admin_dir, manifest_flo):
         if ms.get_presform_list():
