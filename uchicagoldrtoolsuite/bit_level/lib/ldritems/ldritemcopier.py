@@ -114,13 +114,16 @@ class LDRItemCopier(object):
         i = 0
         while not complete and i < self.max_retries:
             i += 1
-            with self.src.open('rb') as s1:
-                with self.dst.open('wb') as s2:
-                    data = s1.read(self.buffering)
-                    while data:
-                        s2.write(data)
+            try:
+                with self.src.open('rb') as s1:
+                    with self.dst.open('wb') as s2:
                         data = s1.read(self.buffering)
-            complete = self.are_the_same()
+                        while data:
+                            s2.write(data)
+                            data = s1.read(self.buffering)
+                complete = self.are_the_same()
+            except:
+                pass
         if complete:
             r['src_eqs_dst'] = True
             r['copied'] = True
