@@ -3,8 +3,27 @@ from .ldritemoperations import hash_ldritem
 
 
 class LDRItemCopier(object):
+    """
+    An environment for facilitating qualified copies of LDRItem instances
+    """
     def __init__(self, src, dst, clobber=False, eq_detect='bytes',
                  max_retries=3, buffering=1024*1000*100):
+        """
+        Spawn a new copier
+
+        __Args__
+        1. src (LDRItem): The source item
+        2. dst (LDRItem): The destination item
+
+        __KWArgs__
+        * clobber (bool): Whether or not to clobber an existing dst
+        * eq_detect (str): what method to use to detect equality
+            of the src and dst
+        * max_retries (int): How many times to attempt a copy operation
+            before giving up
+        * buffering (int): How many bytes to load into RAM for copying/
+            comparison operations
+        """
         self.src = src
         self.dst = dst
         self.clobber = clobber
@@ -79,6 +98,13 @@ class LDRItemCopier(object):
         self._confirm = confirm
 
     def are_the_same(self):
+        """
+        Dispatch to the proper comparing function
+
+        __Returns__
+
+        (bool): comparison functions should return a bool
+        """
         if self.eq_detect is "bytes":
             return self.ldritem_equal_byte_contents()
         elif self.eq_detect is "hash":
@@ -92,6 +118,14 @@ class LDRItemCopier(object):
             )
 
     def copy(self):
+        """
+        Respecting user options and comparisons copy the file so the src
+        is equivalent to the dst, if possible
+
+        __Returns__
+
+        (dict): A small informational dict
+        """
         r = self.build_report_dict()
         r['copied'] = False
         if self.dst.exists():
@@ -132,6 +166,16 @@ class LDRItemCopier(object):
             return r
 
     def ldritem_equal_byte_contents(self):
+        """
+        Grab substrings of byte content from each item and compare them,
+        if they're different return False, otherwise return True
+
+        __Returns__
+
+        (bool): True if equivalent, otherwise False
+        """
+        # The scale of this function means it has to be pretty streamlined,
+        # think hard/benchmark before monkeying around with stuff in here
         # Grab streams
         with self.src.open() as s1:
             with self.dst.open() as s2:
@@ -151,17 +195,38 @@ class LDRItemCopier(object):
         return True
 
     def ldritem_equal_contents_hash(self):
+        """
+        Determines if src and dst are equivalent via hashing both
+
+        __Returns__
+
+        (bool): True if equivalent, otherwise False
+        """
         if hash_ldritem(self.src) == hash_ldritem(self.dst):
             return True
         return False
 
     def ldritem_equal_names(self):
+        """
+        Determines if src and dst are equivalent via item_name
+
+        __Returns__
+
+        (bool): True if equivalent, otherwise False
+        """
         if self.src.item_name == self.dst.item_name:
             return True
         return False
 
     def build_report_dict(self, copied=None, dst_existed=None,
                           clobbered_dst=None, src_eqs_dst=None):
+        """
+        Build the report dict returned by the .copy() function
+
+        __Returns__
+
+        (dict): The little report
+        """
         x = {}
         x['src_eqs_dst'] = src_eqs_dst
         x['copied'] = copied
