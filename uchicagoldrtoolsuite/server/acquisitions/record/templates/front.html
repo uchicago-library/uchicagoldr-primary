@@ -1,0 +1,20 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+	<!-- start of jumbotron -->
+	<div class="jumbotron">
+		<h1 class="text-center">Which Type of Acquisition Are You Looking At?</h1>
+		<p class="text-center">
+			<a class="btn btn-lrg btn-success" href="/acquisition?type=digital&cmd=new" role="button">
+			All Digital
+			</a> |
+			<a class="btn btn-lrg btn-success" href="/acquisition?type=phys&cmd=new" role="button">
+			Partly Physical
+			</a>
+		<p>
+	</div>
+	</div>
+	<!-- end of jumbotron -->
+	
+{% endblock %}
