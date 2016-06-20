@@ -1,5 +1,6 @@
 
 from flask import Blueprint
+from flask.templating import render_template
 
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
@@ -9,37 +10,36 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-blueprint = Blueprint('records', __name__, 
+acquisition = Blueprint('records', __name__, 
                       template_folder='templates')
 
-@blueprint.route('/')
+@acquisition.route('/')
 def frontpage():
-    return str("hello, this is the front page of " + 
-            "the acquisitions record application")
-    
-    
-@blueprint.route('/record/chooseType', methods=['GET'])
+    return render_template('index.html')
+
+@acquisition.route('/record/chooseType', methods=['GET', 'POST'])
 def chooseTypeForNewRecord():
     # select the option to start a physical accession turned digital
     # or born digital acquisition record
-    return "choose the type for the new record"
 
-@blueprint.route('/record/makeNew', methods=['GET', 'POST'])
+    return render_template('choose.html')
+
+@acquisition.route('/record/makeNew', methods=['GET', 'POST'])
 def makeANewRecord():
     # end point for student workers to fill out an acquisition
     # record for the DAS to review and convert to an accession
     # record
     return "make a new record by filling out the form"
 
-@blueprint.route('/records/list')
+@acquisition.route('/records/list')
 def listRecords():
     # end point for DAS to view all acquisitions records 
     # whether converted to accession records or not
     return "view all acquisitions records in the system end point"
 
-@blueprint.route('/record/convertToAccession', methods=['GET', 'POST'])
+@acquisition.route('/record/convertToAccession', methods=['GET', 'POST'])
 def convertRecordToAccession():
-    # end point for the DAS to modify the acqusition record 
+    # end point for the DAS to modify the acquisition record 
     # submitted by a student worker and convert modified record 
     # into an accession record 
     return str("DAS form to modify and convert " + 

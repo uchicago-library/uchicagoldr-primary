@@ -1,6 +1,6 @@
 from flask import Flask
-from .views import blueprint
+from .views import acquisition
 
 
 app = Flask(__name__)
-app.register_blueprint(blueprint)
+app.register_blueprint(acquisition)
