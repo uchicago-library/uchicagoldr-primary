@@ -117,7 +117,7 @@ class LDRItemCopier(object):
                 "to something valid?"
             )
 
-    def copy(self):
+    def copy(self, eat_exceptions=False):
         """
         Respecting user options and comparisons copy the file so the src
         is equivalent to the dst, if possible
@@ -146,6 +146,7 @@ class LDRItemCopier(object):
 
         complete = False
         i = 0
+        ex = None
         while not complete and i < self.max_retries:
             i += 1
             try:
@@ -156,14 +157,17 @@ class LDRItemCopier(object):
                             s2.write(data)
                             data = s1.read(self.buffering)
                 complete = self.are_the_same()
-            except:
-                pass
+            except Exception as e:
+                ex = e
         if complete:
             r['src_eqs_dst'] = True
             r['copied'] = True
             return r
         else:
-            return r
+            if not eat_exceptions:
+                raise ex
+            else:
+                return r
 
     def ldritem_equal_byte_contents(self):
         """
