@@ -13,7 +13,7 @@ except:
 
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from ..ldritems.ldritemoperations import copy
+from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
 from ..ldritems.ldrpath import LDRPath
 
@@ -86,7 +86,8 @@ class GenericPREMISCreator(object):
         recv_file = join(working_dir_path, str(uuid1()))
         premis_file = join(working_dir_path, str(uuid1()))
         recv_item = LDRPath(recv_file)
-        copy(item, recv_item)
+        c = LDRItemCopier(item, recv_item, clobber=True)
+        r = c.copy()
         rec = cls.make_record(recv_file, item)
         rec.write_to_file(premis_file)
         return LDRPath(premis_file)

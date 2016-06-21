@@ -8,7 +8,7 @@ from pypremis.nodes import *
 from ...ldritems.ldrpath import LDRPath
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from ...ldritems.ldritemoperations import copy
+from ...ldritems.ldritemcopier import LDRItemCopier
 
 
 __author__ = "Brian Balsamo"
@@ -56,7 +56,7 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
     def handle_premis(self, cmd_output, material_suite, techmdcreator_name,
                       success):
         premis_path = join(self.working_dir, str(uuid1()))
-        copy(material_suite.get_premis(), LDRPath(premis_path))
+        LDRItemCopier(material_suite.get_premis(), LDRPath(premis_path)).copy()
         orig_premis = PremisRecord(frompath=premis_path)
         event = self._build_Event(cmd_output, techmdcreator_name, success,
                                   orig_premis.get_object_list()[0])

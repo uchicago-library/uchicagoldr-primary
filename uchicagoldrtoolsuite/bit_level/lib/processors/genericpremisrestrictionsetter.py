@@ -11,7 +11,7 @@ from ..misc.premisextensionnodes import Restriction
 from ..misc.premisextensionnodes import RightsExtensionIdentifier
 from ..misc.premisextensionnodes import RestrictedObjectIdentifier
 from ..misc.premisextensionnodes import RestrictingAgentIdentifier
-from ..ldritems.ldritemoperations import copy
+from ..ldritems.ldritemcopier import LDRItemCopier
 
 
 __author__ = "Brian Balsamo"
@@ -93,7 +93,8 @@ class GenericPREMISRestrictionSetter(object):
         """
         recv_file = join(self.working_dir_path, str(uuid1()))
         recv_item = LDRPath(recv_file)
-        copy(item, recv_item)
+        c = LDRItemCopier(item, recv_item)
+        c.copy()
 
         record = PremisRecord(frompath=recv_file)
 

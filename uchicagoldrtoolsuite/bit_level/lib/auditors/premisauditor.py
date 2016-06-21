@@ -78,7 +78,7 @@ class PremisAuditor(Auditor):
         with TemporaryFile() as tempfile:
             with value.open('rb') as read_file:
                 while True:
-                    buf = read_file.read(1024)
+                    buf = read_file.read(1024 * 1000 * 100)
                     if buf:
                         tempfile.write(buf)
                     else:

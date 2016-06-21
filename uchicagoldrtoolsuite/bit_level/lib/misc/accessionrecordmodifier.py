@@ -17,14 +17,14 @@ __version__ = "0.0.1dev"
 
 class AccessionRecordModifier(object):
     """The AccessionRecordModifier is meant to modify an accession record in an archive
-    structure with the information required for an accession to be completely ingested 
+    structure with the information required for an accession to be completely ingested
     into the ldr.
     """
     def __init__(self, subject):
         """initializes an AccessionRecordModifier
-        
+
         __Args__
-        1. subject (LDRItem) : some LDR file-like object that contains JSON 
+        1. subject (LDRItem) : some LDR file-like object that contains JSON
         data that is a valid accession record
         """
         self.record = subject
@@ -46,10 +46,10 @@ class AccessionRecordModifier(object):
 
     def write(self, file_location):
         """writes the contents of the record to the file_location specified
-        
+
         __Args__
-        1. file_location (str): a string representing a path to a location 
-        on-disk to save the record 
+        1. file_location (str): a string representing a path to a location
+        on-disk to save the record
         """
         jsonified_hrecord = self.record.toJSON()
         with open(file_location, 'wb') as writing_file:
@@ -62,7 +62,7 @@ class AccessionRecordModifier(object):
 
     def set_record(self, value):
         """sets the record data attribute value
-        
+
         _Args__
         1. value (LDRItem): the location on-disk of an accession record
         """
@@ -70,7 +70,7 @@ class AccessionRecordModifier(object):
             with TemporaryFile() as tempfile:
                 with value.open('rb') as read_file:
                     while True:
-                        buf = read_file.read(1024)
+                        buf = read_file.read(1024*1000*100)
                         if buf:
                             tempfile.write(buf)
                         else:
