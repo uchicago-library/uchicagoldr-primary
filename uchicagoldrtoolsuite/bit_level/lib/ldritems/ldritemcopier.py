@@ -122,6 +122,11 @@ class LDRItemCopier(object):
         Respecting user options and comparisons copy the file so the src
         is equivalent to the dst, if possible
 
+        __KWArgs__
+
+        * eat_exceptions (bool): If True never raise an exception, instead
+            return a report even if the copy raises an exception.
+
         __Returns__
 
         (dict): A small informational dict
