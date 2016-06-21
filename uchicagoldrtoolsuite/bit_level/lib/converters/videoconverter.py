@@ -9,7 +9,7 @@ from pypremis.nodes import *
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from .abc.converter import Converter
 from ..structures.presformmaterialsuite import PresformMaterialSuite
-from ..ldritems.ldritemoperations import copy
+from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldrpath import LDRPath
 from ..processors.genericpremiscreator import GenericPREMISCreator
 
@@ -89,7 +89,7 @@ class VideoConverter(Converter):
         accordingly
         """
         initd_premis_file = join(self.working_dir, str(uuid1()))
-        copy(self.source_materialsuite.premis, LDRPath(initd_premis_file))
+        LDRItemCopier(self.source_materialsuite.premis, LDRPath(initd_premis_file)).copy()
         orig_premis = PremisRecord(frompath=initd_premis_file)
         orig_name = orig_premis.get_object_list()[0].get_originalName()
         # LibreOffice CLI won't let us just specify an output file name, so make
@@ -102,7 +102,7 @@ class VideoConverter(Converter):
         target_containing_dir = join(self.working_dir, str(uuid1()))
         target_path = join(target_containing_dir, orig_name)
         makedirs(dirname(target_path), exist_ok=True)
-        copy(self.source_materialsuite.content, LDRPath(target_path))
+        LDRItemCopier(self.source_materialsuite.content, LDRPath(target_path)).copy()
 
         # Where we are aiming the LibreOffice CLI converter
         outdir = join(self.working_dir, str(uuid1()))

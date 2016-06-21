@@ -8,7 +8,7 @@ from pypremis.nodes import *
 
 from ..ldritems.ldrpath import LDRPath
 from ..structures.materialsuite import MaterialSuite
-from ..ldritems.ldritemoperations import copy
+from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
 
 
@@ -75,7 +75,8 @@ class GenericPresformCreator(object):
         """
         premis_path = join(self.working_dir_path, str(uuid1()))
         premis_item = LDRPath(premis_path)
-        copy(ms.premis, premis_item, True)
+        c = LDRItemCopier(ms.premis, premis_item, clobber=True)
+        c.copy()
 
         premis_rec = PremisRecord(frompath=premis_path)
 
