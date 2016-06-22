@@ -8,7 +8,6 @@ def readme():
 
 setup(
     name = 'uchicagoldrtoolsuite',
-    description = "A suite of tools for working with digital repositories",
     long_description = readme(),
     version = '0.0.1dev',
     author = "Brian Balsamo, Tyler Danstrom",
@@ -88,6 +87,7 @@ setup(
         'flask-wtf',
         'flask-sqlalchemy',
         'sqlalchemy',
+        'pymysql',
         'pypremis',
         'controlledvocab',
         'hierarchicalrecord',
