@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_wtf import CsrfProtect
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -6,6 +7,7 @@ from .views import acquisition
 import config
 
 app = Flask(__name__)
+CsrfProtect(app)
 app.config.from_object(config)
 app.register_blueprint(acquisition)
 loghandler = RotatingFileHandler('records.log', maxBytes=1024 * 1024 * 100, backupCount=20)

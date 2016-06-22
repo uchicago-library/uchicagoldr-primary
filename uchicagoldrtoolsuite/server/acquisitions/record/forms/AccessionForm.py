@@ -6,6 +6,11 @@ from wtforms.fields.core import SelectField, BooleanField
 
 
 class AccessionForm(Form):
+    collection = SelectField(
+        "Formal Collection To Which This Accession Belongs",
+        validators=[DataRequired],
+        choices=[('A','A'),
+                 ('B','B')])
     materialtype = StringField("Type", validators=[DataRequired])
     rights = StringField("Rights", validators=[DataRequired])
     prc = StringField("PRC", validators=[DataRequired])

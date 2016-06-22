@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<form method="post" action="/acquisition">
+<form method="post" action="{{ request.url }}">
 
 {% for field in recordform %}
 
@@ -10,21 +10,33 @@
 <fieldset class="form-group">
 
 {% if field.type == 'StringField' %}
-<label for="{{ field.name }}">{{ field.label }}</label>
-<input type="text" class="form-control" id="{{ field.name }}"/>
+
 {% endif %}
 
 {% if field.type == 'TextAreaField' %}
 <label for="{{ field.name }}">{{ field.label }}</label>
 <textarea class="form-control" id="{{ field.name }}">
 </textarea>
-{% endif %}
-
-{% if field.type == 'BooleanField' %}
+{% elif field.type == 'BooleanField' %}
 <label>
 <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}">
 {{ field.label }}
 </label>
+{% elif field.type == 'StringField' %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="text" class="form-control" id="{{ field.name }}"/>
+
+{% elif field.type == 'SelectField' %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<select class="form-control" id="{{ field.name }}">
+{{ field.choices }}
+
+{% for choice in field.choices %}
+<option id={{ choice[0] }}>{{ choice[1] }}</option>
+
+{% endfor %}
+</select>
+
 {% endif %}
 
 {% if field.errors %}
@@ -38,7 +50,7 @@
 </fieldset>
 
 {% endfor %}
-
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 

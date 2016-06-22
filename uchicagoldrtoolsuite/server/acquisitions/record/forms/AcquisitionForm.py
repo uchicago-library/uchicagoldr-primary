@@ -4,10 +4,17 @@ from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms.fields.simple import TextAreaField
 from wtforms.fields.core import SelectField, BooleanField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
+
+def possible_restrictions():
+    from ..models.Restriction import db, Restriction
+    output = db.session.query(Restriction)    
+    return [(x.restrictionCode, x.restrictionCode) for x in output]
 
 class AcquisitionForm(Form):
     accessionID = StringField("Accession Identifier", 
                               validators=[DataRequired])
+    collection = StringField("Collection that this belongs in", validators=[DataRequired])
     donorfirstname = StringField("Donor's first name", 
                                  validators=[DataRequired])
     donorlastname = StringField("Donor's last name", 
@@ -25,11 +32,11 @@ class AcquisitionForm(Form):
     sourcephonenumber = StringField("Source's phone number", 
                                     validators=[DataRequired])
     summary = TextAreaField("Description", validators=[DataRequired])
-    restriction = SelectField("Restriction", validators=[DataRequired], 
-                              choices=[('R-X', 'R-X'), 
-                                       ('R-30', 'R-30'),
-                                       ('OU', 'OU'),
-                                       ('O','O')])
+    
+    restriction = SelectField('Restriction Code', 
+                                   choices=possible_restrictions(),
+                                   validators=[DataRequired])
+    
     restrictionComment = TextAreaField("Comment about Restriction", 
                                        validators=[DataRequired])
     adminComment = TextAreaField(

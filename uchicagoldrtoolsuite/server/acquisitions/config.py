@@ -10,5 +10,6 @@ DATABASE_USER = creader.get('Database', 'db_user')
 DATABASE_PASS = creader.get('Database', 'db_pass')
 DATABASE_NAME = creader.get('Database', 'db_name')
 CSRF_ENABLED = False
+SECRET_KEY = creader.get('WebApp', 'secret_key')
 SQLALCHEMY_DATABASE_URI = "mysql+pymysql://{}:{}@{}/{}".format(DATABASE_USER, DATABASE_PASS,
                                                                DATABASE_HOST, DATABASE_NAME)
