@@ -3,7 +3,7 @@ from flask_wtf import Form
 from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms.fields.simple import TextAreaField
-from wtforms.fields.core import SelectField, BooleanField, IntegerFeild
+from wtforms.fields.core import SelectField, BooleanField, IntegerField
 from wtforms.fields import FormField
 from wtforms import Form as WTForm
 
