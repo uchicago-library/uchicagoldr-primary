@@ -21,7 +21,7 @@ class AcquisitionRetriever(object):
         return self._queryable
     
     def set_queryable(self, value):
-        if getattr(self, queryable, None):
+        if getattr(self, 'queryable', None):
             pass
         else:
             self._queryable = Acquisition
@@ -31,6 +31,7 @@ class AcquisitionRetriever(object):
     
     def set_result(self, value):
         if not getattr(self, 'result', None) and isinstance(value, list):
+            print("hi")
             self._result = value
 
     session = property(get_session, set_session)

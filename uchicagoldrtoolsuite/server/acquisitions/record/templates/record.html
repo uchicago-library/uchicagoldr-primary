@@ -3,9 +3,43 @@
 {% block content %}
 
 <form method="post" action="/acquisition">
-<input name=_csrf_token type=hidden value="{{ csrf_token() }}">
-{{ recordform }}
-<input type="submit" value="Save"/>
+
+{% for field in recordform %}
+
+
+<fieldset class="form-group">
+
+{% if field.type == 'StringField' %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="text" class="form-control" id="{{ field.name }}"/>
+{% endif %}
+
+{% if field.type == 'TextAreaField' %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<textarea class="form-control" id="{{ field.name }}">
+</textarea>
+{% endif %}
+
+{% if field.type == 'BooleanField' %}
+<label>
+<input type="checkbox" name="{{ field.name }}" id="{{ field.name }}">
+{{ field.label }}
+</label>
+{% endif %}
+
+{% if field.errors %}
+   <ul class="errors">
+      {% for error in field.errors %}
+      <li>{{ error }}</li>
+      {% endfor %}
+   </ul>
+{% endif %}
+
+</fieldset>
+
+{% endfor %}
+
+<button type="submit" class="btn btn-primary">Submit</button>
 </form>
 
 {% endblock %}
