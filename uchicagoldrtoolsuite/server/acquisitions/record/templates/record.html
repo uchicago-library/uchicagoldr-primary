@@ -4,40 +4,60 @@
 
 <form method="post" action="/acquisition">
 
-{% for field in recordform %}
+<ul>
+{% for field in recordform recursive %}
 
 
 <fieldset class="form-group">
 
+{% if field.type == 'FormField' %}
+<li>
+<label for="{{ field.name }}">{{ field.label }}</label>
+<ul>
+{{ loop(field) }}
+</ul>
+</li>
+{% endif %}
+
 {% if field.type == 'StringField' %}
+<li>
 <label for="{{ field.name }}">{{ field.label }}</label>
 <input type="text" class="form-control" id="{{ field.name }}"/>
+</li>
 {% endif %}
 
 {% if field.type == 'TextAreaField' %}
+<li>
 <label for="{{ field.name }}">{{ field.label }}</label>
 <textarea class="form-control" id="{{ field.name }}">
 </textarea>
+</li>
 {% endif %}
 
 {% if field.type == 'BooleanField' %}
+<li>
 <label>
 <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}">
 {{ field.label }}
 </label>
+</li>
 {% endif %}
 
 {% if field.errors %}
+<li>
    <ul class="errors">
       {% for error in field.errors %}
       <li>{{ error }}</li>
       {% endfor %}
    </ul>
+</li>
 {% endif %}
 
 </fieldset>
 
 {% endfor %}
+
+</ul>
 
 <button type="submit" class="btn btn-primary">Submit</button>
 </form>
