@@ -30,19 +30,12 @@ class AcquisitionForm(Form):
     accessionID = StringField("Accession Identifier",
                               validators=[DataRequired])
     summary = TextAreaField("Description", validators=[DataRequired])
+    restriction_information = FormField(RestrictionFields)
     donor = FormField(DonorSourceInfoFields)
     source = FormField(DonorSourceInfoFields)
-    restriction_information = FormField(RestrictionFields)
-    adminComment = TextAreaField(
-        "Administrative Comment")
-    physicalMediaNote = TextAreaField(
-        "Note about the physical Media")
-    physical_media_fields = FormField(PhysicalMediaFields)
+    adminComment = TextAreaField("Administrative Comment")
+    physical_media_information = FormField(PhysicalMediaFields)
     acquisitionType = BooleanField("Is this acquisition all digital?")
-    receiptLetterSent = BooleanField(
-        "Was a letter of receipt sent?")
-    invLetterSent = BooleanField(
-        "Is an inventory letter required?")
     giftAcknowledgementRequired = BooleanField(
         "Is a gift acknowledgement required?")
     giftAcknowledgementReceived = BooleanField(
