@@ -18,24 +18,26 @@ class PhysicalMediaFields(WTForm):
     quantity = IntegerField("Quantity")
     description = StringField("Description")
 
-class AcquisitionForm(Form):
-    accessionID = StringField("Accession Identifier",
-                              validators=[DataRequired])
-    donor = FormField(DonorSourceInfoFields)
-    source = FormField(DonorSourceInfoFields)
-    summary = TextAreaField("Description", validators=[DataRequired])
+class RestrictionFields(WTForm):
     restriction = SelectField("Restriction", validators=[DataRequired],
                               choices=[('R-X', 'R-X'),
                                        ('R-30', 'R-30'),
                                        ('OU', 'OU'),
                                        ('O','O')])
-    restrictionComment = TextAreaField("Comment about Restriction")
+    restriction_comment = TextAreaField("Restriction Comment")
+
+class AcquisitionForm(Form):
+    accessionID = StringField("Accession Identifier",
+                              validators=[DataRequired])
+    summary = TextAreaField("Description", validators=[DataRequired])
+    donor = FormField(DonorSourceInfoFields)
+    source = FormField(DonorSourceInfoFields)
+    restriction_information = FormField(RestrictionFields)
     adminComment = TextAreaField(
         "Administrative Comment")
     physicalMediaNote = TextAreaField(
         "Note about the physical Media")
-    physicalLocationNote = TextAreaField(
-        "Note about the physical location")
+    physical_media_fields = FormField(PhysicalMediaFields)
     acquisitionType = BooleanField("Is this acquisition all digital?")
     receiptLetterSent = BooleanField(
         "Was a letter of receipt sent?")
