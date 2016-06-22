@@ -11,24 +11,22 @@ def possible_restrictions():
     output = db.session.query(Restriction)    
     return [(x.restrictionCode, x.restrictionCode) for x in output]
 
+class PersonForm(Form):
+    firstname = StringField("First name", 
+                                 validators=[DataRequired])
+    lastname = StringField("Last name", 
+                                validators=[DataRequired])
+    email = StringField("Email address", 
+                             validators=[DataRequired])
+    phonenumber = StringField("Phone number", 
+                              validators=[DataRequired])    
+
 class AcquisitionForm(Form):
     accessionID = StringField("Accession Identifier", 
                               validators=[DataRequired])
     collection = StringField("Collection that this belongs in", validators=[DataRequired])
-    donorfirstname = StringField("Donor's first name", 
-                                 validators=[DataRequired])
-    donorlastname = StringField("Donor's last name", 
-                                validators=[DataRequired])
-    donoremail = StringField("Donor's email address", 
-                             validators=[DataRequired])
-    donorphonenumber = StringField("Donor's phone number", 
-                                   validators=[DataRequired])
-    sourcefirstname = StringField("Source's first name", 
-                                  validators=[DataRequired])
-    sourcelastname = StringField("Source's last name", 
-                                 validators=[DataRequired])
-    sourceemail = StringField("Source's email address", 
-                              validators=[DataRequired])
+    donor = PersonForm("Donor")
+    source = PersonForm("Source")
     sourcephonenumber = StringField("Source's phone number", 
                                     validators=[DataRequired])
     summary = TextAreaField("Description", validators=[DataRequired])
