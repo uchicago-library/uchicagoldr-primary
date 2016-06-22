@@ -84,10 +84,15 @@ setup(
     install_requires = [
         'treelib',
         'pyxdg',
+        'flask',
+        'flask-wtf',
+        'flask-sqlalchemy',
+        'sqlalchemy',
         'pypremis',
         'controlledvocab',
         'hierarchicalrecord',
         'requests'
+
     ],
     extras_require = {
         'magic_mimes': ["python-magic"]
