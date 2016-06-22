@@ -5,7 +5,7 @@ from wtforms.fields.simple import TextAreaField
 from wtforms.fields.core import SelectField, BooleanField
 
 
-class AccessionForm():
+class AccessionForm(Form):
     materialtype = StringField("Type", validators=[DataRequired])
     rights = StringField("Rights", validators=[DataRequired])
     prc = StringField("PRC", validators=[DataRequired])

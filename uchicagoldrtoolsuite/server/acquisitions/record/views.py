@@ -1,4 +1,3 @@
-
 from flask import Blueprint, request
 from flask.templating import render_template
 import logging
@@ -43,6 +42,13 @@ def makeANewRecord():
     form = AcquisitionForm(csrf_enabled=False)
     return render_template('record.html', recordform=form) 
 
+@acquisition.route('/accession', methods=['GET', 'POST'])
+def makeAnAccession():
+    from .forms.AccessionForm import AccessionForm
+    acquisition = request.args.get('id')
+    form = AccessionForm(csrf_enabled=False)
+    return render_template('record.html', recordform=form)
+    
 @acquisition.route('/list')
 def listRecords():
     from .controllers.acquisitionretriever import AcquisitionRetriever

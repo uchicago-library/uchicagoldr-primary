@@ -1,11 +1,16 @@
 {% extends "index.html" %}
 
 {% block content %}
-
-{% for r in result %}
-<p>
-{{ r }}
-</p>
-{% endfor %}
-
+    <div class="list-group">
+        {% for r in result %}
+            <a href="/accession?id={{ r[0] }}" class="list-group-item">
+                {{ r[0] }} created on {{ r[1]|strfdate }} 
+                {% if r[2] == 0 %}
+                  is not accesioned. 
+                {% else %}
+                is accessioned.
+                {% endif %}
+            </a>
+        {% endfor %}
+    </div>
 {% endblock %}

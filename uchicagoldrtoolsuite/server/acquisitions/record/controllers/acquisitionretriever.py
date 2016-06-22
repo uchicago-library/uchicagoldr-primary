@@ -9,7 +9,7 @@ class AcquisitionRetriever(object):
         
     def run_browse(self):
         search = db.session.query(Acquisition)
-        self.result = [(x.id, x.createDate) for x in search]
+        self.result = [(x.id, x.createdDate, x.isAccessioned) for x in search]
         
     def get_session(self):
         return self._session
@@ -31,7 +31,6 @@ class AcquisitionRetriever(object):
     
     def set_result(self, value):
         if not getattr(self, 'result', None) and isinstance(value, list):
-            print("hi")
             self._result = value
 
     session = property(get_session, set_session)
