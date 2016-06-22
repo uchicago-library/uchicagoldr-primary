@@ -38,6 +38,7 @@ class AcquisitionForm(Form):
         "Note about the physical Media")
     physicalLocationNote = TextAreaField(
         "Note about the physical location")
+    acquisitionType = BooleanField("Is this acquisition all digital?")
     receiptLetterSent = BooleanField(
         "Was a letter of receipt sent?")
     invLetterSent = BooleanField(
