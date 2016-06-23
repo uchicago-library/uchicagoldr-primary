@@ -9,7 +9,8 @@ class AcquisitionRetriever(object):
         
     def run_browse(self):
         search = db.session.query(Acquisition)
-        self.result = [(x.id, x.createdDate, x.isAccessioned) for x in search]
+        
+        self.result = sorted([(x.id, x.createdDate, x.isAccessioned) for x in search], key=lambda x: x[2])
         
     def get_session(self):
         return self._session

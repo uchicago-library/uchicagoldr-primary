@@ -1,9 +1,8 @@
 from flask_wtf import Form
-from wtforms import StringField
+from wtforms import Form as WTForm, StringField
 from wtforms.validators import DataRequired
 from wtforms.fields.simple import TextAreaField
 from wtforms.fields.core import SelectField, BooleanField
-
 
 class AccessionForm(Form):
     collection = SelectField(
@@ -11,6 +10,7 @@ class AccessionForm(Form):
         validators=[DataRequired],
         choices=[('A','A'),
                  ('B','B')])
+    span_date = StringField("Year Range")
     materialtype = StringField("Type", validators=[DataRequired])
     rights = StringField("Rights", validators=[DataRequired])
     prc = StringField("PRC", validators=[DataRequired])

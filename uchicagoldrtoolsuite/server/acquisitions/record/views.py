@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import abort, Blueprint, request
 from flask.templating import render_template
 import logging
 
@@ -29,8 +29,6 @@ acquisition = Blueprint('records', __name__,
 @acquisition.route('/')
 def frontpage():
     from .__init__ import app
-    app.logger.error("hi")
-    app.logger.warn("wrong")
     return render_template('front.html', pageTitle='Acquisition Type',
                            pageAction='Selection')
 
@@ -40,10 +38,19 @@ def makeANewRecord():
     # record for the DAS to review and convert to an accession
     # record
     from .forms.AcquisitionForm import AcquisitionForm
+    selected_type = request.args.get('type', '')
+    if selected_type == 'phys':
+        selected_type = False
+    elif selected_type == 'dig':
+        selected_type = True
+    else:
+        return abort(400)
+    
     if request.method == 'POST':
         form = AcquisitionForm(request.form)
     else:
         form = AcquisitionForm()
+        form.acquisitionType.data = selected_type
     return render_template('record.html', recordform=form,
                            pageTitle='New Acquisition', 
                            pageAction="Making an Acquisition Record") 

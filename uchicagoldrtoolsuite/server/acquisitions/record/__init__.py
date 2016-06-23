@@ -19,6 +19,19 @@ app.logger.setLevel(logging.DEBUG)
 app.logger.addHandler(loghandler)
 
 @app.template_filter('strfdate')
-def _jinja2_filter_datetime(date, fmt=None):
+def format_date(date, fmt=None):
     format = '%b %d, %Y'
     return date.strftime(format)
+
+@app.template_filter('capfirst')
+def capfirst(s):
+    return s[0].upper()+s[1:]
+
+@app.template_filter('makePretty')
+def makePretty(s):
+    if '_' in s:
+        parts = s.split('_')
+        parts = [x[0].upper()+x[1:].lower() for x in parts]
+        return ' '.join(parts)
+    else:
+        return s[0].upper()+s[1:].lower()
