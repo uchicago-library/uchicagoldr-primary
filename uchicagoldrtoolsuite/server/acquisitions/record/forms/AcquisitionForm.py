@@ -71,8 +71,8 @@ class AcquisitionForm(Form):
         "Note about the physical location")
 
     collection = StringField("Collection that this belongs in", validators=[DataRequired])
-    donor = FormField(PersonFormFields)
-    source = FormField(PersonFormFields)
+    donor = FormField(DonorFields)
+    source = FormField(SourceFields)
     origin = FormField(OriginFields)
     
     restrictions = FormField(RestrictionFields)
