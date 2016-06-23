@@ -9,8 +9,6 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
-SECRET_KEY = b'/5{\xa0\xc2\x89\x9eI\x12+\x19\x97)\xe3Z\xe9\x9d\xect\xf4\x99\xdc\x9e\xf9'
-
 acquisition = Blueprint('records', __name__, 
                       template_folder='templates')
 
