@@ -2,74 +2,81 @@
 
 {% block content %}
 
-<form method="post" action="{{ request.url }}">
+<form method="post" action="/acquisition">
 
+<ul>
 {% for field in recordform recursive %}
 
 
+<fieldset class="form-group">
+
+{% if field.type == 'IntegerField' %}
+<li>
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="number" class="form-control" id="{{ field.name }}"/>
+</li>
+{% endif %}
 
 {% if field.type == 'FormField' %}
-  <fieldset class="form-group">
-    <legend>
-     {{ field.name|makePretty }}
-     <button class="btn btn-primary btn-sm" type="submit">New</button>
-    </legend>
+<li>
+<label for="{{ field.name }}">{{ field.label }}</label>
+<ul>
 {{ loop(field) }}
-</fieldset>
+</ul>
+</li>
+{% endif %}
 
-{% elif field.type == 'StringField' %}
-<div class="form-group">
+{% if field.type == 'StringField' %}
+<li>
 <label for="{{ field.name }}">{{ field.label }}</label>
 <input type="text" class="form-control" id="{{ field.name }}"/>
-</div>
-{% elif field.type == 'TextAreaField' %}
-<div class="form-group">
+</li>
+{% endif %}
+
+{% if field.type == 'TextAreaField' %}
+<li>
 <label for="{{ field.name }}">{{ field.label }}</label>
 <textarea class="form-control" id="{{ field.name }}">
 </textarea>
-</div>
-{% elif field.type == 'BooleanField' %}
-
-    {% if field.name == 'acquisitionType' %}
-       <div class="form-group">
-        <label>
-          {% if field.data == True %}
-           <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}" checked disabled>
- 
-          {% else %}
-            <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}" disabled>
-          
-          {% endif %}
-           {{ field.label }}
-          </label>
-       </div>
-    {% else %}
-       <div class="form-group">
-        <label>
-         <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}">
-           {{ field.label }}
-         </label> 
-       </div>
-    {% endif %}
-
-{% elif field.type == 'SelectField' %}
-<div class="form-group">
-<label for="{{ field.name }}">{{ field.label }}</label>
-<select class="form-control" id="{{ field.name }}">
-{{ field.choices }}
-
-{% for choice in field.choices %}
-<option id={{ choice[0] }}>{{ choice[1] }}</option>
-{% endfor %}
-</select>
-</div>
+</li>
 {% endif %}
 
+{% if field.type == 'SelectField' %}
+<li>
+<label for="{{ field.name }}">{{ field.label }}</label>
+<select id="{{ field.name }}"> 
+{% for opt in field.choices %}
+<option value="{{ opt[0] }}">{{ opt[1] }}</option> 
+{% endfor %}
+</select>
+</li>
+{% endif %}
 
+{% if field.type == 'BooleanField' %}
+<li>
+<label>
+<input type="checkbox" name="{{ field.name }}" id="{{ field.name }}">
+{{ field.label }}
+</label>
+</li>
+{% endif %}
+
+{% if field.errors %}
+<li>
+   <ul class="errors">
+      {% for error in field.errors %}
+      <li>{{ error }}</li>
+      {% endfor %}
+   </ul>
+</li>
+{% endif %}
+
+</fieldset>
 
 {% endfor %}
 
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+</ul>
+
 <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 
