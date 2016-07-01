@@ -62,7 +62,8 @@ class LDRItemCopier(object):
         supported_detections = [
             "bytes",
             "name",
-            "hash"
+            "hash",
+            "size"
         ]
 
         if not isinstance(eq_detect, str):
@@ -111,6 +112,8 @@ class LDRItemCopier(object):
             return self.ldritem_equal_contents_hash()
         elif self.eq_detect is "name":
             return self.ldritem_equal_names()
+        elif self.eq_detect is "size":
+            return self.ldritem_equal_contents_size()
         else:
             raise AssertionError(
                 "How did we get this far without setting eq_detect " +
@@ -199,9 +202,15 @@ class LDRItemCopier(object):
                     data1 = s1.read(self.buffering)
                     data2 = s2.read(self.buffering)
                 if data1 and not data2 or \
-                        data2 and not data2:
+                        data2 and not data1:
                     return False
         return True
+
+    def ldritem_equal_contents_size(self):
+        if self.src.get_size(buffering=self.buffering) == \
+                self.dst.get_size(buffering=self.buffering):
+            return True
+        return False
 
     def ldritem_equal_contents_hash(self):
         """
@@ -237,6 +246,8 @@ class LDRItemCopier(object):
         (dict): The little report
         """
         x = {}
+        x['eq_detect'] = self.eq_detect
+        x['clobber_setting'] = self.clobber
         x['src_eqs_dst'] = src_eqs_dst
         x['copied'] = copied
         x['dst_existed'] = dst_existed

@@ -1,4 +1,5 @@
 from os import remove
+from os.path import getsize
 from pathlib import Path
 
 from .abc.ldritem import LDRItem
@@ -69,3 +70,12 @@ class LDRPath(LDRItem):
         else:
             raise ValueError("file {} is not opened and " +
                              "therefore cannot write".format(self.item_name))
+    def get_size(self, buffering=1024*1000*100):
+        """
+        Overwrite LDRItem.get_size(), because this is faster.
+
+        Preserve the buffering kwarg for compatability, even though
+        we don't use it for anything
+        """
+        return self.path.stat().st_size
+
