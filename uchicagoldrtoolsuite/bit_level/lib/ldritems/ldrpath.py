@@ -77,5 +77,7 @@ class LDRPath(LDRItem):
         Preserve the buffering kwarg for compatability, even though
         we don't use it for anything
         """
-        return self.path.stat().st_size
-
+        if self.exists():
+            return self.path.stat().st_size
+        else:
+            return 0
