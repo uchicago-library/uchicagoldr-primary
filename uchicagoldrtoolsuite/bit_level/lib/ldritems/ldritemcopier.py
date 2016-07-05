@@ -106,13 +106,13 @@ class LDRItemCopier(object):
 
         (bool): comparison functions should return a bool
         """
-        if self.eq_detect is "bytes":
+        if self.eq_detect == "bytes":
             return self.ldritem_equal_byte_contents()
-        elif self.eq_detect is "hash":
+        elif self.eq_detect == "hash":
             return self.ldritem_equal_contents_hash()
-        elif self.eq_detect is "name":
+        elif self.eq_detect == "name":
             return self.ldritem_equal_names()
-        elif self.eq_detect is "size":
+        elif self.eq_detect == "size":
             return self.ldritem_equal_contents_size()
         else:
             raise AssertionError(
@@ -173,6 +173,7 @@ class LDRItemCopier(object):
             return r
         else:
             if not eat_exceptions:
+                raise OSError("!!! BAD COPY !!! - {} - COPY NOT COMPLETE".format(str(ex)))
                 raise ex
             else:
                 return r

@@ -82,7 +82,7 @@ class FileSystemStageWriter(StageSerializationWriter):
     def _write_ms_content(self, ms, data_dir, manifest_flo):
         dst_path = join(data_dir, ms.get_content().item_name)
         self._make_containing_dir(dst_path)
-        dst = LDRPath(dst_path, root=self.stage_env_path)
+        dst = LDRPath(dst_path, root=data_dir)
         c = LDRItemCopier(ms.get_content(), dst, clobber=True, eq_detect=self.eq_detect)
         r = c.copy()
         manifest_flo.write(self._interpret_copy_report(r, dst))
@@ -92,7 +92,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             dst_path = join(admin_dir, "PREMIS",
                             ms.get_content().item_name+".premis.xml")
             self._make_containing_dir(dst_path)
-            dst = LDRPath(dst_path, root=self.stage_env_path)
+            dst = LDRPath(dst_path, root=join(admin_dir, "PREMIS"))
             c = LDRItemCopier(ms.get_premis(), dst, clobber=True, eq_detect=self.eq_detect)
             r = c.copy()
             manifest_flo.write(self._interpret_copy_report(r, dst))
@@ -106,7 +106,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             dst_path = join(admin_dir, "TECHMD",
                             ms.get_content().item_name+".fits.xml")
             self._make_containing_dir(dst_path)
-            dst = LDRPath(dst_path, root=self.stage_env_path)
+            dst = LDRPath(dst_path, root=join(admin_dir, "TECHMD"))
             c = LDRItemCopier(ms.get_technicalmetadata(0), dst, clobber=True, eq_detect=self.eq_detect)
             r = c.copy()
             manifest_flo.write(self._interpret_copy_report(r, dst))
