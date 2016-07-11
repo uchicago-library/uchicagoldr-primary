@@ -173,8 +173,7 @@ class LDRItemCopier(object):
             return r
         else:
             if not eat_exceptions:
-                raise OSError("!!! BAD COPY !!! - {} - COPY NOT COMPLETE".format(str(ex)))
-                raise ex
+                raise OSError("!!! BAD COPY !!! - {} - COPY NOT COMPLETE - {} !=  {}".format(str(ex), self.src.item_name, self.dst.item_name))
             else:
                 return r
 
