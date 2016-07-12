@@ -98,21 +98,30 @@ class LDRItemCopier(object):
             raise ValueError()
         self._confirm = confirm
 
-    def are_the_same(self):
+    def are_the_same(self, eq_detect=None):
         """
         Dispatch to the proper comparing function
+
+        __KWArgs__
+
+        * eq_detect (str): The equality metric to use, defaults to the
+            same as the Copier instance of not supplied.
 
         __Returns__
 
         (bool): comparison functions should return a bool
         """
-        if self.eq_detect == "bytes":
+
+        if eq_detect is None:
+            eq_detect = self.eq_detect
+
+        if eq_detect == "bytes":
             return self.ldritem_equal_byte_contents()
-        elif self.eq_detect == "hash":
+        elif eq_detect == "hash":
             return self.ldritem_equal_contents_hash()
-        elif self.eq_detect == "name":
+        elif eq_detect == "name":
             return self.ldritem_equal_names()
-        elif self.eq_detect == "size":
+        elif eq_detect == "size":
             return self.ldritem_equal_contents_size()
         else:
             raise AssertionError(
@@ -164,7 +173,9 @@ class LDRItemCopier(object):
                         while data:
                             s2.write(data)
                             data = s1.read(self.buffering)
-                complete = self.are_the_same()
+                # If we have to take a copy operation don't use any metric
+                # other than a direct bytes comparison to audit the copy
+                complete = self.are_the_same(eq_detect="bytes")
             except Exception as e:
                 ex = e
         if complete:
