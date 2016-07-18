@@ -103,7 +103,8 @@ class AudioConverter(Converter):
         target_containing_dir = join(self.working_dir, str(uuid1()))
         target_path = join(target_containing_dir, orig_name)
         makedirs(dirname(target_path), exist_ok=True)
-        LDRItemCopier(self.source_materialsuite.content, LDRPath(target_path)).copy()
+        original_holder = LDRPath(target_path)
+        LDRItemCopier(self.source_materialsuite.content, original_holder).copy()
 
         # Where we are aiming the LibreOffice CLI converter
         outdir = join(self.working_dir, str(uuid1()))
@@ -158,3 +159,6 @@ class AudioConverter(Converter):
             conv_file_premis_rec.write_to_file(presform_premis_path)
             presform_ms.premis = LDRPath(presform_premis_path)
             self.source_materialsuite.add_presform(presform_ms)
+
+        # Cleanup
+        original_holder.delete()
