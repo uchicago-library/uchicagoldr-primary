@@ -1,5 +1,5 @@
 from os import scandir
-from os.path import join, relpath
+from os.path import relpath
 from re import compile as re_compile
 
 from .rootedpath import RootedPath
@@ -19,6 +19,8 @@ class FileWalker(object):
 
     1. items is an iterable containing all files found in a directory
     2. directory is a string representing a valid directory path on-disk
+            - or -
+       and instance of RootedPath
     """
 
     items = []
@@ -28,7 +30,7 @@ class FileWalker(object):
         """
         == Args ==
 
-        1. directory_path : literal string
+        1. directory_path : literal string or RootedPath instance
         2. filter_pattern : regular expression
 
         This class gets initialized with a directory path literal string and
@@ -38,6 +40,9 @@ class FileWalker(object):
         self.directory = directory_path
         self.items = self.walk_directory(filter_pattern=filter_pattern,
                                          inc_dirs=inc_dirs)
+        self.compiled_filter_pattern = None
+        if filter_patern is not None:
+            self.compiled_filter_pattern = re_compile(filter_pattern)
 
     def __iter__(self):
         """
@@ -66,17 +71,17 @@ class FileWalker(object):
             raise ValueError('dir not a str or RootedPath')
 
     def _walk_rooted_directory(self, directory, filter_pattern, inc_dirs):
-        flat_list = scandir(directory.fullpath)
+        flat_list = [x for x in scandir(directory.fullpath)]
         while flat_list:
             node = flat_list.pop()
             if node.is_file():
                 if filter_pattern:
-                    if not re_compile(filter_pattern).search(node.path):
+                    if not self.compiled_filter_pattern.search(node.path):
                         continue
                 yield relpath(node.path, directory.root)
             elif node.is_dir():
                 for child in scandir(node.path):
-                    flat_list.append(child.path)
+                    flat_list.append(child)
                 if inc_dirs:
                     yield relpath(node.path, directory.root)
             else:
@@ -93,12 +98,12 @@ class FileWalker(object):
         filters out files that match a determined filter pattern. It returns
         a genexp.
         """
-        flat_list = scandir(directory)
+        flat_list = [x for x in scandir(directory)]
         while flat_list:
             node = flat_list.pop()
             if node.is_file():
                 if filter_pattern:
-                    if re_compile(filter_pattern).search(node.path):
+                    if self.compiled_filter_pattern.search(node.path):
                         yield node.path
                     else:
                         pass
@@ -106,7 +111,7 @@ class FileWalker(object):
                     yield node.path
             elif node.is_dir():
                 for child in scandir(node.path):
-                    flat_list.append(join(node.path, child))
+                    flat_list.append(child)
                 if inc_dirs:
                     yield node.path
             else:
