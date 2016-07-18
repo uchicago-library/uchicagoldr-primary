@@ -73,4 +73,4 @@ class FITsCreator(TechnicalMetadataCreator):
             self.handle_premis(cmd_data, self.get_source_materialsuite(),
                                "FITs", False)
 
-        original_holder.delete()
+        original_holder.delete(final=True)

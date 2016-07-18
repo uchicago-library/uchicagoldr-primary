@@ -90,7 +90,7 @@ class GenericPREMISCreator(object):
         r = c.copy()
         rec = cls.make_record(recv_file, item)
         rec.write_to_file(premis_file)
-        recv_item.delete()
+        recv_item.delete(final=True)
         return LDRPath(premis_file)
 
     @classmethod

@@ -161,4 +161,4 @@ class VideoConverter(Converter):
             self.source_materialsuite.add_presform(presform_ms)
 
         # cleanup
-        original_holder.delete()
+        original_holder.delete(final=True)
