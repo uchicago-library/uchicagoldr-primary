@@ -1,5 +1,5 @@
-from os import listdir
-from os.path import isdir, isfile, join, relpath
+from os import scandir
+from os.path import join, relpath
 from re import compile as re_compile
 
 from .rootedpath import RootedPath
@@ -66,20 +66,19 @@ class FileWalker(object):
             raise ValueError('dir not a str or RootedPath')
 
     def _walk_rooted_directory(self, directory, filter_pattern, inc_dirs):
-        flat_list = listdir(directory.fullpath)
+        flat_list = scandir(directory.fullpath)
         while flat_list:
             node = flat_list.pop()
-            fullpath = join(directory.fullpath, node)
-            if isfile(fullpath):
+            if node.is_file():
                 if filter_pattern:
-                    if not re_compile(filter_pattern).search(fullpath):
+                    if not re_compile(filter_pattern).search(node.path):
                         continue
-                yield relpath(fullpath, directory.root)
-            elif isdir(fullpath):
-                for child in listdir(fullpath):
-                    flat_list.append(join(fullpath, child))
+                yield relpath(node.path, directory.root)
+            elif node.is_dir():
+                for child in scandir(node.path):
+                    flat_list.append(child.path)
                 if inc_dirs:
-                    yield relpath(fullpath, directory.root)
+                    yield relpath(node.path, directory.root)
             else:
                 raise ValueError('not a file or a dir')
 
@@ -94,22 +93,21 @@ class FileWalker(object):
         filters out files that match a determined filter pattern. It returns
         a genexp.
         """
-        flat_list = listdir(directory)
+        flat_list = scandir(directory)
         while flat_list:
             node = flat_list.pop()
-            fullpath = join(directory, node)
-            if isfile(fullpath):
+            if node.is_file():
                 if filter_pattern:
-                    if re_compile(filter_pattern).search(fullpath):
-                        yield fullpath
+                    if re_compile(filter_pattern).search(node.path):
+                        yield node.path
                     else:
                         pass
                 else:
-                    yield fullpath
-            elif isdir(fullpath):
-                for child in listdir(fullpath):
-                    flat_list.append(join(fullpath, child))
+                    yield node.path
+            elif node.is_dir():
+                for child in scandir(node.path):
+                    flat_list.append(join(node.path, child))
                 if inc_dirs:
-                    yield fullpath
+                    yield node.path
             else:
                 raise ValueError('not a file or a dir')
