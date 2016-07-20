@@ -38,11 +38,9 @@ class FileWalker(object):
         directory for all files contained inside that directory path.
         """
         self.directory = directory_path
-        self.items = self.walk_directory(filter_pattern=filter_pattern,
-                                         inc_dirs=inc_dirs)
-        self.compiled_filter_pattern = None
-        if filter_patern is not None:
-            self.compiled_filter_pattern = re_compile(filter_pattern)
+        self.filter_pattern = filter_pattern
+        self.inc_dirs = inc_dirs
+        self.items = self.walk_directory()
 
     def __iter__(self):
         """
@@ -58,9 +56,16 @@ class FileWalker(object):
         return self.directory
 
     def walk_directory(self, directory=None, filter_pattern=None,
-                       inc_dirs=False):
+                       inc_dirs=None):
         if directory is None:
             directory = self.get_directory()
+        if filter_pattern is None:
+            filter_pattern = self.filter_pattern
+        if inc_dirs is None:
+            inc_dirs = self.inc_dirs
+
+        if filter_pattern is not None:
+            filter_pattern = re_compile(filter_pattern)
 
         if isinstance(directory, str):
             return self._walk_abs_directory(directory, filter_pattern, inc_dirs)
@@ -76,7 +81,7 @@ class FileWalker(object):
             node = flat_list.pop()
             if node.is_file():
                 if filter_pattern:
-                    if not self.compiled_filter_pattern.search(node.path):
+                    if not filter_pattern.search(node.path):
                         continue
                 yield relpath(node.path, directory.root)
             elif node.is_dir():
@@ -103,7 +108,7 @@ class FileWalker(object):
             node = flat_list.pop()
             if node.is_file():
                 if filter_pattern:
-                    if self.compiled_filter_pattern.search(node.path):
+                    if filter_pattern.search(node.path):
                         yield node.path
                     else:
                         pass
