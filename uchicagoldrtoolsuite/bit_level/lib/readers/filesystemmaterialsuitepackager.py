@@ -1,4 +1,4 @@
-from os import listdir
+from os import scandir
 from os.path import join, dirname, basename, isfile, splitext
 from re import compile as re_compile
 
@@ -77,7 +77,7 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         )
         containing_folder_path = join(self.data_fullpath,
                                       dirname(self.rel_content_path))
-        siblings = [x for x in listdir(containing_folder_path)]
+        siblings = [x.name for x in scandir(containing_folder_path)]
         for x in siblings:
             if presform_filename_pattern.match(x):
                 presform_extension = splitext(x)[1]
