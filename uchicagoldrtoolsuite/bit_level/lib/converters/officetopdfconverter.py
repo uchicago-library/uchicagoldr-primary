@@ -1,4 +1,4 @@
-from os import listdir, makedirs
+from os import scandir, makedirs
 from os.path import join, dirname, isfile
 from uuid import uuid1
 import mimetypes
@@ -142,7 +142,7 @@ class OfficeToPDFConverter(Converter):
         # want, if there isn't the conversion failed for some reason
         # we need to assign presform_ldrpath and conv_file_premis_rec to None
         try:
-            where_it_is = join(outdir, listdir(outdir)[0])
+            where_it_is = join(outdir, [x.name for x in scandir(outdir)][0])
             assert(isfile(where_it_is))
             presform_ldrpath = LDRPath(where_it_is)
             conv_file_premis = GenericPREMISCreator.instantiate_and_make_premis(

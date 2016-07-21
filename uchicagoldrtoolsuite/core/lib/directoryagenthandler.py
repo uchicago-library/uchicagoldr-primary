@@ -1,5 +1,5 @@
 from .abc.agenthandler import AgentHandler
-from os import listdir
+from os import scandir
 from os.path import join
 
 from pypremis.lib import PremisRecord
@@ -15,7 +15,8 @@ class DirectoryAgentHandler(AgentHandler):
 
     def retrieve_agent_by_identifier(self):
         print(self.agents_dir)
-        for x in listdir(self.agents_dir):
+        for x in scandir(self.agents_dir):
+            x = x.name
             look_for = self.target_agentIdentifier + ".premis.xml"
             print(x)
             print(look_for)
@@ -29,7 +30,8 @@ class DirectoryAgentHandler(AgentHandler):
                          "in {}".format(self.agents_dir))
 
     def search_for_agent_by_name(self):
-        for x in listdir(self.agents_dir):
+        for x in scandir(self.agents_dir):
+            x = x.name
             file_name = join(self.agents_dir, x)
             pr = PremisRecord(frompath=file_name)
             for a in pr.get_agent_list():
