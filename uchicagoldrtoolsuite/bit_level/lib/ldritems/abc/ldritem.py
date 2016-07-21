@@ -69,5 +69,17 @@ class LDRItem(metaclass=ABCMeta):
         else:
             raise ValueError("is_flo must be either True or False")
 
+    def get_size(self, buffering=1024*1000*100):
+        if self.exists():
+            size = 0
+            with self.open() as f:
+                data = f.read(buffering)
+                while data:
+                    size = size + len(data)
+                    data = f.read(buffering)
+            return size
+        else:
+            return 0
+
     item_name = property(get_name, set_name)
     is_flo = property(get_is_flo, set_is_flo)

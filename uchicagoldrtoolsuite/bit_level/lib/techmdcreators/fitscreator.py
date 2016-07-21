@@ -1,4 +1,4 @@
-from os import makedirs
+from os import makedirs, remove
 from os.path import join, dirname, isfile
 from uuid import uuid1
 
@@ -46,9 +46,10 @@ class FITsCreator(TechnicalMetadataCreator):
         )
         content_file_containing_dir_path = dirname(content_file_path)
         makedirs(content_file_containing_dir_path, exist_ok=True)
+        original_holder = LDRPath(content_file_path)
         LDRItemCopier(
             self.get_source_materialsuite().get_content(),
-            LDRPath(content_file_path)
+            original_holder
         ).copy()
 
         fits_file_path = join(self.working_dir, str(uuid1()))
@@ -71,3 +72,5 @@ class FITsCreator(TechnicalMetadataCreator):
         else:
             self.handle_premis(cmd_data, self.get_source_materialsuite(),
                                "FITs", False)
+
+        original_holder.delete(final=True)

@@ -56,6 +56,11 @@ class TechnicalMetadataCreator(CLIApp):
                                  "staging environment",
                                  type=str,
                                  default=None)
+        self.parser.add_argument("--eq_detect", help="The equality " +
+                                 "metric to use on writing, check " +
+                                 "LDRItemCopier for supported schemes.",
+                                 type=str, action='store',
+                                 default="bytes")
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -82,7 +87,7 @@ class TechnicalMetadataCreator(CLIApp):
                                                          techmd_processors)
         techmd_creator.process(skip_existing=args.skip_existing)
 
-        writer = FileSystemStageWriter(stage, staging_env)
+        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()
         stdout.write("Complete\n")
 

@@ -1,5 +1,6 @@
 from os import makedirs
 from os.path import join, dirname, isfile
+from json import dumps
 
 from .abc.stageserializationwriter import StageSerializationWriter
 from ..ldritems.ldritemoperations import hash_ldritem
@@ -20,7 +21,7 @@ class FileSystemStageWriter(StageSerializationWriter):
     """
     writes a Staging Structure to disk as a series of directories and files
     """
-    def __init__(self, aStructure, aRoot):
+    def __init__(self, aStructure, aRoot, eq_detect="bytes"):
         """
         spawn a writer
 
@@ -28,10 +29,16 @@ class FileSystemStageWriter(StageSerializationWriter):
 
         1. aStructure (Stage): The Stage to write to disk
         2. aRoot (str): The path to your staging environment
+
+        __KWArgs__
+
+        * eq_detect (str): The equality detection metric to pass to
+            LDRItemCopier when writing
         """
         super().__init__(aStructure)
         self.stage_env_path = aRoot
         self.set_implementation('file system')
+        self.eq_detect = eq_detect
 
     def _make_containing_dir(self, path):
         some_dir = dirname(path)
@@ -75,26 +82,20 @@ class FileSystemStageWriter(StageSerializationWriter):
     def _write_ms_content(self, ms, data_dir, manifest_flo):
         dst_path = join(data_dir, ms.get_content().item_name)
         self._make_containing_dir(dst_path)
-        dst = LDRPath(dst_path, root=self.stage_env_path)
-        c = LDRItemCopier(ms.get_content(), dst, clobber=True)
+        dst = LDRPath(dst_path, root=data_dir)
+        c = LDRItemCopier(ms.get_content(), dst, clobber=True, eq_detect=self.eq_detect)
         r = c.copy()
-        if r['copied']:
-            h = hash_ldritem(dst)
-            mf_line_str = "{}\t{}\n".format(dst.item_name, h)
-            manifest_flo.write(mf_line_str)
+        manifest_flo.write(self._interpret_copy_report(r, dst))
 
     def _write_ms_premis(self, ms, admin_dir, manifest_flo):
         if ms.get_premis():
             dst_path = join(admin_dir, "PREMIS",
                             ms.get_content().item_name+".premis.xml")
             self._make_containing_dir(dst_path)
-            dst = LDRPath(dst_path, root=self.stage_env_path)
-            c = LDRItemCopier(ms.get_premis(), dst, clobber=True)
+            dst = LDRPath(dst_path, root=join(admin_dir, "PREMIS"))
+            c = LDRItemCopier(ms.get_premis(), dst, clobber=True, eq_detect=self.eq_detect)
             r = c.copy()
-            if r['copied']:
-                h = hash_ldritem(dst)
-                mf_line_str = "{}\t{}\n".format(dst.item_name, h)
-                manifest_flo.write(mf_line_str)
+            manifest_flo.write(self._interpret_copy_report(r, dst))
 
     def _write_ms_techmd(self, ms, admin_dir, manifest_flo):
         if ms.get_technicalmetadata_list():
@@ -105,13 +106,10 @@ class FileSystemStageWriter(StageSerializationWriter):
             dst_path = join(admin_dir, "TECHMD",
                             ms.get_content().item_name+".fits.xml")
             self._make_containing_dir(dst_path)
-            dst = LDRPath(dst_path, root=self.stage_env_path)
-            c = LDRItemCopier(ms.get_technicalmetadata(0), dst, clobber=True)
+            dst = LDRPath(dst_path, root=join(admin_dir, "TECHMD"))
+            c = LDRItemCopier(ms.get_technicalmetadata(0), dst, clobber=True, eq_detect=self.eq_detect)
             r = c.copy()
-            if r['copied']:
-                h = hash_ldritem(dst)
-                mf_line_str = "{}\t{}\n".format(dst.item_name, h)
-                manifest_flo.write(mf_line_str)
+            manifest_flo.write(self._interpret_copy_report(r, dst))
 
     def _write_ms_presforms(self, ms, data_dir, admin_dir, manifest_flo):
         if ms.get_presform_list():
@@ -123,6 +121,15 @@ class FileSystemStageWriter(StageSerializationWriter):
                 self._write_ms_premis(x, admin_dir, manifest_flo)
                 self._write_ms_techmd(x, admin_dir, manifest_flo)
                 self._write_ms_presforms(x, data_dir, admin_dir, manifest_flo)
+
+    def _interpret_copy_report(self, cr, dst):
+        if cr['copied']:
+            h = hash_ldritem(dst)
+            cr['sha256'] = h
+        if not cr['copied']:
+            cr['sha256'] = None
+        return dst.item_name+"\t"+dumps(cr)+"\n"
+
 
     def write(self):
 
@@ -153,18 +160,18 @@ class FileSystemStageWriter(StageSerializationWriter):
         for legalnote in self.get_struct().get_legalnote_list():
             recv_item_path = join(legalnotes_dir, legalnote.item_name)
             recv_item = LDRPath(recv_item_path, root=legalnotes_dir)
-            c = LDRItemCopier(legalnote, recv_item)
+            c = LDRItemCopier(legalnote, recv_item, eq_detect=self.eq_detect)
             c.copy()
 
         for adminnote in self.get_struct().get_adminnote_list():
             recv_item_path = join(adminnotes_dir, adminnote.item_name)
             recv_item = LDRPath(recv_item_path, root=adminnotes_dir)
-            c = LDRItemCopier(adminnote, recv_item)
+            c = LDRItemCopier(adminnote, recv_item, eq_detect=self.eq_detect)
             c.copy()
 
         for accessionrecord in self.get_struct().get_accessionrecord_list():
             recv_item_path = join(accessionrecords_dir,
                                   accessionrecord.item_name)
             recv_item = LDRPath(recv_item_path, root=accessionrecords_dir)
-            c = LDRItemCopier(accessionrecord, recv_item)
+            c = LDRItemCopier(accessionrecord, recv_item, eq_detect=self.eq_detect)
             c.copy()

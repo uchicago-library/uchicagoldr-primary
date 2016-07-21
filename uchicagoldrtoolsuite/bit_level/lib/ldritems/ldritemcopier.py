@@ -62,7 +62,8 @@ class LDRItemCopier(object):
         supported_detections = [
             "bytes",
             "name",
-            "hash"
+            "hash",
+            "size"
         ]
 
         if not isinstance(eq_detect, str):
@@ -97,20 +98,31 @@ class LDRItemCopier(object):
             raise ValueError()
         self._confirm = confirm
 
-    def are_the_same(self):
+    def are_the_same(self, eq_detect=None):
         """
         Dispatch to the proper comparing function
+
+        __KWArgs__
+
+        * eq_detect (str): The equality metric to use, defaults to the
+            same as the Copier instance of not supplied.
 
         __Returns__
 
         (bool): comparison functions should return a bool
         """
-        if self.eq_detect is "bytes":
+
+        if eq_detect is None:
+            eq_detect = self.eq_detect
+
+        if eq_detect == "bytes":
             return self.ldritem_equal_byte_contents()
-        elif self.eq_detect is "hash":
+        elif eq_detect == "hash":
             return self.ldritem_equal_contents_hash()
-        elif self.eq_detect is "name":
+        elif eq_detect == "name":
             return self.ldritem_equal_names()
+        elif eq_detect == "size":
+            return self.ldritem_equal_contents_size()
         else:
             raise AssertionError(
                 "How did we get this far without setting eq_detect " +
@@ -161,7 +173,9 @@ class LDRItemCopier(object):
                         while data:
                             s2.write(data)
                             data = s1.read(self.buffering)
-                complete = self.are_the_same()
+                # If we have to take a copy operation don't use any metric
+                # other than a direct bytes comparison to audit the copy
+                complete = self.are_the_same(eq_detect="bytes")
             except Exception as e:
                 ex = e
         if complete:
@@ -170,7 +184,7 @@ class LDRItemCopier(object):
             return r
         else:
             if not eat_exceptions:
-                raise ex
+                raise OSError("!!! BAD COPY !!! - {} - COPY NOT COMPLETE - {} !=  {}".format(str(ex), self.src.item_name, self.dst.item_name))
             else:
                 return r
 
@@ -199,9 +213,15 @@ class LDRItemCopier(object):
                     data1 = s1.read(self.buffering)
                     data2 = s2.read(self.buffering)
                 if data1 and not data2 or \
-                        data2 and not data2:
+                        data2 and not data1:
                     return False
         return True
+
+    def ldritem_equal_contents_size(self):
+        if self.src.get_size(buffering=self.buffering) == \
+                self.dst.get_size(buffering=self.buffering):
+            return True
+        return False
 
     def ldritem_equal_contents_hash(self):
         """
@@ -237,6 +257,8 @@ class LDRItemCopier(object):
         (dict): The little report
         """
         x = {}
+        x['eq_detect'] = self.eq_detect
+        x['clobber_setting'] = self.clobber
         x['src_eqs_dst'] = src_eqs_dst
         x['copied'] = copied
         x['dst_existed'] = dst_existed

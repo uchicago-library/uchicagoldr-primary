@@ -69,6 +69,11 @@ class Stager(CLIApp):
                                  "use to exclude files whose paths match.",
                                  type=str, action='store',
                                  default=None)
+        self.parser.add_argument("--eq_detect", help="The equality " +
+                                 "metric to use on writing, check " +
+                                 "LDRItemCopier for supported schemes.",
+                                 type=str, action='store',
+                                 default="bytes")
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -125,7 +130,7 @@ class Stager(CLIApp):
 
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
-        writer = FileSystemStageWriter(stage, destination_root)
+        writer = FileSystemStageWriter(stage, destination_root, eq_detect=args.eq_detect)
         writer.write()
         stdout.write("Complete\n")
 
