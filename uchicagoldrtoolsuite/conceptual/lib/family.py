@@ -12,7 +12,7 @@ __version__ = "0.0.1dev"
 
 class Family(object):
 
-    _record = None
+    _record_identifier = None
     _family_type = None
     _identifier = None
     _name = None
@@ -20,7 +20,7 @@ class Family(object):
     _child_content_pointers = []
 
     def __init__(self, family_type, identifier=None, name=None,
-                 children=[], record=None):
+                 children=[], record_identifier=None):
         self.set_family_type(family_type)
         if identifier is None:
             self._identifier = str(uuid1())
@@ -28,8 +28,8 @@ class Family(object):
             self.set_identifier(identifier)
         if children != []:
             self.set_children(children)
-        if record is not None:
-            self.set_record(record)
+        if record_identifier is not None:
+            self.set_record_identifier(record_identifier)
         if name is not None:
             self.set_name(name)
 
@@ -104,17 +104,16 @@ class Family(object):
     def remove_child_content_pointer(self, index):
         del self.get_child_content_pointers[index]
 
-    def set_record(self, record):
-        if not isinstance(record, HierarchicalRecord):
-            raise ValueError('Records associated with families must be ' +
-                             'HierarchicalRecord instances')
-        self._record = record
+    def set_record_identifier(self, record_identifier):
+        if not isinstance(record_identifier, str):
+            raise ValueError("record_identifier must be a string.")
+        self._record_identifier = record_identifier
 
-    def get_record(self):
-        return self._record
+    def get_record_identifier(self):
+        return self._record_identifier
 
     def del_record(self):
-        self._record = None
+        self._record_identifier = None
 
     def set_family_type(self, family_type):
         if not isinstance(family_type, str):
@@ -135,9 +134,19 @@ class Family(object):
     def del_name(self):
         self._name = None
 
-    property(get_identifier, set_identifier, del_identifier)
-    property(get_child_families, set_child_families, del_child_families)
-    property(get_child_content_pointers, set_child_content_pointers, del_child_content_pointers)
-    property(get_record, set_record, del_record)
-    property(get_family_type, set_family_type)
-    property(get_name, set_name, del_name)
+    def dictify(self):
+        r = {}
+        r['identifier'] = self.identifier
+        r['child_families'] = self.child_families
+        r['child_content_pointers'] = self.child_content_pointers
+        r['record_identifier'] = self.record_identifier
+        r['family_type'] = self.family_type
+        r['name'] = self.name
+
+    identifier = property(get_identifier, set_identifier, del_identifier)
+    child_families = property(get_child_families, set_child_families, del_child_families)
+    child_content_pointers = property(get_child_content_pointers, set_child_content_pointers, del_child_content_pointers)
+    children = property(get_children, set_children, del_children)
+    record_identifier = property(get_record_identifier, set_record_identifier, del_record_identifier)
+    family_type = property(get_family_type, set_family_type)
+    name = property(get_name, set_name, del_name)
