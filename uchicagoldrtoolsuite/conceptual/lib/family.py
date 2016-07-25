@@ -19,18 +19,21 @@ class Family(object):
     _child_content_pointers = []
 
     def __init__(self, family_type, identifier=None, name=None,
-                 children=[], record_identifier=None):
-        self.set_family_type(family_type)
+                 child_families=[], child_content_pointers=[],
+                 record_identifier=None):
+        self.family_type = family_type
         if identifier is None:
-            self._identifier = uuid1().hex
+            self.identifier = uuid1().hex
         else:
-            self.set_identifier(identifier)
-        if children != []:
-            self.set_children(children)
+            self.identifier = identifier
+        if child_families != []:
+            self.child_families = child_families
+        if child_content_pointers != []:
+            self.child_content_pointers = child_content_pointers
         if record_identifier is not None:
-            self.set_record_identifier(record_identifier)
+            self.record_identifier = record_identifier
         if name is not None:
-            self.set_name(name)
+            self.name = name
 
     def __repr__(self):
         return str(self.dictify())

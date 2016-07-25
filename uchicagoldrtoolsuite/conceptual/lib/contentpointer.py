@@ -20,18 +20,17 @@ class ContentPointer(object):
     * _identifier: a uuid
     """
 
-    def __init__(self, identifier=None):
+    _identifier = None
+
+    def __init__(self, identifier):
         """
-        Initialize a new content pointer, if an identifier isn't provided
-        a new one is minted.
+        Initialize a new content pointer
 
         __KWArgs__
 
         * identifier (str): An identifier to embed in the object
         """
-        if not isinstance(identifier, str) and identifier is not None:
-            raise ValueError("Supplied identifiers must be a string")
-        self._identifier = identifier
+        self.identifier = identifier
         if self._identifier is None:
             self._identifier = str(uuid1())
 
@@ -55,4 +54,9 @@ class ContentPointer(object):
         """
         return self._identifier
 
-    property(get_identifier)
+    def set_identifier(self, identifier):
+        if not isinstance(identifier, str):
+            raise ValueError("Identifiers should be strings.")
+        self._identifier = identifier
+
+    identifier = property(get_identifier, set_identifier)
