@@ -1,6 +1,5 @@
 from uuid import uuid1
 
-from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
@@ -23,7 +22,7 @@ class Family(object):
                  children=[], record_identifier=None):
         self.set_family_type(family_type)
         if identifier is None:
-            self._identifier = str(uuid1())
+            self._identifier = uuid1().hex
         else:
             self.set_identifier(identifier)
         if children != []:
@@ -32,6 +31,9 @@ class Family(object):
             self.set_record_identifier(record_identifier)
         if name is not None:
             self.set_name(name)
+
+    def __repr__(self):
+        return str(self.dictify())
 
     def get_identifier(self):
         return self._identifier
@@ -82,7 +84,7 @@ class Family(object):
         if not isinstance(child_uuid, str):
             raise ValueError('Child uuids must be a string')
         if index is None:
-            index = len(self.get_child_families)
+            index = len(self.get_child_families())
         self._child_families.insert(index, child_uuid)
 
     def get_child_family(self, index):
@@ -95,8 +97,8 @@ class Family(object):
         if not isinstance(child_uuid, str):
             raise ValueError('Child uuids must be a string')
         if index is None:
-            index = len(self.get_child_content_pointers)
-        self._child_families.insert(index, child_uuid)
+            index = len(self.get_child_content_pointers())
+        self._child_content_pointers.insert(index, child_uuid)
 
     def get_child_content_pointer(self, index):
         return self.get_child_content_pointers[index]
@@ -111,6 +113,9 @@ class Family(object):
 
     def get_record_identifier(self):
         return self._record_identifier
+
+    def del_record_identifier(self):
+        self._record_identifier = None
 
     def del_record(self):
         self._record_identifier = None
@@ -142,11 +147,31 @@ class Family(object):
         r['record_identifier'] = self.record_identifier
         r['family_type'] = self.family_type
         r['name'] = self.name
+        return r
 
-    identifier = property(get_identifier, set_identifier, del_identifier)
-    child_families = property(get_child_families, set_child_families, del_child_families)
-    child_content_pointers = property(get_child_content_pointers, set_child_content_pointers, del_child_content_pointers)
-    children = property(get_children, set_children, del_children)
-    record_identifier = property(get_record_identifier, set_record_identifier, del_record_identifier)
-    family_type = property(get_family_type, set_family_type)
-    name = property(get_name, set_name, del_name)
+    family_type = property(get_family_type,
+                           set_family_type)
+
+    identifier = property(get_identifier,
+                          set_identifier,
+                          del_identifier)
+
+    child_families = property(get_child_families,
+                              set_child_families,
+                              del_child_families)
+
+    child_content_pointers = property(get_child_content_pointers,
+                                      set_child_content_pointers,
+                                      del_child_content_pointers)
+
+    children = property(get_children,
+                        set_children,
+                        del_children)
+
+    record_identifier = property(get_record_identifier,
+                                 set_record_identifier,
+                                 del_record_identifier)
+
+    name = property(get_name,
+                    set_name,
+                    del_name)
