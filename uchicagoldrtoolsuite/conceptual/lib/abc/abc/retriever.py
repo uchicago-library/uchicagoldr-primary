@@ -21,5 +21,23 @@ class Retriever(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def retrieve(self, uuid):
+    def retrieve(self, request):
+        if not self.verify_request(request):
+            raise ValueError("Unverified request!")
+        pass
+
+    @abstractmethod
+    def verify_request(self, r):
+        pass
+
+    @abstractmethod
+    def get_premis(self, uuid):
+        pass
+
+    @abstractmethod
+    def get_content(self, uuid):
+        pass
+
+    @abstractmethod
+    def get_techmd(self, uuid, index=0):
         pass
