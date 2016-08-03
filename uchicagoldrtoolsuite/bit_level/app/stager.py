@@ -2,6 +2,7 @@ from os.path import join, dirname, expanduser, expandvars
 from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.externalpackagers.externalfilesystemsegmentpackager import \
@@ -15,6 +16,7 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+log = spawn_logger(__name__)
 
 def launch():
     """
@@ -120,19 +122,26 @@ class Stager(CLIApp):
             root=root,
             filter_pattern=args.filter_pattern)
 
-        stdout.write("Source: " + args.directory+"\n")
-        stdout.write("Source Root: " + root+"\n")
-        stdout.write("Stage: " + join(destination_root, args.staging_id) +
-                     "\n")
-        stdout.write("Segment: " + args.prefix + "-" + str(seg_num) + "\n")
+#        stdout.write("Source: " + args.directory+"\n")
+#        stdout.write("Source Root: " + root+"\n")
+#        stdout.write("Stage: " + join(destination_root, args.staging_id) +
+#                     "\n")
+#        stdout.write("Segment: " + args.prefix + "-" + str(seg_num) + "\n")
 
-        stdout.write("Processing...\n")
+#        stdout.write("Processing...\n")
+        log.info("Source: " + args.directory)
+        log.info("Source Root: " + root)
+        log.info("Stage: " + join(destination_root, args.staging_id))
+        log.info("Segment: " + args.prefix + "-" + str(seg_num))
+
+        log.info("Processing...")
 
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
         writer = FileSystemStageWriter(stage, destination_root, eq_detect=args.eq_detect)
         writer.write()
-        stdout.write("Complete\n")
+#        stdout.write("Complete\n")
+        log.info("Complete")
 
 
 if __name__ == "__main__":

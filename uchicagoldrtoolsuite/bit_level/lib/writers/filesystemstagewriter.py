@@ -7,6 +7,7 @@ from ..ldritems.ldritemoperations import hash_ldritem
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldrpath import LDRPath
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -16,6 +17,7 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+log = spawn_logger(__name__)
 
 class FileSystemStageWriter(StageSerializationWriter):
     """
@@ -39,6 +41,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         self.stage_env_path = aRoot
         self.set_implementation('file system')
         self.eq_detect = eq_detect
+        log.debug("A FileSytemStageWriter has been spawned")
 
     def _make_containing_dir(self, path):
         some_dir = dirname(path)
