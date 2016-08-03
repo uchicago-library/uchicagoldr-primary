@@ -6,6 +6,7 @@ from .abc.stageserializationreader import StageSerializationReader
 from ..fstools.absolutefilepathtree import AbsoluteFilePathTree
 from .filesystemsegmentpackager import FileSystemSegmentPackager
 from ..ldritems.ldrpath import LDRPath
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -15,6 +16,7 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+log = spawn_logger(__name__)
 
 class FileSystemStageReader(StageSerializationReader):
     """
@@ -28,6 +30,7 @@ class FileSystemStageReader(StageSerializationReader):
 
         1. staging_directory (str): The path to the Stage on disk
         """
+        log.debug("FileSystemStageReader spawned")
         super().__init__()
         self.set_implementation('file system')
         self.stage_id = staging_directory.split('/')[-1]
@@ -45,7 +48,10 @@ class FileSystemStageReader(StageSerializationReader):
             data_node_depth = tree.find_depth_of_a_path(data_node_identifier)
             data_node = tree.find_tag_at_depth('data', data_node_depth)[0]
             data_node_subdirs = data_node.fpointer
+            seg_num = 0
             for n in data_node_subdirs:
+                seg_num += 1
+                log.info("Reading Segment {}/{}".format(str(seg_num), str(len(data_node_subdirs))))
                 a_past_segment_node_depth = tree.find_depth_of_a_path(n)
                 if a_past_segment_node_depth > 0:
                     label = dirsplit(n)[1]
