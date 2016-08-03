@@ -13,6 +13,8 @@ except:
 
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
 from ..ldritems.ldrpath import LDRPath
@@ -25,6 +27,8 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+log = spawn_logger(__name__)
+eh = ExceptionHandler()
 
 class GenericPREMISCreator(object):
     """
@@ -39,12 +43,17 @@ class GenericPREMISCreator(object):
 
         1. stage (Stage): The Stage to generate PREMIS object records for
         """
+        log.debug("GenericPREMISCreator spawned")
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
         # somewhere before your instance gets garbage collected.
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
+        log.debug(
+            "GenericPREMISCreator created tmpdir @ {}".format(
+            self.working_dir_path)
+        )
 
     def process(self, skip_existing=False):
         """
@@ -55,15 +64,33 @@ class GenericPREMISCreator(object):
         * skip_existing (bool): If True: Skip all materialsuites which claim
             to already have PREMIS records as a part of them.
         """
+        log.debug("Beginning PREMIS processing")
+        s_num = 0
         for segment in self.stage.segment_list:
+            s_num += 1
+            ms_num = 0
             for materialsuite in segment.materialsuite_list:
+                ms_num += 1
+                log.info(
+                    "Processing Section {}/{}, MaterialSuite {}/{}".format(
+                        str(s_num),
+                        str(len(self.stage.segment_list)),
+                        str(ms_num),
+                        str(len(segment.materialsuite_list))
+                    )
+                )
                 if skip_existing:
                     if isinstance(materialsuite.get_premis(), LDRItem):
+                        log.info("PREMIS detected: Skipping")
                         continue
-                materialsuite.set_premis(
-                    self.instantiate_and_make_premis(materialsuite.content,
-                                                     self.working_dir_path)
-                )
+                try:
+                    log.info("No PREMIS detected: Creating")
+                    materialsuite.set_premis(
+                        self.instantiate_and_make_premis(materialsuite.content,
+                                                        self.working_dir_path)
+                    )
+                except Exception as e:
+                    eh.handle(e)
 
     @classmethod
     def instantiate_and_make_premis(cls, item, working_dir_path):

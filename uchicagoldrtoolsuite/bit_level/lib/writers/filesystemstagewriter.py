@@ -8,6 +8,7 @@ from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldrpath import LDRPath
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -18,6 +19,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 log = spawn_logger(__name__)
+eh = ExceptionHandler()
 
 class FileSystemStageWriter(StageSerializationWriter):
     """
@@ -37,11 +39,15 @@ class FileSystemStageWriter(StageSerializationWriter):
         * eq_detect (str): The equality detection metric to pass to
             LDRItemCopier when writing
         """
+        log.debug("A FileSytemStageWriter has been spawned")
         super().__init__(aStructure)
         self.stage_env_path = aRoot
         self.set_implementation('file system')
         self.eq_detect = eq_detect
-        log.debug("A FileSytemStageWriter has been spawned")
+        log.debug(
+            "FileSystemStageWriter.stage_env_path is {}".format(
+                self.stage_env_path)
+        )
 
     def _make_containing_dir(self, path):
         some_dir = dirname(path)
@@ -51,79 +57,97 @@ class FileSystemStageWriter(StageSerializationWriter):
         makedirs(dir_path, exist_ok=True)
 
     def _write_seg(self, seg, data_path, admin_path):
-        seg_data_path = join(data_path, seg.identifier)
-        seg_admin_path = join(admin_path, seg.identifier)
+        try:
+            seg_data_path = join(data_path, seg.identifier)
+            seg_admin_path = join(admin_path, seg.identifier)
 
-        self._make_dir(seg_data_path)
-        self._make_dir(seg_admin_path)
+            self._make_dir(seg_data_path)
+            self._make_dir(seg_admin_path)
 
-        manifest_path = join(seg_admin_path, 'manifest.txt')
-        if isfile(manifest_path):
+            manifest_path = join(seg_admin_path, 'manifest.txt')
+            if isfile(manifest_path):
+                with open(manifest_path, 'a') as f:
+                    f.write('# manifest appended to at {}\n'.format(iso8601_dt()))
+            else:
+                with open(manifest_path, 'w') as f:
+                    f.write('# manifest created at {}\n'.format(iso8601_dt()))
+
             with open(manifest_path, 'a') as f:
-                f.write('# manifest appended to at {}\n'.format(iso8601_dt()))
-        else:
-            with open(manifest_path, 'w') as f:
-                f.write('# manifest created at {}\n'.format(iso8601_dt()))
-
-        with open(manifest_path, 'a') as f:
-            for ms in seg.materialsuite_list:
-                self._write_materialsuite(
-                    ms,
-                    seg_data_path,
-                    seg_admin_path,
-                    f
-                )
+                for ms in seg.materialsuite_list:
+                    self._write_materialsuite(
+                        ms,
+                        seg_data_path,
+                        seg_admin_path,
+                        f
+                    )
+        except Exception as e:
+            eh.handle(e)
 
     def _write_materialsuite(self, ms, seg_data_path, seg_admin_path,
                              manifest_flo):
-        self._write_ms_content(ms, seg_data_path, manifest_flo)
-        self._write_ms_premis(ms, seg_admin_path, manifest_flo)
-        self._write_ms_techmd(ms, seg_admin_path, manifest_flo)
-        self._write_ms_presforms(ms, seg_data_path, seg_admin_path,
-                                 manifest_flo)
+        try:
+            self._write_ms_content(ms, seg_data_path, manifest_flo)
+            self._write_ms_premis(ms, seg_admin_path, manifest_flo)
+            self._write_ms_techmd(ms, seg_admin_path, manifest_flo)
+            self._write_ms_presforms(ms, seg_data_path, seg_admin_path,
+                                    manifest_flo)
+        except Exception as e:
+            eh.handle(e)
 
     def _write_ms_content(self, ms, data_dir, manifest_flo):
-        dst_path = join(data_dir, ms.get_content().item_name)
-        self._make_containing_dir(dst_path)
-        dst = LDRPath(dst_path, root=data_dir)
-        c = LDRItemCopier(ms.get_content(), dst, clobber=True, eq_detect=self.eq_detect)
-        r = c.copy()
-        manifest_flo.write(self._interpret_copy_report(r, dst))
+        try:
+            dst_path = join(data_dir, ms.get_content().item_name)
+            self._make_containing_dir(dst_path)
+            dst = LDRPath(dst_path, root=data_dir)
+            c = LDRItemCopier(ms.get_content(), dst, clobber=True, eq_detect=self.eq_detect)
+            r = c.copy()
+            manifest_flo.write(self._interpret_copy_report(r, dst))
+        except Exception as e:
+            eh.handle(e)
 
     def _write_ms_premis(self, ms, admin_dir, manifest_flo):
-        if ms.get_premis():
-            dst_path = join(admin_dir, "PREMIS",
-                            ms.get_content().item_name+".premis.xml")
-            self._make_containing_dir(dst_path)
-            dst = LDRPath(dst_path, root=join(admin_dir, "PREMIS"))
-            c = LDRItemCopier(ms.get_premis(), dst, clobber=True, eq_detect=self.eq_detect)
-            r = c.copy()
-            manifest_flo.write(self._interpret_copy_report(r, dst))
+        try:
+            if ms.get_premis():
+                dst_path = join(admin_dir, "PREMIS",
+                                ms.get_content().item_name+".premis.xml")
+                self._make_containing_dir(dst_path)
+                dst = LDRPath(dst_path, root=join(admin_dir, "PREMIS"))
+                c = LDRItemCopier(ms.get_premis(), dst, clobber=True, eq_detect=self.eq_detect)
+                r = c.copy()
+                manifest_flo.write(self._interpret_copy_report(r, dst))
+        except Exception as e:
+            eh.handle(e)
 
     def _write_ms_techmd(self, ms, admin_dir, manifest_flo):
-        if ms.get_technicalmetadata_list():
-            if len(ms.get_technicalmetadata_list()) > 1:
-                raise NotImplementedError("Currently the serializer only " +
-                                          "handles a single FITS record in " +
-                                          "the techmd array.")
-            dst_path = join(admin_dir, "TECHMD",
-                            ms.get_content().item_name+".fits.xml")
-            self._make_containing_dir(dst_path)
-            dst = LDRPath(dst_path, root=join(admin_dir, "TECHMD"))
-            c = LDRItemCopier(ms.get_technicalmetadata(0), dst, clobber=True, eq_detect=self.eq_detect)
-            r = c.copy()
-            manifest_flo.write(self._interpret_copy_report(r, dst))
+        try:
+            if ms.get_technicalmetadata_list():
+                if len(ms.get_technicalmetadata_list()) > 1:
+                    raise NotImplementedError("Currently the serializer only " +
+                                            "handles a single FITS record in " +
+                                            "the techmd array.")
+                dst_path = join(admin_dir, "TECHMD",
+                                ms.get_content().item_name+".fits.xml")
+                self._make_containing_dir(dst_path)
+                dst = LDRPath(dst_path, root=join(admin_dir, "TECHMD"))
+                c = LDRItemCopier(ms.get_technicalmetadata(0), dst, clobber=True, eq_detect=self.eq_detect)
+                r = c.copy()
+                manifest_flo.write(self._interpret_copy_report(r, dst))
+        except Exception as e:
+            eh.handle(e)
 
     def _write_ms_presforms(self, ms, data_dir, admin_dir, manifest_flo):
-        if ms.get_presform_list():
-            for x in ms.get_presform_list():
-                x.content.item_name = ms.content.item_name + \
-                    ".presform" + \
-                    x.extension
-                self._write_ms_content(x, data_dir, manifest_flo)
-                self._write_ms_premis(x, admin_dir, manifest_flo)
-                self._write_ms_techmd(x, admin_dir, manifest_flo)
-                self._write_ms_presforms(x, data_dir, admin_dir, manifest_flo)
+        try:
+            if ms.get_presform_list():
+                for x in ms.get_presform_list():
+                    x.content.item_name = ms.content.item_name + \
+                        ".presform" + \
+                        x.extension
+                    self._write_ms_content(x, data_dir, manifest_flo)
+                    self._write_ms_premis(x, admin_dir, manifest_flo)
+                    self._write_ms_techmd(x, admin_dir, manifest_flo)
+                    self._write_ms_presforms(x, data_dir, admin_dir, manifest_flo)
+        except Exception as e:
+            eh.handle(e)
 
     def _interpret_copy_report(self, cr, dst):
         if cr['copied']:
@@ -136,16 +160,26 @@ class FileSystemStageWriter(StageSerializationWriter):
 
     def write(self):
 
-        validated = self.get_struct().validate()
-        if not validated:
-            raise ValueError("Cannot serialize an invalid " +
-                             " structure of type {}".
-                             format(type(self.get_struct()).__name__))
+        log.info("Writing Stage")
+
+        try:
+            validated = self.get_struct().validate()
+            if not validated:
+                raise ValueError("Cannot serialize an invalid " +
+                                " structure of type {}".
+                                format(type(self.get_struct()).__name__))
+        except Exception as e:
+            eh.handle(e, raise_exceptions=True)
 
         stage_directory = join(self.stage_env_path,
                                self.get_struct().get_identifier())
 
-        self._make_dir(stage_directory)
+        log.info("Writing Staging Directory")
+        log.debug("Staging Directory Location: {}".format(stage_directory))
+        try:
+            self._make_dir(stage_directory)
+        except Exception as e:
+            eh.handle(e, raise_exceptions=True)
 
         data_dir = join(stage_directory, 'data')
         admin_dir = join(stage_directory, 'admin')
@@ -153,28 +187,56 @@ class FileSystemStageWriter(StageSerializationWriter):
         accessionrecords_dir = join(admin_dir, 'accessionrecords')
         legalnotes_dir = join(admin_dir, 'legalnotes')
 
-        for x in [stage_directory, data_dir, admin_dir, adminnotes_dir,
-                  accessionrecords_dir, legalnotes_dir]:
-            self._make_dir(x)
+        try:
+            log.info("Writing Staging Directory skeleton")
+            for x in [stage_directory, data_dir, admin_dir, adminnotes_dir,
+                    accessionrecords_dir, legalnotes_dir]:
+                self._make_dir(x)
+        except Exception as e:
+            eh.handle(e, raise_exceptions=True)
 
-        for seg in self.get_struct().segment_list:
-            self._write_seg(seg, data_dir, admin_dir)
+        try:
+            seg_num = 0
+            for seg in self.get_struct().segment_list:
+                seg_num += 1
+                log.info("Writing segment {}/{}".format(str(seg_num), str(len(self.get_struct().segment_list))))
+                self._write_seg(seg, data_dir, admin_dir)
+        except Exception as e:
+            eh.handle(e)
 
-        for legalnote in self.get_struct().get_legalnote_list():
-            recv_item_path = join(legalnotes_dir, legalnote.item_name)
-            recv_item = LDRPath(recv_item_path, root=legalnotes_dir)
-            c = LDRItemCopier(legalnote, recv_item, eq_detect=self.eq_detect)
-            c.copy()
+        try:
+            legalnote_num = 0
+            for legalnote in self.get_struct().get_legalnote_list():
+                legalnote_num += 1
+                log.info("Writing legalnote {}/{}".format(str(legalnote_num), str(len(self.get_struct().get_legalnote_list()))))
+                recv_item_path = join(legalnotes_dir, legalnote.item_name)
+                recv_item = LDRPath(recv_item_path, root=legalnotes_dir)
+                c = LDRItemCopier(legalnote, recv_item, eq_detect=self.eq_detect)
+                c.copy()
+        except Exception as e:
+            eh.handle(e)
 
-        for adminnote in self.get_struct().get_adminnote_list():
-            recv_item_path = join(adminnotes_dir, adminnote.item_name)
-            recv_item = LDRPath(recv_item_path, root=adminnotes_dir)
-            c = LDRItemCopier(adminnote, recv_item, eq_detect=self.eq_detect)
-            c.copy()
+        try:
+            adminnote_num = 0
+            for adminnote in self.get_struct().get_adminnote_list():
+                adminnote_num += 1
+                log.info("Writing adminnote {}/{}".format(str(adminnote_num), str(len(self.get_struct().get_adminnote_list()))))
+                recv_item_path = join(adminnotes_dir, adminnote.item_name)
+                recv_item = LDRPath(recv_item_path, root=adminnotes_dir)
+                c = LDRItemCopier(adminnote, recv_item, eq_detect=self.eq_detect)
+                c.copy()
+        except Exception as e:
+            eh.handle(e)
 
-        for accessionrecord in self.get_struct().get_accessionrecord_list():
-            recv_item_path = join(accessionrecords_dir,
-                                  accessionrecord.item_name)
-            recv_item = LDRPath(recv_item_path, root=accessionrecords_dir)
-            c = LDRItemCopier(accessionrecord, recv_item, eq_detect=self.eq_detect)
-            c.copy()
+        try:
+            accessionrecord_num = 0
+            for accessionrecord in self.get_struct().get_accessionrecord_list():
+                accessionrecord_num += 1
+                log.info("Writing accessionrecord {}/{}".format(str(accessionrecord_num), str(len(self.get_struct().get_accessionrecord_list()))))
+                recv_item_path = join(accessionrecords_dir,
+                                    accessionrecord.item_name)
+                recv_item = LDRPath(recv_item_path, root=accessionrecords_dir)
+                c = LDRItemCopier(accessionrecord, recv_item, eq_detect=self.eq_detect)
+                c.copy()
+        except Exception as e:
+            eh.handle(e)
