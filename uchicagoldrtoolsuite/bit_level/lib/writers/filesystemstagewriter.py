@@ -21,6 +21,7 @@ __version__ = "0.0.1dev"
 log = spawn_logger(__name__)
 eh = ExceptionHandler()
 
+
 class FileSystemStageWriter(StageSerializationWriter):
     """
     writes a Staging Structure to disk as a series of directories and files
@@ -72,16 +73,25 @@ class FileSystemStageWriter(StageSerializationWriter):
                 with open(manifest_path, 'w') as f:
                     f.write('# manifest created at {}\n'.format(iso8601_dt()))
 
-            with open(manifest_path, 'a') as f:
-                for ms in seg.materialsuite_list:
-                    self._write_materialsuite(
-                        ms,
-                        seg_data_path,
-                        seg_admin_path,
-                        f
-                    )
         except Exception as e:
-            eh.handle(e)
+            eh.handle(e, raise_exceptions=True)
+
+        with open(manifest_path, 'a') as f:
+            ms_num = 0
+            for ms in seg.materialsuite_list:
+                ms_num += 1
+                log.info(
+                    "Writing MaterialSuite {}/{}".format(
+                    str(ms_num),
+                    str(len(seg.materialsuite_list))
+                    )
+                )
+                self._write_materialsuite(
+                    ms,
+                    seg_data_path,
+                    seg_admin_path,
+                    f
+                )
 
     def _write_materialsuite(self, ms, seg_data_path, seg_admin_path,
                              manifest_flo):
