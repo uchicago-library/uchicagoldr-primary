@@ -52,4 +52,5 @@ h1 = MultiprocessRotatingFileHandler(join(logdir, master_log_name+".log"),
 h1.setFormatter(f)
 master_log.addHandler(h1)
 h2 = FileHandler(join(logdir, 'jobs', iso8601_dt() + "_" + uuid1().hex))
+h2.setFormatter(f)
 master_log.addHandler(h2)

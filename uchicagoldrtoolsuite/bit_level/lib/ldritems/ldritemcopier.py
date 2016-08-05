@@ -1,5 +1,11 @@
+from json import dumps
+
 from .abc.ldritem import LDRItem
 from .ldritemoperations import hash_ldritem
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+
+
+log = spawn_logger(__name__)
 
 
 class LDRItemCopier(object):
@@ -24,6 +30,13 @@ class LDRItemCopier(object):
         * buffering (int): How many bytes to load into RAM for copying/
             comparison operations
         """
+        log.debug(
+            "LDRItemCopier spawned. {}".format(
+                dumps({'src': src.item_name, 'dst': dst.item_name,
+                       'clobber': clobber, 'eq_detect': eq_detect,
+                       'max_retries': max_retries, 'buffering': buffering})
+            )
+        )
         self.src = src
         self.dst = dst
         self.clobber = clobber
@@ -112,8 +125,15 @@ class LDRItemCopier(object):
         (bool): comparison functions should return a bool
         """
 
+
         if eq_detect is None:
             eq_detect = self.eq_detect
+
+        log.debug(
+            "Equality delegator called for {} and {} with metric {}".format(
+                self.src.item_name, self.dst.item_name, eq_detect
+            )
+        )
 
         if eq_detect == "bytes":
             return self.ldritem_equal_byte_contents()
@@ -143,6 +163,8 @@ class LDRItemCopier(object):
 
         (dict): A small informational dict
         """
+        log.debug("Attempting to copy {} to {} (eat_exceptions={})".format(
+            self.src.item_name, self.dst.item_name, str(eat_exceptions)))
         r = self.build_report_dict()
         r['copied'] = False
         if self.dst.exists():
@@ -150,11 +172,13 @@ class LDRItemCopier(object):
             if not self.clobber:
                 # Not Clobbering
                 r['clobbered_dst'] = False
+                log.debug("{}".format(dumps(r)))
                 return r
             elif self.are_the_same():
                 # No copy required
                 r['clobbered_dst'] = False
                 r['src_eqs_dst'] = True
+                log.debug("{}".format(dumps(r)))
                 return r
             else:
                 r['clobbered_dst'] = True
@@ -181,11 +205,14 @@ class LDRItemCopier(object):
         if complete:
             r['src_eqs_dst'] = True
             r['copied'] = True
+            log.debug("{}".format(dumps(r)))
             return r
         else:
             if not eat_exceptions:
+                log.critical("!!! BAD COPY !!!")
                 raise OSError("!!! BAD COPY !!! - {} - COPY NOT COMPLETE - {} !=  {}".format(str(ex), self.src.item_name, self.dst.item_name))
             else:
+                log.debug("{}".format(dumps(r)))
                 return r
 
     def ldritem_equal_byte_contents(self):
@@ -200,6 +227,8 @@ class LDRItemCopier(object):
         # The scale of this function means it has to be pretty streamlined,
         # think hard/benchmark before monkeying around with stuff in here
         # Grab streams
+        log.debug("Checking byte equality of {} and {}".format(
+            self.src.item_name, self.dst.item_name))
         with self.src.open() as s1:
             with self.dst.open() as s2:
                 # Grab initial data
@@ -214,13 +243,23 @@ class LDRItemCopier(object):
                     data2 = s2.read(self.buffering)
                 if data1 and not data2 or \
                         data2 and not data1:
+                    log.debug("{} != {} (bytes)".format(
+                        self.src.item_name, self.dst.item_name))
                     return False
+        log.debug("{} == {} (bytes)".format(
+            self.src.item_name, self.dst.item_name))
         return True
 
     def ldritem_equal_contents_size(self):
+        log.debug("Checking size equality of {} and {}".format(
+            self.src.item_name, self.dst.item_name))
         if self.src.get_size(buffering=self.buffering) == \
                 self.dst.get_size(buffering=self.buffering):
+            log.debug("{} == {} (size)".format(
+                self.src.item_name, self.dst.item_name))
             return True
+        log.debug("{} != {} (size)".format(
+            self.src.item_name, self.dst.item_name))
         return False
 
     def ldritem_equal_contents_hash(self):
@@ -231,8 +270,14 @@ class LDRItemCopier(object):
 
         (bool): True if equivalent, otherwise False
         """
+        log.debug("Checking hash equality of {} and {}".format(
+            self.src.item_name, self.dst.item_name))
         if hash_ldritem(self.src) == hash_ldritem(self.dst):
+            log.debug("{} == {} (hash)".format(
+                self.src.item_name, self.dst.item_name))
             return True
+        log.debug("{} != {} (hash)".format(
+            self.src.item_name, self.dst.item_name))
         return False
 
     def ldritem_equal_names(self):
@@ -243,8 +288,14 @@ class LDRItemCopier(object):
 
         (bool): True if equivalent, otherwise False
         """
+        log.debug("Checking name equality of {} and {}".format(
+            self.src.item_name, self.dst.item_name))
         if self.src.item_name == self.dst.item_name:
+            log.debug("{} == {} (name)".format(
+                self.src.item_name, self.dst.item_name))
             return True
+        log.debug("{} != {} (name)".format(
+            self.src.item_name, self.dst.item_name))
         return False
 
     def build_report_dict(self, copied=None, dst_existed=None,

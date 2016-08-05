@@ -1,3 +1,6 @@
+from json import dumps
+
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..readers.abc.materialsuitepackager import MaterialSuitePackager
 from ..ldritems.ldrpath import LDRPath
 
@@ -8,6 +11,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
@@ -31,6 +37,8 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
 
         * root (str): A root for the provided path
         """
+        log.debug("ExternalFileSystemMaterialSuitePackager spawned. {}".format(
+            dumps({'orig': orig, 'root': root})))
         super().__init__()
         self.orig = orig
         self.root = root
@@ -39,6 +47,9 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         """
         Minimally turn a path into and LDRPath
         """
+        log.debug("ExternalFileSystemMaterialSuitePackager retrieving " +
+                  "content. {}".format(
+                      dumps({'orig': self.orig, 'root': self.root})))
         return LDRPath(self.orig, root=self.root)
 
     def get_premis(self):
