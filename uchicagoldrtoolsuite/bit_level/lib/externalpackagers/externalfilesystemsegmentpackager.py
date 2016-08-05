@@ -7,6 +7,7 @@ from .externalfilesystemmaterialsuitepackager import\
     ExternalFileSystemMaterialSuitePackager
 from ..fstools.rootedpath import RootedPath
 from ..fstools.filepathtree import FilePathTree
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -15,6 +16,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class ExternalFileSystemSegmentPackager(SegmentPackager):
@@ -45,6 +49,13 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             directory
         * filter_pattern (str): A regex to use to specify files not to include
         """
+        log.info(
+            "ExternalFileSystemSegmentPackager spawned. {}".format(
+                str({'path': path, 'label_text': label_text,
+                     'label_number': label_number, 'root': root,
+                     'filter_pattern': filter_pattern})
+            )
+        )
         super().__init__()
         self.filter_pattern = filter_pattern
         self.set_implementation("file system")
@@ -66,18 +77,33 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
 
         * self.get_struct(): The packaged Segment
         """
+        log.info(
+            "Beginning packaging of {}".format(
+                str(self.path)
+            )
+        )
+        log.debug("Building FilePathTree for {}".format(str(self.path)))
         tree = FilePathTree(self.path, filter_pattern=self.filter_pattern)
+        log.debug("Processing FilePathTree for {}".format(str(self.path)))
         if self.root:
             for x in tree.get_paths():
+                log.debug("Parsing {}".format(join(self.root, x)))
                 if not isfile(join(self.root, x)):
+                    log.debug("{} is not a file".format(join(self.root, x)))
                     continue
+                log.debug("Firing msuite_packager for {}".format(
+                    join(self.root, x)))
                 ms = self.get_msuite_packager()(join(self.root, x),
                                                 root=self.root).package()
                 self.get_struct().add_materialsuite(ms)
         else:
             for x in tree.get_paths():
+                log.debug("Parsing {}".format(x))
                 if not isfile(x):
+                    log.debug("{} is not a file".format(x))
                     continue
+                log.debug("Firing msuite_packager for {}".format(x))
                 ms = self.get_msuite_packager()(x).package()
                 self.get_struct().add_materialsuite(ms)
+        log.info("Packaging of {} complete".format(str(self.path)))
         return self.get_struct()

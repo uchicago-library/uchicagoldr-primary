@@ -45,9 +45,14 @@ class FileSystemStageWriter(StageSerializationWriter):
         self.stage_env_path = aRoot
         self.set_implementation('file system')
         self.eq_detect = eq_detect
-        log.debug(
-            "FileSystemStageWriter.stage_env_path is {}".format(
+        log.info(
+            "FileSystemStageWriter Staging Environment path is {}".format(
                 self.stage_env_path)
+        )
+        log.info(
+            "FileSystemStageWriter contained Stage Identifier is {}".format(
+                aStructure.identifier
+            )
         )
 
     def _make_containing_dir(self, path):

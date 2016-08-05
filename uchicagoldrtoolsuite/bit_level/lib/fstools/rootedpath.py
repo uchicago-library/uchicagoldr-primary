@@ -1,5 +1,6 @@
 from pathlib import Path
 from os.path import split
+from json import dumps
 
 
 __author__ = "Brian Balsamo"
@@ -42,3 +43,9 @@ class RootedPath(object):
         self.path = _path.relative_to(self.root)
         if self.path == ".":
             self.path = ""
+
+    def __repr__(self):
+        i_dict = {'path': str(self.path),
+                  'root': self.root,
+                  'fullpath': self.fullpath}
+        return "RootedPath({})".format(dumps(i_dict))
