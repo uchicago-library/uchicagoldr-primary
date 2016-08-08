@@ -45,11 +45,11 @@ class FileSystemStageWriter(StageSerializationWriter):
         self.stage_env_path = aRoot
         self.set_implementation('file system')
         self.eq_detect = eq_detect
-        log.info(
+        log.debug(
             "FileSystemStageWriter Staging Environment path is {}".format(
                 self.stage_env_path)
         )
-        log.info(
+        log.debug(
             "FileSystemStageWriter contained Stage Identifier is {}".format(
                 aStructure.identifier
             )
@@ -85,7 +85,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             ms_num = 0
             for ms in seg.materialsuite_list:
                 ms_num += 1
-                log.info(
+                log.debug(
                     "Writing MaterialSuite {}/{}".format(
                     str(ms_num),
                     str(len(seg.materialsuite_list))
@@ -175,7 +175,7 @@ class FileSystemStageWriter(StageSerializationWriter):
 
     def write(self):
 
-        log.info("Writing Stage")
+        log.debug("Writing Stage")
 
         try:
             validated = self.get_struct().validate()
@@ -189,7 +189,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         stage_directory = join(self.stage_env_path,
                                self.get_struct().get_identifier())
 
-        log.info("Writing Staging Directory")
+        log.debug("Writing Staging Directory")
         log.debug("Staging Directory Location: {}".format(stage_directory))
         try:
             self._make_dir(stage_directory)
@@ -203,7 +203,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         legalnotes_dir = join(admin_dir, 'legalnotes')
 
         try:
-            log.info("Writing Staging Directory skeleton")
+            log.debug("Writing Staging Directory skeleton")
             for x in [stage_directory, data_dir, admin_dir, adminnotes_dir,
                     accessionrecords_dir, legalnotes_dir]:
                 self._make_dir(x)
@@ -214,7 +214,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             seg_num = 0
             for seg in self.get_struct().segment_list:
                 seg_num += 1
-                log.info("Writing segment {}/{}".format(str(seg_num), str(len(self.get_struct().segment_list))))
+                log.debug("Writing segment {}/{}".format(str(seg_num), str(len(self.get_struct().segment_list))))
                 self._write_seg(seg, data_dir, admin_dir)
         except Exception as e:
             eh.handle(e)
@@ -223,7 +223,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             legalnote_num = 0
             for legalnote in self.get_struct().get_legalnote_list():
                 legalnote_num += 1
-                log.info("Writing legalnote {}/{}".format(str(legalnote_num), str(len(self.get_struct().get_legalnote_list()))))
+                log.debug("Writing legalnote {}/{}".format(str(legalnote_num), str(len(self.get_struct().get_legalnote_list()))))
                 recv_item_path = join(legalnotes_dir, legalnote.item_name)
                 recv_item = LDRPath(recv_item_path, root=legalnotes_dir)
                 c = LDRItemCopier(legalnote, recv_item, eq_detect=self.eq_detect)
@@ -235,7 +235,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             adminnote_num = 0
             for adminnote in self.get_struct().get_adminnote_list():
                 adminnote_num += 1
-                log.info("Writing adminnote {}/{}".format(str(adminnote_num), str(len(self.get_struct().get_adminnote_list()))))
+                log.debug("Writing adminnote {}/{}".format(str(adminnote_num), str(len(self.get_struct().get_adminnote_list()))))
                 recv_item_path = join(adminnotes_dir, adminnote.item_name)
                 recv_item = LDRPath(recv_item_path, root=adminnotes_dir)
                 c = LDRItemCopier(adminnote, recv_item, eq_detect=self.eq_detect)
@@ -247,7 +247,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             accessionrecord_num = 0
             for accessionrecord in self.get_struct().get_accessionrecord_list():
                 accessionrecord_num += 1
-                log.info("Writing accessionrecord {}/{}".format(str(accessionrecord_num), str(len(self.get_struct().get_accessionrecord_list()))))
+                log.debug("Writing accessionrecord {}/{}".format(str(accessionrecord_num), str(len(self.get_struct().get_accessionrecord_list()))))
                 recv_item_path = join(accessionrecords_dir,
                                     accessionrecord.item_name)
                 recv_item = LDRPath(recv_item_path, root=accessionrecords_dir)

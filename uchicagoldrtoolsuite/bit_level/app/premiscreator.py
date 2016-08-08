@@ -1,7 +1,11 @@
 from os.path import join
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.masterlog import \
+    spawn_logger, \
+    activate_master_log_file, \
+    activate_job_log_file, \
+    activate_stdout_log
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.processors.genericpremiscreator import GenericPREMISCreator
@@ -16,6 +20,8 @@ __version__ = "0.0.1dev"
 
 
 log = spawn_logger(__name__)
+activate_job_log_file()
+activate_master_log_file()
 
 
 def launch():
@@ -65,6 +71,8 @@ class PremisCreator(CLIApp):
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
+
+        activate_stdout_log(verbosity=args.verbosity)
 
         # Set conf
         self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)

@@ -49,7 +49,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             directory
         * filter_pattern (str): A regex to use to specify files not to include
         """
-        log.info(
+        log.debug(
             "ExternalFileSystemSegmentPackager spawned. {}".format(
                 str({'path': path, 'label_text': label_text,
                      'label_number': label_number, 'root': root,
@@ -77,7 +77,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
 
         * self.get_struct(): The packaged Segment
         """
-        log.info(
+        log.debug(
             "Beginning packaging of {}".format(
                 str(self.path)
             )
@@ -105,5 +105,5 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
                 log.debug("Firing msuite_packager for {}".format(x))
                 ms = self.get_msuite_packager()(x).package()
                 self.get_struct().add_materialsuite(ms)
-        log.info("Packaging of {} complete".format(str(self.path)))
+        log.debug("Packaging of {} complete".format(str(self.path)))
         return self.get_struct()

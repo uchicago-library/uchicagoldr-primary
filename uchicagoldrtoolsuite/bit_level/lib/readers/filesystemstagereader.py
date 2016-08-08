@@ -47,11 +47,11 @@ class FileSystemStageReader(StageSerializationReader):
         self.stage_env_path = "/".join(staging_directory.split('/')[0:-1])
         self.structureType = "staging"
         self.serialized_location = staging_directory
-        log.info("Stage Env: {}".format(self.stage_env_path))
-        log.info("Stage ID: {}".format(self.stage_id))
+        log.debug("Stage Env: {}".format(self.stage_env_path))
+        log.debug("Stage ID: {}".format(self.stage_id))
 
     def read(self):
-        log.info(
+        log.debug(
             "Beginning Read of {}".format(
                 join(self.stage_env_path, self.stage_id)
             )
@@ -100,7 +100,7 @@ class FileSystemStageReader(StageSerializationReader):
             seg_num = 0
             for n in data_node_subdirs:
                 seg_num += 1
-                log.info(
+                log.debug(
                     "Reading Segment {}/{} from {}".format(
                         str(seg_num),
                         str(len(data_node_subdirs)),
@@ -130,7 +130,7 @@ class FileSystemStageReader(StageSerializationReader):
                             )
                         )
 
-            log.info(
+            log.debug(
                 "Packaging non-segmented material from {}".format(
                     self.serialized_location
                 )
@@ -201,7 +201,7 @@ class FileSystemStageReader(StageSerializationReader):
                 )
             )
 
-        log.info(
+        log.debug(
             "Read of {} complete".format(
                 self.serialized_location
             )

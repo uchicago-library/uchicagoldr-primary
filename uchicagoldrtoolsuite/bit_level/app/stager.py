@@ -1,7 +1,11 @@
 from os.path import join, dirname, expanduser, expandvars
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.masterlog import \
+    spawn_logger, \
+    activate_master_log_file, \
+    activate_job_log_file, \
+    activate_stdout_log
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.externalpackagers.externalfilesystemsegmentpackager import \
@@ -16,6 +20,8 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 log = spawn_logger(__name__)
+activate_job_log_file()
+activate_master_log_file()
 
 def launch():
     """
@@ -78,6 +84,9 @@ class Stager(CLIApp):
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
+
+        # Fire a stdout handler at our preferred verbosity
+        activate_stdout_log(args.verbosity)
 
         # Set conf
         self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)

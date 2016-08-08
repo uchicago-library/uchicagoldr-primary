@@ -71,7 +71,7 @@ class GenericPREMISCreator(object):
             ms_num = 0
             for materialsuite in segment.materialsuite_list:
                 ms_num += 1
-                log.info(
+                log.debug(
                     "Processing Section {}/{}, MaterialSuite {}/{}".format(
                         str(s_num),
                         str(len(self.stage.segment_list)),
@@ -81,10 +81,10 @@ class GenericPREMISCreator(object):
                 )
                 if skip_existing:
                     if isinstance(materialsuite.get_premis(), LDRItem):
-                        log.info("PREMIS detected: Skipping")
+                        log.debug("PREMIS detected: Skipping")
                         continue
                 try:
-                    log.info("No PREMIS detected: Creating")
+                    log.debug("No PREMIS detected: Creating")
                     materialsuite.set_premis(
                         self.instantiate_and_make_premis(materialsuite.content,
                                                         self.working_dir_path)

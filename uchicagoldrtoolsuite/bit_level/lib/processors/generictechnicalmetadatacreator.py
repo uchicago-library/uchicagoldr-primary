@@ -51,7 +51,7 @@ class GenericTechnicalMetadataCreator(object):
             ms_num = 0
             for materialsuite in segment.materialsuite_list:
                 ms_num += 1
-                log.info("Processing section {}/{}, MaterialSuite {}/{}".format(
+                log.debug("Processing section {}/{}, MaterialSuite {}/{}".format(
                     str(s_num),
                     str(len(self.stage.segment_list)),
                     str(ms_num),
@@ -69,10 +69,10 @@ class GenericTechnicalMetadataCreator(object):
                     if materialsuite.get_technicalmetadata_list():
                         if isinstance(materialsuite.get_technicalmetadata(0),
                                     LDRItem):
-                            log.info("Detected TECHMD: Skipping")
+                            log.debug("Detected TECHMD: Skipping")
                             continue
                 try:
-                    log.info("No TECHMD detected: Creating")
+                    log.debug("No TECHMD detected: Creating")
                     for techmd_creator in self.techmd_creators:
                         c = techmd_creator(materialsuite, self.working_dir_path)
                         c.process()
