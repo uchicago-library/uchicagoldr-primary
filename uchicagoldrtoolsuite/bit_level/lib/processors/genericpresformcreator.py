@@ -6,6 +6,7 @@ from os.path import join
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..ldritems.ldrpath import LDRPath
 from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldritemcopier import LDRItemCopier
@@ -18,6 +19,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class GenericPresformCreator(object):
@@ -33,6 +37,7 @@ class GenericPresformCreator(object):
 
         stage (Stage): the Stage to operate on
         """
+        log.debug("GenericPresformCreator spawned.")
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff

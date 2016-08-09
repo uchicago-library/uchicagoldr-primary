@@ -19,9 +19,11 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+
 log = spawn_logger(__name__)
-activate_job_log_file()
 activate_master_log_file()
+activate_job_log_file()
+
 
 def launch():
     """

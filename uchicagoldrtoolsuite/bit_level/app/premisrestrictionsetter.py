@@ -2,6 +2,11 @@ from sys import stdout
 from os.path import join
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from uchicagoldrtoolsuite.core.lib.masterlog import \
+    spawn_logger, \
+    activate_master_log_file, \
+    activate_job_log_file, \
+    activate_stdout_log
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.processors.genericpremisrestrictionsetter import GenericPREMISRestrictionSetter
@@ -13,6 +18,11 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
+activate_master_log_file()
+activate_job_log_file()
 
 
 def launch():
@@ -74,6 +84,8 @@ class PremisRestrictionSetter(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
 
+        activate_stdout_log(args.verbosity)
+
         # Set conf
         self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
 
@@ -87,9 +99,9 @@ class PremisRestrictionSetter(CLIApp):
         stage_fullpath = join(staging_env, args.stage_id)
         reader = FileSystemStageReader(stage_fullpath)
         stage = reader.read()
-        stdout.write("Stage: " + stage_fullpath + "\n")
+        log.info("Stage: " + stage_fullpath)
 
-        stdout.write("Processing...\n")
+        log.info("Processing...")
 
         premis_restriction_setter = GenericPREMISRestrictionSetter(
             stage,
@@ -103,7 +115,7 @@ class PremisRestrictionSetter(CLIApp):
 
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()
-        stdout.write("Complete\n")
+        log.info("Complete")
 
 
 if __name__ == "__main__":
