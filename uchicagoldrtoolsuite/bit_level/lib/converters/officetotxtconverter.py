@@ -7,6 +7,7 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.converter import Converter
 from ..structures.presformmaterialsuite import PresformMaterialSuite
 from ..ldritems.ldritemcopier import LDRItemCopier
@@ -20,6 +21,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class OfficeToTXTConverter(Converter):
@@ -86,6 +90,12 @@ class OfficeToTXTConverter(Converter):
         """
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
+        log.debug(
+            "Txt Converter spawned. " +
+            "Working directory = {}. Timeout = {}".format(
+                working_dir, str(timeout)
+            )
+        )
 
     def convert(self):
         """
@@ -93,6 +103,7 @@ class OfficeToTXTConverter(Converter):
         materialsuites that we manage to make and updating its PREMIS record
         accordingly
         """
+        log.debug("Building conversion environment")
         initd_premis_file = join(self.working_dir, str(uuid1()))
         LDRItemCopier(self.source_materialsuite.premis, LDRPath(initd_premis_file)).copy()
         orig_premis = PremisRecord(frompath=initd_premis_file)
@@ -120,6 +131,9 @@ class OfficeToTXTConverter(Converter):
                             target_path]
         convert_cmd = BashCommand(convert_cmd_args)
         convert_cmd.set_timeout(self.timeout)
+        log.debug("Trying to convert {} to txt".format(
+            orig_name)
+        )
         convert_cmd.run_command()
 
         # If there's anything in the outdir we gave libreoffice thats what we
@@ -136,13 +150,16 @@ class OfficeToTXTConverter(Converter):
             conv_file_premis_rec = PremisRecord(
                 frompath=str(conv_file_premis.path)
             )
+            log.debug("Conversion successful")
         except Exception:
             presform_ldrpath = None
             conv_file_premis_rec = None
+            log.debug("Conversion failed")
 
         # Write a billion things into the PREMIS file(s)
         # This function handles None in the third arg sensibly, just updating
         # the original PREMIS file we have to specify a failed conversion
+        log.debug("Updating PREMIS")
         self.handle_premis(convert_cmd.get_data(),
                            orig_premis,
                            conv_file_premis_rec,
@@ -158,6 +175,7 @@ class OfficeToTXTConverter(Converter):
         # If the conversion was successful construct our PresformMaterialSuite
         # and add it to our source MaterialSuite
         if presform_ldrpath and conv_file_premis_rec:
+            log.debug("Adding PresformMaterialSuite to original MaterialSuite")
             presform_ms = PresformMaterialSuite()
             presform_ms.set_extension(".txt")
             presform_ms.content = presform_ldrpath
@@ -167,4 +185,5 @@ class OfficeToTXTConverter(Converter):
             self.source_materialsuite.add_presform(presform_ms)
 
         # Cleanup
+        log.debug("Deleting temporary file instantiation")
         original_holder.delete(final=True)
