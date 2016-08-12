@@ -7,6 +7,7 @@ from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.processors.generictechnicalmetadatacreator import \
     GenericTechnicalMetadataCreator
 from ..lib.techmdcreators.fitscreator import FITsCreator
+from ..lib.techmdcreators.apifitscreator import APIFITsCreator
 from uchicagoldrtoolsuite.core.lib.masterlog import \
     spawn_logger, \
     activate_master_log_file, \
@@ -92,7 +93,7 @@ class TechnicalMetadataCreator(CLIApp):
 
         log.info("Processing...")
 
-        techmd_processors = [FITsCreator]
+        techmd_processors = [APIFITsCreator]
         techmd_creator = GenericTechnicalMetadataCreator(stage,
                                                          techmd_processors)
         techmd_creator.process(skip_existing=args.skip_existing)

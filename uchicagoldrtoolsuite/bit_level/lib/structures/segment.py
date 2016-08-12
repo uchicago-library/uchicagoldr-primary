@@ -1,3 +1,4 @@
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from .materialsuite import MaterialSuite
 
@@ -8,6 +9,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+# This class doesnt actually have logging in it yet
+log = spawn_logger(__name__)
 
 
 class Segment(Structure):
