@@ -5,6 +5,7 @@ from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.abc.ldritem import LDRItem
 from .abc.technicalmetadatacreator import TechnicalMetadataCreator
@@ -20,8 +21,12 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+log = spawn_logger(__name__)
+
+
 class FITsCreator(TechnicalMetadataCreator):
     def __init__(self, materialsuite, working_dir, timeout=None):
+        log.debug("FITsCreator spawned. Processing {}".format(str(materialsuite.content)))
         super().__init__(materialsuite, working_dir, timeout)
 
     def process(self):
@@ -29,6 +34,7 @@ class FITsCreator(TechnicalMetadataCreator):
                           LDRItem):
             raise ValueError("All material suites must have a PREMIS record " +
                              "in order to generate technical metadata.")
+        log.debug("Building FITS-ing environment")
         premis_file_path = join(self.working_dir, str(uuid1()))
         LDRItemCopier(
             self.get_source_materialsuite().get_premis(),
@@ -59,18 +65,22 @@ class FITsCreator(TechnicalMetadataCreator):
         if self.get_timeout() is not None:
             cmd.set_timeout(self.get_timeout())
 
+        log.debug("Running FITS on file. Timeout: {}".format(str(self.get_timeout())))
         cmd.run_command()
 
         cmd_data = cmd.get_data()
 
         if isfile(fits_file_path):
+            log.debug("FITS successfully created")
             self.get_source_materialsuite().add_technicalmetadata(
                 LDRPath(fits_file_path)
             )
             self.handle_premis(cmd_data, self.get_source_materialsuite(),
                                "FITs", True)
         else:
+            log.debug("FITS creation failed.")
             self.handle_premis(cmd_data, self.get_source_materialsuite(),
                                "FITs", False)
 
+        log.debug("Cleaning up temporary file instantiation")
         original_holder.delete(final=True)

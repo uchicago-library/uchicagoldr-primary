@@ -1,3 +1,4 @@
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
 
@@ -10,6 +11,9 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+log = spawn_logger(__name__)
+
+
 class MaterialSuite(Structure):
     """
     A structure which holds all LDR Items pertaining to an "original" and that
@@ -20,6 +24,7 @@ class MaterialSuite(Structure):
                       'technicalmetadata_list', 'presform_list']
 
     def __init__(self):
+        log.debug("New MaterialSuite created")
         self._content = None
         self._premis = None
         self._technicalmetadata = []
@@ -34,21 +39,25 @@ class MaterialSuite(Structure):
         return str(repr_dict)
 
     def set_content(self, content):
+        log.debug("Setting content to {}".format(str(content)))
         self._content = content
 
     def get_content(self):
         return self._content
 
     def del_content(self):
+        log.debug("Deleting content from MaterialSuite")
         self._content = None
 
     def set_premis(self, premis):
+        log.debug("Setting PREMIS to {}".format(str(premis)))
         self._premis = premis
 
     def get_premis(self):
         return self._premis
 
     def del_premis(self):
+        log.debug("Deleting PREMIS from MaterialSuite")
         self._premis = None
 
     def get_technicalmetadata_list(self):
@@ -62,9 +71,11 @@ class MaterialSuite(Structure):
 
     def del_technicalmetadata_list(self):
         while self.get_technicalmetadata_list():
-            self.get_technicalmetadata_list().pop()
+            self.pop_technicalmetadata()
 
     def add_technicalmetadata(self, technicalmetadata, index=None):
+        log.debug("Adding {} as technicalmetadata".format(
+            str(technicalmetadata)))
         if self.get_technicalmetadata_list() is None:
             self._technicalmetadata = []
         if index is None:
@@ -75,6 +86,7 @@ class MaterialSuite(Structure):
         return self.get_technicalmetadata_list()[index]
 
     def pop_technicalmetadata(self, index=None):
+        log.debug("Popping from technicalmetadata list")
         if index is None:
             return self.get_technicalmetadata_list().pop()
         else:
@@ -90,9 +102,12 @@ class MaterialSuite(Structure):
             self.add_presform(x)
 
     def del_presform_list(self):
+        log.debug("Deleting presform list from MaterialSuite")
         self._presform = None
 
     def add_presform(self, presform, index=None):
+        log.debug("Adding {} to MaterialSuite as presform".format(
+            str(presform)))
         if self.get_presform_list() is None:
             self._presform = []
         if index is None:
@@ -103,6 +118,7 @@ class MaterialSuite(Structure):
         return self.get_presform_list()[index]
 
     def pop_presform(self, index=None):
+        log.debug("Popping from presform list")
         if index is None:
             return self.get_presform_list().pop()
         else:

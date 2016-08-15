@@ -2,6 +2,7 @@ from os.path import join
 from os.path import isfile
 from re import compile as re_compile
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..fstools.rootedpath import RootedPath
 from ..fstools.filepathtree import FilePathTree
 from ..structures.segment import Segment
@@ -16,6 +17,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class FileSystemSegmentPackager(SegmentPackager):
@@ -37,6 +41,11 @@ class FileSystemSegmentPackager(SegmentPackager):
         4. label_number (int): The number that makes up the second part of
             the segment identifier
         """
+        log.debug("FileSystemSegmentPackager spawned." +
+                  "stage_env_path = {}, ".format(stage_env_path) +
+                  "stage_id = {}, ".format(stage_id) +
+                  "label_text = {}, ".format(label_text) +
+                  "label_number = {}, ".format(str(label_number)))
         super().__init__()
         self.stage_env_path = stage_env_path
         self.stage_id = stage_id
@@ -47,9 +56,12 @@ class FileSystemSegmentPackager(SegmentPackager):
         self.segment_data_root = join(stage_env_path, stage_id,
                                       'data',
                                       label_text + "-" + str(label_number))
+        log.debug("Computed segment data root: {}".format(
+            self.segment_data_root))
         self.set_struct(Segment(label_text, int(label_number)))
 
     def package(self):
+        log.debug("Packaging")
         presform_filename_pattern = re_compile(
             "^.*\.presform(\.[a-zA-Z0-9]*)?$"
         )
@@ -57,6 +69,7 @@ class FileSystemSegmentPackager(SegmentPackager):
             self.segment_data_root+"/",
             root=self.segment_data_root
         )
+        log.debug("Creating tree of segment")
         tree = FilePathTree(segment_rooted_path)
         for x in tree.get_paths():
             if not isfile(join(self.segment_data_root, x)):
@@ -73,4 +86,5 @@ class FileSystemSegmentPackager(SegmentPackager):
                 x
             ).package()
             self.get_struct().add_materialsuite(ms)
+        log.debug("Packaging complete")
         return self.get_struct()

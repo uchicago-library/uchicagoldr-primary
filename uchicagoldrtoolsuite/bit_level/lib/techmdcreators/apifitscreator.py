@@ -1,4 +1,4 @@
-from os import makedirs, remove
+from os import makedirs
 from os.path import join, dirname, isfile
 from uuid import uuid1
 from requests import post
@@ -32,8 +32,10 @@ class APIFITsCreator(TechnicalMetadataCreator):
     _API_URL = 'http://127.0.0.1:8080/fits/examine'
 
     def __init__(self, materialsuite, working_dir, timeout=None):
+        log.debug("APIFITsCreator spawned. Processing {}".format(
+            str(materialsuite.content))
+        )
         super().__init__(materialsuite, working_dir, timeout)
-        log.debug("Spawned an APIFITsCreator")
 
     def process(self):
         log.debug(

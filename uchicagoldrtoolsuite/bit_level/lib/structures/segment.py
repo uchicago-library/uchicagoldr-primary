@@ -10,7 +10,7 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
-# This class doesnt actually have logging in it yet
+
 log = spawn_logger(__name__)
 
 
@@ -35,6 +35,9 @@ class Segment(Structure):
     required_parts = ['identifier', 'materialsuite', 'label', 'run']
 
     def __init__(self, label, run_no):
+        log.debug("Segment spawned. Label: {}. Number: {}".format(
+            label, str(run_no))
+        )
 
         self._label = None
         self._run = None
@@ -64,12 +67,14 @@ class Segment(Structure):
             self.pop_materialsuite()
 
     def add_materialsuite(self, x):
+        log.debug("Adding MaterialSuite {}. {}".format(str(x), str(self)))
         self._materialsuite.append(x)
 
     def get_materialsuite(self, index):
         return self.get_materialsuite_list()[index]
 
     def pop_materialsuite(self, index=None):
+        log.debug("Popping materialsuite.")
         if index is None:
             return self.get_materialsuite_list().pop()
         else:
