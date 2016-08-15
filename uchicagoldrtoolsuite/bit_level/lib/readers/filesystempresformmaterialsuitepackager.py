@@ -151,8 +151,8 @@ class FileSystemPresformMaterialSuitePackager(PresformMaterialSuitePackager):
         return None
 
     def get_extension(self):
-        log.debug("Trying to detect extension of {}").format(
-            self.rel_content_path)
+        log.debug("Trying to detect extension of {}".format(
+            self.rel_content_path))
         ext = splitext(self.rel_content_path)[1]
         log.debug("Detected extension is: {}".format(str(ext)))
         return ext

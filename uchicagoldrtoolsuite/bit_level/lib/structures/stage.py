@@ -1,3 +1,4 @@
+from json import dumps
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from .segment import Segment
@@ -34,17 +35,14 @@ class Stage(Structure):
         log.debug("Stage({}) spawned".format(str(self)))
 
     def __repr__(self):
-        repr_str = "<ID: {}".format(self.get_identifier())
-        for x in self.get_segment_list():
-            repr_str = repr_str + str(x)
-        for x in self.get_accessionrecord_list():
-            repr_str = repr_str + str(x)
-        for x in self.get_adminnote_list():
-            repr_str = repr_str + str(x)
-        for x in self.get_legalnote_list():
-            repr_str = repr_str + str(x)
-        repr_str = repr_str + ">"
-        return repr_str
+        attr_dict = {
+            'identifier': self.identifier,
+            'segment_list': [str(x) for x in self.segment_list],
+            'accessionrecord_list': [str(x) for x in self.accessionrecord_list],
+            'adminnote_list': [str(x) for x in self.adminnote_list],
+            'legalnote_list': [str(x) for x in self.legalnote_list]
+        }
+        return "<Stage {}>".format(dumps(attr_dict, sort_keys=True))
 
     def get_identifier(self):
         return self._identifier

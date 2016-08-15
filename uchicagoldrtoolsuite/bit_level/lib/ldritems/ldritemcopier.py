@@ -30,19 +30,24 @@ class LDRItemCopier(object):
         * buffering (int): How many bytes to load into RAM for copying/
             comparison operations
         """
-        log.debug(
-            "LDRItemCopier spawned. {}".format(
-                dumps({'src': src.item_name, 'dst': dst.item_name,
-                       'clobber': clobber, 'eq_detect': eq_detect,
-                       'max_retries': max_retries, 'buffering': buffering})
-            )
-        )
         self.src = src
         self.dst = dst
         self.clobber = clobber
         self.eq_detect = eq_detect
         self.max_retries = max_retries
         self.buffering = buffering
+        log.debug("LDRItemCopier spawned. {}".format(str(self)))
+
+    def __repr__(self):
+        attrib_dict = {
+            'src': str(self.src),
+            'dst': str(self.dst),
+            'clobber': self.clobber,
+            'eq_detect': self.eq_detect,
+            'max_retries': self.max_retries,
+            'buffering': self.buffering
+        }
+        return "<LDRItemCopier {}".format(dumps(attrib_dict, sort_keys=True))
 
     def get_src(self):
         return self._src

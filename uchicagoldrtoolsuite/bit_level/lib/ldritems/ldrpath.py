@@ -22,9 +22,6 @@ class LDRPath(LDRItem):
     Allows a file path to a file on the file system to be treated as an LDRItem
     """
     def __init__(self, param1, root=None):
-        log.debug(
-            "LDRPath spawned. {}".format(dumps({'path': param1, 'root': root}))
-        )
         self.path = Path(param1)
         if root is None:
             self.item_name = str(self.path)
@@ -32,11 +29,14 @@ class LDRPath(LDRItem):
             self.item_name = str(self.path.relative_to(root))
         self.pipe = None
         self.is_flo = True
+        log.debug("LDRPath spawned: {}".format(str(self)))
 
     def __repr__(self):
-        return "LDRPath({})".format(
-            dumps({'name': self.item_name, 'path': str(self.path)})
-        )
+        attrib_dict = {
+            'item_name': self.item_name,
+            'path': str(self.path)
+        }
+        return "<LDRPath {}>".format(dumps(attrib_dict))
 
     def read(self, blocksize=1024*1000*100):
         log.debug("{} being read".format(str(self)))

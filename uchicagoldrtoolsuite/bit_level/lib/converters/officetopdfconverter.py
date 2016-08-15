@@ -1,4 +1,5 @@
 from os import scandir, makedirs
+from json import dumps
 from os.path import join, dirname, isfile
 from uuid import uuid1
 import mimetypes
@@ -106,12 +107,17 @@ class OfficeToPDFConverter(Converter):
         """
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
-        log.debug(
-            "PDF Converter spawned. " +
-            "Working directory = {}. Timeout = {}".format(
-                working_dir, str(timeout)
-            )
-        )
+        log.debug("OfficeToPDFConverter spawned: {} ".format(str(self)))
+
+    def __repr__(self):
+        attrib_dict = {
+            'source_materialsuite': str(self.source_materialsuite),
+            'working_dir': self.working_dir,
+            'timeout': self.timeout,
+            'claimed_mimes': self.claimed_mimes
+        }
+
+        return "<OfficeToPDFConverter {}>".format(dumps(attrib_dict, sort_keys=True))
 
     def convert(self):
         """
@@ -119,9 +125,11 @@ class OfficeToPDFConverter(Converter):
         materialsuites that we manage to make and updating its PREMIS record
         accordingly
         """
-        log.debug("Building conversion environment")
+        log.debug("Building conversion environment for {}".format(str(self)))
         initd_premis_file = join(self.working_dir, str(uuid1()))
+        log.debug("Attempting to instantiate PREMIS @ {}".format(initd_premis_file))
         LDRItemCopier(self.source_materialsuite.premis, LDRPath(initd_premis_file)).copy()
+        log.debug("Reading instantiated PREMIS")
         orig_premis = PremisRecord(frompath=initd_premis_file)
         orig_name = orig_premis.get_object_list()[0].get_originalName()
         # LibreOffice CLI won't let us just specify an output file name, so make
@@ -135,6 +143,7 @@ class OfficeToPDFConverter(Converter):
         target_path = join(target_containing_dir, orig_name)
         makedirs(dirname(target_path), exist_ok=True)
         original_holder = LDRPath(target_path)
+        log.debug("Attempting to instantiate content @ {}".format(target_path))
         LDRItemCopier(self.source_materialsuite.content, original_holder).copy()
 
         # Where we are aiming the LibreOffice CLI converter
@@ -199,6 +208,8 @@ class OfficeToPDFConverter(Converter):
             conv_file_premis_rec.write_to_file(presform_premis_path)
             presform_ms.premis = LDRPath(presform_premis_path)
             self.source_materialsuite.add_presform(presform_ms)
+
+        log.debug("Congversion Complete: {}".format(str(self)))
 
         # cleanup
         log.debug("Deleting temporary file instantiation")
