@@ -1,6 +1,7 @@
 from os import scandir
 from os.path import join, dirname, basename, isfile, splitext
 from re import compile as re_compile
+from json import dumps
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.presformmaterialsuitepackager import PresformMaterialSuitePackager
@@ -39,12 +40,6 @@ class FileSystemPresformMaterialSuitePackager(PresformMaterialSuitePackager):
         5. rel_content_path (str): The **relative** path to the content in
             the segment which should have some of the parts of a MaterialSuite
         """
-        log.debug("FileSystemMaterialSuitePackager spawned." +
-                  "stage_env_path = {}, ".format(stage_env_path) +
-                  "stage_id = {}, ".format(stage_id) +
-                  "label_text = {}, ".format(label_text) +
-                  "label_number = {}, ".format(str(label_number)) +
-                  "rel_content_path = {}".format(rel_content_path))
         super().__init__()
         self.stage_env_path = stage_env_path
         self.stage_id = stage_id
@@ -55,14 +50,25 @@ class FileSystemPresformMaterialSuitePackager(PresformMaterialSuitePackager):
         stage_fullpath = join(stage_env_path, stage_id)
         self.data_fullpath = join(stage_fullpath, 'data',
                                   label_text + "-" + str(label_number))
-        log.debug("Computed data_fullpath = {}".format(self.data_fullpath))
         self.file_fullpath = join(self.data_fullpath, self.rel_content_path)
-        log.debug("Computed file_fullpath = {}".format(self.file_fullpath))
         self.file_name = basename(self.rel_content_path)
-        log.debug("Computed file_name = {}".format(self.file_name))
         self.admin_fullpath = join(stage_fullpath, 'admin',
                                    label_text + "-" + str(label_number))
-        log.debug("Computed admin_fullpath = {}".format(self.admin_fullpath))
+        log.debug("FileSystemPresformMaterialSuitePackager spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'stage_env_path': self.stage_env_path,
+            'stage_id': self.stage_id,
+            'label': self.label_text,
+            'run': self.label_number,
+            'rel_content_path': self.rel_content_path,
+            'data_fullpath': self.data_fullpath,
+            'file_fullpath': self.file_fullpath,
+            'file_name': self.file_name,
+            'admin_fullpath': self.admin_fullpath
+        }
+        return "<FileSystemPresformMaterialSuitePackager {}>".format(dumps(attr_dict, sort_keys=True))
 
     def get_content(self):
         """

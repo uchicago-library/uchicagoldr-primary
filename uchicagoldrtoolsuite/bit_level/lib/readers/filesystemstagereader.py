@@ -1,4 +1,5 @@
 import re
+from json import dumps
 from os.path import exists, join, isfile, split as dirsplit
 
 from .abc.stageserializationreader import StageSerializationReader
@@ -31,25 +32,21 @@ class FileSystemStageReader(StageSerializationReader):
 
         1. staging_directory (str): The path to the Stage on disk
         """
-        log.debug(
-            "FileSystemStageReader for {} spawned".format(
-                staging_directory
-            )
-        )
         super().__init__()
         self.set_implementation('file system')
-        log.debug(
-            "Splitting {} to get env and id".format(
-                staging_directory
-            )
-        )
         self.stage_id = staging_directory.split('/')[-1]
         self.get_struct().set_identifier(staging_directory.split('/')[-1])
         self.stage_env_path = "/".join(staging_directory.split('/')[0:-1])
         self.structureType = "staging"
         self.serialized_location = staging_directory
-        log.debug("Stage Env: {}".format(self.stage_env_path))
-        log.debug("Stage ID: {}".format(self.stage_id))
+        log.debug("FileSystemStageReader spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attrib_dict = {
+            'stage_id': self.stage_id,
+            'stage_env_path': self.stage_env_path,
+        }
+        return "<FileSystemStageReader {}".format(dumps(attrib_dict))
 
     def read(self):
         log.debug(

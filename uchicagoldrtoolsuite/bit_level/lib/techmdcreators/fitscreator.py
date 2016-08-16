@@ -1,6 +1,7 @@
-from os import makedirs, remove
+from os import makedirs
 from os.path import join, dirname, isfile
 from uuid import uuid1
+from json import dumps
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
@@ -26,8 +27,16 @@ log = spawn_logger(__name__)
 
 class FITsCreator(TechnicalMetadataCreator):
     def __init__(self, materialsuite, working_dir, timeout=None):
-        log.debug("FITsCreator spawned. Processing {}".format(str(materialsuite.content)))
         super().__init__(materialsuite, working_dir, timeout)
+        log.debug("FITsCreator spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'source_materialsuite': str(self.source_materialsuite),
+            'working_dir': str(self.working_dir),
+            'timeout': self.timeout
+        }
+        return "<FITsCreator {}>".format(dumps(attr_dict))
 
     def process(self):
         if not isinstance(self.get_source_materialsuite().get_premis(),

@@ -32,7 +32,7 @@ class Stage(Structure):
         self._adminnote = []
         self._legalnote = []
         self.set_identifier(param1)
-        log.debug("Stage({}) spawned".format(str(self)))
+        log.debug("Stage spawned: {}".format(str(self)))
 
     def __repr__(self):
         attr_dict = {

@@ -3,6 +3,7 @@ from os.path import join, dirname, isfile
 from uuid import uuid1
 from requests import post
 from xml.etree.ElementTree import fromstring
+from json import dumps
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
@@ -32,10 +33,17 @@ class APIFITsCreator(TechnicalMetadataCreator):
     _API_URL = 'http://127.0.0.1:8080/fits/examine'
 
     def __init__(self, materialsuite, working_dir, timeout=None):
-        log.debug("APIFITsCreator spawned. Processing {}".format(
-            str(materialsuite.content))
-        )
         super().__init__(materialsuite, working_dir, timeout)
+        log.debug("APIFITsCreator spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'source_materialsuite': str(self.source_materialsuite),
+            'working_dir': str(self.working_dir),
+            'timeout': self.timeout,
+            'api_url': self._API_URL
+        }
+        return "<APIFITsCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self):
         log.debug(
