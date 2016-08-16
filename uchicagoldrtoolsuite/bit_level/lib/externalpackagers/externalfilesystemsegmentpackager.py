@@ -1,5 +1,6 @@
 from os.path import isfile
 from os.path import join
+from json import dumps
 
 from ..structures.segment import Segment
 from ..readers.abc.segmentpackager import SegmentPackager
@@ -49,13 +50,6 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             directory
         * filter_pattern (str): A regex to use to specify files not to include
         """
-        log.debug(
-            "ExternalFileSystemSegmentPackager spawned. {}".format(
-                str({'path': path, 'label_text': label_text,
-                     'label_number': label_number, 'root': root,
-                     'filter_pattern': filter_pattern})
-            )
-        )
         super().__init__()
         self.filter_pattern = filter_pattern
         self.set_implementation("file system")
@@ -68,6 +62,19 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             self.path = RootedPath(path, root=root)
         else:
             self.path = path
+        log.debug(
+            "ExternalFileSystemSegmentPackager spawned. {}".format(str(self))
+        )
+
+    def __repr__(self):
+        attr_dict = {
+            'filter_pattern': str(self.filter_pattern),
+            'label': self.get_id_prefix(),
+            'run': self.get_id_num(),
+            'root': self.root,
+            'path': str(self.path)
+        }
+        return "<ExternalFileSystemSegmentPackager {}>".format(dumps(attr_dict))
 
     def package(self):
         """

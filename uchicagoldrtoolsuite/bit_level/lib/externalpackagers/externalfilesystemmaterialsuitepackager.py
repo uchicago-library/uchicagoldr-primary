@@ -37,19 +37,24 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
 
         * root (str): A root for the provided path
         """
-        log.debug("ExternalFileSystemMaterialSuitePackager spawned. {}".format(
-            dumps({'orig': orig, 'root': root})))
         super().__init__()
         self.orig = orig
         self.root = root
+        log.debug("ExternalFileSystemMaterialSuitePackager spawned. {}".format(str(self)))
+
+    def __repr__(self):
+        attrib_dict = {
+            'orig': self.orig,
+            'root': self.root
+        }
+        return "<ExternalFileSystemMaterialSuitePackager {}>".format(dumps(attrib_dict, sort_keys=True))
 
     def get_content(self):
         """
         Minimally turn a path into and LDRPath
         """
         log.debug("ExternalFileSystemMaterialSuitePackager retrieving " +
-                  "content. {}".format(
-                      dumps({'orig': self.orig, 'root': self.root})))
+                  "content. {}".format(str(self)))
         return LDRPath(self.orig, root=self.root)
 
     def get_premis(self):

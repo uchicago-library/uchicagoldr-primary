@@ -1,3 +1,5 @@
+from json import dumps
+
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from .materialsuite import MaterialSuite
@@ -48,11 +50,11 @@ class Segment(Structure):
         self.set_materialsuite_list([])
 
     def __repr__(self):
-        repr_str = "<{}".format(self.get_identifier())
-        for x in self.get_materialsuite_list():
-            repr_str = repr_str + str(x)
-        repr_str = repr_str + ">"
-        return repr_str
+        attr_dict = {
+            'identifier': self.identifier,
+            'materialsuite_list': [str(x) for x in self.materialsuite_list]
+        }
+        return "<Segment {}>".format(dumps(attr_dict))
 
     def get_materialsuite_list(self):
         return self._materialsuite
@@ -109,6 +111,8 @@ class Segment(Structure):
                              "must be an integer")
 
     def get_identifier(self):
+        # The identifier is a composite of the label and the run number
+        # separated by a dash
         return self.get_label() + "-" + str(self.get_run())
 
     materialsuite_list = property(get_materialsuite_list,

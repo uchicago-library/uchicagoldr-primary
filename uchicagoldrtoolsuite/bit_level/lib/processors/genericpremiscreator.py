@@ -3,6 +3,7 @@ from os.path import getsize
 from mimetypes import guess_type
 from uuid import uuid1
 from os.path import join
+from json import dumps
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
@@ -43,7 +44,6 @@ class GenericPREMISCreator(object):
 
         1. stage (Stage): The Stage to generate PREMIS object records for
         """
-        log.debug("GenericPREMISCreator spawned")
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -54,6 +54,14 @@ class GenericPREMISCreator(object):
             "GenericPREMISCreator created tmpdir @ {}".format(
             self.working_dir_path)
         )
+        log.debug("GenericPREMISCreator spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'stage': str(self.stage),
+            'working_dir_path': self.working_dir_path
+        }
+        return "<GenericPREMISCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self, skip_existing=False):
         """

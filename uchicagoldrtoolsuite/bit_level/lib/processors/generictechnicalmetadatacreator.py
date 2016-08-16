@@ -1,5 +1,5 @@
 from tempfile import TemporaryDirectory
-
+from json import dumps
 
 from ..ldritems.abc.ldritem import LDRItem
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
@@ -32,7 +32,6 @@ class GenericTechnicalMetadataCreator(object):
 
         stage (Stage): the Stage to operate on
         """
-        log.debug("GenericTechnicalMetadataCreator spawned")
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -40,8 +39,15 @@ class GenericTechnicalMetadataCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
         self.techmd_creators = techmd_creators
-        log.debug("GenericTechnicalMetadataCreator created tmpdir @ {}".format(self.working_dir_path))
-        log.debug("Techmd creators available include {}".format(str([x.__name__ for x in self.techmd_creators])))
+        log.debug("GenericTechnicalMetadataCreator spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'stage': str(self.stage),
+            'working_dir_path': self.working_dir_path,
+            'techmd_creators': [str(x) for x in self.techmd_creators]
+        }
+        return "<GenericTechnicalMetadataCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self, skip_existing=False):
         log.debug("Beginning TECHMD Processing")

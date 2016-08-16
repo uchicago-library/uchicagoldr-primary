@@ -1,6 +1,7 @@
 from os import scandir
 from os.path import relpath
 from re import compile as re_compile
+from json import dumps
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .rootedpath import RootedPath
@@ -51,6 +52,14 @@ class FileWalker(object):
         self.filter_pattern = filter_pattern
         self.inc_dirs = inc_dirs
         self.items = self.walk_directory()
+
+    def __repr__(self):
+        attr_dict = {
+            'directory': str(self.directory),
+            'inc_dirs': self.inc_dirs,
+            'filter_pattern': str(self.filter_pattern)
+        }
+        return "<FileWalker {}>".format(dumps(attr_dict))
 
     def __iter__(self):
         """

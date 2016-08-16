@@ -1,3 +1,5 @@
+from json import dumps
+
 from .materialsuite import MaterialSuite
 
 
@@ -19,13 +21,20 @@ class PresformMaterialSuite(MaterialSuite):
         self._extension = None
 
     def __repr__(self):
-        repr_dict = {}
-        repr_dict['content'] = self.get_content()
-        repr_dict['premis'] = self.get_premis()
-        repr_dict['technicalmetadata'] = self.get_technicalmetadata_list()
-        repr_dict['presform'] = self.get_presform_list()
-        repr_dict['extension'] = self.get_extension()
-        return str(repr_dict)
+        attr_dict = {
+            'content': str(self.get_content()),
+            'premis': str(self.get_premis()),
+            'extension': self.get_extension()
+        }
+        if self.technicalmetadata_list:
+            attr_dict['technicalmetadata_list'] = [str(x) for x in self.technicalmetadata_list]
+        else:
+            attr_dict['technicalmetadata_list'] = None
+        if self.presform_list:
+            attr_dict['presform_list'] = [str(x) for x in self.presform_list]
+        else:
+            attr_dict['presform_list'] = None
+        return "<PresformMaterialSuite {}>".format(dumps(attr_dict, sort_keys=True))
 
     def get_extension(self):
         return self._extension

@@ -1,3 +1,5 @@
+from json import dumps
+
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
@@ -31,12 +33,19 @@ class MaterialSuite(Structure):
         self._presform = None
 
     def __repr__(self):
-        repr_dict = {}
-        repr_dict['content'] = self.get_content()
-        repr_dict['premis'] = self.get_premis()
-        repr_dict['technicalmetadata'] = self.get_technicalmetadata_list()
-        repr_dict['presform'] = self.get_presform_list()
-        return str(repr_dict)
+        attr_dict = {
+            'content': str(self.get_content()),
+            'premis': str(self.get_premis())
+        }
+        if self.technicalmetadata_list:
+            attr_dict['technicalmetadata_list'] = [str(x) for x in self.technicalmetadata_list]
+        else:
+            attr_dict['technicalmetadata_list'] = None
+        if self.presform_list:
+            attr_dict['presform_list'] = [str(x) for x in self.presform_list]
+        else:
+            attr_dict['presform_list'] = None
+        return "<MaterialSuite {}>".format(dumps(attr_dict, sort_keys=True))
 
     def set_content(self, content):
         log.debug("Setting content to {}".format(str(content)))

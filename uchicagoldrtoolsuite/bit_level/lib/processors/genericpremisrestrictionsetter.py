@@ -50,7 +50,6 @@ class GenericPREMISRestrictionSetter(object):
             are relevant to this restriction
         * active (bool): Whether or not this restriction is currently active
         """
-        log.debug("GenericPREMISRestrictionSetter spawned.")
         self.stage = stage
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
@@ -59,6 +58,30 @@ class GenericPREMISRestrictionSetter(object):
         self.donor_stipulations = donor_stipulations
         self.restrictingAgentIds = restrictingAgentIds
         self.active = active
+        log.debug("GenericPREMISRestrictionSetter spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'stage': str(self.stage),
+            'working_dir_path': self.working_dir_path,
+            'restriction': self.restriction,
+            'active': self.active
+        }
+
+        if self.reasons:
+            attr_dict['reasons'] = self.reasons
+        else:
+            attr_dict['reasons'] = None
+        if self.donor_stipulations:
+            attr_dict['donor_stipulations'] = self.donor_stipulations
+        else:
+            attr_dict['donor_stipulations'] = None
+        if self.restrictingAgentIds:
+            attr_dict['restricting_agent_ids'] = self.restrictingAgentIds
+        else:
+            attr_dict['restricting_agent_ids'] = None
+
+        return "<GenericPREMISRestrictionSetter {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self):
         log.debug("Beginning PREMIS restriction setting.")

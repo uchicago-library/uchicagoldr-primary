@@ -2,6 +2,7 @@ from tempfile import TemporaryDirectory
 from uuid import uuid1
 from os import makedirs
 from os.path import join
+from json import dumps
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
@@ -37,7 +38,6 @@ class GenericPresformCreator(object):
 
         stage (Stage): the Stage to operate on
         """
-        log.debug("GenericPresformCreator spawned.")
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -45,6 +45,15 @@ class GenericPresformCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
         self.converters = converters
+        log.debug("GenericPresformCreator spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'stage': str(self.stage),
+            'working_dir_path': self.working_dir_path,
+            'converters': [str(x) for x in self.converters]
+        }
+        return "<GenericPresformCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self, skip_existing=False, presform_presforms=False):
         for segment in self.stage.segment_list:
