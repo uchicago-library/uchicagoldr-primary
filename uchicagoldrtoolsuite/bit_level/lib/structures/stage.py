@@ -69,7 +69,7 @@ class Stage(Structure):
         if not isinstance(segment, Segment):
             raise ValueError('only Segments can be added to the segments_list')
         self._segment.append(segment)
-        log.debug("Added Segment to Stage({})".format(str(self)))
+        log.debug("Added Segment to Stage: {}".format(str(segment)))
 
     def get_segment(self, index):
         return self.get_segment_list()[index]
@@ -79,7 +79,6 @@ class Stage(Structure):
             return self.get_segment_list().pop()
         else:
             return self.get_segment_list().pop(index)
-        log.debug("Popped Segment from Stage({})".format(str(self)))
 
     def get_accessionrecord_list(self):
         return self._accessionrecord
@@ -95,7 +94,7 @@ class Stage(Structure):
 
     def add_accessionrecord(self, accrec):
         self._accessionrecord.append(accrec)
-        log.debug("Added accession record to Stage({})".format(str(self)))
+        log.debug("Added accession record to Stage: {}".format(str(accrec)))
 
     def get_accessionrecord(self, index):
         return self.get_accessionrecord_list()[index]
@@ -105,7 +104,6 @@ class Stage(Structure):
             return self.get_accessionrecord_list.pop()
         else:
             return self.get_accessionrecord_list.pop(index)
-        log.debug("Popped accession record from Stage({})".format(str(self)))
 
     def get_adminnote_list(self):
         return self._adminnote
@@ -121,7 +119,7 @@ class Stage(Structure):
 
     def add_adminnote(self, adminnote):
         self.get_adminnote_list().append(adminnote)
-        log.debug("Added adminnote to Stage({})".format(str(self)))
+        log.debug("Added adminnote to Stage: {}".format(str(adminnote)))
 
     def get_adminnote(self, index):
         return self.get_adminnote_list()[index]
@@ -131,7 +129,6 @@ class Stage(Structure):
             return self.get_adminnote_list().pop()
         else:
             return self.get_adminnote_list().pop(index)
-        log.debug("Popped adminnote from Stage({})".format(str(self)))
 
     def get_legalnote_list(self):
         return self._legalnote
@@ -147,7 +144,7 @@ class Stage(Structure):
 
     def add_legalnote(self, legalnote):
         self.get_legalnote_list().append(legalnote)
-        log.debug("Added legalnote to Stage({})".format(str(self)))
+        log.debug("Added legalnote to Stage: {}".format(str(legalnote)))
 
     def get_legalnote(self, index):
         return self.get_legalnote_list()[index]
@@ -157,10 +154,8 @@ class Stage(Structure):
             return self.get_legalnote_list().pop()
         else:
             return self.get_legalnote_list().pop(index)
-        log.debug("Popped legalnote from Stage({})".format(str(self)))
 
     def validate(self):
-        log.debug("Validating Stage({})".format(str(self)))
         for n_thing in self.segment_list:
             if isinstance(n_thing, Segment):
                 pass

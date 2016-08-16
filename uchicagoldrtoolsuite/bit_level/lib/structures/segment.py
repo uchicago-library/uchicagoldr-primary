@@ -37,10 +37,6 @@ class Segment(Structure):
     required_parts = ['identifier', 'materialsuite', 'label', 'run']
 
     def __init__(self, label, run_no):
-        log.debug("Segment spawned. Label: {}. Number: {}".format(
-            label, str(run_no))
-        )
-
         self._label = None
         self._run = None
         self._materialsuite = []
@@ -48,6 +44,7 @@ class Segment(Structure):
         self.set_label(label)
         self.set_run(run_no)
         self.set_materialsuite_list([])
+        log.debug("Segment spawned: {}".format(str(self)))
 
     def __repr__(self):
         attr_dict = {
@@ -69,7 +66,7 @@ class Segment(Structure):
             self.pop_materialsuite()
 
     def add_materialsuite(self, x):
-        log.debug("Adding MaterialSuite {}. {}".format(str(x), str(self)))
+        log.debug("Adding MaterialSuite {}.".format(str(x)))
         self._materialsuite.append(x)
 
     def get_materialsuite(self, index):

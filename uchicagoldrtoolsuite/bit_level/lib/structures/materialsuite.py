@@ -26,11 +26,11 @@ class MaterialSuite(Structure):
                       'technicalmetadata_list', 'presform_list']
 
     def __init__(self):
-        log.debug("New MaterialSuite created")
         self._content = None
         self._premis = None
         self._technicalmetadata = []
         self._presform = None
+        log.debug("MaterialSuite spawned: {}".format(str(self)))
 
     def __repr__(self):
         attr_dict = {
