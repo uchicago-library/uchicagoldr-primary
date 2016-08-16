@@ -129,6 +129,7 @@ class ImageConverter(Converter):
         outdir = join(self.working_dir, str(uuid1()))
         makedirs(outdir)
         conv_file_path = join(outdir, orig_name+".presform.tif")
+        makedirs(dirname(conv_file_path), exist_ok=True)
 
         # Fire 'er up
         convert_cmd_args = [self.ffmpeg_path, '-n', '-i', target_path,

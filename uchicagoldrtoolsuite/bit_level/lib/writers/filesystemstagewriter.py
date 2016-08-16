@@ -40,20 +40,19 @@ class FileSystemStageWriter(StageSerializationWriter):
         * eq_detect (str): The equality detection metric to pass to
             LDRItemCopier when writing
         """
-        log.debug("A FileSytemStageWriter has been spawned")
         super().__init__(aStructure)
         self.stage_env_path = aRoot
         self.set_implementation('file system')
         self.eq_detect = eq_detect
-        log.debug(
-            "FileSystemStageWriter Staging Environment path is {}".format(
-                self.stage_env_path)
-        )
-        log.debug(
-            "FileSystemStageWriter contained Stage Identifier is {}".format(
-                aStructure.identifier
-            )
-        )
+        log.debug("FileSystemStageWriter spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attrib_dict = {
+            'stage_env_path': self.stage_env_path,
+            'eq_detect': self.eq_detect,
+            'struct': str(self.get_struct())
+        }
+        return "<FileSystemStageWriter {}>".format(dumps(attrib_dict))
 
     def _make_containing_dir(self, path):
         some_dir = dirname(path)
