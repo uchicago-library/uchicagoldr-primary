@@ -1,4 +1,5 @@
 from tempfile import TemporaryDirectory
+from json import dumps
 from os.path import join
 from uuid import uuid1
 
