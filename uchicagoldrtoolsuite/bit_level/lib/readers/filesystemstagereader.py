@@ -46,7 +46,7 @@ class FileSystemStageReader(StageSerializationReader):
             'stage_id': self.stage_id,
             'stage_env_path': self.stage_env_path,
         }
-        return "<FileSystemStageReader {}".format(dumps(attrib_dict))
+        return "<FileSystemStageReader {}".format(dumps(attrib_dict, sort_keys=True))
 
     def read(self):
         log.debug(

@@ -51,7 +51,7 @@ class Segment(Structure):
             'identifier': self.identifier,
             'materialsuite_list': [str(x) for x in self.materialsuite_list]
         }
-        return "<Segment {}>".format(dumps(attr_dict))
+        return "<Segment {}>".format(dumps(attr_dict, sort_keys=True))
 
     def get_materialsuite_list(self):
         return self._materialsuite
@@ -66,18 +66,18 @@ class Segment(Structure):
             self.pop_materialsuite()
 
     def add_materialsuite(self, x):
-        log.debug("Adding MaterialSuite {}.".format(str(x)))
         self._materialsuite.append(x)
+        log.debug("Added MaterialSuite to Segment({}): {}".format(self.identifier, str(x)))
 
     def get_materialsuite(self, index):
         return self.get_materialsuite_list()[index]
 
     def pop_materialsuite(self, index=None):
-        log.debug("Popping materialsuite.")
         if index is None:
-            return self.get_materialsuite_list().pop()
+            x = self.get_materialsuite_list().pop()
         else:
-            return self.get_materialsuite_list().pop(index)
+            x = self.get_materialsuite_list().pop(index)
+        log.debug("Popping MaterialSuite from Segment({}): {}".format(self.identifier, str(x)))
 
     def validate(self):
         for n_thing in self.materialsuite:
@@ -91,6 +91,7 @@ class Segment(Structure):
         return self._label
 
     def set_label(self, value):
+        log.debug("Setting Segment({}) label to {}".format(str(self.identifier), value))
         if '-' in value:
             raise ValueError("The character '-' is protected in segment " +
                              "identifier parts.")
@@ -101,6 +102,7 @@ class Segment(Structure):
         return self._run
 
     def set_run(self, value):
+        log.debug("Setting Segment({}) run to {}".format(str(self.identifier), str(value)))
         if isinstance(value, int):
             self._run = value
         else:
@@ -110,7 +112,10 @@ class Segment(Structure):
     def get_identifier(self):
         # The identifier is a composite of the label and the run number
         # separated by a dash
-        return self.get_label() + "-" + str(self.get_run())
+        if self.label and self.run:
+            return self.get_label() + "-" + str(self.get_run())
+        else:
+            return None
 
     materialsuite_list = property(get_materialsuite_list,
                                   set_materialsuite_list,

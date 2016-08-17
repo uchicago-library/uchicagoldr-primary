@@ -36,7 +36,7 @@ class FITsCreator(TechnicalMetadataCreator):
             'working_dir': str(self.working_dir),
             'timeout': self.timeout
         }
-        return "<FITsCreator {}>".format(dumps(attr_dict))
+        return "<FITsCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self):
         if not isinstance(self.get_source_materialsuite().get_premis(),

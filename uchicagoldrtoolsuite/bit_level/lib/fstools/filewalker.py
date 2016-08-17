@@ -59,7 +59,7 @@ class FileWalker(object):
             'inc_dirs': self.inc_dirs,
             'filter_pattern': str(self.filter_pattern)
         }
-        return "<FileWalker {}>".format(dumps(attr_dict))
+        return "<FileWalker {}>".format(dumps(attr_dict, sort_keys=True))
 
     def __iter__(self):
         """

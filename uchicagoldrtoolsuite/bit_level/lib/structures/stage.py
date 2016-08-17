@@ -48,9 +48,10 @@ class Stage(Structure):
         return self._identifier
 
     def set_identifier(self, identifier):
+        log.debug("Stage({}) identifier being set to {}".format(str(self.identifier), self.identifier))
         self._identifier = identifier
         log.debug(
-            "Stage ({}) identifier set to {}".format(str(self), identifier)
+            "Stage identifier set to {}".format(identifier)
         )
 
     def get_segment_list(self):
@@ -69,16 +70,18 @@ class Stage(Structure):
         if not isinstance(segment, Segment):
             raise ValueError('only Segments can be added to the segments_list')
         self._segment.append(segment)
-        log.debug("Added Segment to Stage: {}".format(str(segment)))
+        log.debug("Added Segment({}) to Stage({}): {}".format(segment.identifier, self.identifier, str(segment)))
 
     def get_segment(self, index):
         return self.get_segment_list()[index]
 
     def pop_segment(self, index=None):
         if index is None:
-            return self.get_segment_list().pop()
+            x = self.get_segment_list().pop()
         else:
-            return self.get_segment_list().pop(index)
+            x = self.get_segment_list().pop(index)
+        log.debug("Popped segment({}) from Stage({})".format(x.identifier, self.identifier))
+        return x
 
     def get_accessionrecord_list(self):
         return self._accessionrecord
@@ -94,16 +97,18 @@ class Stage(Structure):
 
     def add_accessionrecord(self, accrec):
         self._accessionrecord.append(accrec)
-        log.debug("Added accession record to Stage: {}".format(str(accrec)))
+        log.debug("Added accession record to Stage({}): {}".format(self.identifier, str(accrec)))
 
     def get_accessionrecord(self, index):
         return self.get_accessionrecord_list()[index]
 
     def pop_accessionrecord(self, index=None):
         if index is None:
-            return self.get_accessionrecord_list.pop()
+            x = self.get_accessionrecord_list.pop()
         else:
-            return self.get_accessionrecord_list.pop(index)
+            x = self.get_accessionrecord_list.pop(index)
+        log.debug("Popped accession record from Stage({}): {}".format(self.identifier, str(x)))
+        return x
 
     def get_adminnote_list(self):
         return self._adminnote
@@ -119,16 +124,18 @@ class Stage(Structure):
 
     def add_adminnote(self, adminnote):
         self.get_adminnote_list().append(adminnote)
-        log.debug("Added adminnote to Stage: {}".format(str(adminnote)))
+        log.debug("Added adminnote to Stage({}): {}".format(self.identifier, str(adminnote)))
 
     def get_adminnote(self, index):
         return self.get_adminnote_list()[index]
 
     def pop_adminnote(self, index=None):
         if index is None:
-            return self.get_adminnote_list().pop()
+            x = self.get_adminnote_list().pop()
         else:
-            return self.get_adminnote_list().pop(index)
+            x = self.get_adminnote_list().pop(index)
+        log.debug("Popped adminnote from Stage({}): {}".format(self.identifier, str(x)))
+        return x
 
     def get_legalnote_list(self):
         return self._legalnote
@@ -156,6 +163,7 @@ class Stage(Structure):
             return self.get_legalnote_list().pop(index)
 
     def validate(self):
+        log.debug("Validating Stage({})".format(self.identifier))
         for n_thing in self.segment_list:
             if isinstance(n_thing, Segment):
                 pass

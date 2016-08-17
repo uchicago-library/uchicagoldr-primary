@@ -52,7 +52,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             'eq_detect': self.eq_detect,
             'struct': str(self.get_struct())
         }
-        return "<FileSystemStageWriter {}>".format(dumps(attrib_dict))
+        return "<FileSystemStageWriter {}>".format(dumps(attrib_dict, sort_keys=True))
 
     def _make_containing_dir(self, path):
         some_dir = dirname(path)

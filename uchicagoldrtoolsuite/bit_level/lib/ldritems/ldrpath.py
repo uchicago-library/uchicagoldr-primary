@@ -36,7 +36,7 @@ class LDRPath(LDRItem):
             'item_name': self.item_name,
             'path': str(self.path)
         }
-        return "<LDRPath {}>".format(dumps(attrib_dict))
+        return "<LDRPath {}>".format(dumps(attrib_dict, sort_keys=True))
 
     def read(self, blocksize=1024*1000*100):
         log.debug("{} being read".format(str(self)))

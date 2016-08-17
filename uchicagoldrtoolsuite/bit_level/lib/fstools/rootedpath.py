@@ -54,4 +54,4 @@ class RootedPath(object):
         i_dict = {'path': str(self.path),
                   'root': self.root,
                   'fullpath': self.fullpath}
-        return "<RootedPath {}>".format(dumps(i_dict))
+        return "<RootedPath {}>".format(dumps(i_dict, sort_keys=True))

@@ -74,7 +74,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             'root': self.root,
             'path': str(self.path)
         }
-        return "<ExternalFileSystemSegmentPackager {}>".format(dumps(attr_dict))
+        return "<ExternalFileSystemSegmentPackager {}>".format(dumps(attr_dict, sort_keys=True))
 
     def package(self):
         """

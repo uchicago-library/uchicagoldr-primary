@@ -17,14 +17,14 @@ class PresformMaterialSuite(MaterialSuite):
                       'technicalmetadata_list', 'presform_list', 'extension']
 
     def __init__(self):
-        super().__init__()
         self._extension = None
+        super().__init__()
 
     def __repr__(self):
         attr_dict = {
             'content': str(self.get_content()),
             'premis': str(self.get_premis()),
-            'extension': self.get_extension()
+            'extension': self.extension
         }
         if self.technicalmetadata_list:
             attr_dict['technicalmetadata_list'] = [str(x) for x in self.technicalmetadata_list]
