@@ -1,7 +1,8 @@
 from os import remove
-from os.path import getsize
 from pathlib import Path
+from json import dumps
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.ldritem import LDRItem
 
 
@@ -11,6 +12,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class LDRPath(LDRItem):
@@ -25,13 +29,27 @@ class LDRPath(LDRItem):
             self.item_name = str(self.path.relative_to(root))
         self.pipe = None
         self.is_flo = True
+        log.debug("LDRPath spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attrib_dict = {
+            'item_name': self.item_name,
+            'path': str(self.path)
+        }
+        return "<LDRPath {}>".format(dumps(attrib_dict, sort_keys=True))
 
     def read(self, blocksize=1024*1000*100):
+        log.debug("{} being read".format(str(self)))
         if not self.pipe:
             raise OSError('{} not open for reading'.format(str(self.path)))
         return self.pipe.read(blocksize)
 
     def open(self, mode='rb', buffering=-1, errors=None):
+        log.debug(
+            "{} opened. Mode: {}. Buffering {}".format(
+                str(self), mode, str(buffering)
+            )
+        )
         if "t" in mode:
             raise OSError('LDR Items do not support text mode')
         if mode == 'r' or \
@@ -43,6 +61,7 @@ class LDRPath(LDRItem):
         return self
 
     def close(self):
+        log.debug("{} closed".format(str(self)))
         if not self.pipe:
             raise ValueError("file {} is already closed".format(self.item_name))
         else:
@@ -50,10 +69,12 @@ class LDRPath(LDRItem):
             self.pipe = None
 
     def exists(self):
+        log.debug("{} existence checked".format(str(self)))
         return self.path.exists()
 
     def delete(self, final=False):
         if final:
+            log.debug("{} deleted".format(str(self)))
             if self.exists():
                 remove(str(self.path))
             if not self.exists():
@@ -61,15 +82,18 @@ class LDRPath(LDRItem):
             else:
                 return (False, "{} exists.".format(self.item_name))
         else:
+            log.debug("{} pseudo-deleted".format(str(self)))
             return (False, "{} will be removed.".format(self.item_name))
 
     def write(self, data):
+        log.debug("Writing data to {}".format(str(self)))
         if self.pipe:
             self.pipe.write(data)
             return True
         else:
             raise ValueError("file {} is not opened and " +
                              "therefore cannot write".format(self.item_name))
+
     def get_size(self, buffering=1024*1000*100):
         """
         Overwrite LDRItem.get_size(), because this is faster.
@@ -77,6 +101,7 @@ class LDRPath(LDRItem):
         Preserve the buffering kwarg for compatability, even though
         we don't use it for anything
         """
+        log.debug("{} size checked".format(str(self)))
         if self.exists():
             return self.path.stat().st_size
         else:

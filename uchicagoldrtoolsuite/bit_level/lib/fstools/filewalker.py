@@ -1,7 +1,9 @@
 from os import scandir
 from os.path import relpath
 from re import compile as re_compile
+from json import dumps
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .rootedpath import RootedPath
 
 
@@ -11,6 +13,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class FileWalker(object):
@@ -37,10 +42,24 @@ class FileWalker(object):
         immediately defines the item attribute with the genexp of walking the
         directory for all files contained inside that directory path.
         """
+        log.debug(
+            "FileWalker spawned. " +
+            "Path = {}. Filter Pattern = {}. Inc_dirs = {}".format(
+                directory_path, str(filter_pattern), str(inc_dirs)
+            )
+        )
         self.directory = directory_path
         self.filter_pattern = filter_pattern
         self.inc_dirs = inc_dirs
         self.items = self.walk_directory()
+
+    def __repr__(self):
+        attr_dict = {
+            'directory': str(self.directory),
+            'inc_dirs': self.inc_dirs,
+            'filter_pattern': str(self.filter_pattern)
+        }
+        return "<FileWalker {}>".format(dumps(attr_dict, sort_keys=True))
 
     def __iter__(self):
         """

@@ -1,7 +1,11 @@
 from os.path import join, dirname, expanduser, expandvars
-from sys import stdout
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from uchicagoldrtoolsuite.core.lib.masterlog import \
+    spawn_logger, \
+    activate_master_log_file, \
+    activate_job_log_file, \
+    activate_stdout_log
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.externalpackagers.externalfilesystemsegmentpackager import \
@@ -14,6 +18,11 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
+activate_master_log_file()
+activate_job_log_file()
 
 
 def launch():
@@ -78,6 +87,9 @@ class Stager(CLIApp):
         # Parse arguments into args namespace
         args = self.parser.parse_args()
 
+        # Fire a stdout handler at our preferred verbosity
+        activate_stdout_log(args.verbosity)
+
         # Set conf
         self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
 
@@ -120,19 +132,18 @@ class Stager(CLIApp):
             root=root,
             filter_pattern=args.filter_pattern)
 
-        stdout.write("Source: " + args.directory+"\n")
-        stdout.write("Source Root: " + root+"\n")
-        stdout.write("Stage: " + join(destination_root, args.staging_id) +
-                     "\n")
-        stdout.write("Segment: " + args.prefix + "-" + str(seg_num) + "\n")
+        log.info("Source: " + args.directory)
+        log.info("Source Root: " + root)
+        log.info("Stage: " + join(destination_root, args.staging_id))
+        log.info("Segment: " + args.prefix + "-" + str(seg_num))
 
-        stdout.write("Processing...\n")
+        log.info("Processing...")
 
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
         writer = FileSystemStageWriter(stage, destination_root, eq_detect=args.eq_detect)
         writer.write()
-        stdout.write("Complete\n")
+        log.info("Complete")
 
 
 if __name__ == "__main__":

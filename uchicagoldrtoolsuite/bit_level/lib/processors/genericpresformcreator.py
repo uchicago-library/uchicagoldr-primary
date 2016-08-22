@@ -2,10 +2,12 @@ from tempfile import TemporaryDirectory
 from uuid import uuid1
 from os import makedirs
 from os.path import join
+from json import dumps
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..ldritems.ldrpath import LDRPath
 from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldritemcopier import LDRItemCopier
@@ -18,6 +20,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class GenericPresformCreator(object):
@@ -40,6 +45,15 @@ class GenericPresformCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
         self.converters = converters
+        log.debug("GenericPresformCreator spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'stage': str(self.stage),
+            'working_dir_path': self.working_dir_path,
+            'converters': [str(x) for x in self.converters]
+        }
+        return "<GenericPresformCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self, skip_existing=False, presform_presforms=False):
         for segment in self.stage.segment_list:

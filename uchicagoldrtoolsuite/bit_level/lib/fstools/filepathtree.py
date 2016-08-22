@@ -3,6 +3,7 @@ from re import compile as re_compile
 
 from treelib import Tree
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .filewalker import FileWalker
 from .rootedpath import RootedPath
 
@@ -13,6 +14,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class FilePathTree(object):
@@ -37,6 +41,12 @@ class FilePathTree(object):
         * leaf_dirs (bool): Whether or not to include directories with no
         contents in the tree
         """
+        log.debug(
+            "Spawning FilePathTree. " +
+            "Path = {}. filter_pattern = {}. leaf_dirs = {}".format(
+                str(path), filter_pattern, str(leaf_dirs)
+            )
+        )
         self.tree = Tree()
         if filter_pattern is not None:
             self.filter_pattern = re_compile(filter_pattern)

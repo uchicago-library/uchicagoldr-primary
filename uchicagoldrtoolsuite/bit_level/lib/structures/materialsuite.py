@@ -1,3 +1,6 @@
+from json import dumps
+
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
 
@@ -8,6 +11,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class MaterialSuite(Structure):
@@ -24,31 +30,43 @@ class MaterialSuite(Structure):
         self._premis = None
         self._technicalmetadata = []
         self._presform = None
+        log.debug("MaterialSuite spawned: {}".format(str(self)))
 
     def __repr__(self):
-        repr_dict = {}
-        repr_dict['content'] = self.get_content()
-        repr_dict['premis'] = self.get_premis()
-        repr_dict['technicalmetadata'] = self.get_technicalmetadata_list()
-        repr_dict['presform'] = self.get_presform_list()
-        return str(repr_dict)
+        attr_dict = {
+            'content': str(self.get_content()),
+            'premis': str(self.get_premis())
+        }
+        if self.technicalmetadata_list:
+            attr_dict['technicalmetadata_list'] = [str(x) for x in self.technicalmetadata_list]
+        else:
+            attr_dict['technicalmetadata_list'] = None
+        if self.presform_list:
+            attr_dict['presform_list'] = [str(x) for x in self.presform_list]
+        else:
+            attr_dict['presform_list'] = None
+        return "<MaterialSuite {}>".format(dumps(attr_dict, sort_keys=True))
 
     def set_content(self, content):
+        log.debug("Setting content in {} to {}".format(str(self), str(content)))
         self._content = content
 
     def get_content(self):
         return self._content
 
     def del_content(self):
+        log.debug("Deleting content from MaterialSuite: {}".format(str(self)))
         self._content = None
 
     def set_premis(self, premis):
+        log.debug("Setting PREMIS in {} to {}".format(str(self), str(premis)))
         self._premis = premis
 
     def get_premis(self):
         return self._premis
 
     def del_premis(self):
+        log.debug("Deleting PREMIS from MaterialSuite: {}".format(str(self)))
         self._premis = None
 
     def get_technicalmetadata_list(self):
@@ -62,7 +80,7 @@ class MaterialSuite(Structure):
 
     def del_technicalmetadata_list(self):
         while self.get_technicalmetadata_list():
-            self.get_technicalmetadata_list().pop()
+            self.pop_technicalmetadata()
 
     def add_technicalmetadata(self, technicalmetadata, index=None):
         if self.get_technicalmetadata_list() is None:
@@ -70,15 +88,17 @@ class MaterialSuite(Structure):
         if index is None:
             index = len(self.get_technicalmetadata_list())
         self.get_technicalmetadata_list().insert(index, technicalmetadata)
+        log.debug("Added technicalmetadata({}) to {}".format(str(technicalmetadata), str(self)))
 
     def get_technicalmetadata(self, index):
         return self.get_technicalmetadata_list()[index]
 
     def pop_technicalmetadata(self, index=None):
         if index is None:
-            return self.get_technicalmetadata_list().pop()
+            x = self.get_technicalmetadata_list().pop()
         else:
-            return self.get_technicalmetadata_list.pop(index)
+            x = self.get_technicalmetadata_list.pop(index)
+        log.debug("Popped technicalmetadata({}) from {}".format(str(x), str(self)))
 
     def get_presform_list(self):
         return self._presform
@@ -90,6 +110,8 @@ class MaterialSuite(Structure):
             self.add_presform(x)
 
     def del_presform_list(self):
+        while self.presform_list:
+            self.pop_presform()
         self._presform = None
 
     def add_presform(self, presform, index=None):
@@ -98,15 +120,20 @@ class MaterialSuite(Structure):
         if index is None:
             index = len(self.get_technicalmetadata_list())
         self.get_presform_list().insert(index, presform)
+        log.debug("Added presform({}) to {}".format(str(presform), str(self)))
 
     def get_presform(self, index):
         return self.get_presform_list()[index]
 
     def pop_presform(self, index=None):
         if index is None:
-            return self.get_presform_list().pop()
+            x = self.get_presform_list().pop()
         else:
-            return self.get_presform_list().pop(index)
+            x = self.get_presform_list().pop(index)
+        if len(self.presform_list == 0):
+            self._presform = None
+        log.debug("Popping presform({}) from {}".format(str(x), str(self)))
+        return x
 
     def validate(self):
         if not isinstance(self.get_content(), LDRItem):

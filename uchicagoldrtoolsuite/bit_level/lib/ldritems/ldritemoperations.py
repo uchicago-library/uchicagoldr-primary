@@ -1,13 +1,9 @@
-from hashlib import md5
 from os.path import join, split
 from tempfile import TemporaryFile
-from urllib.request import urlopen, URLError
-from uuid import uuid1
 from hashlib import md5, sha256
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from .abc.ldritem import LDRItem
-
 from .ldrpath import LDRPath
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -18,6 +14,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+log = spawn_logger(__name__)
 
 
 def read_metadata_from_file_object(attribute_string,
@@ -92,7 +89,7 @@ def get_an_agent_id(id_string, in_package=True):
             return n_line.split(b",")[0].decode("utf-8")
     new_id = IDBuilder().build("premisID").show()
     with LDRPath("/home/tdanstrom/premis/agents.txt").\
-      open('ab') as writing_file:
+            open('ab') as writing_file:
         new_line_string = "\n{},{}".\
                           format(new_id[1], id_string.decode('utf-8'))
         new_line_string = new_line_string.encode('utf-8')
@@ -101,6 +98,7 @@ def get_an_agent_id(id_string, in_package=True):
 
 
 def move(src, dst, clobber=False, eq_detect='bytes'):
+    from .ldritemcopier import LDRItemCopier
     """
     a variation on copy which rather than merely copy the byte-stream of
     the origin into the destination and deletes the origin
@@ -111,15 +109,17 @@ def move(src, dst, clobber=False, eq_detect='bytes'):
     2. destination_loc (LDRItem): destination_loc is where the source
     should be moved
     """
+    log.debug("Moving {} to {}".format(src.item_name, dst.item_name))
     c = LDRItemCopier(src, dst, clobber=clobber, eq_detect=eq_detect)
     r = c.copy()
     if not r['src_eqs_dst']:
         raise OSError("src != dst")
-    origin_loc.delete(final=True)
+    src.delete(final=True)
     if not src.exists() and dst.exists():
         return True
     else:
         return False
+
 
 def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
     """
@@ -138,6 +138,8 @@ def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
 
     hash_str (str): The str-ified hash hexdigest
     """
+
+    log.debug("Hashing {} with algo={}".format(ldritem.item_name, algo))
 
     supported_hashes = [
         "md5",
@@ -167,5 +169,3 @@ def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
         hash_str = str(hash_hex)
 
     return hash_str
-
-

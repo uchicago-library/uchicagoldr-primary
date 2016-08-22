@@ -1,5 +1,8 @@
 from pathlib import Path
 from os.path import split
+from json import dumps
+
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 
 
 __author__ = "Brian Balsamo"
@@ -8,6 +11,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class RootedPath(object):
@@ -42,3 +48,10 @@ class RootedPath(object):
         self.path = _path.relative_to(self.root)
         if self.path == ".":
             self.path = ""
+        log.debug("RootedPath spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        i_dict = {'path': str(self.path),
+                  'root': self.root,
+                  'fullpath': self.fullpath}
+        return "<RootedPath {}>".format(dumps(i_dict, sort_keys=True))

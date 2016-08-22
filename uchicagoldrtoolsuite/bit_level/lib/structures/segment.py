@@ -1,3 +1,6 @@
+from json import dumps
+
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from .materialsuite import MaterialSuite
 
@@ -8,6 +11,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class Segment(Structure):
@@ -31,7 +37,6 @@ class Segment(Structure):
     required_parts = ['identifier', 'materialsuite', 'label', 'run']
 
     def __init__(self, label, run_no):
-
         self._label = None
         self._run = None
         self._materialsuite = []
@@ -39,13 +44,14 @@ class Segment(Structure):
         self.set_label(label)
         self.set_run(run_no)
         self.set_materialsuite_list([])
+        log.debug("Segment spawned: {}".format(str(self)))
 
     def __repr__(self):
-        repr_str = "<{}".format(self.get_identifier())
-        for x in self.get_materialsuite_list():
-            repr_str = repr_str + str(x)
-        repr_str = repr_str + ">"
-        return repr_str
+        attr_dict = {
+            'identifier': self.identifier,
+            'materialsuite_list': [str(x) for x in self.materialsuite_list]
+        }
+        return "<Segment {}>".format(dumps(attr_dict, sort_keys=True))
 
     def get_materialsuite_list(self):
         return self._materialsuite
@@ -61,15 +67,17 @@ class Segment(Structure):
 
     def add_materialsuite(self, x):
         self._materialsuite.append(x)
+        log.debug("Added MaterialSuite to Segment({}): {}".format(self.identifier, str(x)))
 
     def get_materialsuite(self, index):
         return self.get_materialsuite_list()[index]
 
     def pop_materialsuite(self, index=None):
         if index is None:
-            return self.get_materialsuite_list().pop()
+            x = self.get_materialsuite_list().pop()
         else:
-            return self.get_materialsuite_list().pop(index)
+            x = self.get_materialsuite_list().pop(index)
+        log.debug("Popping MaterialSuite from Segment({}): {}".format(self.identifier, str(x)))
 
     def validate(self):
         for n_thing in self.materialsuite:
@@ -83,6 +91,7 @@ class Segment(Structure):
         return self._label
 
     def set_label(self, value):
+        log.debug("Setting Segment({}) label to {}".format(str(self.identifier), value))
         if '-' in value:
             raise ValueError("The character '-' is protected in segment " +
                              "identifier parts.")
@@ -93,6 +102,7 @@ class Segment(Structure):
         return self._run
 
     def set_run(self, value):
+        log.debug("Setting Segment({}) run to {}".format(str(self.identifier), str(value)))
         if isinstance(value, int):
             self._run = value
         else:
@@ -100,7 +110,12 @@ class Segment(Structure):
                              "must be an integer")
 
     def get_identifier(self):
-        return self.get_label() + "-" + str(self.get_run())
+        # The identifier is a composite of the label and the run number
+        # separated by a dash
+        if self.label and self.run:
+            return self.get_label() + "-" + str(self.get_run())
+        else:
+            return None
 
     materialsuite_list = property(get_materialsuite_list,
                                   set_materialsuite_list,

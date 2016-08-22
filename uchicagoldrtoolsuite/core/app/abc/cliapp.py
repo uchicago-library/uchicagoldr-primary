@@ -57,10 +57,10 @@ class CLIApp(App, metaclass=ABCMeta):
         # Always allow the user to specify verbosity
         parser.add_argument(
             '-v',
-            '--verbose',
-            action='count',
-            default=0,
-            help="Cause the program to output verbosely."
+            '--verbosity',
+            help="Cause the program to output verbosely. Options: " + \
+            "'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.",
+            default='INFO'
         )
         self.parser = parser
 

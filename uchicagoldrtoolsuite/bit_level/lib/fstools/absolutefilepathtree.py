@@ -1,5 +1,6 @@
 from os.path import isabs, isfile, isdir, split
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .filepathtree import FilePathTree
 
 
@@ -9,6 +10,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class AbsoluteFilePathTree(FilePathTree):
@@ -22,6 +26,12 @@ class AbsoluteFilePathTree(FilePathTree):
 
         [see FilePathTree.__init__()]
         """
+        log.debug(
+            "Spawning AbsoluteFilePathTree. " +
+            "Path = {}. Filter Pattern = {}. Leaf Dirs = {}".format(
+                str(path), filter_pattern, str(leaf_dirs)
+            )
+        )
         if path is not None:
             if not isabs(path):
                 raise ValueError()

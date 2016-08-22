@@ -15,35 +15,29 @@ class Retriever(metaclass=ABCMeta):
 
     Retrievers interact with a data location in order to return objects.
 
-    __Attribs__
-
-    * _supplied_uuid (str): The supplied uuid to retrieve
-
-    __Methods__
-
-    * _set_supplied_uuid(str): Set the supplied uuid
-        * this should almost assuredly be called in every concrete classes
-        init
-
-    * _get_supplied_uuid(): Returns the supplied uuid value
-
     __Abstract Methods__
 
     * retrieve(): Retrieves the supplied uuid
     """
 
-    _supplied_uuid = None
-
     @abstractmethod
-    def retrieve(self, uuid=None):
+    def retrieve(self, request):
+        if not self.verify_request(request):
+            raise ValueError("Unverified request!")
         pass
 
-    def _set_supplied_uuid(self, uuid):
-        if not isinstance(uuid, str):
-            raise ValueError("Supplied uuids must be strings")
-        self._supplied_uuid = uuid
+    @abstractmethod
+    def verify_request(self, r):
+        pass
 
-    def _get_supplied_uuid(self):
-        return self._supplied_uuid
+    @abstractmethod
+    def get_premis(self, uuid):
+        pass
 
-    property(_get_supplied_uuid, _set_supplied_uuid)
+    @abstractmethod
+    def get_content(self, uuid):
+        pass
+
+    @abstractmethod
+    def get_techmd(self, uuid, index=0):
+        pass

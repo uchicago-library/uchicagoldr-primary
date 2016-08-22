@@ -1,4 +1,5 @@
 from tempfile import TemporaryDirectory
+from json import dumps
 from os.path import join
 from uuid import uuid1
 
@@ -6,6 +7,7 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..ldritems.ldrpath import LDRPath
 from ..misc.premisextensionnodes import Restriction
 from ..misc.premisextensionnodes import RightsExtensionIdentifier
@@ -20,6 +22,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class GenericPREMISRestrictionSetter(object):
@@ -54,14 +59,54 @@ class GenericPREMISRestrictionSetter(object):
         self.donor_stipulations = donor_stipulations
         self.restrictingAgentIds = restrictingAgentIds
         self.active = active
+        log.debug("GenericPREMISRestrictionSetter spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'stage': str(self.stage),
+            'working_dir_path': self.working_dir_path,
+            'restriction': self.restriction,
+            'active': self.active
+        }
+
+        if self.reasons:
+            attr_dict['reasons'] = self.reasons
+        else:
+            attr_dict['reasons'] = None
+        if self.donor_stipulations:
+            attr_dict['donor_stipulations'] = self.donor_stipulations
+        else:
+            attr_dict['donor_stipulations'] = None
+        if self.restrictingAgentIds:
+            attr_dict['restricting_agent_ids'] = self.restrictingAgentIds
+        else:
+            attr_dict['restricting_agent_ids'] = None
+
+        return "<GenericPREMISRestrictionSetter {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self):
+        log.debug("Beginning PREMIS restriction setting.")
+        s_num = 0
         for segment in self.stage.segment_list:
+            s_num += 1
+            ms_num = 0
             for materialsuite in segment.materialsuite_list:
+                ms_num += 1
+                log.debug(
+                    "Processing Segment {}/{}, MaterialSuite {}/{}".format(
+                        str(s_num), str(len(self.stage.segment_list)),
+                        str(ms_num), str(len(segment.materialsuite_list))
+                    )
+                )
                 if not materialsuite.get_premis():
                     raise AttributeError("All material suites must have " +
                                          "PREMIS records in order to set " +
                                          "restrictions in them.")
+                log.debug(
+                    "Setting restriction in PREMIS for {}.".format(
+                        materialsuite.content.item_name
+                    )
+                )
                 materialsuite.set_premis(
                     self.instantiate_and_set_restriction(
                         materialsuite.get_premis()
@@ -73,6 +118,11 @@ class GenericPREMISRestrictionSetter(object):
                             raise AttributeError("All material suites must have " +
                                                 "PREMIS records in order to set " +
                                                 "restrictions in them.")
+                        log.debug(
+                            "Setting restriction in PREMIS for {}.".format(
+                                presform_ms.content.item_name
+                            )
+                        )
                         presform_ms.set_premis(
                             self.instantiate_and_set_restriction(
                                 presform_ms.get_premis()
@@ -91,16 +141,19 @@ class GenericPREMISRestrictionSetter(object):
 
         * return_item (LDRItem): The LDRItem of the updated PREMIS record
         """
+        log.debug("Temporarily instantiating PREMIS file")
         recv_file = join(self.working_dir_path, str(uuid1()))
         recv_item = LDRPath(recv_file)
         c = LDRItemCopier(item, recv_item)
         c.copy()
 
+        log.debug("Parsing existing PREMIS")
         record = PremisRecord(frompath=recv_file)
 
         # Pull the object id out here
         obj_to_link = record.get_object_list()[0]
 
+        log.debug("Inserting restriction elements.")
         if record.get_rights_list():
             rights = record.get_rights_list()[0]
             rights.add_rightsExtension(

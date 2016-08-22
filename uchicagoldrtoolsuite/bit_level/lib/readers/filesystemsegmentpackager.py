@@ -1,7 +1,9 @@
 from os.path import join
 from os.path import isfile
 from re import compile as re_compile
+from json import dumps
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..fstools.rootedpath import RootedPath
 from ..fstools.filepathtree import FilePathTree
 from ..structures.segment import Segment
@@ -16,6 +18,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class FileSystemSegmentPackager(SegmentPackager):
@@ -48,8 +53,21 @@ class FileSystemSegmentPackager(SegmentPackager):
                                       'data',
                                       label_text + "-" + str(label_number))
         self.set_struct(Segment(label_text, int(label_number)))
+        log.debug("FileSystemSegmentPackager spawnwed: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'stage_env_path': self.stage_env_path,
+            'stage_id': self.stage_id,
+            'label': self.label_text,
+            'run': self.label_number,
+            'segment_data_root': self.segment_data_root,
+            'msuite_packager': str(self.get_msuite_packager())
+        }
+        return "<FileSystemSegmentPackager {}>".format(dumps(attr_dict, sort_keys=True))
 
     def package(self):
+        log.debug("Packaging")
         presform_filename_pattern = re_compile(
             "^.*\.presform(\.[a-zA-Z0-9]*)?$"
         )
@@ -57,6 +75,7 @@ class FileSystemSegmentPackager(SegmentPackager):
             self.segment_data_root+"/",
             root=self.segment_data_root
         )
+        log.debug("Creating tree of segment")
         tree = FilePathTree(segment_rooted_path)
         for x in tree.get_paths():
             if not isfile(join(self.segment_data_root, x)):
@@ -73,4 +92,5 @@ class FileSystemSegmentPackager(SegmentPackager):
                 x
             ).package()
             self.get_struct().add_materialsuite(ms)
+        log.debug("Packaging complete")
         return self.get_struct()

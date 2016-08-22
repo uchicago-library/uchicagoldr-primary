@@ -87,7 +87,8 @@ setup(
         'pypremis',
         'controlledvocab',
         'hierarchicalrecord',
-        'requests'
+        'requests',
+        'fasteners'
     ],
     extras_require = {
         'magic_mimes': ["python-magic"]

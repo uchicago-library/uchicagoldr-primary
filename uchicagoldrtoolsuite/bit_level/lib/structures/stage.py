@@ -1,3 +1,5 @@
+from json import dumps
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from .segment import Segment
 from ..ldritems.abc.ldritem import LDRItem
@@ -9,6 +11,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class Stage(Structure):
@@ -27,25 +32,27 @@ class Stage(Structure):
         self._adminnote = []
         self._legalnote = []
         self.set_identifier(param1)
+        log.debug("Stage spawned: {}".format(str(self)))
 
     def __repr__(self):
-        repr_str = "<ID: {}".format(self.get_identifier())
-        for x in self.get_segment_list():
-            repr_str = repr_str + str(x)
-        for x in self.get_accessionrecord_list():
-            repr_str = repr_str + str(x)
-        for x in self.get_adminnote_list():
-            repr_str = repr_str + str(x)
-        for x in self.get_legalnote_list():
-            repr_str = repr_str + str(x)
-        repr_str = repr_str + ">"
-        return repr_str
+        attr_dict = {
+            'identifier': self.identifier,
+            'segment_list': [str(x) for x in self.segment_list],
+            'accessionrecord_list': [str(x) for x in self.accessionrecord_list],
+            'adminnote_list': [str(x) for x in self.adminnote_list],
+            'legalnote_list': [str(x) for x in self.legalnote_list]
+        }
+        return "<Stage {}>".format(dumps(attr_dict, sort_keys=True))
 
     def get_identifier(self):
         return self._identifier
 
     def set_identifier(self, identifier):
+        log.debug("Stage({}) identifier being set to {}".format(str(self.identifier), self.identifier))
         self._identifier = identifier
+        log.debug(
+            "Stage identifier set to {}".format(identifier)
+        )
 
     def get_segment_list(self):
         return self._segment
@@ -63,15 +70,18 @@ class Stage(Structure):
         if not isinstance(segment, Segment):
             raise ValueError('only Segments can be added to the segments_list')
         self._segment.append(segment)
+        log.debug("Added Segment({}) to Stage({}): {}".format(segment.identifier, self.identifier, str(segment)))
 
     def get_segment(self, index):
         return self.get_segment_list()[index]
 
     def pop_segment(self, index=None):
         if index is None:
-            return self.get_segment_list().pop()
+            x = self.get_segment_list().pop()
         else:
-            return self.get_segment_list().pop(index)
+            x = self.get_segment_list().pop(index)
+        log.debug("Popped segment({}) from Stage({})".format(x.identifier, self.identifier))
+        return x
 
     def get_accessionrecord_list(self):
         return self._accessionrecord
@@ -87,15 +97,18 @@ class Stage(Structure):
 
     def add_accessionrecord(self, accrec):
         self._accessionrecord.append(accrec)
+        log.debug("Added accession record to Stage({}): {}".format(self.identifier, str(accrec)))
 
     def get_accessionrecord(self, index):
         return self.get_accessionrecord_list()[index]
 
     def pop_accessionrecord(self, index=None):
         if index is None:
-            return self.get_accessionrecord_list.pop()
+            x = self.get_accessionrecord_list.pop()
         else:
-            return self.get_accessionrecord_list.pop(index)
+            x = self.get_accessionrecord_list.pop(index)
+        log.debug("Popped accession record from Stage({}): {}".format(self.identifier, str(x)))
+        return x
 
     def get_adminnote_list(self):
         return self._adminnote
@@ -111,15 +124,18 @@ class Stage(Structure):
 
     def add_adminnote(self, adminnote):
         self.get_adminnote_list().append(adminnote)
+        log.debug("Added adminnote to Stage({}): {}".format(self.identifier, str(adminnote)))
 
     def get_adminnote(self, index):
         return self.get_adminnote_list()[index]
 
     def pop_adminnote(self, index=None):
         if index is None:
-            return self.get_adminnote_list().pop()
+            x = self.get_adminnote_list().pop()
         else:
-            return self.get_adminnote_list().pop(index)
+            x = self.get_adminnote_list().pop(index)
+        log.debug("Popped adminnote from Stage({}): {}".format(self.identifier, str(x)))
+        return x
 
     def get_legalnote_list(self):
         return self._legalnote
@@ -135,6 +151,7 @@ class Stage(Structure):
 
     def add_legalnote(self, legalnote):
         self.get_legalnote_list().append(legalnote)
+        log.debug("Added legalnote to Stage: {}".format(str(legalnote)))
 
     def get_legalnote(self, index):
         return self.get_legalnote_list()[index]
@@ -146,6 +163,7 @@ class Stage(Structure):
             return self.get_legalnote_list().pop(index)
 
     def validate(self):
+        log.debug("Validating Stage({})".format(self.identifier))
         for n_thing in self.segment_list:
             if isinstance(n_thing, Segment):
                 pass

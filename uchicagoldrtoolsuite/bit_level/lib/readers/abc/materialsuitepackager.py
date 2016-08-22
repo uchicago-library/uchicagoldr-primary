@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABCMeta
 
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.packager import Packager
 from ...structures.materialsuite import MaterialSuite
 
@@ -10,6 +11,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class MaterialSuitePackager(Packager, metaclass=ABCMeta):
@@ -51,6 +55,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         """
         default package implementation
         """
+        log.debug("Packaging")
         ms = self.get_struct()
         try:
             val = self.get_content()
@@ -76,4 +81,5 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
                 ms.set_technicalmetadata_list(val)
         except NotImplementedError:
             pass
+        log.debug("Packaging complete")
         return ms
