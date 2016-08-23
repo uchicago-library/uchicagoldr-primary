@@ -130,7 +130,6 @@ class LDRItemCopier(object):
         (bool): comparison functions should return a bool
         """
 
-
         if eq_detect is None:
             eq_detect = self.eq_detect
 

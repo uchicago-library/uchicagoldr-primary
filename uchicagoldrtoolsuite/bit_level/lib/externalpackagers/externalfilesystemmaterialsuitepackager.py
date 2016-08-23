@@ -40,14 +40,19 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         super().__init__()
         self.orig = orig
         self.root = root
-        log.debug("ExternalFileSystemMaterialSuitePackager spawned. {}".format(str(self)))
+        log.debug(
+            "ExternalFileSystemMaterialSuitePackager spawned. {}".format(
+                str(self)
+            )
+        )
 
     def __repr__(self):
         attrib_dict = {
             'orig': self.orig,
             'root': self.root
         }
-        return "<ExternalFileSystemMaterialSuitePackager {}>".format(dumps(attrib_dict, sort_keys=True))
+        return "<ExternalFileSystemMaterialSuitePackager {}>".format(
+            dumps(attrib_dict, sort_keys=True))
 
     def get_content(self):
         """

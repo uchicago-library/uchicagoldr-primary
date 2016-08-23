@@ -117,7 +117,8 @@ class OfficeToPDFConverter(Converter):
             'claimed_mimes': self.claimed_mimes
         }
 
-        return "<OfficeToPDFConverter {}>".format(dumps(attrib_dict, sort_keys=True))
+        return "<OfficeToPDFConverter {}>".format(
+            dumps(attrib_dict, sort_keys=True))
 
     def convert(self):
         """
@@ -127,8 +128,12 @@ class OfficeToPDFConverter(Converter):
         """
         log.debug("Building conversion environment for {}".format(str(self)))
         initd_premis_file = join(self.working_dir, str(uuid1()))
-        log.debug("Attempting to instantiate PREMIS @ {}".format(initd_premis_file))
-        LDRItemCopier(self.source_materialsuite.premis, LDRPath(initd_premis_file)).copy()
+        log.debug(
+            "Attempting to instantiate PREMIS @ {}".format(initd_premis_file)
+        )
+        LDRItemCopier(
+            self.source_materialsuite.premis, LDRPath(initd_premis_file)
+        ).copy()
         log.debug("Reading instantiated PREMIS")
         orig_premis = PremisRecord(frompath=initd_premis_file)
         orig_name = orig_premis.get_object_list()[0].get_originalName()
