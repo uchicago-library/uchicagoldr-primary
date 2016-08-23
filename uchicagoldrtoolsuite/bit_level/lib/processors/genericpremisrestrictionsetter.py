@@ -33,7 +33,8 @@ class GenericPREMISRestrictionSetter(object):
     restriction node in each of their records
     """
     def __init__(self, stage, restriction, reasons=None,
-                 donor_stipulations=None, restrictingAgentIds=None, active=True):
+                 donor_stipulations=None, restrictingAgentIds=None,
+                 active=True):
         """
         spawn a restriction setter
 
@@ -59,7 +60,9 @@ class GenericPREMISRestrictionSetter(object):
         self.donor_stipulations = donor_stipulations
         self.restrictingAgentIds = restrictingAgentIds
         self.active = active
-        log.debug("GenericPREMISRestrictionSetter spawned: {}".format(str(self)))
+        log.debug(
+            "GenericPREMISRestrictionSetter spawned: {}".format(str(self))
+        )
 
     def __repr__(self):
         attr_dict = {
@@ -82,7 +85,8 @@ class GenericPREMISRestrictionSetter(object):
         else:
             attr_dict['restricting_agent_ids'] = None
 
-        return "<GenericPREMISRestrictionSetter {}>".format(dumps(attr_dict, sort_keys=True))
+        return "<GenericPREMISRestrictionSetter {}>".format(
+            dumps(attr_dict, sort_keys=True))
 
     def process(self):
         log.debug("Beginning PREMIS restriction setting.")
@@ -115,9 +119,10 @@ class GenericPREMISRestrictionSetter(object):
                 if materialsuite.get_presform_list():
                     for presform_ms in materialsuite.get_presform_list():
                         if not presform_ms.get_premis():
-                            raise AttributeError("All material suites must have " +
-                                                "PREMIS records in order to set " +
-                                                "restrictions in them.")
+                            raise AttributeError("All material suites must " +
+                                                 "have PREMIS records in " +
+                                                 "order to set restrictions" +
+                                                 "in them.")
                         log.debug(
                             "Setting restriction in PREMIS for {}.".format(
                                 presform_ms.content.item_name
@@ -228,10 +233,8 @@ class GenericPREMISRestrictionSetter(object):
                                donor_stipulation=None,
                                restrictingAgentIds=None):
 
-        restrictedObjectIdentifier = self.build_restrictedObjectIdentifierFromObj(
-            obj_to_link
-        )
-
+        restrictedObjectIdentifier = \
+            self.build_restrictedObjectIdentifierFromObj(obj_to_link)
 
         restrictionNode = Restriction(restriction_code, str(active),
                                       restrictedObjectIdentifier)
@@ -247,8 +250,10 @@ class GenericPREMISRestrictionSetter(object):
         return restrictionNode
 
     def build_restrictedObjectIdentifierFromObj(self, obj_to_link):
-        objIDType = obj_to_link.get_objectIdentifier(0).get_objectIdentifierType()
-        objIDValue = obj_to_link.get_objectIdentifier(0).get_objectIdentifierValue()
+        objIDType = \
+            obj_to_link.get_objectIdentifier(0).get_objectIdentifierType()
+        objIDValue = \
+            obj_to_link.get_objectIdentifier(0).get_objectIdentifierValue()
         restrictedObjectIdentifier = RestrictedObjectIdentifier(
             objIDType,
             objIDValue

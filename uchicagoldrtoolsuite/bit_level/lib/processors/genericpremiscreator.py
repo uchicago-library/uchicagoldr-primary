@@ -28,8 +28,10 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+
 log = spawn_logger(__name__)
 eh = ExceptionHandler()
+
 
 class GenericPREMISCreator(object):
     """
@@ -52,7 +54,7 @@ class GenericPREMISCreator(object):
         self.working_dir_path = self.working_dir.name
         log.debug(
             "GenericPREMISCreator created tmpdir @ {}".format(
-            self.working_dir_path)
+                self.working_dir_path)
         )
         log.debug("GenericPREMISCreator spawned: {}".format(str(self)))
 
@@ -61,7 +63,8 @@ class GenericPREMISCreator(object):
             'stage': str(self.stage),
             'working_dir_path': self.working_dir_path
         }
-        return "<GenericPREMISCreator {}>".format(dumps(attr_dict, sort_keys=True))
+        return "<GenericPREMISCreator {}>".format(
+            dumps(attr_dict, sort_keys=True))
 
     def process(self, skip_existing=False):
         """
@@ -95,7 +98,7 @@ class GenericPREMISCreator(object):
                     log.debug("No PREMIS detected: Creating")
                     materialsuite.set_premis(
                         self.instantiate_and_make_premis(materialsuite.content,
-                                                        self.working_dir_path)
+                                                         self.working_dir_path)
                     )
                 except Exception as e:
                     eh.handle(e)
