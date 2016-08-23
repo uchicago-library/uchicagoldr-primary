@@ -113,6 +113,7 @@ class PremisRestrictionSetter(CLIApp):
         )
         premis_restriction_setter.process()
 
+        log.info("Writing...")
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")

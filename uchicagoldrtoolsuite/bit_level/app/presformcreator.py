@@ -173,6 +173,7 @@ class PresformCreator(CLIApp):
         presform_creator.process(skip_existing=args.skip_existing,
                                  data_transfer_obj=dto)
 
+        log.info("Writing...")
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")

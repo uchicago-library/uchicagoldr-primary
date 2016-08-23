@@ -94,6 +94,7 @@ class PremisCreator(CLIApp):
         premis_creator = GenericPREMISCreator(stage)
         premis_creator.process(skip_existing=args.skip_existing)
 
+        log.info("Writing...")
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")

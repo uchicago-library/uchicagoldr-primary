@@ -141,6 +141,7 @@ class Stager(CLIApp):
 
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
+        log.info("Writing...")
         writer = FileSystemStageWriter(stage, destination_root, eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
