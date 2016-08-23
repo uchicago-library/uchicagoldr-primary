@@ -55,7 +55,11 @@ def get_log_dir():
     get aggrovated they keep getting dumped there and search through
     the documentation to figure out how to fix that.
     """
-    logdir = conf.get("Logging", "log_dir_path")
+    try:
+        logdir = conf.get("Logging", "log_dir_path")
+    except:
+        master_log.debug("logdir not specified in the config. Setting to ~/ldrtslogs")
+        logdir = None
     if logdir is None:
         logdir = join(expanduser("~"), 'ldrtslogs')
     if not isdir(logdir):
@@ -75,11 +79,17 @@ def activate_master_log_file(verbosity="DEBUG"):
     except:
         master_log.debug("Log size not specified in config. Setting to 1GB")
         max_log_size = 1000000000
+    try:
+        num_backups = conf.getint("Logging", "num_backups")
+    except:
+        masterlog.debug("Number of log backups to store not specified " +
+                        "in config. Setting to 4")
+        num_backups = 4
     logdir = get_log_dir()
     mlog_filepath = join(logdir, master_log_name + ".log")
     h1 = MultiprocessRotatingFileHandler(mlog_filepath,
                                          maxBytes=int(max_log_size/5),
-                                         backupCount=4)
+                                         backupCount=num_backups)
     h1.setLevel(verbosity)
     h1.setFormatter(f)
     master_log.addHandler(h1)
