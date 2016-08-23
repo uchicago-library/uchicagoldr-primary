@@ -73,7 +73,7 @@ class Stager(CLIApp):
                                  "directory that needs to be staged.",
                                  type=str, action='store',
                                  default=None)
-        self.parser.add_argument("--filter-pattern", help="A regex to " +
+        self.parser.add_argument("--filter_pattern", help="A regex to " +
                                  "use to exclude files whose paths match.",
                                  type=str, action='store',
                                  default=None)

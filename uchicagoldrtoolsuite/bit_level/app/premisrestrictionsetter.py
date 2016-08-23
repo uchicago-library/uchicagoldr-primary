@@ -60,10 +60,10 @@ class PremisRestrictionSetter(CLIApp):
         self.parser.add_argument("--reason", help="The reason for setting " +
                                  "this restriction",
                                  action="append")
-        self.parser.add_argument("--donor-stipulation", help="A donor " +
+        self.parser.add_argument("--donor_stipulation", help="A donor " +
                                  "stipulation pertaining to this restriction.",
                                  action="append")
-        self.parser.add_argument("--linking-agentid", help="Any linking " +
+        self.parser.add_argument("--linking_agentid", help="Any linking " +
                                  "agent identifiers pertaining to this " +
                                  "restriction.",
                                  action="append")

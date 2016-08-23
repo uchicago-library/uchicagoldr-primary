@@ -57,32 +57,32 @@ class PresformCreator(CLIApp):
         # Add application specific flags/arguments
         self.parser.add_argument("stage_id", help="The id of the stage",
                                  type=str, action='store')
-        self.parser.add_argument("--skip-existing", help="Skip material " +
+        self.parser.add_argument("--skip_existing", help="Skip material " +
                                  "suites which already claim to have " +
                                  "at least one presform",
                                  action='store_true',
                                  default=False)
-        self.parser.add_argument("--disable-office2pdf",
+        self.parser.add_argument("--disable_office2pdf",
                                  help="Disable the OfficeToPDFConverter",
                                  action='store_true',
                                  default=False)
-        self.parser.add_argument("--disable-office2csv",
+        self.parser.add_argument("--disable_office2csv",
                                  help="Disable the OfficeToCSVConverter",
                                  action='store_true',
                                  default=False)
-        self.parser.add_argument("--disable-office2txt",
+        self.parser.add_argument("--disable_office2txt",
                                  help="Disable the OfficeToTXTConverter",
                                  action='store_true',
                                  default=False)
-        self.parser.add_argument("--disable-videoconverter",
+        self.parser.add_argument("--disable_videoconverter",
                                  help="Disable the VideoConverter",
                                  action='store_true',
                                  default=False)
-        self.parser.add_argument("--disable-imageconverter",
+        self.parser.add_argument("--disable_imageconverter",
                                  help="Disable the ImageConverter",
                                  action='store_true',
                                  default=False)
-        self.parser.add_argument("--disable-audioconverter",
+        self.parser.add_argument("--disable_audioconverter",
                                  help="Disable the AudioConverter",
                                  action='store_true',
                                  default=False)

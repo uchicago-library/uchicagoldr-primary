@@ -57,7 +57,7 @@ class TechnicalMetadataCreator(CLIApp):
         # Add application specific flags/arguments
         self.parser.add_argument("stage_id", help="The id of the stage",
                                  type=str, action='store')
-        self.parser.add_argument("--skip-existing", help="Skip material " +
+        self.parser.add_argument("--skip_existing", help="Skip material " +
                                  "suites which already claim to have " +
                                  "technical metadata",
                                  action='store_true',
