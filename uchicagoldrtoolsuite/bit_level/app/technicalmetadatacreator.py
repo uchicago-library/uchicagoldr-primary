@@ -1,5 +1,6 @@
 from sys import stdout
 from os.path import join
+from configparser import NoOptionError
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
@@ -70,6 +71,20 @@ class TechnicalMetadataCreator(CLIApp):
                                  "LDRItemCopier for supported schemes.",
                                  type=str, action='store',
                                  default="bytes")
+        self.parser.add_argument("--fits_path", help="The path to the FITS " +
+                                 "executable on this system. " +
+                                 "Overrides any value found in configs.",
+                                 type=str, action='store',
+                                 default=None)
+        self.parser.add_argument("--fits_api_url", help="The url of a FITS " +
+                                 "Servlet examine endpoint. " +
+                                 "Overrides any value found in configs.",
+                                 type=str, action='store',
+                                 default=None)
+        self.parser.add_argument("--use_api", help="Use a FITS Servlet " +
+                                 "instead of a local FITS install.",
+                                 action="store_true",
+                                 default=False)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -86,6 +101,22 @@ class TechnicalMetadataCreator(CLIApp):
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
 
+        dto = {}
+        try:
+            dto['fits_path'] = self.conf.get("Paths", "fits_path")
+        except NoOptionError:
+            pass
+        try:
+            dto['fits_api_url'] = self.conf.get("URLs", "fits_api_url")
+        except NoOptionError:
+            pass
+
+
+        if args.fits_api_url is not None:
+            dto['fits_api_url'] = args.fits_api_url
+        if args.fits_path is not None:
+            dto['fits_path'] = args.fits_path
+
         stage_fullpath = join(staging_env, args.stage_id)
         reader = FileSystemStageReader(stage_fullpath)
         stage = reader.read()
@@ -93,10 +124,15 @@ class TechnicalMetadataCreator(CLIApp):
 
         log.info("Processing...")
 
-        techmd_processors = [APIFITsCreator]
+        if args.use_api:
+            techmd_processors = [APIFITsCreator]
+        else:
+            techmd_processors = [FITsCreator]
+
         techmd_creator = GenericTechnicalMetadataCreator(stage,
                                                          techmd_processors)
-        techmd_creator.process(skip_existing=args.skip_existing)
+        techmd_creator.process(skip_existing=args.skip_existing,
+                               data_transfer_obj=dto)
 
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()

@@ -1,5 +1,6 @@
 from sys import stdout
 from os.path import join
+from configparser import NoOptionError
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.lib.masterlog import \
@@ -94,6 +95,17 @@ class PresformCreator(CLIApp):
                                  "LDRItemCopier for supported schemes.",
                                  type=str, action='store',
                                  default="bytes")
+        self.parser.add_argument("--ffmpeg_path",
+                                 help="The path to the ffmpeg executable." +
+                                 "This option will override the conf.",
+                                 action='store',
+                                 default=None)
+        self.parser.add_argument("--libre_office_path",
+                                 help="The path to the LibreOffice " +
+                                 "executable." +
+                                 "This option will override the conf.",
+                                 action='store',
+                                 default=None)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -105,12 +117,27 @@ class PresformCreator(CLIApp):
 
         # App code
 
+        dto = {}
+        try:
+            dto['ffmpeg_path'] = self.conf.get("Paths", 'ffmpeg_path')
+        except NoOptionError:
+            pass
+        try:
+            dto['libre_office_path'] = self.conf.get("Paths",
+                                                     'libre_office_path')
+        except NoOptionError:
+            pass
+
+        if args.ffmpeg_path is not None:
+            dto['ffmpeg_path'] = args.ffmpeg_path
+        if args.libre_office_path is not None:
+            dto['libre_office_path'] = args.libre_office_path
+
         if args.staging_env:
             staging_env = args.staging_env
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
 
-        # App code
         stage_fullpath = join(staging_env, args.stage_id)
         reader = FileSystemStageReader(stage_fullpath)
         stage = reader.read()
@@ -143,7 +170,8 @@ class PresformCreator(CLIApp):
             converters.append(AudioConverter)
 
         presform_creator = GenericPresformCreator(stage, converters)
-        presform_creator.process(skip_existing=args.skip_existing)
+        presform_creator.process(skip_existing=args.skip_existing,
+                                 data_transfer_obj=dto)
 
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()

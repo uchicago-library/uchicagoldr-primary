@@ -32,9 +32,6 @@ class OfficeToTXTConverter(Converter):
     A class for converting a variety of "office" file types to TXT
     """
 
-    # Set the libreoffice path we'll be using in the bash command wrapper
-    libre_office_path = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
-
     # Explicitly claimed mimes this converter should be able to handle
     _claimed_mimes = [
         'application/rtf',
@@ -73,7 +70,7 @@ class OfficeToTXTConverter(Converter):
     _claimed_mimes = list(set(_claimed_mimes))
 
     def __init__(self, input_materialsuite, working_dir,
-                 timeout=None):
+                 timeout=None, data_transfer_obj={}):
         """
         Instantiate a converter
 
@@ -91,6 +88,10 @@ class OfficeToTXTConverter(Converter):
         """
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
+        self.libre_office_path = data_transfer_obj.get('libre_office_path', None)
+        if self.libre_office_path is None:
+            raise ValueError('No libre_office_path specificed in the data' +
+                             'transfer object!')
         log.debug("OfficeToTXTConverter spawned: {}".format(str(self)))
 
     def __repr__(self):

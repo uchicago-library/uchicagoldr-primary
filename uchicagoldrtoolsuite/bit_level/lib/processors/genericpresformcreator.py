@@ -55,7 +55,8 @@ class GenericPresformCreator(object):
         }
         return "<GenericPresformCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
-    def process(self, skip_existing=False, presform_presforms=False):
+    def process(self, skip_existing=False, presform_presforms=False,
+                data_transfer_obj={}):
         for segment in self.stage.segment_list:
             for materialsuite in segment.materialsuite_list:
                 if not isinstance(materialsuite.get_premis(), LDRItem):
@@ -68,13 +69,15 @@ class GenericPresformCreator(object):
                             continue
                     except:
                         pass
-                self.instantiate_and_make_presforms(materialsuite)
+                self.instantiate_and_make_presforms(materialsuite,
+                                                    data_transfer_obj=data_transfer_obj)
                 if presform_presforms:
                     if materialsuite.presform_list is not None:
                         for presform_ms in materialsuite.presform_list:
-                            self.instantiate_and_make_presforms(presform_ms)
+                            self.instantiate_and_make_presforms(presform_ms,
+                                                                data_transfer_obj=data_transfer_obj)
 
-    def instantiate_and_make_presforms(self, ms):
+    def instantiate_and_make_presforms(self, ms, data_transfer_obj={}):
         """
         write the file to disk an examine it, update its PREMIS
 
@@ -107,5 +110,6 @@ class GenericPresformCreator(object):
                 if x in converter._claimed_mimes:
                     c_working_dir = join(self.working_dir_path, str(uuid1()))
                     makedirs(c_working_dir, exist_ok=True)
-                    c = converter(ms, c_working_dir)
+                    c = converter(ms, c_working_dir,
+                                  data_transfer_obj=data_transfer_obj)
                     c.convert()

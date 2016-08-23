@@ -29,11 +29,13 @@ eh = ExceptionHandler()
 
 
 class APIFITsCreator(TechnicalMetadataCreator):
-
-    _API_URL = 'http://127.0.0.1:8080/fits/examine'
-
-    def __init__(self, materialsuite, working_dir, timeout=None):
+    def __init__(self, materialsuite, working_dir, timeout=None,
+                 data_transfer_obj={}):
         super().__init__(materialsuite, working_dir, timeout)
+        self.fits_api_url = data_transfer_obj.get('fits_api_url', None)
+        if self.fits_api_url is None:
+            raise ValueError('No fits_api_url specified in the data ' +
+                             'transfer object!')
         log.debug("APIFITsCreator spawned: {}".format(str(self)))
 
     def __repr__(self):
@@ -41,7 +43,7 @@ class APIFITsCreator(TechnicalMetadataCreator):
             'source_materialsuite': str(self.source_materialsuite),
             'working_dir': str(self.working_dir),
             'timeout': self.timeout,
-            'api_url': self._API_URL
+            'api_url': self.fits_api_url
         }
         return "<APIFITsCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
@@ -89,7 +91,7 @@ class APIFITsCreator(TechnicalMetadataCreator):
         exc = None
         try:
             r = post(
-                self._API_URL,
+                self.fits_api_url,
                 files={'datafile': original_holder.open()}
             )
 

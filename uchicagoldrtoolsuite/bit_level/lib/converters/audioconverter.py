@@ -32,9 +32,6 @@ class AudioConverter(Converter):
     A class for converting a variety of audio files to FLAC
     """
 
-    # Set the libreoffice path we'll be using in the bash command wrapper
-    ffmpeg_path = 'ffmpeg'
-
     # Explicitly claimed mimes this converter should be able to handle
     _claimed_mimes = [
         'audio/x-aiff',
@@ -69,7 +66,7 @@ class AudioConverter(Converter):
     _claimed_mimes = list(set(_claimed_mimes))
 
     def __init__(self, input_materialsuite, working_dir,
-                 timeout=None):
+                 timeout=None, data_transfer_obj={}):
         """
         Instantiate a converter
 
@@ -87,6 +84,10 @@ class AudioConverter(Converter):
         """
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
+        self.ffmpeg_path = data_transfer_obj.get('ffmpeg_path', None)
+        if self.ffmpeg_path is None:
+            raise ValueError('No ffmpeg_path specified in the data ' +
+                             'transfer object!')
         log.debug("AudioConverter spawned: {}".format(str(self)))
 
     def __repr__(self):
