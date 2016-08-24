@@ -1,6 +1,6 @@
-from json import dumps
+from json import dumps, dump
 from os import makedirs
-from os.path import exists, join
+from os.path import exists, join, dirname
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 
@@ -24,6 +24,19 @@ __version__ = "0.0.1dev"
 
 
 log = spawn_logger(__name__)
+
+
+class SegmentedPairTreeObject(PairTreeObject):
+
+    _seg_id = None
+
+    def get_seg_id(self):
+        return self._seg_id
+
+    def set_seg_id(self, x):
+        self._seg_id = x
+
+    seg_id = property(get_seg_id, set_seg_id)
 
 
 class FileSystemArchiveWriter(ArchiveSerializationWriter):
@@ -76,13 +89,14 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         for x in [admin_dir_path, pairtree_root, accession_records_dir_path,
                   adminnotes_dir_path, legalnotes_dir_path]:
             makedirs(x, exist_ok=True)
-        return pairtree_root, accession_records_dir_path, \
+        return admin_dir_path, pairtree_root, accession_records_dir_path, \
             adminnotes_dir_path, legalnotes_dir_path
 
     def _put_materialsuite_into_pairtree(self, materialsuite,
                                          seg_id, pair_tree):
         obj_id = self._get_premis_obj_id(materialsuite.premis)
-        o = PairTreeObject(identifier=obj_id, encapsulation="arf")
+        o = SegmentedPairTreeObject(identifier=obj_id, encapsulation="arf")
+        o.seg_id = seg_id
         content = IntraObjectByteStream(
             materialsuite.content,
             intraobjectaddress="content.file"
@@ -116,21 +130,50 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             premis = PremisRecord(frompath=premis_path)
             return premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
 
-    def write(self):
-        log.debug("Writing Archive")
-
-        ark_path = self._write_ark_dir()
-        pairtree_root, accession_records_dir_path, adminnotes_dir_path, \
-            legalnotes_dir_path = self._write_dirs_skeleton(ark_path)
-
-        data_manifest = {}
-
-        pair_tree = PairTree(containing_dir=ark_path)
-
+    def _pack_archive_into_pairtree(self, pair_tree):
         for seg in self.get_struct().segment_list:
             seg_id = seg.identifier
             for materialsuite in seg.materialsuite_list:
                 self._put_materialsuite_into_pairtree(materialsuite, seg_id,
                                                       pair_tree)
 
-        pair_tree.write()
+    def _write_data(self, pair_tree, ark_path, data_manifest):
+        for obj in pair_tree.objects:
+            for bytestream in obj.bytestreams:
+                path = join(ark_path,
+                            pair_tree.root_dir_name,
+                            str(identifier_to_path(obj.identifier)),
+                            obj.encapsulation,
+                            bytestream.intraobjectaddress)
+                makedirs(dirname(path), exist_ok=True)
+                dst_item = LDRPath(path)
+                cr = LDRItemCopier(bytestream.openable, dst_item).copy()
+                if not cr['src_eqs_dst']:
+                    raise ValueError()
+                manifest_dict = {
+                    'origin': bytestream.openable.item_name,
+                    'identifier': obj.identifier,
+                    'copy_report': cr,
+                    'origin_seg': obj.seg_id,
+                    'acc_id': self.get_struct().identifier
+                }
+                data_manifest.append(manifest_dict)
+
+    def _write_data_manifest(self, data_manifest, admin_dir_path):
+        with open(join(admin_dir_path, "data_manifest.json"), 'w') as f:
+            dump(data_manifest, f, indent=4, sort_keys=True)
+
+    def write(self):
+        log.debug("Writing Archive")
+
+        ark_path = self._write_ark_dir()
+        admin_dir_path, pairtree_root, accession_records_dir_path, \
+            adminnotes_dir_path, legalnotes_dir_path = \
+            self._write_dirs_skeleton(ark_path)
+
+        data_manifest = []
+
+        pair_tree = PairTree(containing_dir=ark_path)
+        self._pack_archive_into_pairtree(pair_tree)
+        self._write_data(pair_tree, ark_path, data_manifest)
+        self._write_data_manifest(data_manifest, admin_dir_path)
