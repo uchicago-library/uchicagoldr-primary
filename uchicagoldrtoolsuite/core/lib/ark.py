@@ -1,10 +1,14 @@
-
 from urllib.request import urlopen, URLError
+from configparser import NoOptionError
 
+from requests import get
+
+from uchicagoldrtoolsuite.core.lib.confreader import ConfReader
 from .identifier import Identifier
 
-__author__ = "Tyler Danstrom"
-__email__ = " tdanstrom@uchicago.edu"
+
+__author__ = "Tyler Danstrom, Brian Balsamo"
+__email__ = " tdanstrom@uchicago.edu, balsamo@uchicago.edu"
 __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
@@ -13,27 +17,31 @@ __version__ = "0.0.1dev"
 
 class Ark(Identifier):
     """Is a LDR version of a DOI identifier. The identifer value is a uuid1
-    the cateeogry is DOI
+    the category is DOI
     """
-    def __init__(self):
+    def __init__(self, noid_minter_url=None):
         """returns a DOI identifer subclass
         It calls the init for the super class identifier to set the category
         """
         super().__init__('noid')
-        self.value = self.generate()
+        if noid_minter_url is None:
+            try:
+                noid_minter_url = ConfReader().get("URLs", "noid_minter")
+            except NoOptionError:
+                raise ValueError("No noid_minter_url provided. Provide " +
+                                 "a url via a kwarg or a conf value.")
+        self.value = self.generate(noid_minter_url)
 
-    def generate(self):
+    def generate(self, noid_minter_url):
         """returns a noid instance as an ascii string
         """
-        request = urlopen("https://y1.lib.uchicago.edu/" +
-                          "cgi-bin/minter/noid?action=mint&n=1")
-        if request.status == 200:
-            data = request.readlines()
-            data_output = data.decode('utf-8').split('61001/')[1].rstrip()
+        response = get(noid_minter_url, verify=False)
+        if response.status_code == 200:
+            data = response.text
+            data_output = data.split('61001/')[1].rstrip()
         else:
-            raise URLError("Cannot read noid minter located at" +
-                           "https://y1.lib.uchicago.edu/cgi-bin/minter/" +
-                           "noid?action=mint&n=1")
+            raise URLError("Cannot read noid minter located at {}".format(
+                noid_minter_url))
         return data_output
 
     def get_value(self):
