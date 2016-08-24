@@ -12,7 +12,7 @@ __version__ = "0.0.1dev"
 class Transformer(metaclass=ABCMeta):
     """The Transformer abstract class should be used as the base class for all
     transformer concrete classes
-    
+
     The transformer's purpose is to take an instance of one type of Structure a
     and transform it into an instance of a different type of Structure.
     """
@@ -22,12 +22,12 @@ class Transformer(metaclass=ABCMeta):
         be the output
 
         The purpose of this method is implement the conversion process
-        of making one type of Structure into another. 
+        of making one type of Structure into another.
         """
         pass
 
     def get_origin_structure(self):
-        """returns the origin structure instance or the original type of 
+        """returns the origin structure instance or the original type of
         structure
         """
         return self._origin_structure

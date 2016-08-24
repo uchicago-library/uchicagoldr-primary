@@ -1,14 +1,18 @@
-
-from ..structures.archive import Archive
+from uchicagoldrtoolsuite.core.lib.ark import Ark
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.transformer import Transformer
+from ..structures.archive import Archive
 from ..structures.stage import Stage
 
-__author__ = "Tyler Danstrom"
-__email__ = " tdanstrom@uchicago.edu"
+__author__ = "Tyler Danstrom, Brian Balsamo"
+__email__ = " tdanstrom@uchicago.edu, balsamo@uchicago.edu"
 __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class StageToArchiveTransformer(Transformer):
@@ -17,18 +21,18 @@ class StageToArchiveTransformer(Transformer):
     """
     def __init__(self, origin_structure):
         """instantiates an instance of a StageToARrchiveTansformer
-        
+
         It starts with the origin structure passed as a parameter
         and sets an empty destination structure.
 
         ___Args__
-        1. origin_structure (Stage) : a fully realized instance of a 
+        1. origin_structure (Stage) : a fully realized instance of a
         Stage structure
         """
         self.origin_structure = origin_structure
         self.destination_structure = None
 
-    def transform(self, defined_id=None, make_noid=False):
+    def transform(self, archive_identifier=None):
         """returns a fully realized Archive structure containing the contents
         of the origin Stage structure.
 
@@ -38,26 +42,30 @@ class StageToArchiveTransformer(Transformer):
         """
         if self.destination_structure is not None:
             raise TypeError("a transformation already occured.")
-        self.destination_structure = Archive(
-            defined_id=defined_id,
-            make_noid=make_noid
-        )
+        if archive_identifier is None:
+            archive_identifier = Ark().value
+        self.destination_structure = Archive(archive_identifier)
+
         for n_segment in self.origin_structure.segment_list:
-            self.destination_structure.segment_list.append(
+            self.destination_structure.add_segment(
                 n_segment
             )
+
         for n_accessionrecord in self.origin_structure.accessionrecord_list:
-            self.destination_structure.accessionrecord_list.append(
+            self.destination_structure.add_accessionrecord(
                 n_accessionrecord
             )
+
         for n_legalnote in self.origin_structure.legalnote_list:
-            self.destination_structure.legalnote_list.append(
+            self.destination_structure.add_legalnote(
                 n_legalnote
             )
+
         for n_adminnote in self.origin_structure.adminnote_list:
-            self.destination_structure.adminnote_list.append(
+            self.destination_structure.add_adminnote(
                 n_adminnote
             )
+
         return self.destination_structure
 
     def get_origin_structure(self):
@@ -72,7 +80,7 @@ class StageToArchiveTransformer(Transformer):
             self._origin_structure = value
         else:
             raise ValueError("StageToPairtreeTransformer must have an " +
-                             "of a Stage in origin_structure")
+                             "instace of a Stage in origin_structure")
 
     def get_destination_structure(self):
         """returns the destination structure, or the structure created from transform method
