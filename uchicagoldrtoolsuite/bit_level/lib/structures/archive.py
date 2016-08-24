@@ -31,7 +31,7 @@ class Archive(Structure):
         self._required_parts = None
 
         self.required_parts = ['identifier', 'segment_list',
-                               'accessionrecord_list', 'admninnote_list',
+                               'accessionrecord_list', 'adminnote_list',
                                'legalnote_list']
         self.identifier = identifier
         self.segment_list = []
@@ -58,9 +58,9 @@ class Archive(Structure):
         for segment in self.segment_list:
             for materialsuite in segment.materialsuite_list:
                 if self._validate_materialsuite(materialsuite) is False:
-                    return False
+                    return (False, "bad materialsuite")
         if len(self.accessionrecord_list) < 1:
-            return False
+            return (False, "no accrec")
         return super().validate()
 
     def __repr__(self):
