@@ -2,8 +2,10 @@ from urllib.request import urlopen, URLError
 from configparser import NoOptionError
 
 from requests import get
+from requests.exceptions import SSLError
 
 from uchicagoldrtoolsuite.core.lib.confreader import ConfReader
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .identifier import Identifier
 
 
@@ -13,6 +15,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = spawn_logger(__name__)
 
 
 class Ark(Identifier):
@@ -31,11 +36,23 @@ class Ark(Identifier):
                 raise ValueError("No noid_minter_url provided. Provide " +
                                  "a url via a kwarg or a conf value.")
         self.value = self.generate(noid_minter_url)
+        log.debug("Spawned an ARK: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'category': self.category,
+            'value': str(self.value)
+        }
+        return "<Ark {}>".format(attr_dict)
 
     def generate(self, noid_minter_url):
         """returns a noid instance as an ascii string
         """
-        response = get(noid_minter_url, verify=False)
+        try:
+            response = get(noid_minter_url)
+        except SSLError:
+            response = get(noid_minter_url, verify=False)
+            log.warn("Bad SSL Cert @ {}".format(noid_minter_url))
         if response.status_code == 200:
             data = response.text
             data_output = data.split('61001/')[1].rstrip()
