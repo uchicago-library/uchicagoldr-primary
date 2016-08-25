@@ -1,8 +1,9 @@
 from json import dumps, dump
 from os import makedirs
-from os.path import exists, join, dirname
+from os.path import exists, join, dirname, split
 from tempfile import TemporaryDirectory
 from uuid import uuid4
+import xml.etree.ElementTree as ET
 
 from pypremis.lib import PremisRecord
 
@@ -12,9 +13,11 @@ from pypairtree.pairtreeobject import PairTreeObject
 from pypairtree.intraobjectbytestream import IntraObjectByteStream
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
+from ..ldritems.ldritemoperations import hash_ldritem
 
 
 __author__ = "Brian Balsamo"
@@ -78,6 +81,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             raise OSError(err_text)
         else:
             makedirs(ark_path, exist_ok=True)
+        self._write_file_acc_namaste_tag(ark_path)
         return ark_path
 
     def _write_dirs_skeleton(self, ark_path):
@@ -131,7 +135,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             tmp_item = LDRPath(premis_path)
             LDRItemCopier(premis_ldritem, tmp_item).copy()
             premis = PremisRecord(frompath=premis_path)
-            return premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+            return premis.get_object_list()[0].\
+                get_objectIdentifier()[0].get_objectIdentifierValue()
 
     def _pack_archive_into_pairtree(self, pair_tree):
         for seg in self.get_struct().segment_list:
@@ -162,13 +167,48 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     'acc_id': self.get_struct().identifier
                 }
                 if not cr['src_eqs_dst']:
-                    print(dumps(manifest_dict, indent=4))
                     raise ValueError("{}".format(bytestream.openable.item_name))
+                if bytestream.intraobjectaddress == "premis.xml":
+                    self._update_premis_in_place(join(ms_path, "premis.xml"),
+                                                 join(ms_path, "content.file"))
+                    self._add_premis_acc_event(join(ms_path, "premis.xml"))
+                if bytestream.intraobjectaddress == "fits.xml":
+                    self._update_fits_in_place(join(ms_path, "fits.xml"),
+                                               join(ms_path, "content.file"))
                 data_manifest.append(manifest_dict)
+
+    def _add_premis_acc_event(self, premis_path):
+        pass
+
+    def _update_premis_in_place(self, premis_path, obj_path):
+        premis = PremisRecord(frompath=premis_path)
+        premis.get_object_list()[0].\
+            get_storage()[0].get_contentLocation().set_contentLocationValue(
+                obj_path
+            )
+        premis.write_to_file(premis_path)
+
+    def _update_fits_in_place(self, fits_path, obj_path):
+        ET.register_namespace('', "http://hul.harvard.edu/ois/xml/ns/fits/fits_output")
+        ET.register_namespace('xsi', "http://www.w3.org/2001/XMLSchema-instance")
+        tree = ET.parse(fits_path)
+        root = tree.getroot()
+        for x in root:
+            if "fileinfo" in x.tag:
+                for y in x:
+                    if "filepath" in y.tag:
+                        y.text = obj_path
+                    if "filename" in y.tag:
+                        y.text = split(obj_path)[1]
+        tree.write(fits_path)
 
     def _write_data_manifest(self, data_manifest, admin_dir_path):
         with open(join(admin_dir_path, "data_manifest.json"), 'w') as f:
             dump(data_manifest, f, indent=4, sort_keys=True)
+
+    def _write_file_acc_namaste_tag(self, dir_path):
+        with open(join(dir_path, "0=icu-file-accession_0.1"), 'w') as f:
+            f.write("icu-file-accession 0.1")
 
     def _write_pairtree_namaste_tag(self, dir_path):
         with open(join(dir_path, "0=pairtree_0.1"), 'w') as f:
@@ -177,6 +217,86 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_materialsuite_namaste_tag(self, dir_path):
         with open(join(dir_path, "0=icu-materialsuite_0.1"), 'w') as f:
             f.write("icu-materialsuite 0.1")
+
+    def _write_adminnotes(self, adminnotes_dir_path, admin_manifest):
+        if self.get_struct().adminnote_list:
+            for x in self.get_struct().adminnote_list:
+                manifest_dict = {
+                    'origin': x.item_name,
+                    'acc_id': self.get_struct().identifier,
+                    'type': 'admin note'
+                }
+                dst_path = join(adminnotes_dir_path, x.item_name)
+                dst_item = LDRPath(dst_path)
+                cr = LDRItemCopier(x, dst_item).copy()
+                if not cr['src_eqs_dst']:
+                    raise ValueError("Bad admin note write!")
+                manifest_dict['copy_report'] = cr
+                manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                admin_manifest.append(manifest_dict)
+
+    def _write_legalnotes(self, legalnotes_dir_path, admin_manifest):
+        if self.get_struct().legalnote_list:
+            for x in self.get_struct().legalnote_list:
+                manifest_dict = {
+                    'origin': x.item_name,
+                    'acc_id': self.get_struct().identifier,
+                    'type': 'legal note'
+                }
+                dst_path = join(legalnotes_dir_path, x.item_name)
+                dst_item = LDRPath(dst_path)
+                cr = LDRItemCopier(x, dst_item).copy()
+                if not cr['src_eqs_dst']:
+                    raise ValueError("Bad legal note write!")
+                manifest_dict['copy_report'] = cr
+                manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                admin_manifest.append(manifest_dict)
+
+    def _write_accessionrecords(self, accessionrecords_dir_path,
+                                admin_manifest):
+        for x in self.get_struct().accessionrecord_list:
+            manifest_dict = {
+                'origin': x.item_name,
+                'acc_id': self.get_struct().identifier,
+                'type': 'accession_record'
+            }
+            dst_path = join(accessionrecords_dir_path, x.item_name)
+            dst_item = LDRPath(dst_path)
+            cr = LDRItemCopier(x, dst_item).copy()
+            if not cr['src_eqs_dst']:
+                raise ValueError("Bad accession record write!")
+            manifest_dict['copy_report'] = cr
+            manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+            manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+            admin_manifest.append(manifest_dict)
+
+    def _add_data_manifest_to_admin_manifest(self, admin_dir_path,
+                                             admin_manifest):
+        data_manifest_item = LDRPath(join(admin_dir_path, 'data_manifest.json'))
+        manifest_dict = {
+            'origin': None,
+            'acc_id': self.get_struct().identifier,
+            'type': 'data_manifest'
+        }
+        md5_hash_str = hash_ldritem(data_manifest_item, algo='md5')
+        sha256_hash_str = hash_ldritem(data_manifest_item, algo='sha256')
+        manifest_dict['md5'] = md5_hash_str
+        manifest_dict['sha256'] = sha256_hash_str
+        admin_manifest.append(manifest_dict)
+
+    def _write_admin_manifest(self, admin_manifest, admin_dir_path):
+        with open(join(admin_dir_path, 'admin_manifest.json'), 'w') as f:
+            dump(admin_manifest, f, indent=4, sort_keys=True)
+
+    def _write_WRITE_FINISHED(self, admin_dir_path):
+        with open(join(admin_dir_path, "WRITE_FINISHED.json"), 'w') as f:
+            dump(
+                {"FINISHED_TIME": iso8601_dt(),
+                 "FINISHED_STATUS": "GOOD"},
+                f, indent=4, sort_keys=True
+            )
 
     def write(self):
         log.debug("Writing Archive")
@@ -187,8 +307,15 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             self._write_dirs_skeleton(ark_path)
 
         data_manifest = []
+        admin_manifest = []
 
         pair_tree = PairTree(containing_dir=ark_path)
         self._pack_archive_into_pairtree(pair_tree)
         self._write_data(pair_tree, ark_path, data_manifest)
         self._write_data_manifest(data_manifest, admin_dir_path)
+        self._write_adminnotes(adminnotes_dir_path, admin_manifest)
+        self._write_legalnotes(legalnotes_dir_path, admin_manifest)
+        self._write_accessionrecords(accession_records_dir_path, admin_manifest)
+        self._add_data_manifest_to_admin_manifest(admin_dir_path, admin_manifest)
+        self._write_admin_manifest(admin_manifest, admin_dir_path)
+        self._write_WRITE_FINISHED(admin_dir_path)
