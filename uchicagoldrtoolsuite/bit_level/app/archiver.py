@@ -1,5 +1,7 @@
 from os.path import join, dirname, expanduser, expandvars
 
+from pypairtree.utils import identifier_to_path
+
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.lib.masterlog import \
     spawn_logger, \
@@ -84,14 +86,13 @@ class Archiver(CLIApp):
         if args.staging_env:
             staging_env = args.staging_env
         else:
-            # Get it from the conf
-            pass
+            staging_env = self.conf.get("Paths", "staging_environment_path")
 
         if args.lts_env:
             lts_env = args.lts_env
         else:
-            # Get it from the conf
-            pass
+            lts_env = self.conf.get("Paths",
+                                    "long_term_storage_environment_path")
 
         stage_path = join(staging_env, args.stage_id)
         log.info("Stage Path: {}".format(stage_path))
@@ -103,6 +104,11 @@ class Archiver(CLIApp):
         if not archive.validate():
             log.critical("Invalid Archive! Aborting!")
             raise ValueError("Invalid Archive! Aborting!")
+        log.info(
+            "Archive Path: {}".format(
+                identifier_to_path(archive.identifier, root=lts_env)
+            )
+        )
         log.info("Writing Archive...")
         FileSystemArchiveWriter(archive, lts_env, args.eq_detect).write()
         log.info("Complete!")

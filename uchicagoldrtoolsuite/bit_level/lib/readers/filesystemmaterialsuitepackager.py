@@ -1,6 +1,7 @@
 from os import scandir
 from os.path import join, dirname, basename, isfile, splitext
 from re import compile as re_compile
+from re import escape as re_escape
 from json import dumps
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
@@ -116,7 +117,7 @@ class FileSystemMaterialSuitePackager(MaterialSuitePackager):
         presforms = []
         presform_filename_pattern = re_compile(
             "^{}\.presform(\.[a-zA-Z0-9]*)?$".format(
-                self.file_name
+                re_escape(self.file_name)
             )
         )
         containing_folder_path = join(self.data_fullpath,

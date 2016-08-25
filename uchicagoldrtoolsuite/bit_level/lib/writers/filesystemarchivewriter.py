@@ -16,6 +16,7 @@ from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 
+
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
 __company = "The University of Chicago Library"
@@ -82,6 +83,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_dirs_skeleton(self, ark_path):
         admin_dir_path = join(ark_path, "admin")
         pairtree_root = join(ark_path, "pairtree_root")
+        makedirs(pairtree_root, exist_ok=True)
+        self._write_pairtree_namaste_tag(pairtree_root)
         accession_records_dir_path = join(admin_dir_path, "accession_records")
         adminnotes_dir_path = join(admin_dir_path, "adminnotes")
         legalnotes_dir_path = join(admin_dir_path, "legalnotes")
@@ -140,16 +143,17 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_data(self, pair_tree, ark_path, data_manifest):
         for obj in pair_tree.objects:
             for bytestream in obj.bytestreams:
-                path = join(ark_path,
-                            pair_tree.root_dir_name,
-                            str(identifier_to_path(obj.identifier)),
-                            obj.encapsulation,
+                ms_path = join(ark_path,
+                               pair_tree.root_dir_name,
+                               str(identifier_to_path(obj.identifier)),
+                               obj.encapsulation)
+                makedirs(ms_path, exist_ok=True)
+                self._write_materialsuite_namaste_tag(ms_path)
+                path = join(ms_path,
                             bytestream.intraobjectaddress)
                 makedirs(dirname(path), exist_ok=True)
                 dst_item = LDRPath(path)
                 cr = LDRItemCopier(bytestream.openable, dst_item).copy()
-                if not cr['src_eqs_dst']:
-                    raise ValueError()
                 manifest_dict = {
                     'origin': bytestream.openable.item_name,
                     'identifier': obj.identifier,
@@ -157,11 +161,22 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     'origin_seg': obj.seg_id,
                     'acc_id': self.get_struct().identifier
                 }
+                if not cr['src_eqs_dst']:
+                    print(dumps(manifest_dict, indent=4))
+                    raise ValueError("{}".format(bytestream.openable.item_name))
                 data_manifest.append(manifest_dict)
 
     def _write_data_manifest(self, data_manifest, admin_dir_path):
         with open(join(admin_dir_path, "data_manifest.json"), 'w') as f:
             dump(data_manifest, f, indent=4, sort_keys=True)
+
+    def _write_pairtree_namaste_tag(self, dir_path):
+        with open(join(dir_path, "0=pairtree_0.1"), 'w') as f:
+            f.write("pairtree 0.1")
+
+    def _write_materialsuite_namaste_tag(self, dir_path):
+        with open(join(dir_path, "0=icu-materialsuite_0.1"), 'w') as f:
+            f.write("icu-materialsuite 0.1")
 
     def write(self):
         log.debug("Writing Archive")
