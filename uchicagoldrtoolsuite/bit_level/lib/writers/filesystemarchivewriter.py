@@ -50,13 +50,14 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     Writes an archive structure to disk utilizing PairTrees as a series
     of directories and files.
     """
-    def __init__(self, anArchive, aRoot, eq_detect="bytes"):
+    def __init__(self, anArchive, aRoot, live_premis_root, eq_detect="bytes"):
         """
         spawn a writer
 
         """
         super().__init__(anArchive)
         self.lts_env_path = aRoot
+        self.live_premis_root = live_premis_root
         self.eq_detect = eq_detect
         log.debug("FileSystemArchiveWriter spawned: {}".format(str(self)))
 
@@ -148,7 +149,15 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                                                       pair_tree)
 
     def _write_data(self, pair_tree, ark_path, data_manifest):
+        data_manifest['acc_id'] = self.get_struct().identifier
+        data_manifest['objs'] = []
         for obj in pair_tree.objects:
+            manifest_entry = {
+                'identifier': obj.identifier,
+                'origin_segment': obj.seg_id,
+                'bytestreams': []
+            }
+            data_manifest['objs'].append(manifest_entry)
             for bytestream in obj.bytestreams:
                 ms_path = join(ark_path,
                                pair_tree.root_dir_name,
@@ -163,20 +172,43 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 cr = LDRItemCopier(bytestream.openable, dst_item).copy()
                 manifest_dict = {
                     'origin': bytestream.openable.item_name,
-                    'identifier': obj.identifier,
-                    'copy_report': cr,
-                    'origin_seg': obj.seg_id,
-                    'acc_id': self.get_struct().identifier
+                    'dst': dst_item.item_name,
+                    'copy_report': cr
                 }
                 if not cr['src_eqs_dst']:
                     raise ValueError("{}".format(bytestream.openable.item_name))
                 if bytestream.intraobjectaddress == "premis.xml":
                     self._update_premis_in_place(join(ms_path, "premis.xml"),
                                                  join(ms_path, "content.file"))
-                if bytestream.intraobjectaddress == "fits.xml":
+                    manifest_dict['type'] = "PREMIS"
+                    manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                    manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                    live_premis_dir_path = join(
+                        self.live_premis_root,
+                        str(identifier_to_path(self.get_struct().identifier)),
+                        obj.encapsulation,
+                        "pairtree_root",
+                        str(identifier_to_path(obj.identifier)),
+                        obj.encapsulation
+                    )
+                    makedirs(live_premis_dir_path, exist_ok=True)
+                    live_premis_dst_item = LDRPath(join(live_premis_dir_path, "premis.xml"))
+                    cr = LDRItemCopier(dst_item, live_premis_dst_item).copy()
+                    if not cr['src_eqs_dst']:
+                        raise ValueError("Bad copy into the live premis dir!")
+                elif bytestream.intraobjectaddress == "fits.xml":
                     self._update_fits_in_place(join(ms_path, "fits.xml"),
                                                join(ms_path, "content.file"))
-                data_manifest.append(manifest_dict)
+                    manifest_dict['type'] = "technical metadata"
+                    manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                    manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                elif bytestream.intraobjectaddress == "content.file":
+                    manifest_dict['type'] = "file content"
+                    manifest_dict['md5'] = None
+                    manifest_dict['sha256'] = None
+                else:
+                    raise ValueError("Unrecognized intraobject address!")
+                manifest_entry['bytestreams'].append(manifest_dict)
 
     def _add_premis_acc_event(self, premis_rec):
         def _build_eventDetailInformation():
@@ -324,7 +356,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             adminnotes_dir_path, legalnotes_dir_path = \
             self._write_dirs_skeleton(ark_path)
 
-        data_manifest = []
+        data_manifest = {}
         admin_manifest = []
 
         pair_tree = PairTree(containing_dir=ark_path)

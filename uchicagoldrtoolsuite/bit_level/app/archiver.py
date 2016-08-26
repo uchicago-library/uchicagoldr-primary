@@ -66,6 +66,10 @@ class Archiver(CLIApp):
                                  "long term storage environment",
                                  type=str,
                                  default=None)
+        self.parser.add_argument("--live_premis_env", help="The path to your " +
+                                 "live PREMIS environment",
+                                 type=str,
+                                 default=None)
         self.parser.add_argument("--eq_detect", help="The equality " +
                                  "metric to use on writing, check " +
                                  "LDRItemCopier for supported schemes.",
@@ -94,6 +98,12 @@ class Archiver(CLIApp):
             lts_env = self.conf.get("Paths",
                                     "long_term_storage_environment_path")
 
+        if args.live_premis_env:
+            live_premis_env = args.live_premis_env
+        else:
+            live_premis_env = self.conf.get("Paths",
+                                            "live_premis_environment_path")
+
         stage_path = join(staging_env, args.stage_id)
         log.info("Stage Path: {}".format(stage_path))
         log.info("Reading Stage...")
@@ -110,7 +120,8 @@ class Archiver(CLIApp):
             )
         )
         log.info("Writing Archive...")
-        FileSystemArchiveWriter(archive, lts_env, args.eq_detect).write()
+        FileSystemArchiveWriter(archive, lts_env, live_premis_env,
+                                args.eq_detect).write()
         log.info("Complete!")
 
 if __name__ == "__main__":

@@ -58,9 +58,9 @@ class Archive(Structure):
         for segment in self.segment_list:
             for materialsuite in segment.materialsuite_list:
                 if self._validate_materialsuite(materialsuite) is False:
-                    return (False, "bad materialsuite")
+                    return False
         if len(self.accessionrecord_list) < 1:
-            return (False, "no accrec")
+            return False
         return super().validate()
 
     def __repr__(self):
