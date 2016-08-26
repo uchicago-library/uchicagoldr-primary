@@ -6,6 +6,7 @@ from uuid import uuid4
 import xml.etree.ElementTree as ET
 
 from pypremis.lib import PremisRecord
+from pypremis.nodes import *
 
 from pypairtree.utils import identifier_to_path
 from pypairtree.pairtree import PairTree
@@ -14,6 +15,7 @@ from pypairtree.intraobjectbytestream import IntraObjectByteStream
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+from uchicagoldrtoolsuite.core.lib.doi import DOI
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
@@ -171,14 +173,29 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 if bytestream.intraobjectaddress == "premis.xml":
                     self._update_premis_in_place(join(ms_path, "premis.xml"),
                                                  join(ms_path, "content.file"))
-                    self._add_premis_acc_event(join(ms_path, "premis.xml"))
                 if bytestream.intraobjectaddress == "fits.xml":
                     self._update_fits_in_place(join(ms_path, "fits.xml"),
                                                join(ms_path, "content.file"))
                 data_manifest.append(manifest_dict)
 
-    def _add_premis_acc_event(self, premis_path):
-        pass
+    def _add_premis_acc_event(self, premis_rec):
+        def _build_eventDetailInformation():
+            return EventDetailInformation(eventDetail="bystream copied into " +
+                                          "the long term storage environment.")
+
+        def _build_eventIdentifier():
+            return EventIdentifier("DOI", DOI().value)
+
+        def _build_eventOutcomeInformation():
+            return EventOutcomeInformation(eventOutcome="SUCCESS")
+
+        def _build_event():
+            e = Event(_build_eventIdentifier(), "ingestion", iso8601_dt())
+            e.add_eventDetailInformation(_build_eventDetailInformation())
+            e.add_eventOutcomeInformation(_build_eventOutcomeInformation())
+            return e
+
+        premis_rec.add_event(_build_event())
 
     def _update_premis_in_place(self, premis_path, obj_path):
         premis = PremisRecord(frompath=premis_path)
@@ -186,6 +203,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             get_storage()[0].get_contentLocation().set_contentLocationValue(
                 obj_path
             )
+        self._add_premis_acc_event(premis)
         premis.write_to_file(premis_path)
 
     def _update_fits_in_place(self, fits_path, obj_path):
