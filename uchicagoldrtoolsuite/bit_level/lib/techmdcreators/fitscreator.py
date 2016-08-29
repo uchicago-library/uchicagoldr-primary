@@ -26,8 +26,13 @@ log = spawn_logger(__name__)
 
 
 class FITsCreator(TechnicalMetadataCreator):
-    def __init__(self, materialsuite, working_dir, timeout=None):
+    def __init__(self, materialsuite, working_dir, timeout=None,
+                 data_transfer_obj={}):
         super().__init__(materialsuite, working_dir, timeout)
+        self.fits_path = data_transfer_obj.get('fits_path', None)
+        if self.fits_path is None:
+            raise ValueError('No fits_path specified in the data ' +
+                             'transfer object!')
         log.debug("FITsCreator spawned: {}".format(str(self)))
 
     def __repr__(self):
@@ -68,7 +73,7 @@ class FITsCreator(TechnicalMetadataCreator):
         ).copy()
 
         fits_file_path = join(self.working_dir, str(uuid1()))
-        cmd = BashCommand(['fits', '-i', content_file_path,
+        cmd = BashCommand([self.fits_path, '-i', content_file_path,
                            '-o', fits_file_path])
 
         if self.get_timeout() is not None:

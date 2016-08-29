@@ -54,7 +54,7 @@ class PremisCreator(CLIApp):
         # Add application specific flags/arguments
         self.parser.add_argument("stage_id", help="The stage identifier",
                                  type=str, action='store')
-        self.parser.add_argument("--skip-existing", help="Skip material " +
+        self.parser.add_argument("--skip_existing", help="Skip material " +
                                  "suites which already claim to have " +
                                  "premis records",
                                  action='store_true',
@@ -94,6 +94,7 @@ class PremisCreator(CLIApp):
         premis_creator = GenericPREMISCreator(stage)
         premis_creator.process(skip_existing=args.skip_existing)
 
+        log.info("Writing...")
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")

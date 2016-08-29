@@ -43,14 +43,14 @@ class CLIApp(App, metaclass=ABCMeta):
 
         # Always allow the user to specify an alternate conf dir
         parser.add_argument(
-            '--conf-dir',
+            '--conf_dir',
             default=None,
             help="Specify a custom configuration directory to be parsed "
             "with precedence over the default and builtin configs."
         )
         # Always allow the user to specify an alternate conf file
         parser.add_argument(
-            '--conf-file',
+            '--conf_file',
             default=None,
             help="Specify a custom configuration filename, if required."
         )

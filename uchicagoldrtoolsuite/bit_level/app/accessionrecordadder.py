@@ -123,6 +123,7 @@ class AccessionRecordAdder(CLIApp):
         else:
             raise AssertionError('Either file or text should be selected')
 
+        log.info("Writing...")
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")

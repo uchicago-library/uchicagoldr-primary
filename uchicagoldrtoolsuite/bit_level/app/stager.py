@@ -62,10 +62,9 @@ class Stager(CLIApp):
         self.parser.add_argument("prefix", help="The prefix defining the " +
                                  "type of run that is being processed",
                                  type=str, action='store')
-        self.parser.add_argument("--destination-root", help="The location " +
-                                 "that the staging directory should be " +
-                                 "created in",
-                                 type=str, action='store',
+        self.parser.add_argument("--staging_env", help="The path to your " +
+                                 "staging environment",
+                                 type=str,
                                  default=None)
         self.parser.add_argument("--resume", "-r", help="An integer for a " +
                                  "run that needs to be resumed.",
@@ -74,7 +73,7 @@ class Stager(CLIApp):
                                  "directory that needs to be staged.",
                                  type=str, action='store',
                                  default=None)
-        self.parser.add_argument("--filter-pattern", help="A regex to " +
+        self.parser.add_argument("--filter_pattern", help="A regex to " +
                                  "use to exclude files whose paths match.",
                                  type=str, action='store',
                                  default=None)
@@ -94,8 +93,8 @@ class Stager(CLIApp):
         self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
 
         # App code
-        if args.destination_root:
-            destination_root = args.destination_root
+        if args.staging_env:
+            destination_root = args.staging_env
         else:
             destination_root = self.conf.get("Paths",
                                              "staging_environment_path")
@@ -141,6 +140,7 @@ class Stager(CLIApp):
 
         seg = ext_seg_packager.package()
         stage.add_segment(seg)
+        log.info("Writing...")
         writer = FileSystemStageWriter(stage, destination_root, eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")

@@ -49,7 +49,7 @@ class GenericTechnicalMetadataCreator(object):
         }
         return "<GenericTechnicalMetadataCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
-    def process(self, skip_existing=False):
+    def process(self, skip_existing=False, data_transfer_obj={}):
         log.debug("Beginning TECHMD Processing")
         s_num = 0
         for segment in self.stage.segment_list:
@@ -80,7 +80,8 @@ class GenericTechnicalMetadataCreator(object):
                 try:
                     log.debug("No TECHMD detected: Creating")
                     for techmd_creator in self.techmd_creators:
-                        c = techmd_creator(materialsuite, self.working_dir_path)
+                        c = techmd_creator(materialsuite, self.working_dir_path,
+                                           data_transfer_obj=data_transfer_obj)
                         c.process()
                     if materialsuite.presform_list is not None:
                         for presform_ms in materialsuite.presform_list:
@@ -88,7 +89,8 @@ class GenericTechnicalMetadataCreator(object):
                                 raise ValueError("All material suites must have a PREMIS " +
                                                 "record in order to generated technical " +
                                                 "metadata records.")
-                            c = techmd_creator(presform_ms, self.working_dir_path)
+                            c = techmd_creator(presform_ms, self.working_dir_path,
+                                               data_transfer_obj=data_transfer_obj)
                             c.process()
                 except Exception as e:
                     eh.handle(e)
