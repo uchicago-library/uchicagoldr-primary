@@ -50,14 +50,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     Writes an archive structure to disk utilizing PairTrees as a series
     of directories and files.
     """
-    def __init__(self, anArchive, aRoot, live_premis_root, eq_detect="bytes"):
+    def __init__(self, anArchive, aRoot, eq_detect="bytes"):
         """
         spawn a writer
 
         """
         super().__init__(anArchive)
         self.lts_env_path = aRoot
-        self.live_premis_root = live_premis_root
         self.eq_detect = eq_detect
         log.debug("FileSystemArchiveWriter spawned: {}".format(str(self)))
 
@@ -183,19 +182,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     manifest_dict['type'] = "PREMIS"
                     manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
                     manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
-                    live_premis_dir_path = join(
-                        self.live_premis_root,
-                        str(identifier_to_path(self.get_struct().identifier)),
-                        obj.encapsulation,
-                        "pairtree_root",
-                        str(identifier_to_path(obj.identifier)),
-                        obj.encapsulation
-                    )
-                    makedirs(live_premis_dir_path, exist_ok=True)
-                    live_premis_dst_item = LDRPath(join(live_premis_dir_path, "premis.xml"))
-                    cr = LDRItemCopier(dst_item, live_premis_dst_item).copy()
-                    if not cr['src_eqs_dst']:
-                        raise ValueError("Bad copy into the live premis dir!")
                 elif bytestream.intraobjectaddress == "fits.xml":
                     self._update_fits_in_place(join(ms_path, "fits.xml"),
                                                join(ms_path, "content.file"))
