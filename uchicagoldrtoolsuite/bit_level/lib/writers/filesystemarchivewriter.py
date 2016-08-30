@@ -271,12 +271,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_adminnotes(self, adminnotes_dir_path, admin_manifest):
         if self.get_struct().adminnote_list:
             for x in self.get_struct().adminnote_list:
+                dst_path = join(adminnotes_dir_path, x.item_name)
                 manifest_dict = {
                     'origin': x.item_name,
                     'acc_id': self.get_struct().identifier,
-                    'type': 'admin note'
+                    'type': 'admin note',
+                    'dst': dst_path
                 }
-                dst_path = join(adminnotes_dir_path, x.item_name)
                 dst_item = LDRPath(dst_path)
                 cr = LDRItemCopier(x, dst_item).copy()
                 if not cr['src_eqs_dst']:
@@ -289,12 +290,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_legalnotes(self, legalnotes_dir_path, admin_manifest):
         if self.get_struct().legalnote_list:
             for x in self.get_struct().legalnote_list:
+                dst_path = join(legalnotes_dir_path, x.item_name)
                 manifest_dict = {
                     'origin': x.item_name,
                     'acc_id': self.get_struct().identifier,
-                    'type': 'legal note'
+                    'type': 'legal note',
+                    'dst': dst_path
                 }
-                dst_path = join(legalnotes_dir_path, x.item_name)
                 dst_item = LDRPath(dst_path)
                 cr = LDRItemCopier(x, dst_item).copy()
                 if not cr['src_eqs_dst']:
@@ -307,12 +309,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_accessionrecords(self, accessionrecords_dir_path,
                                 admin_manifest):
         for x in self.get_struct().accessionrecord_list:
+            dst_path = join(accessionrecords_dir_path, x.item_name)
             manifest_dict = {
                 'origin': x.item_name,
                 'acc_id': self.get_struct().identifier,
-                'type': 'accession_record'
+                'type': 'accession_record',
+                'dst': dst_path
             }
-            dst_path = join(accessionrecords_dir_path, x.item_name)
             dst_item = LDRPath(dst_path)
             cr = LDRItemCopier(x, dst_item).copy()
             if not cr['src_eqs_dst']:
@@ -328,7 +331,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         manifest_dict = {
             'origin': None,
             'acc_id': self.get_struct().identifier,
-            'type': 'data_manifest'
+            'type': 'data_manifest',
+            'dst': 'data_manifest.json'
         }
         md5_hash_str = hash_ldritem(data_manifest_item, algo='md5')
         sha256_hash_str = hash_ldritem(data_manifest_item, algo='sha256')

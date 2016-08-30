@@ -1,4 +1,5 @@
-from os.path import join, isdir, isfile, splitext
+from os import scandir
+from os.path import join, isdir, isfile, splitext, relpath
 from json import load
 
 from pypremis.lib import PremisRecord
@@ -55,19 +56,8 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             data_manifest_path, accrec_dir_path, adminnotes_path, \
             legalnotes_path
 
-    def read(self, lts_path, identifier):
-        self.get_struct().identifier = identifier
-        arch_root, pairtree_root, admin_root, admin_manifest_path, \
-            data_manifest_path, accrec_dir_path, adminnotes_path, \
-            legalnotes_path = self._read_skeleton(lts_path, identifier)
-
-        pairtree = PairTree(containing_dir=arch_root)
-        pairtree.gather_objects()
-
-        data_manifest = None
-        with open(data_manifest_path, 'r') as f:
-            data_manifest = load(f)
-
+    def _confirm_data_manifest_matches_filesystem(self, data_manifest,
+                                                  identifier, pairtree):
         if not data_manifest['acc_id'] == identifier:
             raise ValueError("Identifier mismatch with data_manifest.json")
 
@@ -82,6 +72,15 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         if i != num_ids_from_manifest:
             raise ValueError("ID(s) in the manifest that aren't on the " +
                              "file system!")
+
+    def _read_data(self, data_manifest_path, identifier, pairtree):
+        data_manifest = None
+        with open(data_manifest_path, 'r') as f:
+            data_manifest = load(f)
+
+        self._confirm_data_manifest_matches_filesystem(data_manifest,
+                                                       identifier,
+                                                       pairtree)
 
         for ms_entry in data_manifest['objs']:
             # Create a segment if one doesn't exist with that identifier
@@ -103,7 +102,8 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                     premis_path = bytestream_entry['dst']
                     premis = PremisRecord(frompath=premis_path)
                     try:
-                        relationships = premis.get_object_list()[0].get_relationship()
+                        relationships = premis.get_object_list()[0].\
+                            get_relationship()
                     except KeyError:
                         relationships = []
                     for x in relationships:
@@ -113,16 +113,15 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             if not is_presform:
                 seg.add_materialsuite(
                     self._pack_materialsuite(ms_entry,
-                                            data_manifest)
+                                             data_manifest)
                 )
-
-        return self.get_struct()
 
     def _pack_materialsuite(self, ms_entry, data_manifest):
         ms = MaterialSuite()
+        presform_ids = []
+        original_name = None
         premis = None
         for bytestream_entry in ms_entry['bytestreams']:
-            presform_ids = []
             if bytestream_entry['type'] == "file content":
                 ms.content = LDRPath(bytestream_entry['dst'])
             if bytestream_entry['type'] == "technical metadata":
@@ -130,22 +129,26 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             if bytestream_entry['type'] == "PREMIS":
                 ms.premis = LDRPath(bytestream_entry['dst'])
                 premis = PremisRecord(frompath=bytestream_entry['dst'])
+                original_name = premis.get_object_list()[0].get_originalName()
                 try:
-                    relationships = premis.get_object_list()[0].get_relationship()
+                    relationships = premis.get_object_list()[0].\
+                        get_relationship()
                 except KeyError:
                     relationships = []
                 for x in relationships:
                     if x.get_relationshipType() == "derivation" and \
-                            x.get_relationshipSubType == "is Source of":
+                            x.get_relationshipSubType() == "is Source of":
                         presform_ids.append(x.get_relatedObjectIdentifier()[0].\
                                             get_relatedObjectIdentifierValue())
-            for x in presform_ids:
-                entry = None
-                for y in data_manifest['objs']:
-                    if x == y['identifier']:
-                        entry = y
-                ms.add_presform(self._pack_presform_materialsuite(entry,
-                                                                  data_manifest))
+        for x in presform_ids:
+            entry = None
+            for y in data_manifest['objs']:
+                if x == y['identifier']:
+                    entry = y
+            ms.add_presform(
+                self._pack_presform_materialsuite(entry, data_manifest)
+            )
+        ms.content.item_name = original_name
         return ms
 
     def _pack_presform_materialsuite(self, ms_entry, data_manifest):
@@ -161,7 +164,8 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                 ms.premis = LDRPath(bytestream_entry['dst'])
                 premis = PremisRecord(frompath=bytestream_entry['dst'])
                 try:
-                    relationships = premis.get_object_list()[0].get_relationship()
+                    relationships = premis.get_object_list()[0].\
+                        get_relationship()
                 except KeyError:
                     relationships = []
                 for x in relationships:
@@ -169,7 +173,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                             x.get_relationshipSubType == "is Source of":
                         presform_ids.append(x.get_relatedObjectIdentifier()[0].\
                                             get_relatedObjectIdentifierValue())
-                ext = splitext(premis.get_object_list()[0].get_originalName())
+                ext = splitext(premis.get_object_list()[0].get_originalName())[1]
                 ms.extension = ext
                 for x in presform_ids:
                     entry = None
@@ -178,3 +182,38 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                             entry = y
                     ms.add_presform(self._pack_presform_materialsuite(entry))
         return ms
+
+    def _read_admin(self, admin_manifest_path, accrec_dir_path, adminnotes_path,
+                    legalnotes_path, admin_root):
+        # TODO: Add comparison with the manifest, probably, to mimic data
+        # manifest behavior, even though this one uses the file system instead
+        # of the manifest to find files.
+        admin_manifest = None
+        with open(admin_manifest_path, 'r') as f:
+            admin_manifest = load(f)
+        for x in scandir(accrec_dir_path):
+            accrec = LDRPath(x.path)
+            accrec.item_name = relpath(x.path, accrec_dir_path)
+            self.get_struct().add_accessionrecord(accrec)
+        for x in scandir(adminnotes_path):
+            adminnote = LDRPath(x.path)
+            adminnote.item_name = relpath(x.path, adminnotes_path)
+            self.get_struct().add_adminnote(adminnote)
+        for x in scandir(legalnotes_path):
+            legalnote = LDRPath(x.path)
+            legalnote.item_name = relpath(x.path, legalnotes_path)
+            self.get_struct().add_legalnote(legalnote)
+
+    def read(self, lts_path, identifier):
+        self.get_struct().identifier = identifier
+        arch_root, pairtree_root, admin_root, admin_manifest_path, \
+            data_manifest_path, accrec_dir_path, adminnotes_path, \
+            legalnotes_path = self._read_skeleton(lts_path, identifier)
+
+        pairtree = PairTree(containing_dir=arch_root)
+        pairtree.gather_objects()
+        self._read_data(data_manifest_path, identifier, pairtree)
+
+        self._read_admin(admin_manifest_path, accrec_dir_path, adminnotes_path,
+                         legalnotes_path, admin_root)
+        return self.get_struct()
