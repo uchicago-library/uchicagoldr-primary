@@ -23,10 +23,21 @@ class Converter(metaclass=ABCMeta):
         self._source_materialsuite = None
         self._working_dir = None
         self._timeout = None
+        self._target_extension = None
 
         self.set_source_materialsuite(input_materialsuite)
         self.set_working_dir(working_dir)
         self.set_timeout(timeout)
+
+    def get_target_extension(self):
+        return self._target_extension
+
+    def set_target_extension(self, x):
+        if not isinstance(x, str):
+            raise TypeError()
+        if not x.startswith("."):
+            raise ValueError("Extensions must begin with '.'")
+        self._target_extension = x
 
     def get_claimed_mimes(self):
         return self._claimed_mimes
@@ -63,6 +74,12 @@ class Converter(metaclass=ABCMeta):
         )
 
         if conv_premis:
+
+            conv_premis.get_object_list()[0].set_originalName(
+                orig_premis.get_object_list()[0].get_originalName() +
+                ".presform" + self.target_extension
+            )
+
             conv_premis.get_object_list()[0].add_linkingEventIdentifier(
                 self._build_linkingEventIdentifier(conv_event)
             )
@@ -251,3 +268,4 @@ class Converter(metaclass=ABCMeta):
     source_materialsuite = property(get_source_materialsuite, set_source_materialsuite)
     working_dir = property(get_working_dir, set_working_dir)
     timeout = property(get_timeout, set_timeout)
+    target_extension = property(get_target_extension, set_target_extension)

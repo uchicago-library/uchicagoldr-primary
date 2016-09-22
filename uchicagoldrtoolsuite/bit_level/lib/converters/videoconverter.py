@@ -83,6 +83,7 @@ class VideoConverter(Converter):
         """
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
+        self.target_extension = ".avi"
         self.ffmpeg_path = data_transfer_obj.get('ffmpeg_path', None)
         if self.ffmpeg_path is None:
             raise ValueError('No ffmpeg_path specified in the data' +
@@ -133,7 +134,7 @@ class VideoConverter(Converter):
         # Where we are aiming the LibreOffice CLI converter
         outdir = join(self.working_dir, str(uuid1()))
         makedirs(outdir)
-        conv_file_path = join(outdir, orig_name+".presform.avi")
+        conv_file_path = join(outdir, orig_name+".presform" + self.target_extension)
         makedirs(dirname(conv_file_path), exist_ok=True)
 
         # Fire 'er up
@@ -186,7 +187,7 @@ class VideoConverter(Converter):
         if presform_ldrpath and conv_file_premis_rec:
             log.debug("Adding PresformMaterialSuite to original MaterialSuite")
             presform_ms = PresformMaterialSuite()
-            presform_ms.set_extension(".avi")
+            presform_ms.set_extension(self.target_extension)
             presform_ms.content = presform_ldrpath
             presform_premis_path = join(self.working_dir, str(uuid1()))
             conv_file_premis_rec.write_to_file(presform_premis_path)
