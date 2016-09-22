@@ -15,23 +15,26 @@ from ..ldritems.ldrpath import LDRPath
 
 
 class FileSystemArchiveReader(ArchiveSerializationReader):
-    def __init__(self):
+    def __init__(self, lts_path, identifier):
         super().__init__()
+        self.lts_path = lts_path
+        self.identifier = identifier
 
     def _read_skeleton(self, lts_path, identifier):
-        arch_root = join(lts_path, str(identifier_to_path(identifier)), "arf")
+        arch_root = join(self.lts_path, str(identifier_to_path(identifier)),
+                         "arf")
         pairtree_root = join(arch_root, "pairtree_root")
         admin_root = join(arch_root, "admin")
         if not isdir(arch_root):
             raise ValueError("No such identifier ({}) in the long term " +
                              "storage environment ({})!".format(
-                                 lts_path, identifier))
+                                 self.lts_path, self.identifier))
         if not isdir(pairtree_root):
             raise ValueError("No pairtree root in Archive ({})!".format(
-                identifier))
+                self.identifier))
         if not isdir(admin_root):
             raise ValueError("No admin directory in Archive ({})!".format(
-                identifier))
+                self.identifier))
 
         admin_manifest_path = join(admin_root, "admin_manifest.json")
         data_manifest_path = join(admin_root, "data_manifest.json")
@@ -41,10 +44,10 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
 
         if not isfile(admin_manifest_path):
             raise ValueError("No admin_manifest.json in Archive ({})!".format(
-                identifier))
+                self.identifier))
         if not isfile(data_manifest_path):
             raise ValueError("No data_manifest.json in Archive ({})!".format(
-                identifier))
+                self.identifier))
         if not isdir(accrec_dir_path):
             raise ValueError()
         if not isdir(adminnotes_path):
@@ -173,7 +176,9 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                             x.get_relationshipSubType == "is Source of":
                         presform_ids.append(x.get_relatedObjectIdentifier()[0].\
                                             get_relatedObjectIdentifierValue())
-                ext = splitext(premis.get_object_list()[0].get_originalName())[1]
+                ext = splitext(
+                    premis.get_object_list()[0].get_originalName()
+                )[1]
                 ms.extension = ext
                 for x in presform_ids:
                     entry = None
@@ -204,15 +209,15 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             legalnote.item_name = relpath(x.path, legalnotes_path)
             self.get_struct().add_legalnote(legalnote)
 
-    def read(self, lts_path, identifier):
-        self.get_struct().identifier = identifier
+    def read(self):
+        self.get_struct().identifier = self.identifier
         arch_root, pairtree_root, admin_root, admin_manifest_path, \
             data_manifest_path, accrec_dir_path, adminnotes_path, \
-            legalnotes_path = self._read_skeleton(lts_path, identifier)
+            legalnotes_path = self._read_skeleton()
 
         pairtree = PairTree(containing_dir=arch_root)
         pairtree.gather_objects()
-        self._read_data(data_manifest_path, identifier, pairtree)
+        self._read_data(data_manifest_path, self.identifier, pairtree)
 
         self._read_admin(admin_manifest_path, accrec_dir_path, adminnotes_path,
                          legalnotes_path, admin_root)
