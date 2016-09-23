@@ -69,6 +69,15 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
                 ms.set_premis(val)
         except NotImplementedError:
             pass
+
+        # We do some expensive checking for things after this point so stop
+        # looking for anything if we don't find a PREMIS record. In the future
+        # finding the PREMIS record will be required because of the potential to
+        # need information out of the PREMIS record in order to locate the
+        # remaining components of the MaterialSuite
+        if not ms.get_premis():
+            return ms
+
         try:
             val = self.get_presform_list()
             if val:
