@@ -76,6 +76,7 @@ class OfficeToCSVConverter(Converter):
         """
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
+        self.target_extension = ".csv"
         self.libre_office_path = data_transfer_obj.get('libre_office_path', None)
         if self.libre_office_path is None:
             raise ValueError('No libre_office_path specificed in the data' +
@@ -180,7 +181,7 @@ class OfficeToCSVConverter(Converter):
         if presform_ldrpath and conv_file_premis_rec:
             log.debug("Adding PresformMaterialSuite to original MaterialSuite")
             presform_ms = PresformMaterialSuite()
-            presform_ms.set_extension(".csv")
+            presform_ms.set_extension(self.target_extension)
             presform_ms.content = presform_ldrpath
             presform_premis_path = join(self.working_dir, str(uuid1()))
             conv_file_premis_rec.write_to_file(presform_premis_path)
