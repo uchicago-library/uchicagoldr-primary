@@ -1,4 +1,5 @@
 from json import dumps
+
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from .segment import Segment

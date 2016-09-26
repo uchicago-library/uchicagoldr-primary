@@ -22,6 +22,9 @@ class Identifier(IdentifierCategory):
         """
         self.category = category.upper()
 
+    def __str__(self):
+        return self.value
+
     def show(self):
         """returns a tuple containing the category and the identifier value
         of an instance of the identifier class

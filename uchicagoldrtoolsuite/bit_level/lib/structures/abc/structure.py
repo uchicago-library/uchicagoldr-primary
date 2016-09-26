@@ -25,7 +25,7 @@ class Structure(metaclass=ABCMeta):
     def validate(self):
         for thing in self.get_required_parts():
             if  getattr(self, thing, None) == None:
-                return False
+                return (False, "missing rec part: {}".format(thing))
         return True
 
     def get_required_parts(self):

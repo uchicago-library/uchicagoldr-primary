@@ -1,17 +1,18 @@
+from os.path import join, dirname, expanduser, expandvars
 
-from grp import getgrnam
-from os import chmod, chown
-from os.path import join
-from pwd import getpwnam
-from sys import stdout
+from pypairtree.utils import identifier_to_path
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-
-from ..lib.fstools.absolutefilepathtree import AbsoluteFilePathTree
-from ..lib.readers.filesystemstagereader import FileSystemStageReader
+from uchicagoldrtoolsuite.core.lib.masterlog import \
+    spawn_logger, \
+    activate_master_log_file, \
+    activate_job_log_file, \
+    activate_stdout_log
 from ..lib.writers.filesystemarchivewriter import FileSystemArchiveWriter
-from ..lib.transformers.stagetoarchivetransformer import StageToArchiveTransformer
+from ..lib.readers.filesystemstagereader import FileSystemStageReader
+from ..lib.transformers.stagetoarchivetransformer import \
+    StageToArchiveTransformer
+
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -21,9 +22,14 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+log = spawn_logger(__name__)
+activate_master_log_file()
+activate_job_log_file()
+
+
 def launch():
     """
-    launch hook for entry point
+    entry point launch hook
     """
     app = Archiver(
             __author__=__author__,
@@ -38,64 +44,75 @@ def launch():
 
 class Archiver(CLIApp):
     """
-    This application reads a complete staging directory, translates the
-    resulting Staging Structure into an Archive Structure and writes that
-    Archive Structure to a location.
+    takes an external location and formats it's contents into the
+    beginnings of a staging structure and writes that to disk.
     """
-
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
-                          "for moving materials into the archive.",
+                          "for moving materials into archive structures.",
                           epilog="{}\n".format(self.__copyright__) +
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
-        self.parser.add_argument("directory", type=str, action='store',
-                                 help="Enter the stage directory that is" +
-                                 " ready to be archived")
-        self.parser.add_argument("origin_root", type=str, action='store',
-                                 help="Enter the root of the directory " +
-                                 "entered")
-        self.parser.add_argument("--archive", type=str, action='store',
-                                 help="Use this to specify a non-default " +
-                                 "archive location",
-                                 default="/data/repository/archive")
-        self.parser.add_argument("--group", type=str, action='store',
-                                 help="Enter the name of the group that" +
-                                 " should own the files in the archive.", default="repository")
-        self.parser.add_argument("--user", type=str, action='store',
-                                 help="Enter the name of the user who " +
-                                 "should own the files in the archive.", default="repository")
-        self.parser.add_argument(
-            "--dry-run", help="Use this flag if you don't actually want to " +
-            "change ownership of the files", action='store_true', default=False)
+        self.parser.add_argument("stage_id", help="The identifying name " +
+                                 "for the new staging directory",
+                                 type=str, action='store')
+        self.parser.add_argument("--staging_env", help="The path to your " +
+                                 "staging environment",
+                                 type=str,
+                                 default=None)
+        self.parser.add_argument("--lts_env", help="The path to your " +
+                                 "long term storage environment",
+                                 type=str,
+                                 default=None)
+        self.parser.add_argument("--eq_detect", help="The equality " +
+                                 "metric to use on writing, check " +
+                                 "LDRItemCopier for supported schemes.",
+                                 type=str, action='store',
+                                 default="bytes")
+
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-        staging_reader = FileSystemStageReader(args.directory)
-        staging_structure = staging_reader.read()
-        transformer = StageToArchiveTransformer(staging_structure)
-        id_type, identifier = IDBuilder().build('premisID').show()
-        archive_structure = transformer.transform(defined_id=identifier)
-        writer = FileSystemArchiveWriter(archive_structure, args.archive,
-                                         args.directory)
-        writer.write()
-        stdout.write("new arf located at {}\n".format(
-            join(writer.archive_loc,
-                 writer.pairtree.get_pairtree_path())))
-        file_tree = AbsoluteFilePathTree(
-            join(args.archive, writer.pairtree.get_pairtree_path()))
 
-        if not args.dry_run:
-            gid = getpwnam(args.user).pw_uid
-            uid = getgrnam(args.group).gr_gid
-            for f in file_tree:
-                if len(f.split('pairtree_root')) <= 1:
-                    pass
-                else:
-                    chown(f, uid, gid)
-                    chmod(f, 0x0750)
+        # Fire a stdout handler at our preferred verbosity
+        activate_stdout_log(args.verbosity)
+
+        # Set conf
+        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+
+        # App code
+
+        if args.staging_env:
+            staging_env = args.staging_env
+        else:
+            staging_env = self.conf.get("Paths", "staging_environment_path")
+
+        if args.lts_env:
+            lts_env = args.lts_env
+        else:
+            lts_env = self.conf.get("Paths",
+                                    "long_term_storage_environment_path")
+
+        stage_path = join(staging_env, args.stage_id)
+        log.info("Stage Path: {}".format(stage_path))
+        log.info("Reading Stage...")
+        stage = FileSystemStageReader(stage_path).read()
+        log.info("Transforming Stage into Archive")
+        archive = StageToArchiveTransformer(stage).transform()
+        log.info("Validating Archive...")
+        if not archive.validate():
+            log.critical("Invalid Archive! Aborting!")
+            raise ValueError("Invalid Archive! Aborting!")
+        log.info(
+            "Archive Path: {}".format(
+                identifier_to_path(archive.identifier, root=lts_env)
+            )
+        )
+        log.info("Writing Archive...")
+        FileSystemArchiveWriter(archive, lts_env, args.eq_detect).write()
+        log.info("Complete!")
 
 if __name__ == "__main__":
-    a = Archiver()
-    a.main()
+    s = Archiver()
+    s.main()

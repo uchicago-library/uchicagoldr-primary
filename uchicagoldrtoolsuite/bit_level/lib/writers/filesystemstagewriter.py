@@ -153,6 +153,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         try:
             if ms.get_presform_list():
                 for x in ms.get_presform_list():
+                    print(x.extension)
                     x.content.item_name = ms.content.item_name + \
                         ".presform" + \
                         x.extension

@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from uchicagoldrtoolsuite.core.lib.ark import Ark
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.transformer import Transformer
@@ -15,7 +17,7 @@ __version__ = "0.0.1dev"
 log = spawn_logger(__name__)
 
 
-class StageToArchiveTransformer(Transformer):
+class ArchiveToStageTransformer(Transformer):
     """The StageToARrchiveTransformer takes an instance of a Stage structure
     and copies its contents into an instance of an Archive structure
     """
@@ -26,13 +28,13 @@ class StageToArchiveTransformer(Transformer):
         and sets an empty destination structure.
 
         ___Args__
-        1. origin_structure (Stage) : a fully realized instance of a
-        Stage structure
+        1. origin_structure (Archive) : a fully realized instance of a
+        Archive structure
         """
         self.origin_structure = origin_structure
         self.destination_structure = None
 
-    def transform(self, archive_identifier=None):
+    def transform(self, stage_identifier=None):
         """returns a fully realized Archive structure containing the contents
         of the origin Stage structure.
 
@@ -42,9 +44,9 @@ class StageToArchiveTransformer(Transformer):
         """
         if self.destination_structure is not None:
             raise TypeError("a transformation already occured.")
-        if archive_identifier is None:
-            archive_identifier = Ark().value
-        self.destination_structure = Archive(archive_identifier)
+        if stage_identifier is None:
+            stage_identifier = uuid4().hex
+        self.destination_structure = Stage(stage_identifier)
 
         for n_segment in self.origin_structure.segment_list:
             self.destination_structure.add_segment(
@@ -76,11 +78,11 @@ class StageToArchiveTransformer(Transformer):
     def set_origin_structure(self, value):
         """sets the origin structure: it will only accept a Stage structure
         """
-        if isinstance(value, Stage):
+        if isinstance(value, Archive):
             self._origin_structure = value
         else:
-            raise ValueError("StageToPairtreeTransformer must have an " +
-                             "instace of a Stage in origin_structure")
+            raise ValueError("ArchiveToStageTransformerr must have an " +
+                             "instace of an Archive in origin_structure")
 
     def get_destination_structure(self):
         """returns the destination structure, or the structure created from transform method
@@ -93,7 +95,7 @@ class StageToArchiveTransformer(Transformer):
         self._destination_structure = value
 
     def __repr__(self):
-        return "< transform from stage {} to archive {}".\
+        return "< transform from archive {} to stage {}".\
             format(id(self.origin_structure),
                    id(self.destination_structure))
 

@@ -1,321 +1,361 @@
-
+from json import dumps, dump
 from os import makedirs
-from os.path import basename, dirname, exists, join, split
-from sys import stderr
+from os.path import exists, join, dirname, split
+from tempfile import TemporaryDirectory
+from uuid import uuid4
+import xml.etree.ElementTree as ET
 
-from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from pypremis.lib import PremisRecord
+from pypremis.nodes import *
 
+from pypairtree.utils import identifier_to_path
+from pypairtree.pairtree import PairTree
+from pypairtree.pairtreeobject import PairTreeObject
+from pypairtree.intraobjectbytestream import IntraObjectByteStream
+
+from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+from uchicagoldrtoolsuite.core.lib.doi import DOI
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
-from ..structures.archive import Archive
-from ..misc.accessionrecordmodifier import AccessionRecordModifier
-from ..misc.archivefitsmodifier import ArchiveFitsModifier
-from ..misc.archivemanifestwriter import ArchiveManifestWriter
-from ..misc.archivepremismodifier import ArchivePremisModifier
-
-from ..auditors.archiveauditor import ArchiveAuditor
-from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldrpath import LDRPath
-from ..fstools.pairtree import Pairtree
-from ..misc.premisdigestextractor import PremisDigestExtractor
-
-from ..misc.premisrestrictionextractor import PremisRestrictionsExtractor
+from ..ldritems.ldritemcopier import LDRItemCopier
+from ..ldritems.ldritemoperations import hash_ldritem
 
 
-__author__ = "Tyler Danstrom"
-__email__ = " tdanstrom@uchicago.edu"
-__company__ = "The University of Chicago Library"
-__copyright__ = "Copyright University of Chicago, 2016"
+__author__ = "Brian Balsamo"
+__email__ = "balsamo@uchicago.edu"
+__company = "The University of Chicago Library"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+log = spawn_logger(__name__)
+
+
+class SegmentedPairTreeObject(PairTreeObject):
+
+    _seg_id = None
+
+    def get_seg_id(self):
+        return self._seg_id
+
+    def set_seg_id(self, x):
+        self._seg_id = x
+
+    seg_id = property(get_seg_id, set_seg_id)
+
+
 class FileSystemArchiveWriter(ArchiveSerializationWriter):
     """
-    writes an archive structure to the file system as a directory.
-
-    It is instantited with an instance of an ArchiveStructure,
-    the archive root directory, and the origin root directory,
-
-    Once instantiated, the write() method should be called when ready
-    to serialize the archive structure to disk.
+    Writes an archive structure to disk utilizing PairTrees as a series
+    of directories and files.
     """
-    def __init__(self, aStructure, archive_loc, origin_loc):
+    def __init__(self, anArchive, aRoot, eq_detect="bytes"):
         """
-        initialize the writer
+        spawn a writer
 
-        __Args__
-
-        1. aStructure (StagingStructure): The structure to write
-        2. archive_loc (str): the root directory for the archive of the ldr
-        3. origin_loc (str): the root directory of the stage directory
-        being archived
         """
-        self.structure = aStructure
-        self.pairtree = Pairtree(self.structure.identifier)
-        self.audit_qualification = ArchiveAuditor(aStructure)
-        self.origin_root = split(origin_loc)[0]
-        self.identifier = IDBuilder().build('premisID')
-        self.premis_modifier = ArchivePremisModifier
-        self.fits_modifier = ArchiveFitsModifier
-        self.file_digest_extraction = PremisDigestExtractor
-        self.file_restriction_extraction = PremisRestrictionsExtractor
-        self.manifest_writer = ArchiveManifestWriter(archive_loc)
-        self.archive_loc = archive_loc
-        self.accessrecord_modifier = AccessionRecordModifier
+        super().__init__(anArchive)
+        self.lts_env_path = aRoot
+        self.eq_detect = eq_detect
+        log.debug("FileSystemArchiveWriter spawned: {}".format(str(self)))
+
+    def __repr__(self):
+        attr_dict = {
+            'lts_env_path': self.lts_env_path,
+            'eq_detect': self.eq_detect,
+            'struct': str(self.get_struct())
+        }
+        return "<FileSystemArchiveWriter {}>".format(dumps(attr_dict,
+                                                           sort_keys=True))
+
+    def _write_ark_dir(self, clobber=False):
+        ark_path = join(
+            str(identifier_to_path(self.get_struct().identifier,
+                                   root=self.lts_env_path)),
+            "arf"
+        )
+        if exists(ark_path) and not clobber:
+            err_text = "The Ark path ({}) ".format(ark_path) + \
+                "already exists in the long term storage environment. " + \
+                "Aborting."
+            log.critical(err_text)
+            raise OSError(err_text)
+        else:
+            makedirs(ark_path, exist_ok=True)
+        self._write_file_acc_namaste_tag(ark_path)
+        return ark_path
+
+    def _write_dirs_skeleton(self, ark_path):
+        admin_dir_path = join(ark_path, "admin")
+        pairtree_root = join(ark_path, "pairtree_root")
+        makedirs(pairtree_root, exist_ok=True)
+        self._write_pairtree_namaste_tag(pairtree_root)
+        accession_records_dir_path = join(admin_dir_path, "accession_records")
+        adminnotes_dir_path = join(admin_dir_path, "adminnotes")
+        legalnotes_dir_path = join(admin_dir_path, "legalnotes")
+
+        for x in [admin_dir_path, pairtree_root, accession_records_dir_path,
+                  adminnotes_dir_path, legalnotes_dir_path]:
+            makedirs(x, exist_ok=True)
+        return admin_dir_path, pairtree_root, accession_records_dir_path, \
+            adminnotes_dir_path, legalnotes_dir_path
+
+    def _put_materialsuite_into_pairtree(self, materialsuite,
+                                         seg_id, pair_tree):
+        obj_id = self._get_premis_obj_id(materialsuite.premis)
+        o = SegmentedPairTreeObject(identifier=obj_id, encapsulation="arf")
+        o.seg_id = seg_id
+        content = IntraObjectByteStream(
+            materialsuite.content,
+            intraobjectaddress="content.file"
+        )
+        premis = IntraObjectByteStream(
+            materialsuite.premis,
+            intraobjectaddress="premis.xml"
+        )
+        if len(materialsuite.technicalmetadata_list) > 1:
+            raise NotImplementedError(
+                "The Archive serializer currently only supports " +
+                "serializing a single FITs record as technical metadata."
+            )
+        fits = IntraObjectByteStream(
+            materialsuite.technicalmetadata_list[0],
+            intraobjectaddress="fits.xml"
+        )
+        o.add_bytestream(content)
+        o.add_bytestream(premis)
+        o.add_bytestream(fits)
+        pair_tree.add_object(o)
+        if materialsuite.presform_list:
+            for x in materialsuite.presform_list:
+                self._put_materialsuite_into_pairtree(x, seg_id, pair_tree)
+
+    def _get_premis_obj_id(self, premis_ldritem):
+        with TemporaryDirectory() as tmp_dir:
+            premis_path = join(tmp_dir, uuid4().hex)
+            tmp_item = LDRPath(premis_path)
+            LDRItemCopier(premis_ldritem, tmp_item).copy()
+            premis = PremisRecord(frompath=premis_path)
+            return premis.get_object_list()[0].\
+                get_objectIdentifier()[0].get_objectIdentifierValue()
+
+    def _pack_archive_into_pairtree(self, pair_tree):
+        for seg in self.get_struct().segment_list:
+            seg_id = seg.identifier
+            for materialsuite in seg.materialsuite_list:
+                self._put_materialsuite_into_pairtree(materialsuite, seg_id,
+                                                      pair_tree)
+
+    def _write_data(self, pair_tree, ark_path, data_manifest):
+        data_manifest['acc_id'] = self.get_struct().identifier
+        data_manifest['objs'] = []
+        for obj in pair_tree.objects:
+            manifest_entry = {
+                'identifier': obj.identifier,
+                'origin_segment': obj.seg_id,
+                'bytestreams': []
+            }
+            data_manifest['objs'].append(manifest_entry)
+            for bytestream in obj.bytestreams:
+                ms_path = join(ark_path,
+                               pair_tree.root_dir_name,
+                               str(identifier_to_path(obj.identifier)),
+                               obj.encapsulation)
+                makedirs(ms_path, exist_ok=True)
+                self._write_materialsuite_namaste_tag(ms_path)
+                path = join(ms_path,
+                            bytestream.intraobjectaddress)
+                makedirs(dirname(path), exist_ok=True)
+                dst_item = LDRPath(path)
+                cr = LDRItemCopier(bytestream.openable, dst_item).copy()
+                manifest_dict = {
+                    'origin': bytestream.openable.item_name,
+                    'dst': dst_item.item_name,
+                    'copy_report': cr
+                }
+                if not cr['src_eqs_dst']:
+                    raise ValueError("{}".format(bytestream.openable.item_name))
+                if bytestream.intraobjectaddress == "premis.xml":
+                    self._update_premis_in_place(join(ms_path, "premis.xml"),
+                                                 join(ms_path, "content.file"))
+                    manifest_dict['type'] = "PREMIS"
+                    manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                    manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                elif bytestream.intraobjectaddress == "fits.xml":
+                    self._update_fits_in_place(join(ms_path, "fits.xml"),
+                                               join(ms_path, "content.file"))
+                    manifest_dict['type'] = "technical metadata"
+                    manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                    manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                elif bytestream.intraobjectaddress == "content.file":
+                    manifest_dict['type'] = "file content"
+                    manifest_dict['md5'] = None
+                    manifest_dict['sha256'] = None
+                else:
+                    raise ValueError("Unrecognized intraobject address!")
+                manifest_entry['bytestreams'].append(manifest_dict)
+
+    def _add_premis_acc_event(self, premis_rec):
+        def _build_eventDetailInformation():
+            return EventDetailInformation(eventDetail="bystream copied into " +
+                                          "the long term storage environment.")
+
+        def _build_eventIdentifier():
+            return EventIdentifier("DOI", DOI().value)
+
+        def _build_eventOutcomeInformation():
+            return EventOutcomeInformation(eventOutcome="SUCCESS")
+
+        def _build_event():
+            e = Event(_build_eventIdentifier(), "ingestion", iso8601_dt())
+            e.add_eventDetailInformation(_build_eventDetailInformation())
+            e.add_eventOutcomeInformation(_build_eventOutcomeInformation())
+            return e
+
+        premis_rec.add_event(_build_event())
+
+    def _update_premis_in_place(self, premis_path, obj_path):
+        premis = PremisRecord(frompath=premis_path)
+        premis.get_object_list()[0].\
+            get_storage()[0].get_contentLocation().set_contentLocationValue(
+                obj_path
+            )
+        self._add_premis_acc_event(premis)
+        premis.write_to_file(premis_path)
+
+    def _update_fits_in_place(self, fits_path, obj_path):
+        ET.register_namespace('', "http://hul.harvard.edu/ois/xml/ns/fits/fits_output")
+        ET.register_namespace('xsi', "http://www.w3.org/2001/XMLSchema-instance")
+        tree = ET.parse(fits_path)
+        root = tree.getroot()
+        for x in root:
+            if "fileinfo" in x.tag:
+                for y in x:
+                    if "filepath" in y.tag:
+                        y.text = obj_path
+                    if "filename" in y.tag:
+                        y.text = split(obj_path)[1]
+        tree.write(fits_path)
+
+    def _write_data_manifest(self, data_manifest, admin_dir_path):
+        with open(join(admin_dir_path, "data_manifest.json"), 'w') as f:
+            dump(data_manifest, f, indent=4, sort_keys=True)
+
+    def _write_file_acc_namaste_tag(self, dir_path):
+        with open(join(dir_path, "0=icu-file-accession_0.1"), 'w') as f:
+            f.write("icu-file-accession 0.1")
+
+    def _write_pairtree_namaste_tag(self, dir_path):
+        with open(join(dir_path, "0=pairtree_0.1"), 'w') as f:
+            f.write("pairtree 0.1")
+
+    def _write_materialsuite_namaste_tag(self, dir_path):
+        with open(join(dir_path, "0=icu-materialsuite_0.1"), 'w') as f:
+            f.write("icu-materialsuite 0.1")
+
+    def _write_adminnotes(self, adminnotes_dir_path, admin_manifest):
+        if self.get_struct().adminnote_list:
+            for x in self.get_struct().adminnote_list:
+                dst_path = join(adminnotes_dir_path, x.item_name)
+                manifest_dict = {
+                    'origin': x.item_name,
+                    'acc_id': self.get_struct().identifier,
+                    'type': 'admin note',
+                    'dst': dst_path
+                }
+                dst_item = LDRPath(dst_path)
+                cr = LDRItemCopier(x, dst_item).copy()
+                if not cr['src_eqs_dst']:
+                    raise ValueError("Bad admin note write!")
+                manifest_dict['copy_report'] = cr
+                manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                admin_manifest.append(manifest_dict)
+
+    def _write_legalnotes(self, legalnotes_dir_path, admin_manifest):
+        if self.get_struct().legalnote_list:
+            for x in self.get_struct().legalnote_list:
+                dst_path = join(legalnotes_dir_path, x.item_name)
+                manifest_dict = {
+                    'origin': x.item_name,
+                    'acc_id': self.get_struct().identifier,
+                    'type': 'legal note',
+                    'dst': dst_path
+                }
+                dst_item = LDRPath(dst_path)
+                cr = LDRItemCopier(x, dst_item).copy()
+                if not cr['src_eqs_dst']:
+                    raise ValueError("Bad legal note write!")
+                manifest_dict['copy_report'] = cr
+                manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                admin_manifest.append(manifest_dict)
+
+    def _write_accessionrecords(self, accessionrecords_dir_path,
+                                admin_manifest):
+        for x in self.get_struct().accessionrecord_list:
+            dst_path = join(accessionrecords_dir_path, x.item_name)
+            manifest_dict = {
+                'origin': x.item_name,
+                'acc_id': self.get_struct().identifier,
+                'type': 'accession_record',
+                'dst': dst_path
+            }
+            dst_item = LDRPath(dst_path)
+            cr = LDRItemCopier(x, dst_item).copy()
+            if not cr['src_eqs_dst']:
+                raise ValueError("Bad accession record write!")
+            manifest_dict['copy_report'] = cr
+            manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+            manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+            admin_manifest.append(manifest_dict)
+
+    def _add_data_manifest_to_admin_manifest(self, admin_dir_path,
+                                             admin_manifest):
+        data_manifest_item = LDRPath(join(admin_dir_path, 'data_manifest.json'))
+        manifest_dict = {
+            'origin': None,
+            'acc_id': self.get_struct().identifier,
+            'type': 'data_manifest',
+            'dst': 'data_manifest.json'
+        }
+        md5_hash_str = hash_ldritem(data_manifest_item, algo='md5')
+        sha256_hash_str = hash_ldritem(data_manifest_item, algo='sha256')
+        manifest_dict['md5'] = md5_hash_str
+        manifest_dict['sha256'] = sha256_hash_str
+        admin_manifest.append(manifest_dict)
+
+    def _write_admin_manifest(self, admin_manifest, admin_dir_path):
+        with open(join(admin_dir_path, 'admin_manifest.json'), 'w') as f:
+            dump(admin_manifest, f, indent=4, sort_keys=True)
+
+    def _write_WRITE_FINISHED(self, admin_dir_path):
+        with open(join(admin_dir_path, "WRITE_FINISHED.json"), 'w') as f:
+            dump(
+                {"FINISHED_TIME": iso8601_dt(),
+                 "FINISHED_STATUS": "GOOD"},
+                f, indent=4, sort_keys=True
+            )
 
     def write(self):
-        """
-        checks of the structure is validate and audits the contents of the
-        structure for errors.
+        log.debug("Writing Archive")
 
-        If the structure is valid and there are no errors in the audit it
-        serializes the structure to disk which includes the following steps
+        ark_path = self._write_ark_dir()
+        admin_dir_path, pairtree_root, accession_records_dir_path, \
+            adminnotes_dir_path, legalnotes_dir_path = \
+            self._write_dirs_skeleton(ark_path)
 
-        1. modifies premis records in the structure to include archive
-        information
+        data_manifest = {}
+        admin_manifest = []
 
-        2. modifies fits technical metadata records to include archive
-        information
-
-        3. sets up archive file serialization structure and copies contents
-        of the structure into the serialization structure
-
-        4. extracts message digests for the resource files from premis records
-        and appends them with the new file location to the archive manifest
-
-        """
-        if self.structure.validate() and self.audit_qualification.audit():
-            pairtree_path = self.pairtree.get_pairtree_path()
-            data_dir = join(self.archive_loc, pairtree_path, 'data')
-            admin_dir = join(self.archive_loc, pairtree_path, 'admin')
-            makedirs(data_dir, exist_ok=True)
-            makedirs(admin_dir, exist_ok=True)
-            accrecord_dir = join(admin_dir, 'accessionrecord')
-            legalnote_dir = join(admin_dir, 'legalnotes')
-            adminnote_dir = join(admin_dir, 'adminnotes')
-            makedirs(accrecord_dir, exist_ok=True)
-            makedirs(legalnote_dir, exist_ok=True)
-            makedirs(adminnote_dir, exist_ok=True)
-            accrecords = []
-            for n_acc_record in self.structure.accessionrecord_list:
-                acc_filename = basename(n_acc_record.item_name)
-                LDRItemCopier(n_acc_record, LDRPath(
-                    join(accrecord_dir,
-                         acc_filename))).copy()
-                accrecords.append(join(accrecord_dir, acc_filename))
-            for n_legal_note in self.structure.legalnote_list:
-                legalnote_filename = basename(n_legal_note.item_name)
-                LDRItemCopier(n_legal_note, LDRPath(
-                    join(legalnote_dir,
-                         legalnote_filename))).copy()
-            for n_adminnote in self.structure.adminnote_list:
-                adminnote_filename = basename(n_adminnote.item_name)
-                LDRItemCopier(n_adminnote, LDRPath(
-                    join(adminnote_dir,
-                         adminnote_filename))).copy()
-            accession_restrictions = set([])
-            for n_segment in self.structure.segment_list:
-                segment_id = n_segment.label+'-'+str(n_segment.run)
-                techmd_dir = join(admin_dir, segment_id, 'TECHMD')
-                premis_dir = join(admin_dir, segment_id, 'PREMIS')
-                segment_data_dir = join(data_dir, segment_id)
-                makedirs(techmd_dir, exist_ok=True)
-                makedirs(premis_dir, exist_ok=True)
-                makedirs(segment_data_dir, exist_ok=True)
-                for n_msuite in n_segment.materialsuite_list:
-                    n_content_destination_fullpath = join(
-                        data_dir, segment_id, n_msuite.content.item_name)
-
-                    modifier = self.premis_modifier(
-                        n_msuite.premis, n_content_destination_fullpath)
-                    modifier.change_record()
-                    digest_data = self.file_digest_extraction(
-                        n_msuite.premis).extract_digests()
-                    restrictions = self.file_restriction_extraction(
-                        n_msuite.premis).extract_restrictions()
-                    for n_restriction in restrictions:
-                        accession_restrictions.add(n_restriction)
-                    self.manifest_writer.add_a_line(
-                        n_content_destination_fullpath, digest_data)
-
-                    makedirs(
-                        join(data_dir, dirname(
-                            n_msuite.content.item_name)), exist_ok=True)
-                    makedirs(
-                        join(premis_dir, dirname(
-                            n_msuite.content.item_name)), exist_ok=True)
-                    makedirs(
-                        join(techmd_dir, dirname(
-                            n_msuite.content.item_name)), exist_ok=True)
-
-                    new_premis_path = join(
-                        premis_dir, n_msuite.premis.item_name)
-                    new_content_path = join(
-                        data_dir, segment_id,
-                        n_msuite.content.item_name)
-
-                    makedirs(new_content_path, exist_ok=True)
-
-                    new_content_ldrpath = LDRPath(new_content_path)
-                    modifier.record.write_to_file(new_premis_path)
-                    LDRItemCopier(n_msuite.content, new_content_ldrpath).copy()
-
-                    for n_techmd in n_msuite.technicalmetadata_list:
-                        new_tech_record_loc = join(
-                            techmd_dir, n_techmd.item_name)
-                        new_tech_record = self.fits_modifier(
-                            n_techmd, new_tech_record_loc).modify_record()
-                        new_tech_record.write(new_tech_record_loc)
-                    if getattr(n_msuite, 'presform_list', None):
-                        for n_presform in n_msuite.presform_list:
-                            n_destination_fullpath = join(
-                                data_dir, segment_id,
-                                n_presform.content.item_name)
-                            modifier = self.premis_modifier(
-                                n_presform.premis, n_destination_fullpath)
-                            modifier.change_record()
-                            makedirs(
-                                join(data_dir, dirname(
-                                    n_presform.content.item_name)),
-                                exist_ok=True)
-                            makedirs(
-                                join(premis_dir, dirname(
-                                    n_presform.content.item_name)),
-                                exist_ok=True)
-                            makedirs(
-                                join(techmd_dir, dirname(
-                                    n_presform.content.item_name)),
-                                exist_ok=True)
-                            digest_data = self.file_digest_extraction(
-                                n_presform.premis).extract_digests()
-                            restrictions = self.file_restriction_extraction(
-                                n_presform.premis).extract_restrictions()
-                            self.manifest_writer.add_a_line(
-                                n_destination_fullpath, digest_data)
-
-                            new_premis_path = join(
-                                premis_dir, n_presform.premis.item_name)
-                            new_presform_content_path = join(
-                                data_dir, segment_id,
-                                n_presform.content.item_name)
-                            new_presform_content_ldrpath = LDRPath(
-                                new_presform_content_path)
-                            modifier.record.write_to_file(new_premis_path)
-                            LDRItemCopier(n_presform.content,
-                                 new_presform_content_ldrpath).copy()
-                        for n_techmd in n_presform.technicalmetadata_list:
-                            new_tech_record_loc = join(
-                                techmd_dir, n_techmd.item_name)
-                            new_tech_record = self.fits_modifier(
-                                n_techmd, new_tech_record_loc).modify_record()
-
-                            new_tech_record.write(new_tech_record_loc)
-                self.manifest_writer.write()
-                for a_record in accrecords:
-                    acc_modifier = self.accessrecord_modifier(
-                        LDRPath(a_record))
-                    acc_modifier.add_restriction_info(list(restrictions))
-                    acc_modifier.write(a_record)
-
-        else:
-            stderr.write(self.structure.explain_results())
-            stderr.write(self.audit_qualification.show_errors())
-
-    def get_structure(self):
-        """returns the structure that this writer serializes
-        """
-        return self._structure
-
-    def set_structure(self, value):
-        """ sets the structure attribute for this writer. It will reject any structure
-        object that it not an Archive structure.
-        """
-        if isinstance(value, Archive):
-            self._structure = value
-        else:
-            raise ValueError(
-                "FileSystemArchiveWriter reqiures an Archive structure" +
-                " in the structure attribute")
-
-    def get_pairtree(self):
-        """returns the pairtree object for the writer
-        """
-        return self._pairtree
-
-    def set_pairtree(self, value):
-        """sets the pairtree object for the writer. It will only accept
-        a Pairtree object
-        """
-        if isinstance(value, Pairtree):
-            self._pairtree = value
-        else:
-            raise ValueError(
-                "FileSystemArchiveWriter must take an instance of a " +
-                "Pairtree in the pairtree attribute")
-
-    def get_origin_root(self):
-        """returns the origin root string for the writer
-        """
-        return self._origin_root
-
-    def set_origin_root(self, value):
-        """sets the origin root for the writer. It will only accept a file
-        path that exists on the machine that the code is running on
-        """
-        if exists(value):
-            self._origin_root = value
-        else:
-            raise ValueError("{} origin root does not exist.".format(value))
-
-    def get_archive_loc(self):
-        """returns the archive root of the writer
-        """
-        return self._archive_loc
-
-    def set_archive_loc(self, value):
-        """ sets the archive root for the writer. It will only accept a filepath that
-        exists on the machine that the application is running on
-        """
-        if exists(value):
-            self._archive_loc = value
-        else:
-            raise ValueError(
-                "{} archive loc does not exist".format(value))
-
-    def get_identifier(self):
-        """ returns the identifer for the writer
-        """
-        return self._identifier
-
-    def set_identifier(self, value):
-        """sets the identifier factory for the writer
-        """
-        self._identifier = value
-
-    def get_premis_modifier(self):
-        """ returns the premis modifier for the writer
-        """
-        return self._premis_modifier
-
-    def set_premis_modifier(self, value):
-        """sets the premis modifier for the writer
-        """
-        self._premis_modifier = value
-
-    def get_fits_modifier(self):
-        """sets the fits modifier for the writer
-        """
-        return self._fits_modifier
-
-    def set_fits_modifier(self, value):
-        """returns the fits modifier for the factory
-        """
-        self._fits_modifier = value
-
-    structure = property(get_structure, set_structure)
-    pairtree = property(get_pairtree, set_pairtree)
-    origin_root = property(get_origin_root, set_origin_root)
-    archive_loc = property(get_archive_loc, set_archive_loc)
-    fits_modifer = property(get_fits_modifier, set_fits_modifier)
-    premis_modifier = property(get_premis_modifier, set_premis_modifier)
-    identifier = property(get_identifier, set_identifier)
+        pair_tree = PairTree(containing_dir=ark_path)
+        self._pack_archive_into_pairtree(pair_tree)
+        self._write_data(pair_tree, ark_path, data_manifest)
+        self._write_data_manifest(data_manifest, admin_dir_path)
+        self._write_adminnotes(adminnotes_dir_path, admin_manifest)
+        self._write_legalnotes(legalnotes_dir_path, admin_manifest)
+        self._write_accessionrecords(accession_records_dir_path, admin_manifest)
+        self._add_data_manifest_to_admin_manifest(admin_dir_path, admin_manifest)
+        self._write_admin_manifest(admin_manifest, admin_dir_path)
+        self._write_WRITE_FINISHED(admin_dir_path)

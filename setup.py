@@ -38,7 +38,7 @@ setup(
             'ldrprune = uchicagoldrtoolsuite.bit_level.app.pruner:launch',
             'ldrcreatepremis = uchicagoldrtoolsuite.bit_level.app.premiscreator:launch',
             'ldrsetrestriction = uchicagoldrtoolsuite.bit_level.app.premisrestrictionsetter:launch',
-            'ldrarchive = uchicagoldrtoolsuite.bit_levelapp.archiver:launch',
+            'ldrarchive = uchicagoldrtoolsuite.bit_level.app.archiver:launch',
             'ldraru = uchicagoldrtoolsuite.core.app.aru:launch',
             'ldrpostinstall = uchicagoldrtoolsuite.core.app.postinstall:launch',
             'ldraddadminnote = uchicagoldrtoolsuite.bit_level.app.adminnoteadder:launch',
@@ -46,7 +46,7 @@ setup(
             'ldraddaccessionrecord = uchicagoldrtoolsuite.bit_level.app.accessionrecordadder:launch',
             'ldrcreatetechmd = uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator:launch',
             'ldrcreatepresforms = uchicagoldrtoolsuite.bit_level.app.presformcreator:launch',
-            'ldrmakeagent = uchicagoldrtoolsuite.core.app.premisagentmaker:launch'
+            'ldrmakeagent = uchicagoldrtoolsuite.core.app.premisagentmaker:launch',
         ]
     },
     package_data = {
