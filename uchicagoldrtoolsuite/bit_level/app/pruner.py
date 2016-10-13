@@ -2,9 +2,11 @@ from argparse import Action
 from os.path import exists, join
 import re
 from sys import stdout
+from json import dumps
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.readers.filesystemstagereader import FileSystemStageReader
+from ..lib.processors.genericpruner import GenericPruner
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -90,20 +92,10 @@ class Pruner(CLIApp):
         staging_directory_reader = FileSystemStageReader(stage_fullpath)
         staging_structure = staging_directory_reader.read()
         try:
-            for n_segment in staging_structure.segment:
-                for n_suite in n_segment.materialsuite:
-                    for req_part in n_suite.required_parts:
-                        if isinstance(getattr(n_suite, req_part), list):
-                            for n_file in getattr(n_suite, req_part):
-                                for pattern in args.patterns:
-                                    match_pattern = re.compile(pattern)
-                                    if match_pattern.match(n_file.item_name):
-                                        success, message = n_file.delete(
-                                            final=args.final_decision
-                                        )
-                                        stdout.write("{}\n".format(message))
-
-            return 0
+            p = GenericPruner(staging_structure, args.patterns,
+                              final=args.final_decision)
+            r = p.prune()
+            print(dumps(r, indent=4))
         except KeyboardInterrupt:
             return 131
 
