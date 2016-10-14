@@ -19,6 +19,14 @@ class GenericPruner(object):
                     raise RuntimeError("the pruner can not operate on " +
                                        "stages for which presforms have " +
                                        "been generated.")
+                if ms.premis:
+                    raise RuntimeError("the pruner can not operate on " +
+                                       "stages for which PREMIS has " +
+                                       "been generated.")
+                if ms.technicalmetadata_list:
+                    raise RuntimeError("the pruner can not operate on " +
+                                       "stages for which techmd has " +
+                                       "been generated.")
                 if self._check_match(ms.content.item_name):
                     to_delete.append(ms.content)
         for x in to_delete:

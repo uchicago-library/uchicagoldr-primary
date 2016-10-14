@@ -66,7 +66,7 @@ class Pruner(CLIApp):
                                  help="Enter a valid directory that needs " +
                                  "to be pruned",
                                  action='store')
-        self.parser.add_argument("patterns",
+        self.parser.add_argument("selection_patterns",
                                  help="Enter a list of regular " +
                                  "expressions matching file names that can " +
                                  "be deleted from the staging directory",
@@ -75,6 +75,11 @@ class Pruner(CLIApp):
                                  "staging environment",
                                  type=str,
                                  default=None)
+        self.parser.add_argument("--exclusion_pattern",
+                                 help="Specify a list of patterns which" +
+                                 "'save' an item whose item name matches " +
+                                 "a deletion pattern from being removed.",
+                                 action='append', default=[])
         # Parse arguments into args namespace
         args = self.parser.parse_args()
 
@@ -92,7 +97,8 @@ class Pruner(CLIApp):
         staging_directory_reader = FileSystemStageReader(stage_fullpath)
         staging_structure = staging_directory_reader.read()
         try:
-            p = GenericPruner(staging_structure, args.patterns,
+            p = GenericPruner(staging_structure, args.selection_patterns,
+                              exclude_patterns=args.exclusion_pattern,
                               final=args.final_decision)
             r = p.prune()
             print(dumps(r, indent=4))
