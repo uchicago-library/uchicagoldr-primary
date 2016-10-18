@@ -12,8 +12,8 @@ class GenericPruner(object):
 
     def prune(self):
         report = {}
-        to_delete = []
         for seg in self.stage.segment_list:
+            to_delete = []
             for ms in seg.materialsuite_list:
                 if ms.presform_list:
                     raise RuntimeError("the pruner can not operate on " +
@@ -29,15 +29,18 @@ class GenericPruner(object):
                                        "been generated.")
                 if self._check_match(ms.content.item_name):
                     to_delete.append(ms.content)
-        for x in to_delete:
-            if self.final is True:
-                try:
-                    x.delete(final=self.final)
-                    report[x.item_name] = "Deleted"
-                except:
-                    report[x.item_name] = "Deletion Error"
-            else:
-                report[x.item_name] = "Would have been deleted"
+            for x in to_delete:
+                report_identifier = "{}|{}".format(
+                    seg.identifier, x.item_name
+                )
+                if self.final is True:
+                    try:
+                        x.delete(final=self.final)
+                        report[report_identifier] = "Deleted"
+                    except:
+                        report[report_identifier] = "Deletion Error"
+                else:
+                    report[report_identifier] = "Would have been deleted"
         return report
 
     def _check_match(self, x):

@@ -58,10 +58,10 @@ class Pruner(CLIApp):
                           "{}".format(self.__email__),
                           fromfile_prefix_chars='@')
         # Add application specific flags/arguments
-        self.parser.add_argument('--final_decision', type=bool,
+        self.parser.add_argument('--final_decision',
                                  help="A flag to set when you really want to" +
                                  " delete the files matching the pattern",
-                                 default=False)
+                                 default=False, action='store_true')
         self.parser.add_argument("stage_id",
                                  help="Enter a valid directory that needs " +
                                  "to be pruned",
