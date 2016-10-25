@@ -80,6 +80,8 @@ setup(
         '/tarball/master#egg=controlledvocab',
         'https://github.com/uchicago-library/uchicagoldr-hierarchicalrecords' +
         '/tarball/master#egg=hierarchicalrecord',
+        'https://github.com/bnbalsamo/nothashes' +
+        '/tarball/master#egg=nothashes',
     ],
     install_requires = [
         'treelib',
@@ -88,9 +90,8 @@ setup(
         'controlledvocab',
         'hierarchicalrecord',
         'requests',
-        'fasteners'
-    ],
-    extras_require = {
-        'magic_mimes': ["python-magic"]
-    }
+        'fasteners',
+        'python-magic',
+        'nothashes'
+    ]
 )

@@ -204,15 +204,16 @@ class GenericPREMISCreator(object):
         1. (PremisNode.ObjectCharacteristics): a populated ObjectCharacteristics
         node
         """
-        fixity1, fixity2 = cls._make_fixity(file_path)
+        fixitys = cls._make_fixity(file_path)
         size = str(getsize(file_path))
         formats = cls._make_format(file_path, item)
         objChar = ObjectCharacteristics(formats[0])
         if len(formats) > 1:
             for x in formats[1:]:
                 objChar.add_format(x)
-        objChar.set_fixity(fixity1)
-        objChar.add_fixity(fixity2)
+        for x in fixitys:
+            if x is not None:
+                objChar.add_fixity(x)
         objChar.set_size(size)
         return objChar
 
@@ -245,14 +246,39 @@ class GenericPREMISCreator(object):
 
         __Returns__
 
-        1. (PremisNode.Fixity): The md5 fixity node
-        2. (PremisNode.Fixity): the sha256 fixity node
+        1. fixitys ([PremisNode.Fixity]): fixity nodes including computed
+            values
         """
-        md5_fixity = Fixity('md5', sane_hash('md5', file_path))
-        md5_fixity.set_messageDigestOriginator('python3 hashlib.md5')
-        sha256_fixity = Fixity('sha256', sane_hash('sha256', file_path))
-        sha256_fixity.set_messageDigestOriginator('python3 hashlib.sha256')
-        return md5_fixity, sha256_fixity
+        fixitys = []
+        with open(file_path, 'rb') as f:
+            try:
+                md5_fixity = Fixity('md5', sane_hash('md5', f))
+                md5_fixity.set_messageDigestOriginator('python3 hashlib.md5')
+                fixitys.append(md5_fixity)
+            except:
+                pass
+        with open(file_path, 'rb') as f:
+            try:
+                sha256_fixity = Fixity('sha256', sane_hash('sha256', f))
+                sha256_fixity.set_messageDigestOriginator('python3 hashlib.sha256')
+                fixitys.append(sha256_fixity)
+            except:
+                pass
+        with open(file_path, 'rb') as f:
+            try:
+                crc32_fixity = Fixity('crc32', sane_hash('crc32', f))
+                crc32_fixity.set_messageDigestOriginator('python3 zlib.crc32')
+                fixitys.append(crc32_fixity)
+            except:
+                pass
+        with open(file_path, 'rb') as f:
+            try:
+                adler32_fixity = Fixity('adler32', sane_hash('adler32', f))
+                adler32_fixity.set_messageDigestOriginator('python3 zlib.adler32')
+                fixitys.append(adler32_fixity)
+            except:
+                pass
+        return fixitys
 
     @classmethod
     def _make_format(cls, file_path, item):

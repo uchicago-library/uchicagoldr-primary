@@ -4,6 +4,7 @@ from hashlib import md5, sha256
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from .ldrpath import LDRPath
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -124,6 +125,8 @@ def move(src, dst, clobber=False, eq_detect='bytes'):
 def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
     """
     hash any flavor of LDRItem
+    see the sane_hash function in uchicagoldrtoolsuite.core.lib.convenience
+    for the cannonical list of supported hashes (and hash like operations)
 
     __Args__
 
@@ -136,36 +139,11 @@ def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
 
     __Returns__
 
-    hash_str (str): The str-ified hash hexdigest
+    x (str): The str-ified hash hexdigest
     """
 
     log.debug("Hashing {} with algo={}".format(ldritem.item_name, algo))
 
-    supported_hashes = [
-        "md5",
-        "sha256"
-    ]
-
-    if algo not in supported_hashes:
-        raise ValueError("{} is not a supported hash.".format(str(algo)) +
-                         "Supported Hashes include:\n"
-                         "{}".format(", ".join(supported_hashes)))
-
-    if algo == "md5":
-        hasher = md5()
-    elif algo == "sha256":
-        hasher = sha256()
-    else:
-        raise AssertionError("Implementation goofs in the LDR Item hasher.")
-
-    hash_str = None
-
     with ldritem.open() as f:
-        data = f.read(buffering)
-        while data:
-            hasher.update(data)
-            data = f.read(buffering)
-        hash_hex = hasher.hexdigest()
-        hash_str = str(hash_hex)
-
-    return hash_str
+        x = sane_hash(algo, f, buffering)
+    return x

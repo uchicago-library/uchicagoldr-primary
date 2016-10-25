@@ -2,6 +2,7 @@ from sys import stderr
 from urllib.request import urlopen, URLError
 from uuid import uuid1
 
+
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
@@ -38,7 +39,7 @@ def iso8601_dt(dt=None, tz=None):
     return dt.isoformat()
 
 
-def sane_hash(hash_algo, file_path, block_size=65536):
+def sane_hash(hash_algo, flo, buf=65536):
     """
     compute a hash hexdigest without loading giant things into RAM
 
@@ -47,7 +48,7 @@ def sane_hash(hash_algo, file_path, block_size=65536):
     1. hash_algo (str): an algo with an implementation hooked
         - md5
         - sha256
-    2. file_path (str): the abspath to the file
+    2. flo (bytes io): a file like object to draw bytes from
 
     __KWArgs__
 
@@ -58,26 +59,35 @@ def sane_hash(hash_algo, file_path, block_size=65536):
     * (str): The hexdigest of the specified hashing algo on the file
     """
     from hashlib import md5, sha256
-    if hash_algo == 'md5':
-        hasher = md5
-    elif hash_algo == 'sha256':
-        hasher = sha256
-    else:
-        raise NotImplemented('Hashing algos supported are md5 and sha256')
+    from nothashes import crc32, adler32
 
-    hash_result = hasher()
-    with open(file_path, 'rb') as f:
-        while True:
-            try:
-                data = f.read(block_size)
-            except OSError as e:
-                stderr.write("{} could not be read\n".format(file_path))
-                stderr.write(e)
-                stderr.write("\n")
-            if not data:
-                break
-            hash_result.update(data)
-    return str(hash_result.hexdigest())
+    supported_algos = {
+        'md5': md5,
+        'sha256': sha256,
+        'crc32': crc32,
+        'adler32': adler32
+    }
+
+    hash_cls = supported_algos.get(hash_algo, None)
+
+    if hash_cls is None:
+        raise NotImplemented(
+            'Unsupported hashing algo ({}) passed to sane_hash!'.format(hash_algo) +
+            'Hashing algos supported are: '.format(str(supported_algos.keys()))
+        )
+
+    hasher = hash_cls()
+    while True:
+        try:
+            data = flo.read(buf)
+        except OSError as e:
+            stderr.write("stream could not be read\n")
+            stderr.write(e)
+            stderr.write("\n")
+        if not data:
+            break
+        hasher.update(data)
+    return hasher.hexdigest()
 
 
 def retrieve_resource_filepath(resource_path, pkg_name=None):

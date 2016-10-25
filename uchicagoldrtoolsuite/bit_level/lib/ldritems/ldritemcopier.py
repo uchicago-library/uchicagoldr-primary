@@ -80,7 +80,10 @@ class LDRItemCopier(object):
         supported_detections = [
             "bytes",
             "name",
-            "hash",
+            "md5",
+            "crc32",
+            "adler32",
+            "sha256",
             "size"
         ]
 
@@ -139,19 +142,25 @@ class LDRItemCopier(object):
             )
         )
 
-        if eq_detect == "bytes":
-            return self.ldritem_equal_byte_contents()
-        elif eq_detect == "hash":
-            return self.ldritem_equal_contents_hash()
-        elif eq_detect == "name":
-            return self.ldritem_equal_names()
-        elif eq_detect == "size":
-            return self.ldritem_equal_contents_size()
-        else:
-            raise AssertionError(
-                "How did we get this far without setting eq_detect " +
-                "to something valid?"
+        # Metrics go from least paranoid to most paranoid, generally
+        # Choosing a metric has a significant effect on the amount of time
+        # copies will take, either in aggregate or of large files.
+        equality_metrics = {
+            'adler32': self.ldritem_equal_contents_adler32,
+            'crc32': self.ldritem_equal_contents_crc32,
+            'md5': self.ldritem_equal_contents_md5,
+            'sha256': self.ldritem_equal_contents_sha256,
+            'bytes': self.ldritem_equal_byte_contents
+        }
+
+        metric = equality_metrics.get(eq_detect)
+
+        if metric is None:
+            raise ValueError(
+                "{} isn't a valid equality metric!".format(eq_detect)
             )
+        else:
+            return metric()
 
     def copy(self, eat_exceptions=False):
         """
@@ -266,7 +275,7 @@ class LDRItemCopier(object):
             self.src.item_name, self.dst.item_name))
         return False
 
-    def ldritem_equal_contents_hash(self):
+    def ldritem_equal_contents_hash(self, x):
         """
         Determines if src and dst are equivalent via hashing both
 
@@ -276,13 +285,25 @@ class LDRItemCopier(object):
         """
         log.debug("Checking hash equality of {} and {}".format(
             self.src.item_name, self.dst.item_name))
-        if hash_ldritem(self.src) == hash_ldritem(self.dst):
+        if hash_ldritem(self.src, x) == hash_ldritem(self.dst, x):
             log.debug("{} == {} (hash)".format(
                 self.src.item_name, self.dst.item_name))
             return True
         log.debug("{} != {} (hash)".format(
             self.src.item_name, self.dst.item_name))
         return False
+
+    def ldritem_equal_contents_adler32(self):
+        return self.ldritem_equal_contents_hash('adler32')
+
+    def ldritem_equal_contents_crc32(self):
+        return self.ldritem_equal_contents_hash('crc32')
+
+    def ldritem_equal_contents_sha256(self):
+        return self.ldritem_equal_contents_hash('sha256')
+
+    def ldritem_equal_contents_md5(self):
+        return self.ldritem_equal_contents_hash('md5')
 
     def ldritem_equal_names(self):
         """
