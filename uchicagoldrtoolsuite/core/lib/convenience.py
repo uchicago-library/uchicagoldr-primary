@@ -1,4 +1,5 @@
 from sys import stderr
+from codecs import encode
 from urllib.request import urlopen, URLError
 from uuid import uuid1
 
@@ -9,6 +10,120 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+def hex_str_to_bytes(h):
+    """
+    Convert a hex string to bytes
+
+    convert a utf-8 encoded string of characters assumed
+    to be a series of bytes encoded as two characters
+    (0-9, a-f) representing a base 16 (hexidecimal) number
+    into a bytes object
+
+    This function is the inverse of bytes_to_hex_str()
+
+    __Args__
+
+    1. h (str): The hex represented as a string
+
+    __Returns__
+
+    (bytes): The hex represented as a bytes object
+    """
+    return bytes(bytearray.fromhex(h))
+
+
+def bytes_to_hex_str(b):
+    """
+    Convert a bytes object to a utf-8 encoded hexademical string representation
+
+    converts a bytes object to a utf-8 encoded hexademical string.
+    Each byte is encoded as a two character substring, and those
+    substrings are concatenated together.
+
+    This function is the inverse of hex_str_to_bytes()
+
+    __Args__
+
+    1. b (bytes): The bytes to be converted to a hex str
+
+    __Returns__
+
+    (str): The hexademical representation of the bytes
+    """
+    return encode(b, 'hex').decode('utf-8')
+
+
+def hex_str_to_chr_str(h, encoding="utf-8"):
+    """
+    Tries to convert a utf-8 encoded hex byte representation
+    to an encoded string of the characters at those code-points
+
+    This conversion is attempted wholesale (aka, one bad byte breaks it).
+
+    __Args__
+
+    1. h (str): The utf-8 encoded hex representation of the bytes
+
+    __KWArgs__
+
+    encoding (str): The encoding of the hex byte representation
+
+    __Returns__
+
+    (str): A string of the characters represented by the hex
+    """
+    return hex_str_to_bytes(h).decode(encoding)
+
+
+def hex_str_to_chr_array(h):
+    # !!! WARNING !!!
+    # This operation is potentially lossy, as there is no way
+    # to reasonably escape where are writing an ordinal from
+    # where we are writing a character with no advance knowledge
+    # of the file names.
+    #
+    # One potential solution might be to prepend every file name with
+    # a dynamically computed delimiter, but that makes the file names
+    # fairly ugly, complicates the operation, and I don't know if there
+    # is actually much demand for it. It also has an unhandled failure
+    # case in instances where a file name contains every ASCII character,
+    # which would have to be resolved by implementing multicharacter
+    # delimiters, which starts to get really ugly really fast.
+    """
+    Return an array of ASCII characters and/or hex str byte representations
+    for a given hex representation of some bytes.
+
+    This function is paranoid, and opts to represent any characters outside
+    of the ASCII range as a hexademical representation of the byte values
+    at that point.
+
+    __Args__
+
+    h (str): Some bytes represented as a hexadecimal string
+
+    __Returns__
+
+    result([str]): An array of strings, for bytes representing a code point
+        shared with ASCII this will be the resulting ASCII character, for those
+        which fall outside of the ascii range it will be a hexademical
+        representation of the byte value, prefixed with 0x.
+    """
+    if not len(h) % 2 == 0:
+        raise ValueError("Improperly encoded hex string!")
+    index = 2
+    result = []
+    while index <= len(h):
+        byte_of_interest = h[index-2:index]
+        ordinal = int(byte_of_interest, base=16)
+        if ordinal >= int("80", base=16):
+            character = hex(ordinal)
+        else:
+            character = chr(ordinal)
+        result.append(character)
+        index = index + 2
+    return result
 
 
 def iso8601_dt(dt=None, tz=None):

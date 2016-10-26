@@ -82,6 +82,8 @@ setup(
         '/tarball/master#egg=hierarchicalrecord',
         'https://github.com/bnbalsamo/nothashes' +
         '/tarball/master#egg=nothashes',
+        'https://github.com/bnbalsamo/pypairtree' +
+        '/tarball/master#egg=pypairtree'
     ],
     install_requires = [
         'treelib',
@@ -92,6 +94,7 @@ setup(
         'requests',
         'fasteners',
         'python-magic',
-        'nothashes'
+        'nothashes',
+        'pypairtree'
     ]
 )

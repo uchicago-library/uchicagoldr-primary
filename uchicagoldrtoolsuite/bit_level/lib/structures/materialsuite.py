@@ -22,18 +22,23 @@ class MaterialSuite(Structure):
     original itself
     """
 
-    required_parts = ['content', 'original', 'premis',
+    required_parts = ['identifier', 'content', 'original', 'premis',
                       'technicalmetadata_list', 'presform_list']
 
-    def __init__(self):
+    def __init__(self, identifier):
         self._content = None
         self._premis = None
         self._technicalmetadata = []
         self._presform = None
+        self._identifier = None
+
+        self.identifier = identifier
+
         log.debug("MaterialSuite spawned: {}".format(str(self)))
 
     def __repr__(self):
         attr_dict = {
+            'identifier': self.identifier,
             'content': str(self.get_content()),
             'premis': str(self.get_premis())
         }
@@ -46,6 +51,17 @@ class MaterialSuite(Structure):
         else:
             attr_dict['presform_list'] = None
         return "<MaterialSuite {}>".format(dumps(attr_dict, sort_keys=True))
+
+    def get_identifier(self):
+        return self._identifier
+
+    def set_identifier(self, x):
+        if not isinstance(x, str):
+            raise ValueError("Bad materialsuite identifier!")
+        self._identifier = x
+
+    def del_identifier(self):
+        self.identifier = None
 
     def set_content(self, content):
         log.debug("Setting content in {} to {}".format(str(self), str(content)))
@@ -155,6 +171,12 @@ class MaterialSuite(Structure):
                 if not x.validate():
                     return False
         return super().validate()
+
+    identifier = property(
+        get_identifier,
+        set_identifier,
+        del_identifier
+    )
 
     content = property(
         get_content,

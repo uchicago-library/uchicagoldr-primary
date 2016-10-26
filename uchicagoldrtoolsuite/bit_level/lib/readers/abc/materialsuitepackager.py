@@ -1,4 +1,9 @@
 from abc import abstractmethod, ABCMeta
+from tempfile import TemporaryDirectory
+from uuid import uuid4
+from os.path import join
+
+from pypremis.lib import PremisRecord
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.packager import Packager
@@ -33,7 +38,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     """
     @abstractmethod
     def __init__(self):
-        self.set_struct(MaterialSuite())
+        pass
 
     @abstractmethod
     def get_content(self):
@@ -51,43 +56,51 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     def get_presform_list(self):
         pass
 
+    def get_identifier(self, premis_ldritem):
+        with TemporaryDirectory() as tmp_dir:
+            tmp_file_name = uuid4().hex
+            tmp_file_path = join(tmp_dir, tmp_file_name)
+            with premis_ldritem.open('rb') as f:
+                with open(tmp_file_path, 'wb') as tmp_file:
+                    tmp_file.write(f.read())
+            premis = PremisRecord(frompath=tmp_file_path)
+            ident = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+        return ident
+
     def package(self):
         """
         default package implementation
         """
         log.debug("Packaging")
-        ms = self.get_struct()
+
         try:
-            val = self.get_content()
-            if val:
-                ms.set_content(val)
+            premis = self.get_premis()
+            if not premis:
+                raise ValueError()
         except NotImplementedError:
-            pass
+            raise ValueError()
+
+        ms = MaterialSuite(self.get_identifier(premis))
+        self.set_struct(ms)
+
         try:
-            val = self.get_premis()
-            if val:
-                ms.set_premis(val)
+            content = self.get_content()
+            if content:
+                ms.set_content(content)
         except NotImplementedError:
             pass
 
-        # We do some expensive checking for things after this point so stop
-        # looking for anything if we don't find a PREMIS record. In the future
-        # finding the PREMIS record will be required because of the potential to
-        # need information out of the PREMIS record in order to locate the
-        # remaining components of the MaterialSuite
-        if not ms.get_premis():
-            return ms
 
         try:
-            val = self.get_presform_list()
-            if val:
-                ms.set_presform_list(val)
+            presform_list = self.get_presform_list()
+            if presform_list:
+                ms.set_presform_list(presform_list)
         except NotImplementedError:
             pass
         try:
-            val = self.get_techmd_list()
-            if val:
-                ms.set_technicalmetadata_list(val)
+            techmd_list = self.get_techmd_list()
+            if techmd_list:
+                ms.set_technicalmetadata_list(techmd_list)
         except NotImplementedError:
             pass
         log.debug("Packaging complete")
