@@ -77,11 +77,12 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
             premis = self.get_premis()
             if not premis:
                 raise ValueError()
+            ms = MaterialSuite(self.get_identifier(premis))
+            self.set_struct(ms)
+            self.struct.premis = premis
         except NotImplementedError:
             raise ValueError()
 
-        ms = MaterialSuite(self.get_identifier(premis))
-        self.set_struct(ms)
 
         try:
             content = self.get_content()

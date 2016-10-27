@@ -54,7 +54,7 @@ class LDRItemCopier(object):
 
     def set_src(self, src):
         if not isinstance(src, LDRItem):
-            raise ValueError()
+            raise ValueError("src must be LDRItem, not {}".format(type(src)))
         self._src = src
 
     def get_dst(self):
@@ -62,7 +62,7 @@ class LDRItemCopier(object):
 
     def set_dst(self, dst):
         if not isinstance(dst, LDRItem):
-            raise ValueError()
+            raise ValueError("dst must be LDRItem, not {}".format(type(dst)))
         self._dst = dst
 
     def get_clobber(self):

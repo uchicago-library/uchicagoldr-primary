@@ -13,6 +13,7 @@ except:
     pass
 
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
+from uchicagoldrtoolsuite.core.lib.convenience import bytes_to_hex_str
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
@@ -125,14 +126,15 @@ class GenericPREMISCreator(object):
         premis_file = join(working_dir_path, str(uuid1()))
         recv_item = LDRPath(recv_file)
         c = LDRItemCopier(item, recv_item, clobber=True)
-        r = c.copy()
-        rec = cls.make_record(recv_file, item)
+        r = c.copy(eq_detect="md5")
+        assert(r['src_eqs_dst'])
+        rec = cls.make_record(recv_file, item.item_name)
         rec.write_to_file(premis_file)
         recv_item.delete(final=True)
         return LDRPath(premis_file)
 
     @classmethod
-    def make_record(cls, file_path, item):
+    def make_record(cls, file_path, original_name=None):
         """
         build a PremisNode.Object from a file and use it to instantiate a record
 
@@ -145,11 +147,13 @@ class GenericPREMISCreator(object):
 
         1. (PremisRecord): The populated record instance
         """
-        obj = cls._make_object(file_path, item)
+        if original_name is None:
+            original_name = file_path
+        obj = cls._make_object(file_path, original_name)
         return PremisRecord(objects=[obj])
 
     @classmethod
-    def _make_object(cls, file_path, item):
+    def _make_object(cls, file_path, original_name):
         """
         make an object entry auto-populated with the required information
 
@@ -164,11 +168,10 @@ class GenericPREMISCreator(object):
         """
         objectIdentifier = cls._make_objectIdentifier()
         objectCategory = 'file'
-        objectCharacteristics = cls._make_objectCharacteristics(file_path, item)
-        originalName = item.item_name
+        objectCharacteristics = cls._make_objectCharacteristics(file_path, original_name)
         storage = cls._make_Storage(file_path)
         obj = Object(objectIdentifier, objectCategory, objectCharacteristics)
-        obj.set_originalName(originalName)
+        obj.set_originalName(bytes_to_hex_str(original_name))
         obj.set_storage(storage)
         return obj
 
@@ -190,7 +193,7 @@ class GenericPREMISCreator(object):
         return ObjectIdentifier(identifier_tup[0], identifier_tup[1])
 
     @classmethod
-    def _make_objectCharacteristics(cls, file_path, item):
+    def _make_objectCharacteristics(cls, file_path, original_name):
         """
         make a new objectCharacteristics node for a file
 
@@ -206,7 +209,7 @@ class GenericPREMISCreator(object):
         """
         fixitys = cls._make_fixity(file_path)
         size = str(getsize(file_path))
-        formats = cls._make_format(file_path, item)
+        formats = cls._make_format(file_path, original_name)
         objChar = ObjectCharacteristics(formats[0])
         if len(formats) > 1:
             for x in formats[1:]:
@@ -281,7 +284,7 @@ class GenericPREMISCreator(object):
         return fixitys
 
     @classmethod
-    def _make_format(cls, file_path, item):
+    def _make_format(cls, file_path, original_name):
         """
         make new format nodes for a file
 
@@ -294,7 +297,7 @@ class GenericPREMISCreator(object):
 
         1. (list): a list of format nodes
         """
-        magic_num, guess = cls._detect_mime(file_path, item)
+        magic_num, guess = cls._detect_mime(file_path, original_name)
         formats = []
         if magic_num:
             premis_magic_format_desig = FormatDesignation(magic_num)
@@ -342,7 +345,7 @@ class GenericPREMISCreator(object):
         return ContentLocation("Unix File Path", file_path)
 
     @classmethod
-    def _detect_mime(cls, file_path, item):
+    def _detect_mime(cls, file_path, original_name):
         """
         use both magic number and file extension mime detection on a file
 
@@ -357,11 +360,12 @@ class GenericPREMISCreator(object):
         2. (str): file extension mime detected
         """
         try:
-            magic_num = from_file(file_path, mime=True).decode()
+            magic_num = from_file(file_path, mime=True)
         except:
             magic_num = None
         try:
-            guess = guess_type(item.item_name)[0]
+            original_name = original_name.decode('utf-8')
+            guess = guess_type(original_name)[0]
         except:
             guess = None
         return magic_num, guess
