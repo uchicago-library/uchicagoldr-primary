@@ -26,7 +26,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     ABC for all MaterialSuitePackagers
 
     mandates:
-        # .get_original()
+        * .get_original()
         * .get_premis()
         * .get_techmd()
         * .get_presform()
@@ -38,7 +38,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     """
     @abstractmethod
     def __init__(self):
-        pass
+        self.struct = MaterialSuite()
 
     @abstractmethod
     def get_content(self):
@@ -77,8 +77,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
             premis = self.get_premis()
             if not premis:
                 raise ValueError()
-            ms = MaterialSuite(self.get_identifier(premis))
-            self.set_struct(ms)
+            self.struct.identifier = self.get_identifier(premis)
             self.struct.premis = premis
         except NotImplementedError:
             raise ValueError()
@@ -87,7 +86,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         try:
             content = self.get_content()
             if content:
-                ms.set_content(content)
+                self.struct.set_content(content)
         except NotImplementedError:
             pass
 
@@ -95,14 +94,14 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         try:
             presform_list = self.get_presform_list()
             if presform_list:
-                ms.set_presform_list(presform_list)
+                self.struct.set_presform_list(presform_list)
         except NotImplementedError:
             pass
         try:
             techmd_list = self.get_techmd_list()
             if techmd_list:
-                ms.set_technicalmetadata_list(techmd_list)
+                self.struct.set_technicalmetadata_list(techmd_list)
         except NotImplementedError:
             pass
         log.debug("Packaging complete")
-        return ms
+        return self.struct

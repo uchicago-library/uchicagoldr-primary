@@ -17,18 +17,29 @@ from ..ldritems.ldritemcopier import LDRItemCopier
 
 class ExternalFileSystemPairTreeMaterialSuitePackager(MaterialSuitePackager):
     def __init__(self, path, root=None):
+        super().__init__()
         self.path = path
         self.root = root
         self.working_dir = TemporaryDirectory()
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
 
+    def package(self):
+        # Because the PREMIS file is this weird made up thing in a TempDir
+        # we have to keep the temporary directory around for the duration
+        # of the life of the structure - otherwise it poofs out of existence
+        # with the packager and we've just packaged a bunch of stuff that
+        # doesn't exist anymore. My (temporary?) solution to this is to cram
+        # a reference to the temporary directory into the resulting structure
+        # itself, which isn't particular pretty, but I think it will work
+        # as expected in nearly all the obvious cases.
+        self.struct._tmpdir = self.working_dir
+        return super().package()
+
     def get_premis(self):
         # Surprise! Nothing coming in externally is assumed to have a valid
         # pre-existing PREMIS record. Instead we are going to whip one into
-        # existence and pretend it was there all along. Deleting the packager
-        # instance will also delete the temp dir that the premis record
-        # is in - so don't do that until you've written it somewhere.
+        # existence and pretend it was there all along.
         def copy_to_working():
 
             def build_ingestion_event(copyreport):

@@ -25,14 +25,12 @@ class MaterialSuite(Structure):
     required_parts = ['identifier', 'content', 'original', 'premis',
                       'technicalmetadata_list', 'presform_list']
 
-    def __init__(self, identifier):
+    def __init__(self):
         self._content = None
         self._premis = None
         self._technicalmetadata = []
         self._presform = None
         self._identifier = None
-
-        self.identifier = identifier
 
         log.debug("MaterialSuite spawned: {}".format(str(self)))
 

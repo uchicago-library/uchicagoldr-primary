@@ -86,13 +86,13 @@ class FileWalker(object):
         if filter_pattern is not None:
             filter_pattern = re_compile(filter_pattern)
 
-        if isinstance(directory, str):
-            return self._walk_abs_directory(directory, filter_pattern, inc_dirs)
-        elif isinstance(directory, RootedPath):
+        if isinstance(directory, RootedPath):
             return self._walk_rooted_directory(directory, filter_pattern,
                                                inc_dirs)
+        elif isinstance(directory, str) or isinstance(directory, bytes):
+            return self._walk_abs_directory(directory, filter_pattern, inc_dirs)
         else:
-            raise ValueError('dir not a str or RootedPath')
+            raise ValueError('dir not a str, bytes, or RootedPath object')
 
     def _walk_rooted_directory(self, directory, filter_pattern, inc_dirs):
         flat_list = [x for x in scandir(directory.fullpath)]

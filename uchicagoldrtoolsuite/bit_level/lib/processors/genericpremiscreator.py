@@ -5,12 +5,12 @@ from uuid import uuid1
 from os.path import join
 from json import dumps
 
-from pypremis.lib import PremisRecord
-from pypremis.nodes import *
 try:
     from magic import from_file
 except:
     pass
+from pypremis.lib import PremisRecord
+from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from uchicagoldrtoolsuite.core.lib.convenience import bytes_to_hex_str
@@ -128,7 +128,7 @@ class GenericPREMISCreator(object):
         c = LDRItemCopier(item, recv_item, clobber=True)
         r = c.copy(eq_detect="md5")
         assert(r['src_eqs_dst'])
-        rec = cls.make_record(recv_file, item.item_name)
+        rec = cls.make_record(bytes(recv_file, 'utf-8'), item.item_name)
         rec.write_to_file(premis_file)
         recv_item.delete(final=True)
         return LDRPath(premis_file)

@@ -53,7 +53,8 @@ class FilePathTree(object):
         else:
             self.filter_pattern = None
         if path:
-            if not (isinstance(path, str) or isinstance(path, RootedPath)):
+            if not (isinstance(path, str) or isinstance(path, RootedPath) \
+                    or isinstance(path, bytes)):
                 raise ValueError()
             if isinstance(path, str):
                 if not isabs(path):
@@ -79,17 +80,27 @@ class FilePathTree(object):
 
     def _init_tree(self, path):
         """
-        Initialize the tree root. For relpaths this will be "", for abspaths
-        this will be "/"
+        Initialize the tree root.
+
+        This function recursively splits the path until it is atomic (and so,
+        almost assuredly the tree root). This function was rewritten to be open
+        ended in order to account for bytes objects as input in addition to
+        strings.
 
         __Args__
 
-        1. path (str): The path to init a tree for
+        1. path (str/bytes): The path to init a tree for
         """
-        if path[0] == '/':
-            self.tree.create_node("/", "/")
-        else:
-            self.tree.create_node("", "")
+        def get_root(path):
+            # Recursive: split it until it won't split anymore.
+            x = split(path)[0]
+            if x == path:
+                return x
+            else:
+                return get_root(x)
+
+        root = get_root(path)
+        self.tree.create_node(root, root)
 
     def add_node(self, path):
         """
@@ -101,7 +112,9 @@ class FilePathTree(object):
 
         """
         # Warning: this blows up if the tree was init'd with a relpath and you
-        # try to add an abspath, or vice versa.
+        # try to add an abspath, or vice versa. It also blows up if you mix
+        # strings and bytes as path inputs. So probably don't do either of
+        # those things.
         if self.tree.root is None:
             self._init_tree(path)
         path_split = split(path)
