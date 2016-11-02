@@ -75,6 +75,7 @@ class Converter(metaclass=ABCMeta):
 
         if conv_premis:
 
+            # TODO: Decide whether or not to set originalNames for presforms
             conv_premis.get_object_list()[0].set_originalName(
                 orig_premis.get_object_list()[0].get_originalName() +
                 ".presform" + self.target_extension

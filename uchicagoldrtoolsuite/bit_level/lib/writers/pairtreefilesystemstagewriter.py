@@ -27,7 +27,7 @@ class PairTreeFileSystemStageWriter(StageSerializationWriter):
         for x in ['admin', 'segments']:
             required_dirs.append(Path(self.stage_root, x))
 
-        for x in ['accessionrecords', 'adminnotes', 'legalnotes', 'manifests']:
+        for x in ['accessionrecords', 'adminnotes', 'legalnotes']:
             required_dirs.append(Path(self.stage_root, 'admin', x))
 
         for x in required_dirs:
@@ -93,25 +93,14 @@ class PairTreeFileSystemSegmentWriter(object):
         self.eq_detect = eq_detect
 
     def _write_skeleton(self):
-#        materialsuites_root = Path(self.segment_root, 'materialsuites')
         materialsuites_root = self.segment_root
         makedirs(str(materialsuites_root))
 
-#    def _write_manifest(self):
-#        with open(str(Path(self.segment_root, 'manifest.json')), 'w') as f:
-#            dump(
-#                [x.identifier for x in self.struct.materialsuite_list],
-#                f,
-#                ident=4
-#            )
-
     def write(self):
         self._write_skeleton()
-#        self._write_manifest()
         for x in self.struct.materialsuite_list:
             ptfsmsw = PairTreeFileSystemMaterialSuiteWriter(
                 x,
-#                str(Path(self.segment_root, 'materialsuites')),
                 str(self.segment_root),
                 eq_detect=self.eq_detect
             )
