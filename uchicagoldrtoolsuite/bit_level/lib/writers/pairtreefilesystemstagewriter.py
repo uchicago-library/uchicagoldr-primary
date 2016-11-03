@@ -8,6 +8,7 @@ from pypairtree.utils import identifier_to_path
 from .abc.stageserializationwriter import StageSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
+from ..ldritems.ldritemoperations import hash_ldritem
 
 
 def makedirs(x):
@@ -127,20 +128,27 @@ class PairTreeFileSystemMaterialSuiteWriter(object):
         target_premis_item = LDRPath(str(target_premis_path))
 
         copiers = []
-        copiers.append(LDRItemCopier(self.struct.content, target_content_item))
-        copiers.append(LDRItemCopier(self.struct.premis, target_premis_item))
+        copiers.append(LDRItemCopier(self.struct.content, target_content_item,
+                                     clobber=True))
+        copiers.append(LDRItemCopier(self.struct.premis, target_premis_item,
+                                     clobber=True))
 
         for x in self.struct.technicalmetadata_list:
-            if x.item_name:
-                item_name = x.item_name
-            else:
-                item_name = uuid4().hex
+            # Use a quick checksum as the file name, this should prevent
+            # un-needed writing so long as the records don't change in between
+            # reading and writing a stage where the TECHMD already exists.
+            # It also keeps the names equivalent if a stage is moved
+            # from one root to another.
+            # So long as the file sizes stay small the overhead of computing
+            # a quick checksum like adler should be negligible.
+            h = hash_ldritem(x, algo="adler32")
             target_techmd_path = Path(self.materialsuite_root,
-                                      'TECHMD', item_name)
+                                      'TECHMD', h)
             target_techmd_item = LDRPath(str(target_techmd_path))
-            copiers.append(LDRItemCopier(x, target_techmd_item))
+            copiers.append(LDRItemCopier(x, target_techmd_item, clobber=True))
 
         for x in copiers:
             cr = x.copy()
             if not cr['src_eqs_dst']:
+                print(cr)
                 raise ValueError()

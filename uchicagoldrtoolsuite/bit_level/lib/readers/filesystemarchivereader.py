@@ -121,7 +121,6 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
 
     def _pack_materialsuite(self, ms_entry, data_manifest):
         ms = MaterialSuite()
-        presform_ids = []
         original_name = None
         premis = None
         for bytestream_entry in ms_entry['bytestreams']:
@@ -133,59 +132,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                 ms.premis = LDRPath(bytestream_entry['dst'])
                 premis = PremisRecord(frompath=bytestream_entry['dst'])
                 original_name = premis.get_object_list()[0].get_originalName()
-                try:
-                    relationships = premis.get_object_list()[0].\
-                        get_relationship()
-                except KeyError:
-                    relationships = []
-                for x in relationships:
-                    if x.get_relationshipType() == "derivation" and \
-                            x.get_relationshipSubType() == "is Source of":
-                        presform_ids.append(x.get_relatedObjectIdentifier()[0].\
-                                            get_relatedObjectIdentifierValue())
-        for x in presform_ids:
-            entry = None
-            for y in data_manifest['objs']:
-                if x == y['identifier']:
-                    entry = y
-            ms.add_presform(
-                self._pack_presform_materialsuite(entry, data_manifest)
-            )
         ms.content.item_name = original_name
-        return ms
-
-    def _pack_presform_materialsuite(self, ms_entry, data_manifest):
-        ms = PresformMaterialSuite()
-        premis = None
-        for bytestream_entry in ms_entry['bytestreams']:
-            presform_ids = []
-            if bytestream_entry['type'] == "file content":
-                ms.content = LDRPath(bytestream_entry['dst'])
-            if bytestream_entry['type'] == "technical metadata":
-                ms.add_technicalmetadata(LDRPath(bytestream_entry['dst']))
-            if bytestream_entry['type'] == "PREMIS":
-                ms.premis = LDRPath(bytestream_entry['dst'])
-                premis = PremisRecord(frompath=bytestream_entry['dst'])
-                try:
-                    relationships = premis.get_object_list()[0].\
-                        get_relationship()
-                except KeyError:
-                    relationships = []
-                for x in relationships:
-                    if x.get_relationshipType() == "derivation" and \
-                            x.get_relationshipSubType == "is Source of":
-                        presform_ids.append(x.get_relatedObjectIdentifier()[0].\
-                                            get_relatedObjectIdentifierValue())
-                ext = splitext(
-                    premis.get_object_list()[0].get_originalName()
-                )[1]
-                ms.extension = ext
-                for x in presform_ids:
-                    entry = None
-                    for y in data_manifest['objs']:
-                        if x == y['identifier']:
-                            entry = y
-                    ms.add_presform(self._pack_presform_materialsuite(entry))
         return ms
 
     def _read_admin(self, admin_manifest_path, accrec_dir_path, adminnotes_path,

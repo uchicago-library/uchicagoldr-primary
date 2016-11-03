@@ -28,11 +28,11 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     mandates:
         * .get_original()
         * .get_premis()
-        * .get_techmd()
-        * .get_presform()
+        * .get_techmd_list()
 
-    all of which should return iters of LDRItem subclasses
-    if an implementation doesn't implement any of these by choice it should
+    all of which should return LDRItem subclasses or iters of them, if list
+    is specified in the method name.
+    If an implementation doesn't implement any of these by choice it should
     raise a NotImplementedError. The default .package() implementation
     simply eats these.
     """
@@ -50,10 +50,6 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
 
     @abstractmethod
     def get_techmd_list(self):
-        pass
-
-    @abstractmethod
-    def get_presform_list(self):
         pass
 
     def get_identifier(self, premis_ldritem):
@@ -90,13 +86,6 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         except NotImplementedError:
             pass
 
-
-        try:
-            presform_list = self.get_presform_list()
-            if presform_list:
-                self.struct.set_presform_list(presform_list)
-        except NotImplementedError:
-            pass
         try:
             techmd_list = self.get_techmd_list()
             if techmd_list:

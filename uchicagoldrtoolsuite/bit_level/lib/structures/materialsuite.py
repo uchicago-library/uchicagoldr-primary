@@ -23,13 +23,12 @@ class MaterialSuite(Structure):
     """
 
     required_parts = ['identifier', 'content', 'original', 'premis',
-                      'technicalmetadata_list', 'presform_list']
+                      'technicalmetadata_list']
 
     def __init__(self):
         self._content = None
         self._premis = None
         self._technicalmetadata = []
-        self._presform = None
         self._identifier = None
 
         log.debug("MaterialSuite spawned: {}".format(str(self)))
@@ -44,10 +43,6 @@ class MaterialSuite(Structure):
             attr_dict['technicalmetadata_list'] = [str(x) for x in self.technicalmetadata_list]
         else:
             attr_dict['technicalmetadata_list'] = None
-        if self.presform_list:
-            attr_dict['presform_list'] = [str(x) for x in self.presform_list]
-        else:
-            attr_dict['presform_list'] = None
         return "<MaterialSuite {}>".format(dumps(attr_dict, sort_keys=True))
 
     def get_identifier(self):
@@ -114,41 +109,6 @@ class MaterialSuite(Structure):
             x = self.get_technicalmetadata_list.pop(index)
         log.debug("Popped technicalmetadata({}) from {}".format(str(x), str(self)))
 
-    def get_presform_list(self):
-        return self._presform
-
-    def set_presform_list(self, presform_list):
-        self.del_presform_list()
-        self._presform = []
-        for x in presform_list:
-            self.add_presform(x)
-
-    def del_presform_list(self):
-        while self.presform_list:
-            self.pop_presform()
-        self._presform = None
-
-    def add_presform(self, presform, index=None):
-        if self.get_presform_list() is None:
-            self._presform = []
-        if index is None:
-            index = len(self.get_technicalmetadata_list())
-        self.get_presform_list().insert(index, presform)
-        log.debug("Added presform({}) to {}".format(str(presform), str(self)))
-
-    def get_presform(self, index):
-        return self.get_presform_list()[index]
-
-    def pop_presform(self, index=None):
-        if index is None:
-            x = self.get_presform_list().pop()
-        else:
-            x = self.get_presform_list().pop(index)
-        if len(self.presform_list == 0):
-            self._presform = None
-        log.debug("Popping presform({}) from {}".format(str(x), str(self)))
-        return x
-
     def validate(self):
         if not isinstance(self.get_content(), LDRItem):
             return False
@@ -161,12 +121,6 @@ class MaterialSuite(Structure):
         if len(self.get_technicalmetadata_list()) > 0:
             for x in self.get_technicalmetadata_list():
                 if not isinstance(x, LDRItem):
-                    return False
-        if len(self.get_presform_list()) > 0:
-            for x in self.get_presform_list():
-                if not isinstance(x, MaterialSuite):
-                    return False
-                if not x.validate():
                     return False
         return super().validate()
 
@@ -192,10 +146,4 @@ class MaterialSuite(Structure):
         get_technicalmetadata_list,
         set_technicalmetadata_list,
         del_technicalmetadata_list
-    )
-
-    presform_list = property(
-        get_presform_list,
-        set_presform_list,
-        del_presform_list
     )

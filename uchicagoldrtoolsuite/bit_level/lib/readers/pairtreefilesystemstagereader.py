@@ -8,7 +8,6 @@ from .abc.stageserializationreader import StageSerializationReader
 from .abc.segmentpackager import SegmentPackager
 from .abc.materialsuitepackager import MaterialSuitePackager
 from ..structures.segment import Segment
-from ..structures.presformmaterialsuite import PresformMaterialSuite
 from ..fstools.filewalker import FileWalker
 from ..ldritems.ldrpath import LDRPath
 
@@ -53,24 +52,11 @@ class PairTreeFileSystemSegmentReader(SegmentPackager):
         for f in FileWalker(self.path).walk_directory():
             if not f.endswith("premis.xml"):
                 continue
-            if self._not_presform_materialsuite(f):
-                rel_p = Path(f).relative_to(self.path)
-                # remove the file and ecapsulation
-                id_dir_path = Path(rel_p.parents[1])
-                identifiers.append(path_to_identifier(id_dir_path))
+            rel_p = Path(f).relative_to(self.path)
+            # remove the file and ecapsulation
+            id_dir_path = Path(rel_p.parents[1])
+            identifiers.append(path_to_identifier(id_dir_path))
         return identifiers
-
-    def _not_presform_materialsuite(self, premis_path):
-        premis_rec = PremisRecord(frompath=str(premis_path))
-        obj = premis_rec.get_object_list()[0]
-        try:
-            for relation in obj.get_relationship():
-                if relation.get_relationshipType() == "derivation" and \
-                        relation.get_relationshipSubType == "has Source":
-                    return False
-        except:
-            pass
-        return True
 
     def package(self):
         for ident in self._gather_identifiers():
@@ -110,43 +96,3 @@ class PairTreeFileSystemMaterialSuiteReader(MaterialSuitePackager):
     def get_techmd_list(self):
         return [LDRPath(x.path) for x in
                 scandir(str(Path(self.path, 'TECHMD')))]
-
-    def get_presform_list(self):
-        premis_path = Path(self.path, 'premis.xml')
-        if not premis_path.is_file():
-            return None
-        premis_rec = PremisRecord(frompath=str(premis_path))
-        obj = premis_rec.get_object_list()[0]
-        try:
-            presforms = []
-            presform_identifiers = []
-            relationships = obj.get_relationship()
-            for relation in relationships:
-                if relation.get_relationshipType() == "derivation" and \
-                        relation.get_relationshipSubType == "is Source of":
-                    related_objects = relation.get_relatedObjectIdentifier()
-                    if len(related_objects) > 1:
-                        raise RuntimeError('presform handling broke')
-                    related_object = related_objects[0]
-                    presform_identifiers.append(
-                        related_object.get_relatedObjectIdentifierValue()
-                    )
-            for x in presform_identifiers:
-                p = PairTreeFileSystemPresformMaterialSuiteReader(
-                    self.seg_path, x
-                )
-                p.set_struct(PresformMaterialSuite)
-                # Recursive
-                presforms.append(p.package())
-            return presforms
-        except:
-            return None
-
-
-class PairTreeFileSystemPresformMaterialSuiteReader(PairTreeFileSystemMaterialSuiteReader):
-    def get_extension(self):
-        # TODO: This extension business is an artifact of using the item_name
-        # to serialize things, does it event need to continue to exist, or can
-        # I eliminate PresformMaterialSuites and rely on PREMIS to take care
-        # of defining that relation and all other ancillary information?
-        return "nul"
