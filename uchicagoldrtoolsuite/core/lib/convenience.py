@@ -1,7 +1,9 @@
 from sys import stderr
 from codecs import encode
 from urllib.request import urlopen, URLError
-from uuid import uuid1
+from uuid import uuid1, uuid4
+from tempfile import TemporaryDirectory
+from os.path import join
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -10,6 +12,38 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+class TemporaryFilePath:
+    """
+    Produces a file path that can be written to, closed, and then re-opened
+    for reads on both Unix and Windows systems.
+
+    Can be used as a context manager, eg:
+
+    with TemporaryFilePath() as path:
+        with open(path, 'wb') as dst:
+            dst.write(b'123')
+        with open(path, 'rb') as src:
+            print(src.read())
+
+    [out]: b'123'
+
+    The file path will disappear when no more references to the object
+    exist via the magic in the TemporaryDirectory() class. Anything written
+    to it will be deleted. The same thing happens if it is used as a context
+    manager - afterwards it disappears.
+    """
+    def __init__(self):
+        # Throw this reference on the object, so it sticks around
+        self.containing_dir = TemporaryDirectory()
+        filename = uuid4().hex
+        self.path = join(self.containing_dir.name, filename)
+
+    def __enter__(self):
+        return self.path
+
+    def __exit__(self, *args):
+        del self.containing_dir
 
 
 def hex_str_to_bytes(h):
