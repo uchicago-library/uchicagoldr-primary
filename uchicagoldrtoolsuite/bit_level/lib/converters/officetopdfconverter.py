@@ -10,7 +10,7 @@ from pypremis.nodes import *
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.converter import Converter
-from ..structures.presformmaterialsuite import PresformMaterialSuite
+from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldrpath import LDRPath
 from ..processors.genericpremiscreator import GenericPREMISCreator
@@ -204,20 +204,19 @@ class OfficeToPDFConverter(Converter):
             LDRPath(updated_premis_outpath)
         )
 
+        log.debug("Congversion Complete: {}".format(str(self)))
+        # cleanup
+        log.debug("Deleting temporary file instantiation")
+        original_holder.delete(final=True)
+
         # If the conversion was successful construct our PresformMaterialSuite
         # and add it to our source MaterialSuite
         if presform_ldrpath and conv_file_premis_rec:
             log.debug("Adding PresformMaterialSuite to original MaterialSuite")
-            presform_ms = PresformMaterialSuite()
-            presform_ms.set_extension(self.target_extension)
+            presform_ms = MaterialSuite()
             presform_ms.content = presform_ldrpath
             presform_premis_path = join(self.working_dir, str(uuid1()))
             conv_file_premis_rec.write_to_file(presform_premis_path)
             presform_ms.premis = LDRPath(presform_premis_path)
-            self.source_materialsuite.add_presform(presform_ms)
+            return presform_ms
 
-        log.debug("Congversion Complete: {}".format(str(self)))
-
-        # cleanup
-        log.debug("Deleting temporary file instantiation")
-        original_holder.delete(final=True)

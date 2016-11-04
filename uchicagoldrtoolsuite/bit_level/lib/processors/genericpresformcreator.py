@@ -62,20 +62,21 @@ class GenericPresformCreator(object):
                 if not isinstance(materialsuite.get_premis(), LDRItem):
                     raise ValueError("All material suites must have a PREMIS " +
                                      "record in order to generate presforms.")
-                if skip_existing:
-                    try:
-                        if isinstance(materialsuite.get_presform(0),
-                                      MaterialSuite):
-                            continue
-                    except:
-                        pass
-                self.instantiate_and_make_presforms(materialsuite,
-                                                    data_transfer_obj=data_transfer_obj)
-                if presform_presforms:
-                    if materialsuite.presform_list is not None:
-                        for presform_ms in materialsuite.presform_list:
-                            self.instantiate_and_make_presforms(presform_ms,
-                                                                data_transfer_obj=data_transfer_obj)
+#                if skip_existing:
+#                    try:
+#                        if isinstance(materialsuite.get_presform(0),
+#                                      MaterialSuite):
+#                            continue
+#                    except:
+#                        pass
+                for x in self.instantiate_and_make_presforms(materialsuite,
+                                                             data_transfer_obj=data_transfer_obj):
+                    segment.add_materialsuite(x)
+#                if presform_presforms:
+#                    if materialsuite.presform_list is not None:
+#                        for presform_ms in materialsuite.presform_list:
+#                            self.instantiate_and_make_presforms(presform_ms,
+#                                                                data_transfer_obj=data_transfer_obj)
 
     def instantiate_and_make_presforms(self, ms, data_transfer_obj={}):
         """
@@ -105,6 +106,7 @@ class GenericPresformCreator(object):
                 fmt_dsg = rec_format.get_formatDesignation()
                 if fmt_dsg:
                     mimes.append(fmt_dsg.get_formatName())
+        presforms = []
         for converter in self.converters:
             for x in mimes:
                 if x in converter._claimed_mimes:
@@ -112,4 +114,7 @@ class GenericPresformCreator(object):
                     makedirs(c_working_dir, exist_ok=True)
                     c = converter(ms, c_working_dir,
                                   data_transfer_obj=data_transfer_obj)
-                    c.convert()
+                    presform = c.convert()
+                    if presform is not None:
+                        presforms.append(presform)
+        return presforms

@@ -76,10 +76,10 @@ class Converter(metaclass=ABCMeta):
         if conv_premis:
 
             # TODO: Decide whether or not to set originalNames for presforms
-            conv_premis.get_object_list()[0].set_originalName(
-                orig_premis.get_object_list()[0].get_originalName() +
-                ".presform" + self.target_extension
-            )
+            # TODONE: I decided not to - because of the weird stuff that would
+            # be required with decoding/re-encoding the hex escaped string
+            # This will break some old serializers - but shouldn't effect
+            # the pairtree serializer in any way
 
             conv_premis.get_object_list()[0].add_linkingEventIdentifier(
                 self._build_linkingEventIdentifier(conv_event)
