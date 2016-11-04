@@ -58,6 +58,7 @@ class GenericPresformCreator(object):
     def process(self, skip_existing=False, presform_presforms=False,
                 data_transfer_obj={}):
         for segment in self.stage.segment_list:
+            stuff_to_add_to_segment = []
             for materialsuite in segment.materialsuite_list:
                 if not isinstance(materialsuite.get_premis(), LDRItem):
                     raise ValueError("All material suites must have a PREMIS " +
@@ -71,7 +72,9 @@ class GenericPresformCreator(object):
 #                        pass
                 for x in self.instantiate_and_make_presforms(materialsuite,
                                                              data_transfer_obj=data_transfer_obj):
-                    segment.add_materialsuite(x)
+                    stuff_to_add_to_segment.append(x)
+            for x in stuff_to_add_to_segment:
+                segment.add_materialsuite(x)
 #                if presform_presforms:
 #                    if materialsuite.presform_list is not None:
 #                        for presform_ms in materialsuite.presform_list:

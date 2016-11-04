@@ -149,7 +149,8 @@ class OfficeToCSVConverter(Converter):
             presform_ldrpath = LDRPath(where_it_is)
             conv_file_premis = GenericPREMISCreator.instantiate_and_make_premis(
                 presform_ldrpath,
-                working_dir_path=self.working_dir
+                working_dir_path=self.working_dir,
+                set_originalName=False
             )
             conv_file_premis_rec = PremisRecord(
                 frompath=str(conv_file_premis.path)
@@ -186,6 +187,7 @@ class OfficeToCSVConverter(Converter):
         if presform_ldrpath and conv_file_premis_rec:
             log.debug("Adding PresformMaterialSuite to original MaterialSuite")
             presform_ms = MaterialSuite()
+            presform_ms.identifier = conv_file_premis_rec.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
             presform_ms.content = presform_ldrpath
             presform_premis_path = join(self.working_dir, str(uuid1()))
             conv_file_premis_rec.write_to_file(presform_premis_path)

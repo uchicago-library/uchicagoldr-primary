@@ -67,7 +67,7 @@ class GenericPREMISCreator(object):
         return "<GenericPREMISCreator {}>".format(
             dumps(attr_dict, sort_keys=True))
 
-    def process(self, skip_existing=False):
+    def process(self, skip_existing=False, set_originalName=True):
         """
         make the premis records for everything
 
@@ -99,13 +99,15 @@ class GenericPREMISCreator(object):
                     log.debug("No PREMIS detected: Creating")
                     materialsuite.set_premis(
                         self.instantiate_and_make_premis(materialsuite.content,
-                                                         self.working_dir_path)
+                                                         self.working_dir_path,
+                                                         set_originalName=set_originalName)
                     )
                 except Exception as e:
                     eh.handle(e)
 
     @classmethod
-    def instantiate_and_make_premis(cls, item, working_dir_path):
+    def instantiate_and_make_premis(cls, item, working_dir_path,
+                                    set_originalName=True):
         """
         Write an item to a tempdir, examine it and make a PREMIS record
 
@@ -125,10 +127,13 @@ class GenericPREMISCreator(object):
         recv_file = join(working_dir_path, str(uuid1()))
         premis_file = join(working_dir_path, str(uuid1()))
         recv_item = LDRPath(recv_file)
-        c = LDRItemCopier(item, recv_item, clobber=True)
-        r = c.copy(eq_detect="md5")
+        c = LDRItemCopier(item, recv_item, clobber=True, eq_detect="md5")
+        r = c.copy()
         assert(r['src_eqs_dst'])
-        rec = cls.make_record(bytes(recv_file, 'utf-8'), item.item_name)
+        if set_originalName:
+            rec = cls.make_record(bytes(recv_file, 'utf-8'), item.item_name)
+        else:
+            rec = cls.make_record(bytes(recv_file, 'utf-8'))
         rec.write_to_file(premis_file)
         recv_item.delete(final=True)
         return LDRPath(premis_file)
@@ -147,13 +152,11 @@ class GenericPREMISCreator(object):
 
         1. (PremisRecord): The populated record instance
         """
-        if original_name is None:
-            original_name = file_path
         obj = cls._make_object(file_path, original_name)
         return PremisRecord(objects=[obj])
 
     @classmethod
-    def _make_object(cls, file_path, original_name):
+    def _make_object(cls, file_path, original_name=None):
         """
         make an object entry auto-populated with the required information
 
@@ -171,7 +174,8 @@ class GenericPREMISCreator(object):
         objectCharacteristics = cls._make_objectCharacteristics(file_path, original_name)
         storage = cls._make_Storage(file_path)
         obj = Object(objectIdentifier, objectCategory, objectCharacteristics)
-        obj.set_originalName(bytes_to_hex_str(original_name))
+        if original_name is not None:
+            obj.set_originalName(bytes_to_hex_str(original_name))
         obj.set_storage(storage)
         return obj
 
@@ -342,6 +346,8 @@ class GenericPREMISCreator(object):
 
         1. (PremisNode): The populated contentLocation node
         """
+        if isinstance(file_path, bytes):
+            file_path = file_path.decode("utf-8")
         return ContentLocation("Unix File Path", file_path)
 
     @classmethod
