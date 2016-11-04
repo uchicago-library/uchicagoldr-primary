@@ -46,6 +46,29 @@ class TemporaryFilePath:
         del self.containing_dir
 
 
+def ldritem_to_premisrecord(item):
+    from pypremis.lib import PremisRecord
+    with TemporaryFilePath() as dst_path:
+        with item.open() as src:
+            with open(dst_path, 'wb') as dst:
+                dst.write(src.read())
+        r = PremisRecord(frompath=dst_path)
+    return r
+
+
+def is_presform_materialsuite(ms):
+    try:
+        p = ldritem_to_premisrecord(ms.premis)
+        obj = p.get_object_list()[0]
+        relations = obj.get_relationship()
+        for relation in relations:
+            if relation.get_relationshipType() == 'derivation' and \
+                    relation.get_relationshipSubType() == 'has Source':
+                return True
+        return False
+    except:
+        return None
+
 def hex_str_to_bytes(h):
     """
     Convert a hex string to bytes
