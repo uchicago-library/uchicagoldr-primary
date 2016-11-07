@@ -1,6 +1,6 @@
 from os import makedirs
 from os.path import join, dirname, isfile
-from uuid import uuid1
+from uuid import uuid4
 from json import dumps
 
 from pypremis.lib import PremisRecord
@@ -49,18 +49,21 @@ class FITsCreator(TechnicalMetadataCreator):
             raise ValueError("All material suites must have a PREMIS record " +
                              "in order to generate technical metadata.")
         log.debug("Building FITS-ing environment")
-        premis_file_path = join(self.working_dir, str(uuid1()))
+        premis_file_path = join(self.working_dir, str(uuid4()))
         LDRItemCopier(
             self.get_source_materialsuite().get_premis(),
             LDRPath(premis_file_path)
         ).copy()
         premis_record = PremisRecord(frompath=premis_file_path)
-        original_name = premis_record.get_object_list()[0].get_originalName()
+        # hacky fix for not setting the originalName in presforms during the
+        # staging tearup in response to some filename encodings not being
+        # interoperable on different operating systems. (OSX/BSD/Windows/Linux)
+        original_name = uuid4().hex
 
         content_file_path = dirname(
             join(
                 self.working_dir,
-                str(uuid1()),
+                uuid4().hex,
                 original_name
             )
         )
@@ -72,7 +75,7 @@ class FITsCreator(TechnicalMetadataCreator):
             original_holder
         ).copy()
 
-        fits_file_path = join(self.working_dir, str(uuid1()))
+        fits_file_path = join(self.working_dir, uuid4().hex)
         cmd = BashCommand([self.fits_path, '-i', content_file_path,
                            '-o', fits_file_path])
 

@@ -8,6 +8,8 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.convenience import \
+    is_presform_materialsuite, TemporaryFilePath, ldritem_to_premisrecord
 from ..ldritems.ldrpath import LDRPath
 from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldritemcopier import LDRItemCopier
@@ -63,23 +65,27 @@ class GenericPresformCreator(object):
                 if not isinstance(materialsuite.get_premis(), LDRItem):
                     raise ValueError("All material suites must have a PREMIS " +
                                      "record in order to generate presforms.")
-#                if skip_existing:
-#                    try:
-#                        if isinstance(materialsuite.get_presform(0),
-#                                      MaterialSuite):
-#                            continue
-#                    except:
-#                        pass
+                if is_presform_materialsuite(materialsuite) and not \
+                        presform_presforms:
+                    continue
+                if skip_existing:
+                    has_presforms = False
+                    premis = ldritem_to_premisrecord(materialsuite.premis)
+                    try:
+                        for relation in premis.get_object_list()[0].get_relationship():
+                            if relation.get_relationshipType() == 'derivation' \
+                                    and relation.get_relationshipSubType() == 'is Source of':
+                                has_presforms = True
+                                break
+                    except KeyError:
+                        pass
+                    if has_presforms:
+                        continue
                 for x in self.instantiate_and_make_presforms(materialsuite,
                                                              data_transfer_obj=data_transfer_obj):
                     stuff_to_add_to_segment.append(x)
             for x in stuff_to_add_to_segment:
                 segment.add_materialsuite(x)
-#                if presform_presforms:
-#                    if materialsuite.presform_list is not None:
-#                        for presform_ms in materialsuite.presform_list:
-#                            self.instantiate_and_make_presforms(presform_ms,
-#                                                                data_transfer_obj=data_transfer_obj)
 
     def instantiate_and_make_presforms(self, ms, data_transfer_obj={}):
         """
@@ -91,8 +97,9 @@ class GenericPresformCreator(object):
 
         __Returns__
 
-        * (tuple): The first entry is a list of presform LDRItems
-            The second is the updated PREMIS record.
+        * presforms (list[MaterialSuite]): a list of materialsuites,
+            which represent the preservation stable copies of the original file
+            as well as their associated PREMIS
         """
         premis_path = join(self.working_dir_path, str(uuid1()))
         premis_item = LDRPath(premis_path)

@@ -221,5 +221,4 @@ class OfficeToPDFConverter(Converter):
             presform_premis_path = join(self.working_dir, str(uuid1()))
             conv_file_premis_rec.write_to_file(presform_premis_path)
             presform_ms.premis = LDRPath(presform_premis_path)
-            print("returning a presform ms")
             return presform_ms

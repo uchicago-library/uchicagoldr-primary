@@ -194,7 +194,6 @@ class VideoConverter(Converter):
             log.debug("Adding PresformMaterialSuite to original MaterialSuite")
             presform_ms = MaterialSuite()
             presform_ms.identifier = conv_file_premis_rec.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
-            presform_ms.set_extension(self.target_extension)
             presform_ms.content = presform_ldrpath
             presform_premis_path = join(self.working_dir, str(uuid1()))
             conv_file_premis_rec.write_to_file(presform_premis_path)
