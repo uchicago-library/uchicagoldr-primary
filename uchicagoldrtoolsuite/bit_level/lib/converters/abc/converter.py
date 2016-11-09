@@ -1,9 +1,18 @@
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
+from uuid import uuid4
+import mimetypes
+from os.path import splitext, isfile
 
 from pypremis.nodes import *
+from pypremis.lib import PremisRecord
 
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.bit_level.lib.ldritems.ldrpath import LDRPath
+from uchicagoldrtoolsuite.bit_level.lib.structures.materialsuite import MaterialSuite
+from uchicagoldrtoolsuite.bit_level.lib.ldritems.ldritemcopier import LDRItemCopier
+from uchicagoldrtoolsuite.bit_level.lib.processors.genericpremiscreator import GenericPREMISCreator
 
 
 __author__ = "Brian Balsamo"
@@ -17,17 +26,27 @@ __version__ = "0.0.1dev"
 class Converter(metaclass=ABCMeta):
 
     _claimed_mimes = []
+    _claimed_extensions = []
 
     def __init__(self, input_materialsuite, working_dir, timeout=None):
-
         self._source_materialsuite = None
         self._working_dir = None
         self._timeout = None
         self._target_extension = None
+        self._converter_name = "Converter ABC"
 
+        self.claim_mimes_from_extensions()
         self.set_source_materialsuite(input_materialsuite)
         self.set_working_dir(working_dir)
         self.set_timeout(timeout)
+
+    @classmethod
+    def claim_mimes_from_extensions(cls):
+        mimetypes.init()
+        for x in cls._claimed_extensions:
+            x = mimetypes.types_map.get(x, None)
+            if x is not None and x not in cls._claimed_mimes:
+                cls._claimed_mimes.append(x)
 
     def get_target_extension(self):
         return self._target_extension
@@ -60,9 +79,48 @@ class Converter(metaclass=ABCMeta):
     def set_timeout(self, x):
         self._timeout = x
 
+    def instantiate_original(self, premis=None):
+        target_path = str(Path(self.working_dir, uuid4().hex))
+        # if we have the PREMIS try to set an extension, just in case the
+        # converter requires it
+        if premis is not None:
+            path_altered = False
+            try:
+                ext = splitext(premis.get_object_list()[0].get_originalName())[1]
+                if ext is not '':
+                    target_path = target_path + ext
+                    path_altered = True
+            except:
+                pass
+            if not path_altered:
+                try:
+                    ext = mimetypes.guess_extension(premis.get_object_list()[0].get_objectCharacteristics()[0].get_format()[0].get_formatName())
+                    target_path = target_path + ext
+                except:
+                    pass
+
+        target_ldritem = LDRPath(target_path)
+        c = LDRItemCopier(self.source_materialsuite.content, target_ldritem)
+        r = c.copy()
+        if r['src_eqs_dst'] is not True:
+            raise RuntimeError("Bad Copy!")
+        return target_path
+
+    def instantiate_and_read_original_premis(self):
+        target_path = Path(self.working_dir, uuid4().hex)
+        target_ldritem = LDRPath(str(target_path))
+        c = LDRItemCopier(self.source_materialsuite.premis, target_ldritem)
+        r = c.copy()
+        if r['src_eqs_dst'] is not True:
+            raise RuntimeError("Bad Copy!")
+        return PremisRecord(frompath=str(target_path))
+
     @abstractmethod
-    def convert(self):
+    def run_converter(self, in_path):
         pass
+
+    def generate_presform_premis_record(self, presform_path):
+        return GenericPREMISCreator.make_record(presform_path)
 
     def handle_premis(self, cmd_output, orig_premis, conv_premis, converter_name):
         conv_event = self.build_conv_event(cmd_output, orig_premis, conv_premis, converter_name)
@@ -265,8 +323,39 @@ class Converter(metaclass=ABCMeta):
     def look_up_agent(self, x):
         return None
 
+    def convert(self):
+        orig_premis = self.instantiate_and_read_original_premis()
+        target = self.instantiate_original(premis=orig_premis)
+        results = self.run_converter(target)
+        print(results)
+        outpath = results.get('outpath', None)
+        if outpath is not None:
+            presform_premis = self.generate_presform_premis_record(outpath)
+        else:
+            presform_premis = None
+        self.handle_premis(results['cmd_output'], orig_premis, presform_premis, self.converter_name)
+        updated_premis_fp = Path(self.working_dir, uuid4().hex)
+        orig_premis.write_to_file(str(updated_premis_fp))
+        self.source_materialsuite.premis = LDRPath(str(updated_premis_fp))
+        if outpath is not None:
+            print("Successful conversion!")
+            presform_premis_fp = str(Path(self.working_dir, uuid4().hex))
+            presform_premis.write_to_file(presform_premis_fp)
+            f = MaterialSuite()
+            f.identifier = presform_premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+            f.content = LDRPath(outpath)
+            f.premis = LDRPath(presform_premis_fp)
+            return f
+
+    def get_converter_name(self):
+        return self._converter_name
+
+    def set_converter_name(self, x):
+        self._converter_name = x
+
     claimed_mimes = property(get_claimed_mimes)
     source_materialsuite = property(get_source_materialsuite, set_source_materialsuite)
     working_dir = property(get_working_dir, set_working_dir)
     timeout = property(get_timeout, set_timeout)
     target_extension = property(get_target_extension, set_target_extension)
+    converter_name = property(get_converter_name, set_converter_name)

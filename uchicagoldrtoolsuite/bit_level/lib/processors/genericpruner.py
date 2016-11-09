@@ -13,7 +13,8 @@ from ..ldritems.ldrpath import LDRPath
 
 
 class GenericPruner(object):
-    def __init__(self, stage, patterns, exclude_patterns=None, final=False):
+    def __init__(self, stage, patterns, exclude_patterns=None, final=False,
+                 in_place_delete=False):
         self.stage = stage
         self.patterns = [re_compile(x) for x in patterns]
         if exclude_patterns is not None:
@@ -21,18 +22,23 @@ class GenericPruner(object):
         else:
             self.exclude_patterns = []
         self.final = final
+        self.in_place_delete = in_place_delete
 
     def prune(self):
         matched_names = []
         for seg in self.stage.segment_list:
             for ms in seg.materialsuite_list:
-                name_or_none = self.eval_materialsuite(ms, self.patterns, self.exclude_patterns, final=self.final)
+                name_or_none = self.eval_materialsuite(
+                    ms, self.patterns, self.exclude_patterns, final=self.final,
+                    in_place_delete=self.in_place_delete
+                )
                 if name_or_none is not None:
                     matched_names.append(name_or_none)
         return matched_names
 
     @classmethod
-    def eval_materialsuite(cls, ms, patterns, exclude_patterns=[], final=False):
+    def eval_materialsuite(cls, ms, patterns, exclude_patterns=[], final=False,
+                           in_place_delete=False):
         def write_premis_deletion_event(ms):
             premis_location = TemporaryFilePath()
             ms._tmp_premis_loc = premis_location
@@ -60,9 +66,7 @@ class GenericPruner(object):
             )
             premis.add_event(event)
             premis.write_to_file(premis_location.path)
-            print("it worked!")
             ms.premis = LDRPath(premis_location.path)
-            print(len(ldritem_to_premisrecord(ms.premis).get_event_list()))
 
         if not isinstance(ms.premis, LDRItem):
             raise RuntimeError("All MaterialSuites must have a premis " +
@@ -73,8 +77,8 @@ class GenericPruner(object):
         except KeyError:
             # theres no originalName set in the PREMIS
             # should this instead raise a RuntimeError?
+            # (this probably means its a presform)
             return
-
         try:
             originalName = hex_str_to_chr_str(originalName)
         except:
@@ -96,7 +100,9 @@ class GenericPruner(object):
         if matched:
             if final is True:
                 write_premis_deletion_event(ms)
-                ms.content.delete(final=final)
+                if in_place_delete is True:
+                    ms.content.delete(final=final)
+                del ms.content
             else:
                 write_premis_mock_deletion_event(ms)
             return originalName

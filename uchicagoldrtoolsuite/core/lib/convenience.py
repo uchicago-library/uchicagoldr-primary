@@ -4,6 +4,7 @@ from urllib.request import urlopen, URLError
 from uuid import uuid1, uuid4
 from tempfile import TemporaryDirectory
 from os.path import join
+from os import scandir
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -12,6 +13,16 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+def recursive_scandir(path="."):
+    stack = [path]
+    while stack:
+        cur_path = stack.pop()
+        for x in scandir(cur_path):
+            if x.is_dir():
+                stack.append(x.path)
+            yield x
+
 
 class TemporaryFilePath:
     """
@@ -38,6 +49,10 @@ class TemporaryFilePath:
         self.containing_dir = TemporaryDirectory()
         filename = uuid4().hex
         self.path = join(self.containing_dir.name, filename)
+
+    def __fspath__(self):
+        # Woo, 3.6 compatability
+        return self.path
 
     def __enter__(self):
         return self.path
@@ -68,6 +83,7 @@ def is_presform_materialsuite(ms):
         return False
     except:
         return None
+
 
 def hex_str_to_bytes(h):
     """

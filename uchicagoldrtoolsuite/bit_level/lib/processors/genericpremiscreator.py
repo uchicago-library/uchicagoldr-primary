@@ -13,7 +13,6 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
-from uchicagoldrtoolsuite.core.lib.convenience import bytes_to_hex_str
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
@@ -106,37 +105,54 @@ class GenericPREMISCreator(object):
                     eh.handle(e)
 
     @classmethod
-    def instantiate_and_make_premis(cls, item, working_dir_path,
-                                    set_originalName=True):
-        """
-        Write an item to a tempdir, examine it and make a PREMIS record
+    def process_materialsuite(cls, materialsuite, originalName=None):
+        tmp_file_path = TemporaryFilePath()
+        new_premis_path = TemporaryFilePath()
+        try:
+            tmp_files = getattr(materialsuite, tmp_files)
+            tmp_files.append(new_premis_path)
+        except:
+            materialsuite.tmp_files = [new_premis_path]
+        tmp_ldritem = LDRPath(tmp_file_path.path)
+        c = LDRItemCopier(materialsuite.content, tmp_ldritem)
+        cr = c.copy()
+        assert(cr['src_eqs_dst'] is True)
+        premis = make_record(tmp_file_path.path, original_name=originalName)
+        premis.write_to_file(new_premis_path.path)
+        materialsuite.premis = LDRPath(new_premis_path.path)
 
-        __Args__
-
-        1. item (LDRItem): The LDRItem to create a premis record for
-
-        __KWArgs__
-
-        * working_dir_path (str): Where to write things to disk. Defaults
-            to the current instances working_dir_path
-
-        __Returns__
-
-        * (LDRPath): The item representing the PREMIS record
-        """
-        recv_file = join(working_dir_path, str(uuid1()))
-        premis_file = join(working_dir_path, str(uuid1()))
-        recv_item = LDRPath(recv_file)
-        c = LDRItemCopier(item, recv_item, clobber=True, eq_detect="md5")
-        r = c.copy()
-        assert(r['src_eqs_dst'])
-        if set_originalName:
-            rec = cls.make_record(bytes(recv_file, 'utf-8'), item.item_name)
-        else:
-            rec = cls.make_record(bytes(recv_file, 'utf-8'))
-        rec.write_to_file(premis_file)
-        recv_item.delete(final=True)
-        return LDRPath(premis_file)
+#    @classmethod
+#    def instantiate_and_make_premis(cls, item, working_dir_path,
+#                                    originalName=None):
+#        """
+#        Write an item to a tempdir, examine it and make a PREMIS record
+#
+#        __Args__
+#
+#        1. item (LDRItem): The LDRItem to create a premis record for
+#
+#        __KWArgs__
+#
+#        * working_dir_path (str): Where to write things to disk. Defaults
+#            to the current instances working_dir_path
+#
+#        __Returns__
+#
+#        * (LDRPath): The item representing the PREMIS record
+#        """
+#        recv_file = join(working_dir_path, str(uuid1()))
+#        premis_file = join(working_dir_path, str(uuid1()))
+#        recv_item = LDRPath(recv_file)
+#        c = LDRItemCopier(item, recv_item, clobber=True, eq_detect="md5")
+#        r = c.copy()
+#        assert(r['src_eqs_dst'])
+#        if set_originalName:
+#            rec = cls.make_record(bytes(recv_file, 'utf-8'), item.item_name)
+#        else:
+#            rec = cls.make_record(bytes(recv_file, 'utf-8'))
+#        rec.write_to_file(premis_file)
+#        recv_item.delete(final=True)
+#        return LDRPath(premis_file)
 
     @classmethod
     def make_record(cls, file_path, original_name=None):
@@ -175,7 +191,7 @@ class GenericPREMISCreator(object):
         storage = cls._make_Storage(file_path)
         obj = Object(objectIdentifier, objectCategory, objectCharacteristics)
         if original_name is not None:
-            obj.set_originalName(bytes_to_hex_str(original_name))
+            obj.set_originalName(original_name)
         obj.set_storage(storage)
         return obj
 
@@ -370,7 +386,6 @@ class GenericPREMISCreator(object):
         except:
             magic_num = None
         try:
-            original_name = original_name.decode('utf-8')
             guess = guess_type(original_name)[0]
         except:
             guess = None
