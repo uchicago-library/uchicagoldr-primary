@@ -116,15 +116,20 @@ class GenericPresformCreator(object):
                 fmt_dsg = rec_format.get_formatDesignation()
                 if fmt_dsg:
                     mimes.append(fmt_dsg.get_formatName())
-        presforms = []
+        converters_to_run = []
         for converter in self.converters:
             for x in mimes:
                 if x in converter._claimed_mimes:
-                    c_working_dir = join(self.working_dir_path, str(uuid1()))
-                    makedirs(c_working_dir, exist_ok=True)
-                    c = converter(ms, c_working_dir,
-                                  data_transfer_obj=data_transfer_obj)
-                    presform = c.convert()
-                    if presform is not None:
-                        presforms.append(presform)
+                    converters_to_run.append(converter)
+                    break
+
+        presforms = []
+        for converter in set(converters_to_run):
+            c_working_dir = join(self.working_dir_path, str(uuid1()))
+            makedirs(c_working_dir, exist_ok=True)
+            c = converter(ms, c_working_dir,
+                            data_transfer_obj=data_transfer_obj)
+            presform = c.convert()
+            if presform is not None:
+                presforms.append(presform)
         return presforms
