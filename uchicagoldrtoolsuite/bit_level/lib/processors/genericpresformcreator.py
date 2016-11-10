@@ -119,7 +119,7 @@ class GenericPresformCreator(object):
         converters_to_run = []
         for converter in self.converters:
             for x in mimes:
-                if x in converter._claimed_mimes:
+                if converter.handles_mime(x):
                     converters_to_run.append(converter)
                     break
 

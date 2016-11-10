@@ -27,12 +27,12 @@ class Converter(metaclass=ABCMeta):
 
     _claimed_mimes = []
     _claimed_extensions = []
+    _claimed_list_initd = False
 
     def __init__(self, input_materialsuite, working_dir, timeout=None):
         self._source_materialsuite = None
         self._working_dir = None
         self._timeout = None
-        self._target_extension = None
         self._converter_name = "Converter ABC"
 
         self.claim_mimes_from_extensions()
@@ -42,21 +42,23 @@ class Converter(metaclass=ABCMeta):
 
     @classmethod
     def claim_mimes_from_extensions(cls):
-        mimetypes.init()
-        for x in cls._claimed_extensions:
-            x = mimetypes.types_map.get(x, None)
-            if x is not None and x not in cls._claimed_mimes:
-                cls._claimed_mimes.append(x)
+        # This might be faster if I made _claimed_mimes a set - but with
+        # datasets of this size I suspect it wouldn't buy anymore than a few
+        # micro(nano?) seconds speedup, and would make the class syntax weirder
+        if not cls._claimed_list_initd:
+            mimetypes.init()
+            for x in cls._claimed_extensions:
+                x = mimetypes.types_map.get(x, None)
+                if x is not None and x not in cls._claimed_mimes:
+                    cls._claimed_mimes.append(x)
+        cls._claimed_list_initd = True
 
-    def get_target_extension(self):
-        return self._target_extension
-
-    def set_target_extension(self, x):
-        if not isinstance(x, str):
-            raise TypeError()
-        if not x.startswith("."):
-            raise ValueError("Extensions must begin with '.'")
-        self._target_extension = x
+    @classmethod
+    def handles_mime(cls, mime):
+        cls.claim_mimes_from_extensions()
+        if mime in cls._claimed_mimes:
+            return True
+        return False
 
     def get_claimed_mimes(self):
         return self._claimed_mimes
@@ -327,7 +329,6 @@ class Converter(metaclass=ABCMeta):
         orig_premis = self.instantiate_and_read_original_premis()
         target = self.instantiate_original(premis=orig_premis)
         results = self.run_converter(target)
-        print(results)
         outpath = results.get('outpath', None)
         if outpath is not None:
             presform_premis = self.generate_presform_premis_record(outpath)
@@ -338,7 +339,6 @@ class Converter(metaclass=ABCMeta):
         orig_premis.write_to_file(str(updated_premis_fp))
         self.source_materialsuite.premis = LDRPath(str(updated_premis_fp))
         if outpath is not None:
-            print("Successful conversion!")
             presform_premis_fp = str(Path(self.working_dir, uuid4().hex))
             presform_premis.write_to_file(presform_premis_fp)
             f = MaterialSuite()
@@ -357,5 +357,4 @@ class Converter(metaclass=ABCMeta):
     source_materialsuite = property(get_source_materialsuite, set_source_materialsuite)
     working_dir = property(get_working_dir, set_working_dir)
     timeout = property(get_timeout, set_timeout)
-    target_extension = property(get_target_extension, set_target_extension)
     converter_name = property(get_converter_name, set_converter_name)
