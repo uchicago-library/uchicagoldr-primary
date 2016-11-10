@@ -1,30 +1,55 @@
-from re import compile as re_compile
 from uuid import uuid4
 
 from pypremis.factories import LinkingObjectIdentifierFactory
 from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.convenience import ldritem_to_premisrecord
-from uchicagoldrtoolsuite.core.lib.convenience import hex_str_to_chr_str
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import TemporaryFilePath
-from ..ldritems.abc.ldritem import LDRItem
 from ..ldritems.ldrpath import LDRPath
 
 
+def default_callback(premis, patterns, exclude_patterns=None):
+    """if originalName fields match any compiled regex in patterns prune
+    the content, if it also matches an exclude pattern don't prune it"""
+    try:
+        # Keep in mind, the originalName field is the result of calling
+        # fsencode on whatever the pathname is - relative to a supplied
+        # root if one is given (at least if you are using the
+        # ExternalFileSystemSegmentPackager).
+        originalName = premis.get_object_list()[0].get_originalName()
+    except KeyError:
+        # theres no originalName set in the PREMIS
+        # should this instead raise a RuntimeError?
+        # (this probably means its a presform)
+        return
+
+    matched = False
+    for patt in patterns:
+        if patt.match(originalName):
+            matched = True
+            break
+    if matched:
+        if exclude_patterns:
+            for ex_patt in exclude_patterns:
+                if ex_patt.match(originalName):
+                    matched = False
+                    break
+    if matched:
+        return True
+
 class GenericPruner(object):
-    def __init__(self, stage, patterns, exclude_patterns=None, final=False,
-                 in_place_delete=False):
+    def __init__(self, stage, callback=default_callback, callback_args=[],
+                 callback_kwargs={}, final=False, in_place_delete=False):
         self.stage = stage
-        self.patterns = [re_compile(x) for x in patterns]
-        if exclude_patterns is not None:
-            self.exclude_patterns = [re_compile(x) for x in exclude_patterns]
-        else:
-            self.exclude_patterns = []
         self.final = final
         self.in_place_delete = in_place_delete
+        self.callback = callback
+        self.callback_args = callback_args
+        self.callback_kwargs = callback_kwargs
 
-    def prune(self):
+    def prune(self, callback=None, callback_args=None, callback_kwargs=None,
+              final=None, in_place_delete=None):
         def write_premis_deletion_event(ms):
             premis_location = TemporaryFilePath()
             ms._tmp_premis_loc = premis_location
@@ -54,53 +79,29 @@ class GenericPruner(object):
             premis.write_to_file(premis_location.path)
             ms.premis = LDRPath(premis_location.path)
 
-        matched_names = []
+        if callback is None:
+            callback = self.callback
+        if callback_args is None:
+            callback_args = self.callback_args
+        if callback_kwargs is None:
+            callback_kwargs = self.callback_kwargs
+        if final is None:
+            final = self.final
+        if in_place_delete is None:
+            in_place_delete = self.in_place_delete
+
+        matched_identifiers = []
         for seg in self.stage.segment_list:
             for ms in seg.materialsuite_list:
-                name_or_none = self.eval_materialsuite(
-                    ms, self.patterns, self.exclude_patterns, final=self.final,
-                    in_place_delete=self.in_place_delete
-                )
-                if name_or_none is not None:
-                    matched_names.append(name_or_none)
-                    if self.final is True:
+                premis = ldritem_to_premisrecord(ms.premis)
+                identifier = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+                if callback(premis, *callback_args, **callback_kwargs) is True:
+                    matched_identifiers.append(identifier)
+                    if final is True:
                         if self.in_place_delete is True:
                             ms.content.delete(final=True)
                         del ms.content
                         write_premis_deletion_event(ms)
                     else:
                         write_premis_mock_deletion_event(ms)
-        return matched_names
-
-    @classmethod
-    def eval_materialsuite(cls, ms, patterns, exclude_patterns=[], final=False,
-                           in_place_delete=False):
-        if not isinstance(ms.premis, LDRItem):
-            raise RuntimeError("All MaterialSuites must have a premis " +
-                               "record before pruning can occur!")
-        premis = ldritem_to_premisrecord(ms.premis)
-        try:
-            # Keep in mind, the originalName field is the result of calling
-            # fsencode on whatever the pathname is - relative to a supplied
-            # root if one is given (at least if you are using the
-            # ExternalFileSystemSegmentPackager).
-            originalName = premis.get_object_list()[0].get_originalName()
-        except KeyError:
-            # theres no originalName set in the PREMIS
-            # should this instead raise a RuntimeError?
-            # (this probably means its a presform)
-            return
-
-        matched = False
-        for patt in patterns:
-            if patt.match(originalName):
-                matched = True
-                break
-        if matched:
-            for ex_patt in exclude_patterns:
-                if ex_patt.match(originalName):
-                    matched = False
-                    break
-
-        if matched:
-            return originalName
+        return matched_identifiers
