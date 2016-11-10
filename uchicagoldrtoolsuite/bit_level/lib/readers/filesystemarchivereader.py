@@ -131,8 +131,13 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             if bytestream_entry['type'] == "PREMIS":
                 ms.premis = LDRPath(bytestream_entry['dst'])
                 premis = PremisRecord(frompath=bytestream_entry['dst'])
-                original_name = premis.get_object_list()[0].get_originalName()
-        ms.content.item_name = original_name
+                try:
+                    original_name = premis.get_object_list()[0].get_originalName()
+                except KeyError:
+                    pass
+                ms.identifier = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+        if original_name:
+            ms.content.item_name = original_name
         return ms
 
     def _read_admin(self, admin_manifest_path, accrec_dir_path, adminnotes_path,

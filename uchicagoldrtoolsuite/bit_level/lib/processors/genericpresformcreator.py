@@ -101,6 +101,8 @@ class GenericPresformCreator(object):
             which represent the preservation stable copies of the original file
             as well as their associated PREMIS
         """
+        if not ms.content:
+            return []
         premis_path = join(self.working_dir_path, str(uuid1()))
         premis_item = LDRPath(premis_path)
         c = LDRItemCopier(ms.premis, premis_item, clobber=True)

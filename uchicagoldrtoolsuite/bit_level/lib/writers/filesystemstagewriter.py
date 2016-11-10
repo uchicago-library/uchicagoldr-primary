@@ -128,10 +128,13 @@ class FileSystemMaterialSuiteWriter(object):
         target_premis_item = LDRPath(str(target_premis_path))
 
         copiers = []
-        copiers.append(LDRItemCopier(self.struct.content, target_content_item,
-                                     clobber=True))
+
         copiers.append(LDRItemCopier(self.struct.premis, target_premis_item,
                                      clobber=True))
+
+        if self.struct.content is not None:
+            copiers.append(LDRItemCopier(self.struct.content, target_content_item,
+                                        clobber=True))
 
         for x in self.struct.technicalmetadata_list:
             # Use a quick checksum as the file name, this should prevent

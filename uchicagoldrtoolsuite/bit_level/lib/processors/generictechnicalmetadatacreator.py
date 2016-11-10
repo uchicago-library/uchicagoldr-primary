@@ -71,6 +71,8 @@ class GenericTechnicalMetadataCreator(object):
                 except Exception as e:
                     eh.handle(e)
                     continue
+                if not materialsuite.content:
+                    continue
                 if skip_existing:
                     if materialsuite.get_technicalmetadata_list():
                         if isinstance(materialsuite.get_technicalmetadata(0),
