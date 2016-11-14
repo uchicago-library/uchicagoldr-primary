@@ -35,6 +35,7 @@ setup(
     entry_points = {
         'console_scripts':[
             'ldrstage = uchicagoldrtoolsuite.bit_level.app.stager:launch',
+            'ldrstage2 = uchicagoldrtoolsuite.bit_level.app.piecemealstager:launch',
             'ldrprune = uchicagoldrtoolsuite.bit_level.app.pruner:launch',
             'ldrcreatepremis = uchicagoldrtoolsuite.bit_level.app.premiscreator:launch',
             'ldrsetrestriction = uchicagoldrtoolsuite.bit_level.app.premisrestrictionsetter:launch',
