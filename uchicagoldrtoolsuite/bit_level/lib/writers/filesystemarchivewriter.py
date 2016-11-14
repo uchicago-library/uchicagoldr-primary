@@ -127,9 +127,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         o.add_bytestream(premis)
         o.add_bytestream(fits)
         pair_tree.add_object(o)
-        if materialsuite.presform_list:
-            for x in materialsuite.presform_list:
-                self._put_materialsuite_into_pairtree(x, seg_id, pair_tree)
 
     def _get_premis_obj_id(self, premis_ldritem):
         with TemporaryDirectory() as tmp_dir:
@@ -257,7 +254,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_adminnotes(self, adminnotes_dir_path, admin_manifest):
         if self.get_struct().adminnote_list:
             for x in self.get_struct().adminnote_list:
-                dst_path = join(adminnotes_dir_path, x.item_name)
+                dst_path = join(adminnotes_dir_path, hash_ldritem(x, algo="crc32"))
                 manifest_dict = {
                     'origin': x.item_name,
                     'acc_id': self.get_struct().identifier,
@@ -276,7 +273,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_legalnotes(self, legalnotes_dir_path, admin_manifest):
         if self.get_struct().legalnote_list:
             for x in self.get_struct().legalnote_list:
-                dst_path = join(legalnotes_dir_path, x.item_name)
+                dst_path = join(legalnotes_dir_path, hash_ldritem(x, algo="crc32"))
                 manifest_dict = {
                     'origin': x.item_name,
                     'acc_id': self.get_struct().identifier,
@@ -295,7 +292,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     def _write_accessionrecords(self, accessionrecords_dir_path,
                                 admin_manifest):
         for x in self.get_struct().accessionrecord_list:
-            dst_path = join(accessionrecords_dir_path, x.item_name)
+            dst_path = join(accessionrecords_dir_path, hash_ldritem(x, algo="crc32"))
             manifest_dict = {
                 'origin': x.item_name,
                 'acc_id': self.get_struct().identifier,

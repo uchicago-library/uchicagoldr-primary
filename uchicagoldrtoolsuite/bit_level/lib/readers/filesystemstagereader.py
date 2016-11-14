@@ -18,7 +18,24 @@ class FileSystemStageReader(StageSerializationReader):
         self.path = path
         self.struct.set_identifier(str(Path(path).parts[-1]))
 
+    def assert_skeleton(self):
+        accessionrecords_dir = Path(self.path, 'admin', 'accessionrecords')
+        legalnotes_dir = Path(self.path, 'admin', 'legalnotes')
+        adminnotes_dir = Path(self.path, 'admin', 'adminnotes')
+        segments_dir = Path(self.path, 'segments')
+        for x in [accessionrecords_dir, legalnotes_dir,
+                  adminnotes_dir, segments_dir]:
+            if not x.is_dir():
+                return False
+        return True
+
     def read(self):
+        # If there's not a valid stage skeleton on the file system here return a
+        # blank staging structure. Whether or not this should "fail" silently or
+        # raise an error might warrant inclusion as a kwarg/CLI flag?
+        if not self.assert_skeleton():
+            return self.struct
+
         accessionrecords_dir = Path(self.path, 'admin', 'accessionrecords')
         legalnotes_dir = Path(self.path, 'admin', 'legalnotes')
         adminnotes_dir = Path(self.path, 'admin', 'adminnotes')

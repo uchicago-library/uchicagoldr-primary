@@ -10,7 +10,6 @@ from pypairtree.utils import identifier_to_path
 from .abc.archiveserializationreader import ArchiveSerializationReader
 from ..structures.segment import Segment
 from ..structures.materialsuite import MaterialSuite
-from ..structures.presformmaterialsuite import PresformMaterialSuite
 from ..ldritems.ldrpath import LDRPath
 
 
@@ -88,7 +87,6 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         for ms_entry in data_manifest['objs']:
             # Create a segment if one doesn't exist with that identifier
             # otherwise grab the existing segment from the structure
-            is_presform = False
             seg = None
             for x in self.get_struct().segment_list:
                 if x.identifier == ms_entry['origin_segment']:
@@ -109,15 +107,10 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                             get_relationship()
                     except KeyError:
                         relationships = []
-                    for x in relationships:
-                        if x.get_relationshipType() == "derivation" and \
-                                x.get_relationshipSubType() == "has Source":
-                            is_presform = True
-            if not is_presform:
-                seg.add_materialsuite(
-                    self._pack_materialsuite(ms_entry,
-                                             data_manifest)
-                )
+            seg.add_materialsuite(
+                self._pack_materialsuite(ms_entry,
+                                            data_manifest)
+            )
 
     def _pack_materialsuite(self, ms_entry, data_manifest):
         ms = MaterialSuite()

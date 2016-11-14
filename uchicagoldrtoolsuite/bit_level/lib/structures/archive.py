@@ -4,7 +4,6 @@ from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
 from .segment import Segment
-from .presformmaterialsuite import PresformMaterialSuite
 
 __author__ = "Tyler Danstrom, Brian Balsamo"
 __email__ = "tdanstrom@uchicago.edu, balsamo@uchicago.edu"
@@ -40,18 +39,15 @@ class Archive(Structure):
         self.adminnote_list = []
 
     def _validate_materialsuite(self, materialsuite):
-        if isinstance(materialsuite, PresformMaterialSuite):
-            if not isinstance(materialsuite.extension, str):
+        try:
+            if not isinstance(materialsuite.content, LDRItem):
                 return False
-        if not isinstance(materialsuite.content, LDRItem):
+            if not isinstance(materialsuite.premis, LDRItem):
+                return False
+            if not len(materialsuite.technicalmetadata_list) > 0:
+                return False
+        except:
             return False
-        if not isinstance(materialsuite.premis, LDRItem):
-            return False
-        if not len(materialsuite.technicalmetadata_list) > 0:
-            return False
-        if materialsuite.presform_list:
-            for x in materialsuite.presform_list:
-                self._validate_materialsuite(x)
         return True
 
     def validate(self):

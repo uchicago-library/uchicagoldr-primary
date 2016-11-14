@@ -1,12 +1,12 @@
 from argparse import Action
 from os.path import exists, join
-import re
-from sys import stdout
+from re import compile as re_compile
 from json import dumps
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.processors.genericpruner import GenericPruner
+from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -30,18 +30,6 @@ def launch():
             __version__=__version__
     )
     app.main()
-
-
-class ValidateDirectory(Action):
-    """
-    Argparse Action class for determining a directory exists
-    when passed as an argument
-    """
-    def __call__(self, parser, namespace, value, option_string=None):
-        if not exists(value):
-            print(value)
-            raise IOError("{} does not exist on the filesystem")
-        setattr(namespace, self.dest, value)
 
 
 class Pruner(CLIApp):
@@ -97,11 +85,15 @@ class Pruner(CLIApp):
         staging_directory_reader = FileSystemStageReader(stage_fullpath)
         staging_structure = staging_directory_reader.read()
         try:
-            p = GenericPruner(staging_structure, args.selection_patterns,
-                              exclude_patterns=args.exclusion_pattern,
-                              final=args.final_decision)
+            p = GenericPruner(staging_structure,
+                              callback_args=[[re_compile(x) for x in args.selection_patterns]],
+                              callback_kwargs={'exclude_patterns': [re_compile(x) for x in args.exclusion_pattern]},
+                              final=args.final_decision, in_place_delete=True)
             r = p.prune()
             print(dumps(r, indent=4))
+            w = FileSystemStageWriter(staging_structure, staging_env,
+                                      eq_detect="adler32")
+            w.write()
         except KeyboardInterrupt:
             return 131
 
