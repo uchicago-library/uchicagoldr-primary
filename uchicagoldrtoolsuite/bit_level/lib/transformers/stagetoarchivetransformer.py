@@ -20,7 +20,7 @@ class StageToArchiveTransformer(Transformer):
     and copies its contents into an instance of an Archive structure
     """
     def __init__(self, origin_structure):
-        """instantiates an instance of a StageToARrchiveTansformer
+        """instantiates an instance of a StageToArrchiveTansformer
 
         It starts with the origin structure passed as a parameter
         and sets an empty destination structure.

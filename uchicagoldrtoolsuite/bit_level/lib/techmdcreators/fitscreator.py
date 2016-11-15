@@ -24,6 +24,7 @@ __version__ = "0.0.1dev"
 
 log = spawn_logger(__name__)
 
+# TODO: Technical metadata creators probably need a go over like the converters
 
 class FITsCreator(TechnicalMetadataCreator):
     def __init__(self, materialsuite, working_dir, timeout=None,

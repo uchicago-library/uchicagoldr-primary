@@ -5,6 +5,9 @@ from uuid import uuid1, uuid4
 from tempfile import TemporaryDirectory
 from os.path import join
 from os import scandir
+from functools import wraps
+
+from .exceptionhandler import ExceptionHandler
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -13,6 +16,30 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+eh = ExceptionHandler()
+
+
+def handle_and_raise(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            eh.handle(e, raise_exceptions=True)
+    return decorated_function
+
+
+def handle_and_pass(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            eh.handle(e, raise_exceptions=False)
+    return decorated_function
+
 
 def recursive_scandir(path="."):
     stack = [path]
