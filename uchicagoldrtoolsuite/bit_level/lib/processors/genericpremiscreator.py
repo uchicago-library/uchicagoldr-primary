@@ -37,6 +37,10 @@ class GenericPREMISCreator(object):
     """
     Ingests a stage structure and produces a PREMIS stub object
     record for everything in it
+
+    This class itself is kind of a loose wrapper around the real workhorse
+    class methods, which are employed fairly often themselves in other
+    processors at the MaterialSuite level
     """
     def __init__(self, stage):
         """
@@ -106,6 +110,18 @@ class GenericPREMISCreator(object):
 
     @classmethod
     def process_materialsuite(cls, materialsuite, originalName=None):
+        """
+        Ingests a MaterialSuite and sets its PREMIS data
+
+        __Args__
+
+        1. materialsuite (MaterialSuite): The MaterialSuite to produce the
+            PREMIS data for
+
+        __KWArgs__
+
+        * originalName (str): The originalName to set in the PREMIS record
+        """
         tmp_file_path = TemporaryFilePath()
         new_premis_path = TemporaryFilePath()
         try:
@@ -120,39 +136,6 @@ class GenericPREMISCreator(object):
         premis = make_record(tmp_file_path.path, original_name=originalName)
         premis.write_to_file(new_premis_path.path)
         materialsuite.premis = LDRPath(new_premis_path.path)
-
-#    @classmethod
-#    def instantiate_and_make_premis(cls, item, working_dir_path,
-#                                    originalName=None):
-#        """
-#        Write an item to a tempdir, examine it and make a PREMIS record
-#
-#        __Args__
-#
-#        1. item (LDRItem): The LDRItem to create a premis record for
-#
-#        __KWArgs__
-#
-#        * working_dir_path (str): Where to write things to disk. Defaults
-#            to the current instances working_dir_path
-#
-#        __Returns__
-#
-#        * (LDRPath): The item representing the PREMIS record
-#        """
-#        recv_file = join(working_dir_path, str(uuid1()))
-#        premis_file = join(working_dir_path, str(uuid1()))
-#        recv_item = LDRPath(recv_file)
-#        c = LDRItemCopier(item, recv_item, clobber=True, eq_detect="md5")
-#        r = c.copy()
-#        assert(r['src_eqs_dst'])
-#        if set_originalName:
-#            rec = cls.make_record(bytes(recv_file, 'utf-8'), item.item_name)
-#        else:
-#            rec = cls.make_record(bytes(recv_file, 'utf-8'))
-#        rec.write_to_file(premis_file)
-#        recv_item.delete(final=True)
-#        return LDRPath(premis_file)
 
     @classmethod
     def make_record(cls, file_path, original_name=None):

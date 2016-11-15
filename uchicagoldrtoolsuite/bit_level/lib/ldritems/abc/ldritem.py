@@ -81,5 +81,6 @@ class LDRItem(metaclass=ABCMeta):
         else:
             return 0
 
+    # TODO: Potentially phase out item_name?
     item_name = property(get_name, set_name)
     is_flo = property(get_is_flo, set_is_flo)

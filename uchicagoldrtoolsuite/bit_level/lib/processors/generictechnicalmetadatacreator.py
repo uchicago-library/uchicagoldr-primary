@@ -14,6 +14,10 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+# This class doesn't have a function in it that lends itself to easily splitting
+# into a @classmethod (see #98). Before any major work occurs in this class for
+# whatever reason that should probably be remedied.
+
 log = spawn_logger(__name__)
 eh = ExceptionHandler()
 
@@ -50,6 +54,16 @@ class GenericTechnicalMetadataCreator(object):
         return "<GenericTechnicalMetadataCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
     def process(self, skip_existing=False, data_transfer_obj={}):
+        """
+        create technical metadata for the provided stage
+
+        __KWArgs__
+
+        * skip_existing (bool): if True and the MaterialSuite has >0 technical
+            metadata records then skip it
+        * data_transfer_obj (dict): A dictionary for techmd creator specific
+            configuration options
+        """
         log.debug("Beginning TECHMD Processing")
         s_num = 0
         for segment in self.stage.segment_list:

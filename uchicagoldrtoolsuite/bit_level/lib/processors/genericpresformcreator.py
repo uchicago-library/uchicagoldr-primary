@@ -38,7 +38,8 @@ class GenericPresformCreator(object):
 
         __Args__
 
-        stage (Stage): the Stage to operate on
+        1. stage (Stage): the Stage to operate on
+        2. converters ([Converter]): an array of the converters to use
         """
         self.stage = stage
         # This instance var should hold the dir open until the instance is
@@ -59,6 +60,18 @@ class GenericPresformCreator(object):
 
     def process(self, skip_existing=False, presform_presforms=False,
                 data_transfer_obj={}):
+        """
+        Iterate over all the MaterialSuites in the stage, creating presforms
+
+        __KWArgs__
+
+        * skip_existing (bool): If True and a presform already exists (as
+            determined by the PREMIS record) skip the MaterialSuite
+        * presform_presforms (bool): If True operate on MaterialSuites
+            that contain presform data, otherwise skip them
+        * data_trans_obj (dict): A dictionary containing converter specific
+            configuration values
+        """
         for segment in self.stage.segment_list:
             stuff_to_add_to_segment = []
             for materialsuite in segment.materialsuite_list:

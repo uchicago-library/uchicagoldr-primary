@@ -10,8 +10,21 @@ from ..ldritems.ldrpath import LDRPath
 
 
 def default_callback(premis, patterns, exclude_patterns=None):
-    """if originalName fields match any compiled regex in patterns prune
-    the content, if it also matches an exclude pattern don't prune it"""
+    """
+    See if an originalName field matches any of a set of patterns
+    and does not match any exclude patterns
+
+    __Args__
+
+    1. premis (PremisRecord): The PREMIS record that contains the object
+        whose originalName we want to test again
+    2. patterns ([re.regex]): A list of regular expressions to check
+
+    __KWArgs__
+
+    * exclude_patterns ([re.regex] || None): An array of patterns which
+        "excuse" an originalName from a match against a pattern, or None
+    """
     try:
         # Keep in mind, the originalName field is the result of calling
         # fsencode on whatever the pathname is - relative to a supplied
@@ -39,8 +52,34 @@ def default_callback(premis, patterns, exclude_patterns=None):
         return True
 
 class GenericPruner(object):
+    """
+    A class for pruning MaterialSuites out of a stage after they have been
+    added to it by an ExternalPackager. Utilizes a provided callback funcion
+    which operates on the MaterialSuite's PREMIS record to determine whether
+    or not to prune
+    """
     def __init__(self, stage, callback=default_callback, callback_args=[],
                  callback_kwargs={}, final=False, in_place_delete=False):
+        """
+        Create a new pruner
+
+        __Args__
+
+        1. stage (Stage): The stage to prune
+
+        __KWArgs__
+
+        * callback (callable): The callback that will be provided with the
+            PremisRecord instance as well as any user supplied args/kwargs
+        * callback_args (list): arguments to pass into the callback function,
+            the PremisRecord instance is always the first argument regardless
+            of what is passed in this array.
+        * callback_kwargs (dict): kwargs to pass into the callback function
+        * final (bool): Whether or not take _any_ real actions, or only
+            mock actions recorded in the PREMIS
+        * in_place_delete (bool): If True && final --> fire the LDRItem.delete()
+            method on the content of MaterialSuites matched by the callback
+        """
         self.stage = stage
         self.final = final
         self.in_place_delete = in_place_delete
@@ -50,6 +89,28 @@ class GenericPruner(object):
 
     def prune(self, callback=None, callback_args=None, callback_kwargs=None,
               final=None, in_place_delete=None):
+        """
+        Prunes the provided stage. All arguments default to values provided
+            to the instance on init
+
+        __KWArgs__
+
+        * callback (callable): The callback that will be provided with the
+            PremisRecord instance as well as any user supplied args/kwargs
+        * callback_args (list): arguments to pass into the callback function,
+            the PremisRecord instance is always the first argument regardless
+            of what is passed in this array.
+        * callback_kwargs (dict): kwargs to pass into the callback function
+        * final (bool): Whether or not take _any_ real actions, or only
+            mock actions recorded in the PREMIS
+        * in_place_delete (bool): If True && final --> fire the LDRItem.delete()
+            method on the content of MaterialSuites matched by the callback
+
+        __Returns__
+
+        matched_identifiers ([str]): The identifiers of all matched
+            MaterialSuites
+        """
         def write_premis_deletion_event(ms):
             premis_location = TemporaryFilePath()
             ms._tmp_premis_loc = premis_location
