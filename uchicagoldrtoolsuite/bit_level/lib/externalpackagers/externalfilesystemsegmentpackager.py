@@ -55,7 +55,6 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
         for x in recursive_scandir(self.path):
             if not x.is_file():
                 continue
-
             # TODO
             # Filter pattern should probably be reintroduced HERE, in a try
             # catch type re-encoding of the filename from bytes.

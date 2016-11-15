@@ -24,6 +24,7 @@ from ..ldritems.ldritemcopier import LDRItemCopier
 # Right now I think I am going to go with trying to coerce representations,
 # regardless of how they come in, into strings.
 
+
 class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
     """
     Point at a file - get a MaterialSuite
@@ -33,6 +34,18 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
     so really nothing like magic).
     """
     def __init__(self, path, root=None):
+        """
+        Instantiate a new packager
+
+        __Args__
+
+        1. path (str/bytes): The fullpath to the target file
+
+        __KWArgs__
+
+        * root (str/bytes): A subpath of the fullpath. The canonical name of
+            the file then becomes its path relative to this root.
+        """
         self._str_path = None
         self._bytes_path = None
         self._str_root = None
@@ -46,6 +59,13 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
 
     def package(self):
+        """
+        The interface method for packagers
+
+        __Returns__
+
+        * (MaterialSuite): The external file packaged as a MaterialSuite
+        """
         # Because the PREMIS file is this weird made up thing in a TempDir
         # we have to keep the temporary directory around for the duration
         # of the life of the structure - otherwise it poofs out of existence
@@ -161,6 +181,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self._str_root = fsdecode(x)
         self._bytes_root = fsencode(x)
 
+    # Byte equivalent properties are prefaced with a b
     path = property(get_str_path, set_path)
     bpath = property(get_bytes_path, set_path)
     root = property(get_str_root, set_root)
