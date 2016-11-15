@@ -24,12 +24,53 @@ __version__ = "0.0.1dev"
 
 
 class Converter(metaclass=ABCMeta):
+    """
+    Defines and partially implements a workflow for archive-safe file conversion
 
+    The Converter ABC should be used as the base class for all converters
+    which operate on MaterialSuites. Converters claim mime-types which they
+    can handle the conversions for (claimed extensions do this by proxy) and
+    emit a new MaterialSuite which contains a preservation stable copy of a file
+    with an attached PREMIS record. These PREMIS records should accurately
+    reflect the relation of the relation of the new stable file to the file
+    from which it was derived.
+
+    In the event of failure the Converter should update the PREMIS metadata
+    of the original file, such that the attempt at conversion (despite it
+    failing) is recorded.
+    """
+
+    # Mime names abiding by https://tools.ietf.org/html/rfc4288#section-4.2 in
+    # theory, and matching the output of magic.from_file() or
+    # mimetypes.guess_type() in practice.
     _claimed_mimes = []
+
+    # Extension, including a preceeding dot. Anything that can be mapped by
+    # mimetypes.types_map to a mime will be added to the _claimed_mimes array
+    # when a child class calls super().__init__()
     _claimed_extensions = []
+
+    # Flipped to true when an instance claims its mimes from provided extensions
     _claimed_list_initd = False
 
     def __init__(self, input_materialsuite, working_dir, timeout=None):
+        """
+        Superclass init for converters. Handles setting instance variables
+        and some basic setup.
+
+        __Args__
+
+        * input_materialsuite (MaterialSuite): The MaterialSuite containing the
+            original file and the associated PREMIS record
+        * working_dir (pathlike): A temporary directory where the converter
+            can dump intermediate files, as well as the final product
+
+        __KWArgs__
+
+        1) timeout (int): Time (in seconds) to block for a conversion process.
+            After {timeout} seconds have gone by SIGTERM is sent to the external
+            process.
+        """
         self._source_materialsuite = None
         self._working_dir = None
         self._timeout = None
@@ -42,6 +83,10 @@ class Converter(metaclass=ABCMeta):
 
     @classmethod
     def claim_mimes_from_extensions(cls):
+        """
+        Iterate through the claimed extensions, trying to map them into mimes
+        to be read out of the original's PREMIS
+        """
         # This might be faster if I made _claimed_mimes a set - but with
         # datasets of this size I suspect it wouldn't buy anymore than a few
         # micro(nano?) seconds speedup, and would make the class syntax weirder
@@ -55,6 +100,17 @@ class Converter(metaclass=ABCMeta):
 
     @classmethod
     def handles_mime(cls, mime):
+        """
+        Alerts external code as to whether or not the converter handles {mime}
+
+        __Args__
+
+        mime (str): A mimetype
+
+        __Returns__
+
+        (bool): True if the mime is handled, false otherwise
+        """
         cls.claim_mimes_from_extensions()
         if mime in cls._claimed_mimes:
             return True
@@ -81,7 +137,29 @@ class Converter(metaclass=ABCMeta):
     def set_timeout(self, x):
         self._timeout = x
 
+    def get_converter_name(self):
+        return self._converter_name
+
+    def set_converter_name(self, x):
+        self._converter_name = x
+
     def instantiate_original(self, premis=None):
+        """
+        Writes the bytestream from the original MaterialSuite to disk
+        Attempts to give the file an accurate extension to help some external
+        converter processes which rely on file extensions by looking at either
+        the originalName field (if it has an extension) or by trying to
+        extrapolate the extension from the mimetype.
+
+        __KWArgs__
+
+        * premis (PremisRecord): The PREMIS which defines the original file
+
+        __Returns__
+
+        * target_path (str): The path the instantiated original byte data is
+            now at.
+        """
         target_path = str(Path(self.working_dir, uuid4().hex))
         # if we have the PREMIS try to set an extension, just in case the
         # converter requires it
@@ -109,6 +187,13 @@ class Converter(metaclass=ABCMeta):
         return target_path
 
     def instantiate_and_read_original_premis(self):
+        """
+        Dumps the byte data out of an LDRItem and reads it as PREMIS
+
+        __Returns__
+
+        (PremisRecord): A PREMIS metadata record object.
+        """
         target_path = Path(self.working_dir, uuid4().hex)
         target_ldritem = LDRPath(str(target_path))
         c = LDRItemCopier(self.source_materialsuite.premis, target_ldritem)
@@ -119,12 +204,63 @@ class Converter(metaclass=ABCMeta):
 
     @abstractmethod
     def run_converter(self, in_path):
+        """
+        The abstract method which runs the specific converter in each subclass.
+
+        __Args__
+
+        1. in_path (str): A filesystem path to the file to be converted
+
+        __Returns__
+
+        Each subclass must return a dictionary from this method with two keys:
+            1. outpath
+            2. cmd_output
+
+        The value attached to the outpath key must be either a string or None
+        (and it should be None if the conversion fails).
+
+        The value of cmd_output.__str__() is written into the PREMIS record
+        as part of the event metadata.
+        """
         pass
 
     def generate_presform_premis_record(self, presform_path):
+        """
+        Wraps the creation of a stub PREMIS record, so its name is more explicit
+
+        __Args__
+
+        1. presform_path (str): A file system path with a newly created
+            preservation stable file
+
+        __Returns__
+
+        (PremisRecord): A stub PREMIS record describing the file at
+            {presform_path}
+        """
         return GenericPREMISCreator.make_record(presform_path)
 
     def handle_premis(self, cmd_output, orig_premis, conv_premis, converter_name):
+        """
+        Handles creating conversion events and linking records
+        In the event of a failed conversion handles the creation of a failure
+        event in the original PREMIS record.
+
+        __Args__
+
+        1. cmd_output (CompletedProcess/*): Data inserted as event information
+            into the event entity.
+
+        2. orig_premis (PremisRecord): The PREMIS metadata for the original
+            object
+
+        3. conv_premis (PremisRecord || None): The PREMIS metadata for the
+            converted object, or None if conversion failed
+
+        4. converter_name (str): What this converter calls itself for record
+            keeping purposes.
+        """
         conv_event = self.build_conv_event(cmd_output, orig_premis, conv_premis, converter_name)
         orig_premis.add_event(
             conv_event
@@ -323,9 +459,24 @@ class Converter(metaclass=ABCMeta):
         return x
 
     def look_up_agent(self, x):
+        """
+        TODO: Looks up an agent from a centralized source
+        """
+        # TODO
         return None
 
     def convert(self):
+        """
+        The general interface for all converter classes.
+
+        Defines a conversion workflow which makes no assumptions about the
+        input bytestreams
+
+        __Returns__
+
+        * f (MaterialSuite) || (None): The resulting MaterialSuite, or None
+            in the event of a failed conversion
+        """
         orig_premis = self.instantiate_and_read_original_premis()
         target = self.instantiate_original(premis=orig_premis)
         results = self.run_converter(target)
@@ -346,12 +497,6 @@ class Converter(metaclass=ABCMeta):
             f.content = LDRPath(outpath)
             f.premis = LDRPath(presform_premis_fp)
             return f
-
-    def get_converter_name(self):
-        return self._converter_name
-
-    def set_converter_name(self, x):
-        self._converter_name = x
 
     claimed_mimes = property(get_claimed_mimes)
     source_materialsuite = property(get_source_materialsuite, set_source_materialsuite)

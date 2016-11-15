@@ -68,6 +68,9 @@ class ImageConverter(Converter):
 
         * timeout (int): A timeout (in seconds) to kill the conversion process
             after.
+
+        * data_transfer_obj (dict): A dictionary carrying potential converter-
+            specific configuration values.
         """
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
@@ -90,9 +93,17 @@ class ImageConverter(Converter):
 
     def run_converter(self, in_path):
         """
-        Edit the source materialsuite in place, adding any new presform
-        materialsuites that we manage to make and updating its PREMIS record
-        accordingly
+        Runs ffmpeg against {in_path} in order to generate a tif file
+
+        See the Converter ABC to see how this fits into the whole workflow
+
+        __Args__
+
+        in_path (str): The path where the original file is located
+
+        __Returns__
+
+        (dict): A dictionary used by the converter ABC
         """
         conv_file_path = join(self.working_dir, uuid4().hex + ".tif")
         # Fire 'er up

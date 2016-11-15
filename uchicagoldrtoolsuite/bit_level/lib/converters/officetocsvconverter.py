@@ -61,6 +61,8 @@ class OfficeToCSVConverter(Converter):
 
         * timeout (int): A timeout (in seconds) to kill the conversion process
             after.
+        * data_transfer_obj (dict): A dictionary carrying potential converter-
+            specific configuration values.
         """
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
@@ -83,6 +85,23 @@ class OfficeToCSVConverter(Converter):
             dumps(attrib_dict, sort_keys=True))
 
     def run_converter(self, in_path):
+        """
+        Runs libreoffice against {in_path} in order to generate a csv file
+
+        See the Converter ABC to see how this fits into the whole workflow
+
+        __Args__
+
+        in_path (str): The path where the original file is located
+
+        __Returns__
+
+        (dict): A dictionary used by the converter ABC
+        """
+        # LibreOffice is a little crazy, and won't let us specify a complete
+        # outpath for the file - just an outdir, so we make one just for it and
+        # then assume that the only file in there is the result of the
+        # conversion (which it should be)
         outdir = join(self.working_dir, uuid4().hex)
         makedirs(outdir, exist_ok=True)
         convert_cmd_args = [self.libre_office_path, '--headless',
