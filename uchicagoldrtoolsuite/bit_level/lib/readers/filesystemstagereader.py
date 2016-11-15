@@ -13,7 +13,23 @@ from ..ldritems.ldrpath import LDRPath
 
 
 class FileSystemStageReader(StageSerializationReader):
+    """
+    The reader for pairtree based FileSystem stage structure serializations.
+    Given the location of a stage reconstructs the stage structure from byte
+    streams serialized as files on disk.
+    """
+    # TODO: Should this be changed to be more similar to the archive reader,
+    # which accepts an environment path and an identifier rather than just a
+    # single path? Probably. - BNB
     def __init__(self, path):
+        """
+        Create a new FileSystemStageReader
+
+        __Args__
+
+        1. path (str): The path to the stage on disk. The leaf component should
+            be the stage identifier
+        """
         super().__init__()
         self.path = path
         self.struct.set_identifier(str(Path(path).parts[-1]))
@@ -30,6 +46,13 @@ class FileSystemStageReader(StageSerializationReader):
         return True
 
     def read(self):
+        """
+        Reads the structure at the given location
+
+        __Returns__
+
+        * self.struct (Stage): The stage
+        """
         # If there's not a valid stage skeleton on the file system here return a
         # blank staging structure. Whether or not this should "fail" silently or
         # raise an error might warrant inclusion as a kwarg/CLI flag?
@@ -59,7 +82,22 @@ class FileSystemStageReader(StageSerializationReader):
 
 
 class FileSystemSegmentReader(SegmentPackager):
+    """
+    The packager for pairtree based segment serializations
+
+    Given the path and identifier components of a Segment, package that segment
+    up and return it
+    """
     def __init__(self, path, label_text, label_number):
+        """
+        Create a new FileSystemSegmentReader
+
+        __Args__
+
+        1. path (str): The path the segment is located at
+        2. label_text (str): The textual component of the segment label
+        3. label_number (str/int): The numeric component of the segment label
+        """
         super().__init__()
         self.path = path
         self.set_struct(Segment(label_text, int(label_number)))
@@ -79,6 +117,13 @@ class FileSystemSegmentReader(SegmentPackager):
         return identifiers
 
     def package(self):
+        """
+        Packages the structure at the given location
+
+        __Returns__
+
+        self.struct (Segment): The segment
+        """
         for ident in self._gather_identifiers():
             self.struct.add_materialsuite(
                 FileSystemMaterialSuiteReader(
@@ -90,7 +135,27 @@ class FileSystemSegmentReader(SegmentPackager):
 
 
 class FileSystemMaterialSuiteReader(MaterialSuitePackager):
+    """
+    The packager for pairtree based MaterialSuite serializations
+
+    Given the path where the MaterialSuite is stored, the identifier, and the
+    pairtree encapsulation string, packages a MaterialSuite
+    """
     def __init__(self, seg_path, identifier, encapsulation='srf'):
+        """
+        Create a new FileSystemMaterialSuiteReader
+
+        __Args__
+
+        1. seg_path (str): The path to the location where the MaterialSuite
+            is stored
+        2. identifier (str): The identifier of the MaterialSuite
+
+        __KWArgs__
+
+        * encapsulation (str): The pairtree encapsulation utilized by the
+            serializer. Defaults to "srf" for "Stage Resource Folder"
+        """
         super().__init__()
         self.seg_path = seg_path
         self.identifier = identifier

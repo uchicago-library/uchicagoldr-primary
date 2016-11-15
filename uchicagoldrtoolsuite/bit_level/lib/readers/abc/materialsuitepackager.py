@@ -38,6 +38,11 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     """
     @abstractmethod
     def __init__(self):
+        # TODO: The init here is slightly different from the StageReader init,
+        # which sets the identifier to a uuid4(), this is due to a difference in
+        # the underlying structures themselves - Stage's init require an
+        # identifier. This should probably be made consistant, one way or
+        # another.
         self.struct = MaterialSuite()
 
     @abstractmethod
@@ -53,6 +58,10 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         pass
 
     def get_identifier(self, premis_ldritem):
+        """
+        Instantiate the premis in a tempfile, read it, grab the identifier
+        """
+        # TODO: make this use ldritem_to_premisrecord
         with TemporaryDirectory() as tmp_dir:
             tmp_file_name = uuid4().hex
             tmp_file_path = join(tmp_dir, tmp_file_name)

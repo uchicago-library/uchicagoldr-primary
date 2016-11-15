@@ -14,7 +14,23 @@ from ..ldritems.ldrpath import LDRPath
 
 
 class FileSystemArchiveReader(ArchiveSerializationReader):
+    """
+    The reader for pairtree based FileSystem archive structure serializations
+
+    Given the location of a long term storage environment and the identifier
+    of an archive structure reconstructs the archive structure from byte
+    streams serialized as files on disk.
+    """
     def __init__(self, lts_path, identifier):
+        """
+        Create a new FileSystemArchiveReader
+
+        __Args__
+
+        1. lts_path (str): The file system path to the long term storage env
+        2. identifier (str): The identifier of the archive structure stored
+            in the given long term storage environment
+        """
         super().__init__()
         self.lts_path = lts_path
         self.identifier = identifier
@@ -155,6 +171,13 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             self.get_struct().add_legalnote(legalnote)
 
     def read(self):
+        """
+        Reads the structure at the given location with the given identifier
+
+        __Returns__
+
+        self.struct (Archive): The archive structure
+        """
         self.get_struct().identifier = self.identifier
         arch_root, pairtree_root, admin_root, admin_manifest_path, \
             data_manifest_path, accrec_dir_path, adminnotes_path, \
