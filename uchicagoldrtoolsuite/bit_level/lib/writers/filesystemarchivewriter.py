@@ -33,6 +33,9 @@ log = spawn_logger(__name__)
 
 
 class SegmentedPairTreeObject(PairTreeObject):
+    """
+    A quick wrapper for PairTreeObjects to store the segment id on them
+    """
 
     _seg_id = None
 
@@ -52,8 +55,17 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     """
     def __init__(self, anArchive, aRoot, eq_detect="bytes"):
         """
-        spawn a writer
+        spawn a writer for the pairtree based Archive serialization
 
+        __Args__
+
+        1. anArchive (Archive): A populated archive structure
+        2. aRoot (str): The path to a long term storage environment
+
+        __KWArgs__
+
+        * eq_detect (str): What equality detection metric to use while
+            serializing
         """
         super().__init__(anArchive)
         self.lts_env_path = aRoot
@@ -336,6 +348,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             )
 
     def write(self):
+        """
+        write the archive to disk at the specified location
+        """
         log.debug("Writing Archive")
 
         ark_path = self._write_ark_dir()

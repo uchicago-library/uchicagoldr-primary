@@ -24,6 +24,7 @@ f = Formatter("[%(levelname)8s] [%(asctime)s] [%(name)s] = %(message)s",
 
 conf = ConfReader()
 
+
 class MultiprocessRotatingFileHandler(RotatingFileHandler):
     """
     Mix some fasteners in with stdlib logging, to avoid disasters in

@@ -12,11 +12,32 @@ from ..ldritems.ldritemoperations import hash_ldritem
 
 
 def makedirs(x):
+    """
+    wrap makedirs, so it doesn't freak out if the dir is already there
+    """
     _makedirs(x, exist_ok=True)
 
 
 class FileSystemStageWriter(StageSerializationWriter):
+    """
+    A writer for the pairtree based file system stage serialization
+
+    Converters the structure and contained bytestreams into files/dirs
+    on disk
+    """
     def __init__(self, aStructure, aRoot, eq_detect="bytes"):
+        """
+        Create a new FileSystemStageWriter instance
+
+        __Args__
+
+        1. aStructure (Stage): The structure to write
+        2. aRoot (str): The path to a staging environment
+
+        __KWArgs__
+
+        * eq_detect (str): The equality metric to use during serialization
+        """
         super().__init__(aStructure)
         self.stage_env_path = Path(aRoot)
         self.stage_root = Path(self.stage_env_path, self.struct.identifier)
@@ -75,6 +96,9 @@ class FileSystemStageWriter(StageSerializationWriter):
                 raise ValueError()
 
     def write(self):
+        """
+        Serialize the stage to the provided location
+        """
         self._build_skeleton()
         self._write_accessionrecords()
         self._write_adminnotes()
@@ -88,7 +112,25 @@ class FileSystemStageWriter(StageSerializationWriter):
 
 
 class FileSystemSegmentWriter(object):
+    """
+    A writer for the pairtree based file system segment serialization
+
+    Converters the structure and contained bytestreams into files/dirs
+    on disk
+    """
     def __init__(self, aStructure, aRoot, eq_detect="bytes"):
+        """
+        Create a new FileSystemSegmentWriter
+
+        __Args__
+
+        1. aStructure (Segment): The structure to serialize
+        2. aRoot (str): The path to the segment root dir
+
+        __KWArgs__
+
+        * eq_detect (str): The equality metric to use during serialization
+        """
         self.struct = aStructure
         self.segment_root = Path(aRoot, self.struct.identifier)
         self.eq_detect = eq_detect
@@ -98,6 +140,9 @@ class FileSystemSegmentWriter(object):
         makedirs(str(materialsuites_root))
 
     def write(self):
+        """
+        Serialize the segment to the provided location
+        """
         self._write_skeleton()
         for x in self.struct.materialsuite_list:
             ptfsmsw = FileSystemMaterialSuiteWriter(
@@ -109,7 +154,25 @@ class FileSystemSegmentWriter(object):
 
 
 class FileSystemMaterialSuiteWriter(object):
+    """
+    A writer for the pairtree based file system materialsuite serialization
+
+    Converters the structure and contained bytestreams into files/dirs
+    on disk
+    """
     def __init__(self, aStructure, aRoot, eq_detect="bytes"):
+        """
+        Create a new FileSystemMaterialSuiteWriter
+
+        __Args__
+
+        1. aStructure (MaterialSuite): The structure to serialize
+        2. aRoot (str): The path to the materialsuite root dir
+
+        __KWArgs__
+
+        * eq_detect (str): The equality metric to use during serialization
+        """
         self.struct = aStructure
         self.materialsuite_root = Path(
             identifier_to_path(self.struct.identifier, root=aRoot),
@@ -121,6 +184,9 @@ class FileSystemMaterialSuiteWriter(object):
         makedirs(str(Path(self.materialsuite_root, 'TECHMD')))
 
     def write(self):
+        """
+        Serialize the material suite to the provided location
+        """
         self._write_skeleton()
         target_content_path = Path(self.materialsuite_root, 'content.file')
         target_content_item = LDRPath(str(target_content_path))

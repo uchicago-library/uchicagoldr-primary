@@ -7,8 +7,6 @@ from os.path import join
 from os import scandir
 from functools import wraps
 
-from .exceptionhandler import ExceptionHandler
-
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -18,10 +16,9 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-eh = ExceptionHandler()
-
-
 def handle_and_raise(func):
+    from .exceptionhandler import ExceptionHandler
+    eh = ExceptionHandler()
     @wraps(func)
     def decorated_function(*args, **kwargs):
         try:
@@ -32,6 +29,8 @@ def handle_and_raise(func):
 
 
 def handle_and_pass(func):
+    from .exceptionhandler import ExceptionHandler
+    eh = ExceptionHandler()
     @wraps(func)
     def decorated_function(*args, **kwargs):
         try:
@@ -42,13 +41,10 @@ def handle_and_pass(func):
 
 
 def recursive_scandir(path="."):
-    stack = [path]
-    while stack:
-        cur_path = stack.pop()
-        for x in scandir(cur_path):
-            if x.is_dir():
-                stack.append(x.path)
-            yield x
+    for x in scandir(path):
+        yield x
+        if x.is_dir():
+            yield from recursive_scandir(x.path)
 
 
 class TemporaryFilePath:
