@@ -1,6 +1,5 @@
 from os.path import join, split
 from tempfile import TemporaryFile
-from hashlib import md5, sha256
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder

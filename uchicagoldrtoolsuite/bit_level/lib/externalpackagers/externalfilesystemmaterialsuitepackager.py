@@ -10,7 +10,6 @@ from pypremis.factories import LinkingEventIdentifierFactory
 from pypremis.factories import LinkingObjectIdentifierFactory
 
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
-from uchicagoldrtoolsuite.core.lib.convenience import bytes_to_hex_str
 from ..processors.genericpremiscreator import GenericPREMISCreator
 from ..readers.abc.materialsuitepackager import MaterialSuitePackager
 from ..ldritems.ldrpath import LDRPath

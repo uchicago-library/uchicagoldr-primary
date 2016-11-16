@@ -1,19 +1,10 @@
-from os import makedirs
-from os.path import join, dirname, isfile
+from os.path import join, isfile
 from uuid import uuid4
-import mimetypes
 from json import dumps
-
-from pypremis.lib import PremisRecord
-from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.converter import Converter
-from ..structures.materialsuite import MaterialSuite
-from ..ldritems.ldritemcopier import LDRItemCopier
-from ..ldritems.ldrpath import LDRPath
-from ..processors.genericpremiscreator import GenericPREMISCreator
 
 
 __author__ = "Brian Balsamo"
@@ -52,7 +43,6 @@ class AudioConverter(Converter):
         '.aiff',
         '.midi'
     ]
-
 
     def __init__(self, input_materialsuite, working_dir,
                  timeout=None, data_transfer_obj={}):

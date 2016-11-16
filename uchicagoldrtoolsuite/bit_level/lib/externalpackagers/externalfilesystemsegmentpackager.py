@@ -2,7 +2,6 @@ from ..readers.abc.segmentpackager import SegmentPackager
 from ..structures.segment import Segment
 from .externalfilesystemmaterialsuitepackager import\
     ExternalFileSystemMaterialSuitePackager
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
 
 

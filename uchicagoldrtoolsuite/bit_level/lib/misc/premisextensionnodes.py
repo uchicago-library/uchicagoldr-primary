@@ -265,24 +265,3 @@ class RestrictingAgentIdentifier(ExtensionNode):
 
     def get_restrictingAgentIdentifierRole(self):
         return self.get_field('restrictingAgentIdentifierRole')
-
-    def __init__(self, organizationName, internalIdentfier):
-        ExtensionNode.__init__(self)
-        self.set_organizationName(organizationName)
-        self.set_internalIdentifier(internalIdentifier)
-
-    def set_organizationName(self, organizationName):
-        pass
-
-    def get_organizationName(self):
-        pass
-
-    def set_internalIdentifier(self, internalIdentifier):
-        pass
-
-    def get_internalIdentifier(self):
-        pass
-
-    def add_internalIdentifier(self, internalIdentifier):
-        pass
-

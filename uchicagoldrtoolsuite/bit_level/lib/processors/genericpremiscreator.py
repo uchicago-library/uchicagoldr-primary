@@ -1,8 +1,6 @@
 from tempfile import TemporaryDirectory
 from os.path import getsize
 from mimetypes import guess_type
-from uuid import uuid1
-from os.path import join
 from json import dumps
 
 try:

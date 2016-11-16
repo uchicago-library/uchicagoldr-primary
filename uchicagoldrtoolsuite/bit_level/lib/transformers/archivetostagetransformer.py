@@ -1,6 +1,5 @@
 from uuid import uuid4
 
-from uchicagoldrtoolsuite.core.lib.ark import Ark
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.transformer import Transformer
 from ..structures.archive import Archive

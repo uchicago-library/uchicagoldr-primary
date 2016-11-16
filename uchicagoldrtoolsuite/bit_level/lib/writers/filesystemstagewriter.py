@@ -1,7 +1,6 @@
 from os import makedirs as _makedirs
 from pathlib import Path
 from uuid import uuid4
-from json import dump
 
 from pypairtree.utils import identifier_to_path
 
@@ -200,7 +199,7 @@ class FileSystemMaterialSuiteWriter(object):
 
         if self.struct.content is not None:
             copiers.append(LDRItemCopier(self.struct.content, target_content_item,
-                                        clobber=True))
+                                         clobber=True))
 
         for x in self.struct.technicalmetadata_list:
             # Use a quick checksum as the file name, this should prevent

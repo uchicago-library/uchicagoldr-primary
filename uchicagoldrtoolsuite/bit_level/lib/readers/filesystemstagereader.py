@@ -2,7 +2,6 @@ from pathlib import Path
 from os import scandir
 
 from pypairtree.utils import path_to_identifier, identifier_to_path
-from pypremis.lib import PremisRecord
 
 from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
 from .abc.stageserializationreader import StageSerializationReader

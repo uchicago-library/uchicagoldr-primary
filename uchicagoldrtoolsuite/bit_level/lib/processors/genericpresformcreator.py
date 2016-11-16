@@ -9,9 +9,8 @@ from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.convenience import \
-    is_presform_materialsuite, TemporaryFilePath, ldritem_to_premisrecord
+    is_presform_materialsuite, ldritem_to_premisrecord
 from ..ldritems.ldrpath import LDRPath
-from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
 
@@ -143,7 +142,7 @@ class GenericPresformCreator(object):
             c_working_dir = join(self.working_dir_path, str(uuid1()))
             makedirs(c_working_dir, exist_ok=True)
             c = converter(ms, c_working_dir,
-                            data_transfer_obj=data_transfer_obj)
+                          data_transfer_obj=data_transfer_obj)
             presform = c.convert()
             if presform is not None:
                 presforms.append(presform)

@@ -1,5 +1,5 @@
 from os import scandir
-from os.path import join, isdir, isfile, splitext, relpath
+from os.path import join, isdir, isfile, relpath
 from json import load
 
 from pypremis.lib import PremisRecord
@@ -113,19 +113,19 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                     int(ms_entry['origin_segment'].split("-")[1])
                 )
                 self.get_struct().add_segment(seg)
-            premis_path = None
-            for bytestream_entry in ms_entry['bytestreams']:
-                if bytestream_entry['type'] == "PREMIS":
-                    premis_path = bytestream_entry['dst']
-                    premis = PremisRecord(frompath=premis_path)
-                    try:
-                        relationships = premis.get_object_list()[0].\
-                            get_relationship()
-                    except KeyError:
-                        relationships = []
+#            premis_path = None
+#            for bytestream_entry in ms_entry['bytestreams']:
+#                if bytestream_entry['type'] == "PREMIS":
+#                    premis_path = bytestream_entry['dst']
+#                    premis = PremisRecord(frompath=premis_path)
+#                    try:
+#                        relationships = premis.get_object_list()[0].\
+#                            get_relationship()
+#                    except KeyError:
+#                        relationships = []
             seg.add_materialsuite(
                 self._pack_materialsuite(ms_entry,
-                                            data_manifest)
+                                         data_manifest)
             )
 
     def _pack_materialsuite(self, ms_entry, data_manifest):
@@ -154,9 +154,9 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         # TODO: Add comparison with the manifest, probably, to mimic data
         # manifest behavior, even though this one uses the file system instead
         # of the manifest to find files.
-        admin_manifest = None
-        with open(admin_manifest_path, 'r') as f:
-            admin_manifest = load(f)
+#        admin_manifest = None
+#        with open(admin_manifest_path, 'r') as f:
+#            admin_manifest = load(f)
         for x in scandir(accrec_dir_path):
             accrec = LDRPath(x.path)
             accrec.item_name = relpath(x.path, accrec_dir_path)

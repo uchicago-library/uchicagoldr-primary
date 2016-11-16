@@ -51,6 +51,7 @@ def default_callback(premis, patterns, exclude_patterns=None):
     if matched:
         return True
 
+
 class GenericPruner(object):
     """
     A class for pruning MaterialSuites out of a stage after they have been
