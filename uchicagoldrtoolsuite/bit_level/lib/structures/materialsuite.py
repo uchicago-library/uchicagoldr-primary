@@ -1,6 +1,6 @@
 from json import dumps
+from logging import getLogger
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
 
@@ -13,7 +13,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class MaterialSuite(Structure):

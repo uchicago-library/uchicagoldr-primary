@@ -1,3 +1,6 @@
+from logging import getLogger
+
+from uchicagoldrtoolsuite import handled
 from ..readers.abc.segmentpackager import SegmentPackager
 from ..structures.segment import Segment
 from .externalfilesystemmaterialsuitepackager import\
@@ -12,8 +15,10 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+log = getLogger(__name__)
 
 class ExternalFileSystemSegmentPackager(SegmentPackager):
+    @handled
     def __init__(self, path, label_text, label_number, root=None,
                  filter_pattern=None):
         """
@@ -35,6 +40,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             default this will be the containing directory of the specified
             directory
         """
+        log.info("Instantiating a new ExternalFileSystemSegmentPackager")
         super().__init__()
         self.path = path
         self.set_implementation("file system")
@@ -45,6 +51,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
         self.root = root
         self.filter_pattern = filter_pattern
 
+    @handled
     def package(self):
         """
         grab all the files out of the supplied path,

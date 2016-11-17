@@ -2,12 +2,12 @@ from tempfile import TemporaryDirectory
 from json import dumps
 from os.path import join
 from uuid import uuid1
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..ldritems.ldrpath import LDRPath
 from ..misc.premisextensionnodes import Restriction
 from ..misc.premisextensionnodes import RightsExtensionIdentifier
@@ -24,7 +24,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class GenericPREMISRestrictionSetter(object):

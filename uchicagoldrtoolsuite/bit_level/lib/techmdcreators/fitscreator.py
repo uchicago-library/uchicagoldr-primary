@@ -2,6 +2,7 @@ from os import makedirs
 from os.path import join, dirname, isfile
 from uuid import uuid4
 from json import dumps
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
@@ -22,7 +23,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 # TODO: Technical metadata creators probably need a go over like the converters
 

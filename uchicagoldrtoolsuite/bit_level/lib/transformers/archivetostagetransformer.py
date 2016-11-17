@@ -1,6 +1,6 @@
 from uuid import uuid4
+from logging import getLogger
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.transformer import Transformer
 from ..structures.archive import Archive
 from ..structures.stage import Stage
@@ -13,7 +13,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class ArchiveToStageTransformer(Transformer):

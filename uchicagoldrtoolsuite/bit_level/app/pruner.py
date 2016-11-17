@@ -1,4 +1,5 @@
 from argparse import Action
+from logging import getLogger
 from os.path import exists, join
 from re import compile as re_compile
 from json import dumps
@@ -15,6 +16,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
 
 
 def launch():

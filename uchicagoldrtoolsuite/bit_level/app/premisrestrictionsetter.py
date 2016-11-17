@@ -1,9 +1,9 @@
 from sys import stdout
 from os.path import join
+from logging import getLogger
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.masterlog import \
-    spawn_logger, \
+from uchicagoldrtoolsuite import \
     activate_master_log_file, \
     activate_job_log_file, \
     activate_stdout_log
@@ -20,7 +20,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 activate_master_log_file()
 activate_job_log_file()
 

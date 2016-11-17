@@ -4,6 +4,7 @@ from uuid import uuid1
 from requests import post
 from xml.etree.ElementTree import fromstring
 from json import dumps
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
@@ -24,7 +25,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 eh = ExceptionHandler()
 
 

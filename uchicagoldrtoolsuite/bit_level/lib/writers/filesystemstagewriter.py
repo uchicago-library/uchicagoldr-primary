@@ -1,4 +1,5 @@
 from os import makedirs as _makedirs
+from logging import getLogger
 from pathlib import Path
 from uuid import uuid4
 
@@ -8,6 +9,9 @@ from .abc.stageserializationwriter import StageSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldritemoperations import hash_ldritem
+
+
+log = getLogger(__name__)
 
 
 def makedirs(x):

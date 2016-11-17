@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 import mimetypes
 from os.path import splitext, isfile
+from logging import getLogger
 
 from pypremis.nodes import *
 from pypremis.lib import PremisRecord
@@ -21,6 +22,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
 
 
 class Converter(metaclass=ABCMeta):

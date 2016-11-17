@@ -4,6 +4,7 @@ from os.path import exists, join, dirname, split
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 import xml.etree.ElementTree as ET
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
@@ -13,7 +14,6 @@ from pypairtree.pairtree import PairTree
 from pypairtree.pairtreeobject import PairTreeObject
 from pypairtree.intraobjectbytestream import IntraObjectByteStream
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.doi import DOI
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
@@ -29,7 +29,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class SegmentedPairTreeObject(PairTreeObject):

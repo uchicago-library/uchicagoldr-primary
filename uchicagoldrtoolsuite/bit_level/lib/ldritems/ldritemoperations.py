@@ -1,5 +1,6 @@
 from os.path import join, split
 from tempfile import TemporaryFile
+from logging import getLogger
 
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
@@ -14,7 +15,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 def read_metadata_from_file_object(attribute_string,

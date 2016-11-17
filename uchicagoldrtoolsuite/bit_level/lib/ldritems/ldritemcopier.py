@@ -1,11 +1,11 @@
 from json import dumps
+from logging import getLogger
 
 from .abc.ldritem import LDRItem
 from .ldritemoperations import hash_ldritem
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class LDRItemCopier(object):

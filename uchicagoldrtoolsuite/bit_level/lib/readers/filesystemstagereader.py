@@ -1,4 +1,5 @@
 from pathlib import Path
+from logging import getLogger
 from os import scandir
 
 from pypairtree.utils import path_to_identifier, identifier_to_path
@@ -9,6 +10,9 @@ from .abc.segmentpackager import SegmentPackager
 from .abc.materialsuitepackager import MaterialSuitePackager
 from ..structures.segment import Segment
 from ..ldritems.ldrpath import LDRPath
+
+
+log = getLogger(__name__)
 
 
 class FileSystemStageReader(StageSerializationReader):

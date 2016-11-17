@@ -3,11 +3,11 @@ from uuid import uuid1
 from os import makedirs
 from os.path import join
 from json import dumps
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.convenience import \
     is_presform_materialsuite, ldritem_to_premisrecord
 from ..ldritems.ldrpath import LDRPath
@@ -23,7 +23,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class GenericPresformCreator(object):

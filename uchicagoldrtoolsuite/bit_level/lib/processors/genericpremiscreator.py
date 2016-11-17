@@ -2,6 +2,7 @@ from tempfile import TemporaryDirectory
 from os.path import getsize
 from mimetypes import guess_type
 from json import dumps
+from logging import getLogger
 
 try:
     from magic import from_file
@@ -12,7 +13,6 @@ from pypremis.nodes import *
 
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
@@ -27,7 +27,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 eh = ExceptionHandler()
 
 

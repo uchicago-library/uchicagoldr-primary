@@ -1,3 +1,4 @@
+from logging import getLogger
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 from os import fsencode, fsdecode
@@ -14,6 +15,10 @@ from ..processors.genericpremiscreator import GenericPREMISCreator
 from ..readers.abc.materialsuitepackager import MaterialSuitePackager
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
+
+
+log = getLogger(__name__)
+
 
 # The handling of paths in this class is an interesting conundrum - because the
 # different major OSes use different canonical path representations (bytes on

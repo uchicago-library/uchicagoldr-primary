@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from uchicagoldrtoolsuite.core.lib.ark import Ark
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.transformer import Transformer
@@ -12,7 +14,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class StageToArchiveTransformer(Transformer):

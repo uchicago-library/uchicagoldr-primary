@@ -1,8 +1,8 @@
 from tempfile import TemporaryDirectory
 from json import dumps
+from logging import getLogger
 
 from ..ldritems.abc.ldritem import LDRItem
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 
 
@@ -18,7 +18,7 @@ __version__ = "0.0.1dev"
 # into a @classmethod (see #98). Before any major work occurs in this class for
 # whatever reason that should probably be remedied.
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 eh = ExceptionHandler()
 
 

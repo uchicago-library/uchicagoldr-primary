@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from logging import getLogger
 
 from .abc.serializationwriter import SerializationWriter
 
@@ -9,6 +10,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
 
 
 class ArchiveSerializationWriter(SerializationWriter, metaclass=ABCMeta):

@@ -1,11 +1,12 @@
 from sys import exc_info
 from os import makedirs
 from os.path import join, isfile, expanduser
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger, StreamHandler, Formatter, FileHandler
 from logging.handlers import RotatingFileHandler
 from configparser import ConfigParser
 from tempfile import gettempdir
 from functools import wraps
+from uuid import uuid4
 
 from pkg_resources import Requirement, resource_filename, resource_stream, \
     resource_string
@@ -79,10 +80,36 @@ def retrieve_resource_stream(resource_path, pkg_name=None):
     return resource_stream(Requirement.parse(pkg_name), resource_path)
 
 
+def mux_parsers(ordered_subparsers):
+    """
+    mux together a list of parsers, ordered from most preferred to least
+
+    __Args__
+
+    1) ordered_subparsers (list): The other parsers, ordered from
+    most preferred to least
+
+    __Returns__
+
+    * parser (ConfigParser): A parser containing the final values
+    """
+    parser = ConfigParser()
+    # Reverse the list, so when we clobber values we end up with the most
+    # preferrential one
+    for subparser in reversed(ordered_subparsers):
+        for section in subparser.sections():
+            for option in subparser.options(section):
+                if not parser.has_section(section):
+                    parser.add_section(section)
+                parser[section][option] = subparser.get(section, option,
+                                                        raw=True)
+    return parser
+
+
 def build_conf(config_directory=None, config_file=None,
                and_default=True, and_builtin=True):
     """
-    Build a new ConfReader to read values from
+    Build a new ConfigParser from some standard spots
 
     __KWArgs__
 
@@ -93,31 +120,6 @@ def build_conf(config_directory=None, config_file=None,
     conf location
     * and_builtin (bool): Whether or not to check/use the builtin conf
     """
-
-    def mux_parsers(ordered_subparsers):
-        """
-        mux together a list of parsers, ordered from most preferred to least
-
-        __Args__
-
-        1) ordered_subparsers (list): The other parsers, ordered from
-        most preferred to least
-
-        __Returns__
-
-        * parser (ConfigParser): A parser containing the final values
-        """
-        parser = ConfigParser()
-        # Reverse the list, so when we clobber values we end up with the most
-        # preferrential one
-        for subparser in reversed(ordered_subparsers):
-            for section in subparser.sections():
-                for option in subparser.options(section):
-                    if not parser.has_section(section):
-                        parser.add_section(section)
-                    parser[section][option] = subparser.get(section, option,
-                                                            raw=True)
-        return parser
 
     # Assume if the user didn't enter a filename they used the default
     if config_file is None:
@@ -166,6 +168,7 @@ conf = build_conf()
 
 # The default root logger
 root_log = getLogger(__name__)
+root_log.setLevel("DEBUG")
 
 # This mess is just a hassle to keep more than one place
 _f = Formatter("[%(levelname)8s] [%(asctime)s] [%(name)s] = %(message)s",
@@ -238,6 +241,25 @@ def activate_stdout_log(verbosity="INFO"):
     h.setFormatter(_f)
     root_log.addHandler(h)
     root_log.info("Now logging to stdout @ {}".format(verbosity))
+
+
+def activate_job_log_file(verbosity="DEBUG"):
+    """
+    Write a per job log file in $logdir/jobs with the filename of the time
+    the job occured plus a uuid to not clobbering things
+    """
+    # Its kind of awkward to cram this import in this function definition, but I
+    # dont think that the iso8601_dt() function really deserves to be at this
+    # level of initialization unless its required.
+    from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+    logdir = get_log_dir()
+    jlog_filepath = join(logdir, 'jobs', iso8601_dt() + "_" + uuid4().hex)
+    h2 = FileHandler(jlog_filepath)
+    h2.setLevel(verbosity)
+    h2.setFormatter(_f)
+    root_log.addHandler(h2)
+    root_log.info("Now logging to job log file: "
+                  "{} @ {}".format(jlog_filepath, verbosity))
 
 
 def clear_root_log_handlers():

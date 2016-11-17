@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 from os.path import join
 from os import scandir
 from functools import wraps
+from logging import getLogger
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -16,28 +17,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-def handle_and_raise(func):
-    from .exceptionhandler import ExceptionHandler
-    eh = ExceptionHandler()
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            eh.handle(e, raise_exceptions=True)
-    return decorated_function
-
-
-def handle_and_pass(func):
-    from .exceptionhandler import ExceptionHandler
-    eh = ExceptionHandler()
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            eh.handle(e, raise_exceptions=False)
-    return decorated_function
+log = getLogger(__name__)
 
 
 def recursive_scandir(path="."):

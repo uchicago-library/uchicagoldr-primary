@@ -1,6 +1,7 @@
 from os import scandir
 from os.path import join, isdir, isfile, relpath
 from json import load
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 
@@ -11,6 +12,9 @@ from .abc.archiveserializationreader import ArchiveSerializationReader
 from ..structures.segment import Segment
 from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldrpath import LDRPath
+
+
+log = getLogger(__name__)
 
 
 class FileSystemArchiveReader(ArchiveSerializationReader):

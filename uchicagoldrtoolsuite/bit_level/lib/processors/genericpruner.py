@@ -1,4 +1,5 @@
 from uuid import uuid4
+from logging import getLogger
 
 from pypremis.factories import LinkingObjectIdentifierFactory
 from pypremis.nodes import *
@@ -7,6 +8,9 @@ from uchicagoldrtoolsuite.core.lib.convenience import ldritem_to_premisrecord
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import TemporaryFilePath
 from ..ldritems.ldrpath import LDRPath
+
+
+log = getLogger(__name__)
 
 
 def default_callback(premis, patterns, exclude_patterns=None):
