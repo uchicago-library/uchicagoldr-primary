@@ -1,11 +1,11 @@
 from abc import abstractmethod, ABCMeta
+from logging import getLogger
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 from os.path import join
 
 from pypremis.lib import PremisRecord
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.packager import Packager
 from ...structures.materialsuite import MaterialSuite
 
@@ -18,7 +18,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class MaterialSuitePackager(Packager, metaclass=ABCMeta):

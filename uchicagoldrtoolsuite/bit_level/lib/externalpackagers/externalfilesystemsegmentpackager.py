@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from uchicagoldrtoolsuite import handled
+from uchicagoldrtoolsuite import log_aware
 from ..readers.abc.segmentpackager import SegmentPackager
 from ..structures.segment import Segment
 from .externalfilesystemmaterialsuitepackager import\
@@ -18,7 +18,7 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 class ExternalFileSystemSegmentPackager(SegmentPackager):
-    @handled
+    @log_aware(log, raise_e=False)
     def __init__(self, path, label_text, label_number, root=None,
                  filter_pattern=None):
         """
@@ -50,8 +50,9 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
         self.set_struct(Segment(self.get_id_prefix(), int(self.get_id_num())))
         self.root = root
         self.filter_pattern = filter_pattern
+        raise ValueError("This is a test")
 
-    @handled
+    @log_aware(log)
     def package(self):
         """
         grab all the files out of the supplied path,

@@ -274,28 +274,42 @@ def handler(e, exc_info=None, log=None,
     if log is None:
         log = root_log
     if log_exceptions:
-        log.exception(e, exc_info=exc_info)
+        if raise_exceptions:
+            log.exception(e, exc_info=exc_info)
+        else:
+            log.warning("BYPASSED EXCEPTION: {}".format(str(e)), exc_info=exc_info)
     if raise_exceptions:
         raise(e)
 
+def log_aware(log=None, raise_e=True):
+    def _log_aware(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            try:
+                return function(*args, **kwargs)
+            except Exception as e:
+                handler(e, exc_info=exc_info(),
+                        log=log, raise_exceptions=raise_e)
+        return wrapper
+    return _log_aware
 
-def handled(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            handler(e, exc_info=exc_info())
-    return decorated_function
+#def log_aware(f):
+#    @wraps(f)
+#    def decorated_function(*args, **kwargs):
+#        try:
+#            return f(*args, **kwargs)
+#        except Exception as e:
+#            handler(e, exc_info=exc_info())
+#    return decorated_function
 
 
-def handled_noraise(f):
-    # Probably don't use this, and instead try-catch the code itself explaining
-    # why its fine to not raise the exception.
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            handler(e, exc_info=exc_info(), raise_exceptions=False)
-    return decorated_function
+#def log_aware_noraise(f):
+#    # Probably don't use this, and instead try-catch the code itself explaining
+#    # why its fine to not raise the exception.
+#    @wraps(f)
+#    def decorated_function(*args, **kwargs):
+#        try:
+#            return f(*args, **kwargs)
+#        except Exception as e:
+#            handler(e, exc_info=exc_info(), raise_exceptions=False)
+#    return decorated_function

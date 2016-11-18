@@ -1,8 +1,8 @@
-from .masterlog import spawn_logger
+from logging import getLogger
 from sys import exc_info
 from traceback import TracebackException, print_exc
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 class ExceptionHandler(object):
 

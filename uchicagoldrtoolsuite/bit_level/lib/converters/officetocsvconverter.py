@@ -5,7 +5,6 @@ from uuid import uuid4
 from logging import getLogger
 
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.converter import Converter
 
 

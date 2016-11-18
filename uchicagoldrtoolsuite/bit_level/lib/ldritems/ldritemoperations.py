@@ -2,7 +2,6 @@ from os.path import join, split
 from tempfile import TemporaryFile
 from logging import getLogger
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from .ldrpath import LDRPath

@@ -7,7 +7,6 @@ from logging import getLogger
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.abc.ldritem import LDRItem
 from .abc.technicalmetadatacreator import TechnicalMetadataCreator

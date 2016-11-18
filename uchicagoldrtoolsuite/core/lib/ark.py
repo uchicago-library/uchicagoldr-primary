@@ -1,11 +1,11 @@
 from urllib.request import urlopen, URLError
 from configparser import NoOptionError
+from logging import getLogger
 
 from requests import get
 from requests.exceptions import SSLError
 
 from uchicagoldrtoolsuite.core.lib.confreader import ConfReader
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .identifier import Identifier
 
 
@@ -17,7 +17,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class Ark(Identifier):
