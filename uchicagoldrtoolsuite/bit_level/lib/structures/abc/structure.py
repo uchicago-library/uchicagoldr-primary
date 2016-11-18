@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractproperty, abstractmethod
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
+
 
 __author__ = "Tyler Danstrom"
 __email__ = "tdanstrom@uchicago.edu"
@@ -26,12 +28,14 @@ class Structure(metaclass=ABCMeta):
     required_parts = []
 
     @abstractmethod
+    @log_aware(log)
     def validate(self):
         for thing in self.get_required_parts():
             if  getattr(self, thing, None) == None:
                 return (False, "missing rec part: {}".format(thing))
         return True
 
+    @log_aware(log)
     def get_required_parts(self):
         return self.required_parts
 

@@ -1,5 +1,6 @@
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.ark import Ark
 from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .abc.transformer import Transformer
@@ -21,6 +22,7 @@ class StageToArchiveTransformer(Transformer):
     """The StageToARrchiveTransformer takes an instance of a Stage structure
     and copies its contents into an instance of an Archive structure
     """
+    @log_aware(log)
     def __init__(self, origin_structure):
         """instantiates an instance of a StageToArrchiveTansformer
 
@@ -34,6 +36,7 @@ class StageToArchiveTransformer(Transformer):
         self.origin_structure = origin_structure
         self.destination_structure = None
 
+    @log_aware(log)
     def transform(self, archive_identifier=None):
         """returns a fully realized Archive structure containing the contents
         of the origin Stage structure.
@@ -70,11 +73,13 @@ class StageToArchiveTransformer(Transformer):
 
         return self.destination_structure
 
+    @log_aware(log)
     def get_origin_structure(self):
         """returns the origin structure, in this case a fully-realized Stage structure
         """
         return self._origin_structure
 
+    @log_aware(log)
     def set_origin_structure(self, value):
         """sets the origin structure: it will only accept a Stage structure
         """
@@ -84,16 +89,19 @@ class StageToArchiveTransformer(Transformer):
             raise ValueError("StageToPairtreeTransformer must have an " +
                              "instace of a Stage in origin_structure")
 
+    @log_aware(log)
     def get_destination_structure(self):
         """returns the destination structure, or the structure created from transform method
         """
         return self._destination_structure
 
+    @log_aware(log)
     def set_destination_structure(self, value):
         """sets the destination structure, an Archive structure
         """
         self._destination_structure = value
 
+    @log_aware(log)
     def __repr__(self):
         return "< transform from stage {} to archive {}".\
             format(id(self.origin_structure),

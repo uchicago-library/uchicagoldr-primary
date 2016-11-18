@@ -10,6 +10,7 @@ from pypremis.nodes import *
 from pypremis.factories import LinkingEventIdentifierFactory
 from pypremis.factories import LinkingObjectIdentifierFactory
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from ..processors.genericpremiscreator import GenericPREMISCreator
 from ..readers.abc.materialsuitepackager import MaterialSuitePackager
@@ -37,6 +38,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
     creates a stub PREMIS record for the file with some precomputed info,
     so really nothing like magic).
     """
+    @log_aware(log)
     def __init__(self, path, root=None):
         """
         Instantiate a new packager
@@ -62,6 +64,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
 
+    @log_aware(log)
     def package(self):
         """
         The interface method for packagers
@@ -81,6 +84,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.struct._tmpdir = self.working_dir
         return super().package()
 
+    @log_aware(log)
     def get_premis(self):
         # Surprise! Nothing coming in externally is assumed to have a valid
         # pre-existing PREMIS record. Instead we are going to whip one into
@@ -151,6 +155,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         write_minimal_premis(minimal_premis_record)
         return LDRPath(self.instantiated_premis)
 
+    @log_aware(log)
     def get_content(self):
         x = LDRPath(self.working_path)
         if self.root is not None:
@@ -165,22 +170,28 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
     def get_presform_list(self):
         raise NotImplementedError()
 
+    @log_aware(log)
     def get_bytes_path(self):
         return self._bytes_path
 
+    @log_aware(log)
     def get_str_path(self):
         return self._str_path
 
+    @log_aware(log)
     def set_path(self, x):
         self._str_path = fsdecode(x)
         self._bytes_paths = fsencode(x)
 
+    @log_aware(log)
     def get_bytes_root(self):
         return self._bytes_root
 
+    @log_aware(log)
     def get_str_root(self):
         return self._str_root
 
+    @log_aware(log)
     def set_root(self, x):
         self._str_root = fsdecode(x)
         self._bytes_root = fsencode(x)

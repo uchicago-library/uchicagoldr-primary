@@ -3,6 +3,7 @@ from os.path import join, isfile
 from uuid import uuid4
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from .abc.converter import Converter
 
@@ -43,6 +44,7 @@ class VideoConverter(Converter):
         ".vob"
     ]
 
+    @log_aware(log)
     def __init__(self, input_materialsuite, working_dir,
                  timeout=None, data_transfer_obj={}):
         """
@@ -69,6 +71,7 @@ class VideoConverter(Converter):
                              'transfer object!')
         log.debug("VideoConverter spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attrib_dict = {
             'source_materialsuite': str(self.source_materialsuite),
@@ -79,6 +82,7 @@ class VideoConverter(Converter):
 
         return "<VideoConverter {}>".format(dumps(attrib_dict, sort_keys=True))
 
+    @log_aware(log)
     def run_converter(self, in_path):
         """
         Edit the source materialsuite in place, adding any new presform

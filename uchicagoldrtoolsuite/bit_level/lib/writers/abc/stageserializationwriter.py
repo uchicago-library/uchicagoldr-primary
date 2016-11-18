@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from .abc.serializationwriter import SerializationWriter
 from ...structures.stage import Stage
 
@@ -21,5 +22,6 @@ class StageSerializationWriter(SerializationWriter, metaclass=ABCMeta):
     A base class for all Staging Structure Serialization Writers
     """
     @abstractmethod
+    @log_aware(log)
     def __init__(self, struct):
         self.set_struct(struct)

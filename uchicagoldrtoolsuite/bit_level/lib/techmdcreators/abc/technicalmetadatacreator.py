@@ -6,6 +6,7 @@ from uuid import uuid1
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from ...ldritems.ldrpath import LDRPath
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
@@ -30,33 +31,42 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
     _timeout = None
 
     @abstractmethod
+    @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None):
         self.set_source_materialsuite(materialsuite)
         self.set_working_dir(working_dir)
         self.set_timeout(timeout)
 
+    @log_aware(log)
     def get_source_materialsuite(self):
         return self._source_materialsuite
 
+    @log_aware(log)
     def set_source_materialsuite(self, x):
         self._source_materialsuite = x
 
+    @log_aware(log)
     def get_working_dir(self):
         return self._working_dir
 
+    @log_aware(log)
     def set_working_dir(self, x):
         self._working_dir = x
 
+    @log_aware(log)
     def get_timeout(self):
         return self._timeout
 
+    @log_aware(log)
     def set_timeout(self, x):
         self._timeout = x
 
     @abstractmethod
+    @log_aware(log)
     def process(self):
         pass
 
+    @log_aware(log)
     def handle_premis(self, cmd_output, material_suite, techmdcreator_name,
                       success):
         premis_path = join(self.working_dir, str(uuid1()))
@@ -77,6 +87,7 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
             LDRPath(updated_premis_path)
         )
 
+    @log_aware(log)
     def _build_Event(self, cmd_output, techmdcreator_name, success, link_obj):
         eventIdentifier = self._build_eventIdentifier()
         eventType = "description"
@@ -98,17 +109,20 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
         )
         return event
 
+    @log_aware(log)
     def _build_eventIdentifier(self):
         id_tup = IDBuilder().build('premisID').show()
         eventIdentifierType = id_tup[0]
         eventIdentifierValue = id_tup[1]
         return EventIdentifier(eventIdentifierType, eventIdentifierValue)
 
+    @log_aware(log)
     def _build_eventDetailInformation(self, techmdcreator_name):
         eventDetail = "Ran {} on the ".format(techmdcreator_name) + \
             "content in order to generate technical metadata."
         return EventDetailInformation(eventDetail=eventDetail)
 
+    @log_aware(log)
     def _build_eventOutcomeInformation(self, cmd_output, success):
         if success:
             eventOutcome = "SUCCESS"
@@ -123,6 +137,7 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
             eventOutcomeDetail=eventOutcomeDetail
         )
 
+    @log_aware(log)
     def _build_linkingAgentIdentifier(self, techmdcreator_name, role):
         agent_id = self.look_up_agent(techmdcreator_name)
         if agent_id is None:
@@ -134,6 +149,7 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
         agent_id.set_linkingAgentRole(role)
         return agent_id
 
+    @log_aware(log)
     def _build_linkingObjectIdentifier(self, obj, role):
         linkingObjectIdentifierType = \
             obj.get_objectIdentifier()[0].get_objectIdentifierType()
@@ -144,6 +160,7 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
         obj_id.set_linkingObjectRole(role)
         return obj_id
 
+    @log_aware(log)
     def _build_linkingEventIdentifier(self, event):
         linkingEventIdentifierType = \
             event.get_eventIdentifier().get_eventIdentifierType()
@@ -152,6 +169,7 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
         return LinkingEventIdentifier(linkingEventIdentifierType,
                                       linkingEventIdentifierValue)
 
+    @log_aware(log)
     def look_up_agent(self, x):
         return None
 

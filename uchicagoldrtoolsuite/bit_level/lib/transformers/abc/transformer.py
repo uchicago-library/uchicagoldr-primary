@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractproperty, abstractmethod
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
+
 __author__ = "Tyler Danstrom"
 __email__ = " tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
@@ -20,6 +22,7 @@ class Transformer(metaclass=ABCMeta):
     and transform it into an instance of a different type of Structure.
     """
     @abstractmethod
+    @log_aware(log)
     def transform():
         """should return an example of whatever Structure type needs to
         be the output
@@ -29,23 +32,27 @@ class Transformer(metaclass=ABCMeta):
         """
         pass
 
+    @log_aware(log)
     def get_origin_structure(self):
         """returns the origin structure instance or the original type of
         structure
         """
         return self._origin_structure
 
+    @log_aware(log)
     def set_origin_structure(self, value):
         """sets the origin structure data attribute
         """
         self._origin_structure = value
 
+    @log_aware(log)
     def get_destination_structure(self):
         """gets the destination structure or the type of structure that shold result
         from transformation
         """
         return self._destination_structure
 
+    @log_aware(log)
     def set_destination_structure(self, value):
         """sets the destination structure or the type of structure that the origin
         structure needs to be converted to

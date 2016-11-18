@@ -1,4 +1,5 @@
 from tempfile import TemporaryDirectory
+from os import fsdecode
 from os.path import getsize
 from mimetypes import guess_type
 from json import dumps
@@ -11,6 +12,7 @@ except:
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
@@ -40,6 +42,7 @@ class GenericPREMISCreator(object):
     class methods, which are employed fairly often themselves in other
     processors at the MaterialSuite level
     """
+    @log_aware(log)
     def __init__(self, stage):
         """
         spawn a premis creator that should work for any LDRItems
@@ -60,6 +63,7 @@ class GenericPREMISCreator(object):
         )
         log.debug("GenericPREMISCreator spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'stage': str(self.stage),
@@ -68,6 +72,7 @@ class GenericPREMISCreator(object):
         return "<GenericPREMISCreator {}>".format(
             dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def process(self, skip_existing=False, set_originalName=True):
         """
         make the premis records for everything
@@ -107,6 +112,7 @@ class GenericPREMISCreator(object):
                     eh.handle(e)
 
     @classmethod
+    @log_aware(log)
     def process_materialsuite(cls, materialsuite, originalName=None):
         """
         Ingests a MaterialSuite and sets its PREMIS data
@@ -136,6 +142,7 @@ class GenericPREMISCreator(object):
         materialsuite.premis = LDRPath(new_premis_path.path)
 
     @classmethod
+    @log_aware(log)
     def make_record(cls, file_path, original_name=None):
         """
         build a PremisNode.Object from a file and use it to instantiate a record
@@ -153,6 +160,7 @@ class GenericPREMISCreator(object):
         return PremisRecord(objects=[obj])
 
     @classmethod
+    @log_aware(log)
     def _make_object(cls, file_path, original_name=None):
         """
         make an object entry auto-populated with the required information
@@ -177,6 +185,7 @@ class GenericPREMISCreator(object):
         return obj
 
     @classmethod
+    @log_aware(log)
     def _make_objectIdentifier(cls):
         """
         mint a new object identifier
@@ -194,6 +203,7 @@ class GenericPREMISCreator(object):
         return ObjectIdentifier(identifier_tup[0], identifier_tup[1])
 
     @classmethod
+    @log_aware(log)
     def _make_objectCharacteristics(cls, file_path, original_name):
         """
         make a new objectCharacteristics node for a file
@@ -222,6 +232,7 @@ class GenericPREMISCreator(object):
         return objChar
 
     @classmethod
+    @log_aware(log)
     def _make_Storage(cls, file_path):
         """
         make a new storage node for a file
@@ -240,6 +251,7 @@ class GenericPREMISCreator(object):
         return stor
 
     @classmethod
+    @log_aware(log)
     def _make_fixity(cls, file_path):
         """
         make a fixity node for md5 and one for sha256 for a file
@@ -285,6 +297,7 @@ class GenericPREMISCreator(object):
         return fixitys
 
     @classmethod
+    @log_aware(log)
     def _make_format(cls, file_path, original_name):
         """
         make new format nodes for a file
@@ -331,6 +344,7 @@ class GenericPREMISCreator(object):
         return formats
 
     @classmethod
+    @log_aware(log)
     def _make_contentLocation(cls, file_path):
         """
         make a new contentLocation node for a file
@@ -343,11 +357,10 @@ class GenericPREMISCreator(object):
 
         1. (PremisNode): The populated contentLocation node
         """
-        if isinstance(file_path, bytes):
-            file_path = file_path.decode("utf-8")
-        return ContentLocation("Unix File Path", file_path)
+        return ContentLocation("Unix File Path", fsdecode(file_path))
 
     @classmethod
+    @log_aware(log)
     def _detect_mime(cls, file_path, original_name):
         """
         use both magic number and file extension mime detection on a file

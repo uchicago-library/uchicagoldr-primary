@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
+
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -24,18 +26,23 @@ class SerializationWriter(metaclass=ABCMeta):
     _implementation = None
 
     @abstractmethod
+    @log_aware(log)
     def write(self):
         pass
 
+    @log_aware(log)
     def set_struct(self, struct):
         self._struct = struct
 
+    @log_aware(log)
     def get_struct(self):
         return self._struct
 
+    @log_aware(log)
     def set_implementation(self, implementation):
         self._implementation = implementation
 
+    @log_aware(log)
     def get_implementation(self):
         return self._implementation
 

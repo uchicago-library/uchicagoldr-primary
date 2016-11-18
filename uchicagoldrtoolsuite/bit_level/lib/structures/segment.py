@@ -1,6 +1,7 @@
 from json import dumps
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from .abc.structure import Structure
 from .materialsuite import MaterialSuite
 
@@ -36,6 +37,7 @@ class Segment(Structure):
 
     required_parts = ['identifier', 'materialsuite', 'label', 'run']
 
+    @log_aware(log)
     def __init__(self, label, run_no):
         self._label = None
         self._run = None
@@ -46,6 +48,7 @@ class Segment(Structure):
         self.set_materialsuite_list([])
         log.debug("Segment spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'identifier': self.identifier,
@@ -53,25 +56,31 @@ class Segment(Structure):
         }
         return "<Segment {}>".format(dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def get_materialsuite_list(self):
         return self._materialsuite
 
+    @log_aware(log)
     def set_materialsuite_list(self, materialsuite_list):
         self.del_materialsuite_list()
         for x in materialsuite_list:
             self.add_materialsuite(x)
 
+    @log_aware(log)
     def del_materialsuite_list(self):
         while self.get_materialsuite_list():
             self.pop_materialsuite()
 
+    @log_aware(log)
     def add_materialsuite(self, x):
         self._materialsuite.append(x)
         log.debug("Added MaterialSuite to Segment({}): {}".format(self.identifier, str(x)))
 
+    @log_aware(log)
     def get_materialsuite(self, index):
         return self.get_materialsuite_list()[index]
 
+    @log_aware(log)
     def pop_materialsuite(self, index=None):
         if index is None:
             x = self.get_materialsuite_list().pop()
@@ -79,6 +88,7 @@ class Segment(Structure):
             x = self.get_materialsuite_list().pop(index)
         log.debug("Popping MaterialSuite from Segment({}): {}".format(self.identifier, str(x)))
 
+    @log_aware(log)
     def validate(self):
         for n_thing in self.materialsuite:
             if getattr(n_thing, MaterialSuite):
@@ -87,9 +97,11 @@ class Segment(Structure):
                 return False
         return Structure._validate()
 
+    @log_aware(log)
     def get_label(self):
         return self._label
 
+    @log_aware(log)
     def set_label(self, value):
         log.debug("Setting Segment({}) label to {}".format(str(self.identifier), value))
         if '-' in value:
@@ -98,9 +110,11 @@ class Segment(Structure):
         else:
             self._label = value
 
+    @log_aware(log)
     def get_run(self):
         return self._run
 
+    @log_aware(log)
     def set_run(self, value):
         log.debug("Setting Segment({}) run to {}".format(str(self.identifier), str(value)))
         if isinstance(value, int):
@@ -109,6 +123,7 @@ class Segment(Structure):
             raise ValueError("The value of run in segment structure " +
                              "must be an integer")
 
+    @log_aware(log)
     def get_identifier(self):
         # The identifier is a composite of the label and the run number
         # separated by a dash

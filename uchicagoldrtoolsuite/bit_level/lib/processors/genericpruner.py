@@ -4,6 +4,7 @@ from logging import getLogger
 from pypremis.factories import LinkingObjectIdentifierFactory
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import ldritem_to_premisrecord
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import TemporaryFilePath
@@ -13,6 +14,7 @@ from ..ldritems.ldrpath import LDRPath
 log = getLogger(__name__)
 
 
+@log_aware(log)
 def default_callback(premis, patterns, exclude_patterns=None):
     """
     See if an originalName field matches any of a set of patterns
@@ -63,6 +65,7 @@ class GenericPruner(object):
     which operates on the MaterialSuite's PREMIS record to determine whether
     or not to prune
     """
+    @log_aware(log)
     def __init__(self, stage, callback=default_callback, callback_args=[],
                  callback_kwargs={}, final=False, in_place_delete=False):
         """
@@ -92,6 +95,7 @@ class GenericPruner(object):
         self.callback_args = callback_args
         self.callback_kwargs = callback_kwargs
 
+    @log_aware(log)
     def prune(self, callback=None, callback_args=None, callback_kwargs=None,
               final=None, in_place_delete=None):
         """

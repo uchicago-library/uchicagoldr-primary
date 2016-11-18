@@ -14,6 +14,7 @@ from pypairtree.pairtree import PairTree
 from pypairtree.pairtreeobject import PairTreeObject
 from pypairtree.intraobjectbytestream import IntraObjectByteStream
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.doi import DOI
 from .abc.archiveserializationwriter import ArchiveSerializationWriter
@@ -53,6 +54,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     Writes an archive structure to disk utilizing PairTrees as a series
     of directories and files.
     """
+    @log_aware(log)
     def __init__(self, anArchive, aRoot, eq_detect="bytes"):
         """
         spawn a writer for the pairtree based Archive serialization
@@ -72,6 +74,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.eq_detect = eq_detect
         log.debug("FileSystemArchiveWriter spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'lts_env_path': self.lts_env_path,
@@ -81,6 +84,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         return "<FileSystemArchiveWriter {}>".format(dumps(attr_dict,
                                                            sort_keys=True))
 
+    @log_aware(log)
     def _write_ark_dir(self, clobber=False):
         ark_path = join(
             str(identifier_to_path(self.get_struct().identifier,
@@ -98,6 +102,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self._write_file_acc_namaste_tag(ark_path)
         return ark_path
 
+    @log_aware(log)
     def _write_dirs_skeleton(self, ark_path):
         admin_dir_path = join(ark_path, "admin")
         pairtree_root = join(ark_path, "pairtree_root")
@@ -113,6 +118,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         return admin_dir_path, pairtree_root, accession_records_dir_path, \
             adminnotes_dir_path, legalnotes_dir_path
 
+    @log_aware(log)
     def _put_materialsuite_into_pairtree(self, materialsuite,
                                          seg_id, pair_tree):
         obj_id = self._get_premis_obj_id(materialsuite.premis)
@@ -140,6 +146,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         o.add_bytestream(fits)
         pair_tree.add_object(o)
 
+    @log_aware(log)
     def _get_premis_obj_id(self, premis_ldritem):
         with TemporaryDirectory() as tmp_dir:
             premis_path = join(tmp_dir, uuid4().hex)
@@ -149,6 +156,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             return premis.get_object_list()[0].\
                 get_objectIdentifier()[0].get_objectIdentifierValue()
 
+    @log_aware(log)
     def _pack_archive_into_pairtree(self, pair_tree):
         for seg in self.get_struct().segment_list:
             seg_id = seg.identifier
@@ -156,6 +164,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 self._put_materialsuite_into_pairtree(materialsuite, seg_id,
                                                       pair_tree)
 
+    @log_aware(log)
     def _write_data(self, pair_tree, ark_path, data_manifest):
         data_manifest['acc_id'] = self.get_struct().identifier
         data_manifest['objs'] = []
@@ -205,6 +214,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     raise ValueError("Unrecognized intraobject address!")
                 manifest_entry['bytestreams'].append(manifest_dict)
 
+    @log_aware(log)
     def _add_premis_acc_event(self, premis_rec):
         def _build_eventDetailInformation():
             return EventDetailInformation(eventDetail="bystream copied into " +
@@ -224,6 +234,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
         premis_rec.add_event(_build_event())
 
+    @log_aware(log)
     def _update_premis_in_place(self, premis_path, obj_path):
         premis = PremisRecord(frompath=premis_path)
         premis.get_object_list()[0].\
@@ -233,6 +244,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self._add_premis_acc_event(premis)
         premis.write_to_file(premis_path)
 
+    @log_aware(log)
     def _update_fits_in_place(self, fits_path, obj_path):
         ET.register_namespace('', "http://hul.harvard.edu/ois/xml/ns/fits/fits_output")
         ET.register_namespace('xsi', "http://www.w3.org/2001/XMLSchema-instance")
@@ -247,22 +259,27 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                         y.text = split(obj_path)[1]
         tree.write(fits_path)
 
+    @log_aware(log)
     def _write_data_manifest(self, data_manifest, admin_dir_path):
         with open(join(admin_dir_path, "data_manifest.json"), 'w') as f:
             dump(data_manifest, f, indent=4, sort_keys=True)
 
+    @log_aware(log)
     def _write_file_acc_namaste_tag(self, dir_path):
         with open(join(dir_path, "0=icu-file-accession_0.1"), 'w') as f:
             f.write("icu-file-accession 0.1")
 
+    @log_aware(log)
     def _write_pairtree_namaste_tag(self, dir_path):
         with open(join(dir_path, "0=pairtree_0.1"), 'w') as f:
             f.write("pairtree 0.1")
 
+    @log_aware(log)
     def _write_materialsuite_namaste_tag(self, dir_path):
         with open(join(dir_path, "0=icu-materialsuite_0.1"), 'w') as f:
             f.write("icu-materialsuite 0.1")
 
+    @log_aware(log)
     def _write_adminnotes(self, adminnotes_dir_path, admin_manifest):
         if self.get_struct().adminnote_list:
             for x in self.get_struct().adminnote_list:
@@ -282,6 +299,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
                 admin_manifest.append(manifest_dict)
 
+    @log_aware(log)
     def _write_legalnotes(self, legalnotes_dir_path, admin_manifest):
         if self.get_struct().legalnote_list:
             for x in self.get_struct().legalnote_list:
@@ -301,6 +319,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
                 admin_manifest.append(manifest_dict)
 
+    @log_aware(log)
     def _write_accessionrecords(self, accessionrecords_dir_path,
                                 admin_manifest):
         for x in self.get_struct().accessionrecord_list:
@@ -320,6 +339,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
             admin_manifest.append(manifest_dict)
 
+    @log_aware(log)
     def _add_data_manifest_to_admin_manifest(self, admin_dir_path,
                                              admin_manifest):
         data_manifest_item = LDRPath(join(admin_dir_path, 'data_manifest.json'))
@@ -335,10 +355,12 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         manifest_dict['sha256'] = sha256_hash_str
         admin_manifest.append(manifest_dict)
 
+    @log_aware(log)
     def _write_admin_manifest(self, admin_manifest, admin_dir_path):
         with open(join(admin_dir_path, 'admin_manifest.json'), 'w') as f:
             dump(admin_manifest, f, indent=4, sort_keys=True)
 
+    @log_aware(log)
     def _write_WRITE_FINISHED(self, admin_dir_path):
         with open(join(admin_dir_path, "WRITE_FINISHED.json"), 'w') as f:
             dump(
@@ -347,6 +369,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 f, indent=4, sort_keys=True
             )
 
+    @log_aware(log)
     def write(self):
         """
         write the archive to disk at the specified location

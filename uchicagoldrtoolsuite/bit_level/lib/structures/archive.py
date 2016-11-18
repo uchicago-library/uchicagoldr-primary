@@ -1,6 +1,7 @@
 from json import dumps
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
 from .segment import Segment
@@ -20,7 +21,7 @@ class Archive(Structure):
     """
     The structure which holds archival contents in the archive environment.
     """
-
+    @log_aware(log)
     def __init__(self, identifier):
         self._identifier = None
         self._segment = []
@@ -38,6 +39,7 @@ class Archive(Structure):
         self.legalnote_list = []
         self.adminnote_list = []
 
+    @log_aware(log)
     def _validate_materialsuite(self, materialsuite):
         try:
             if not isinstance(materialsuite.content, LDRItem):
@@ -50,6 +52,7 @@ class Archive(Structure):
             return False
         return True
 
+    @log_aware(log)
     def validate(self):
         for segment in self.segment_list:
             for materialsuite in segment.materialsuite_list:
@@ -59,6 +62,7 @@ class Archive(Structure):
             return False
         return super().validate()
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'identifier': self.identifier,
@@ -69,9 +73,11 @@ class Archive(Structure):
         }
         return "<Archive {}>".format(dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def get_identifier(self):
         return self._identifier
 
+    @log_aware(log)
     def set_identifier(self, identifier):
         log.debug("Archive({}) identifier being set to {}".format(str(self.identifier), self.identifier))
         self._identifier = identifier
@@ -79,27 +85,33 @@ class Archive(Structure):
             "Archive identifier set to {}".format(identifier)
         )
 
+    @log_aware(log)
     def get_segment_list(self):
         return self._segment
 
+    @log_aware(log)
     def set_segment_list(self, seg_list):
         self.del_segment_list()
         for x in seg_list:
             self.add_segment(x)
 
+    @log_aware(log)
     def del_segment_list(self):
         while self.get_segment_list():
             self.pop_segment()
 
+    @log_aware(log)
     def add_segment(self, segment):
         if not isinstance(segment, Segment):
             raise ValueError('only Segments can be added to the segments_list')
         self._segment.append(segment)
         log.debug("Added Segment({}) to Archive({}): {}".format(segment.identifier, self.identifier, str(segment)))
 
+    @log_aware(log)
     def get_segment(self, index):
         return self.get_segment_list()[index]
 
+    @log_aware(log)
     def pop_segment(self, index=None):
         if index is None:
             x = self.get_segment_list().pop()
@@ -108,25 +120,31 @@ class Archive(Structure):
         log.debug("Popped segment({}) from Archive({})".format(x.identifier, self.identifier))
         return x
 
+    @log_aware(log)
     def get_accessionrecord_list(self):
         return self._accessionrecord
 
+    @log_aware(log)
     def set_accessionrecord_list(self, acc_rec_list):
         self.del_accessionrecord_list()
         for x in acc_rec_list:
             self.add_accessionrecord(x)
 
+    @log_aware(log)
     def del_accessionrecord_list(self):
         while self.get_accessionrecord_list():
             self.pop_accessionrecord()
 
+    @log_aware(log)
     def add_accessionrecord(self, accrec):
         self._accessionrecord.append(accrec)
         log.debug("Added accession record to Archive({}): {}".format(self.identifier, str(accrec)))
 
+    @log_aware(log)
     def get_accessionrecord(self, index):
         return self.get_accessionrecord_list()[index]
 
+    @log_aware(log)
     def pop_accessionrecord(self, index=None):
         if index is None:
             x = self.get_accessionrecord_list.pop()
@@ -135,25 +153,31 @@ class Archive(Structure):
         log.debug("Popped accession record from Archive({}): {}".format(self.identifier, str(x)))
         return x
 
+    @log_aware(log)
     def get_adminnote_list(self):
         return self._adminnote
 
+    @log_aware(log)
     def set_adminnote_list(self, adminnotelist):
         self.del_adminnote_list()
         for x in adminnotelist:
             self.add_adminnote(x)
 
+    @log_aware(log)
     def del_adminnote_list(self):
         while self.get_adminnote_list():
             self.pop_adminnote()
 
+    @log_aware(log)
     def add_adminnote(self, adminnote):
         self.get_adminnote_list().append(adminnote)
         log.debug("Added adminnote to Archive({}): {}".format(self.identifier, str(adminnote)))
 
+    @log_aware(log)
     def get_adminnote(self, index):
         return self.get_adminnote_list()[index]
 
+    @log_aware(log)
     def pop_adminnote(self, index=None):
         if index is None:
             x = self.get_adminnote_list().pop()
@@ -162,34 +186,42 @@ class Archive(Structure):
         log.debug("Popped adminnote from Archive({}): {}".format(self.identifier, str(x)))
         return x
 
+    @log_aware(log)
     def get_legalnote_list(self):
         return self._legalnote
 
+    @log_aware(log)
     def set_legalnote_list(self, legalnote_list):
         self.del_legalnote_list()
         for x in legalnote_list:
             self.add_legalnote(x)
 
+    @log_aware(log)
     def del_legalnote_list(self):
         while self.get_legalnote_list():
             self.pop_legalnote()
 
+    @log_aware(log)
     def add_legalnote(self, legalnote):
         self.get_legalnote_list().append(legalnote)
         log.debug("Added legalnote to Archive: {}".format(str(legalnote)))
 
+    @log_aware(log)
     def get_legalnote(self, index):
         return self.get_legalnote_list()[index]
 
+    @log_aware(log)
     def pop_legalnote(self, index=None):
         if index is None:
             return self.get_legalnote_list().pop()
         else:
             return self.get_legalnote_list().pop(index)
 
+    @log_aware(log)
     def get_required_parts(self):
         return self._required_parts
 
+    @log_aware(log)
     def set_required_parts(self, value):
         self._required_parts = value
 

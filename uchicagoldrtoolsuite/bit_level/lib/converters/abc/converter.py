@@ -8,6 +8,7 @@ from logging import getLogger
 from pypremis.nodes import *
 from pypremis.lib import PremisRecord
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from uchicagoldrtoolsuite.bit_level.lib.ldritems.ldrpath import LDRPath
@@ -57,6 +58,7 @@ class Converter(metaclass=ABCMeta):
     # Flipped to true when an instance claims its mimes from provided extensions
     _claimed_list_initd = False
 
+    @log_aware(log)
     def __init__(self, input_materialsuite, working_dir, timeout=None):
         """
         Superclass init for converters. Handles setting instance variables
@@ -86,6 +88,7 @@ class Converter(metaclass=ABCMeta):
         self.set_timeout(timeout)
 
     @classmethod
+    @log_aware(log)
     def claim_mimes_from_extensions(cls):
         """
         Iterate through the claimed extensions, trying to map them into mimes
@@ -103,6 +106,7 @@ class Converter(metaclass=ABCMeta):
         cls._claimed_list_initd = True
 
     @classmethod
+    @log_aware(log)
     def handles_mime(cls, mime):
         """
         Alerts external code as to whether or not the converter handles {mime}
@@ -120,33 +124,43 @@ class Converter(metaclass=ABCMeta):
             return True
         return False
 
+    @log_aware(log)
     def get_claimed_mimes(self):
         return self._claimed_mimes
 
+    @log_aware(log)
     def get_source_materialsuite(self):
         return self._source_materialsuite
 
+    @log_aware(log)
     def get_working_dir(self):
         return self._working_dir
 
+    @log_aware(log)
     def get_timeout(self):
         return self._timeout
 
+    @log_aware(log)
     def set_source_materialsuite(self, x):
         self._source_materialsuite = x
 
+    @log_aware(log)
     def set_working_dir(self, x):
         self._working_dir = x
 
+    @log_aware(log)
     def set_timeout(self, x):
         self._timeout = x
 
+    @log_aware(log)
     def get_converter_name(self):
         return self._converter_name
 
+    @log_aware(log)
     def set_converter_name(self, x):
         self._converter_name = x
 
+    @log_aware(log)
     def instantiate_original(self, premis=None):
         """
         Writes the bytestream from the original MaterialSuite to disk
@@ -190,6 +204,7 @@ class Converter(metaclass=ABCMeta):
             raise RuntimeError("Bad Copy!")
         return target_path
 
+    @log_aware(log)
     def instantiate_and_read_original_premis(self):
         """
         Dumps the byte data out of an LDRItem and reads it as PREMIS
@@ -207,6 +222,7 @@ class Converter(metaclass=ABCMeta):
         return PremisRecord(frompath=str(target_path))
 
     @abstractmethod
+    @log_aware(log)
     def run_converter(self, in_path):
         """
         The abstract method which runs the specific converter in each subclass.
@@ -229,6 +245,7 @@ class Converter(metaclass=ABCMeta):
         """
         pass
 
+    @log_aware(log)
     def generate_presform_premis_record(self, presform_path):
         """
         Wraps the creation of a stub PREMIS record, so its name is more explicit
@@ -245,6 +262,7 @@ class Converter(metaclass=ABCMeta):
         """
         return GenericPREMISCreator.make_record(presform_path)
 
+    @log_aware(log)
     def handle_premis(self, cmd_output, orig_premis, conv_premis, converter_name):
         """
         Handles creating conversion events and linking records
@@ -311,6 +329,7 @@ class Converter(metaclass=ABCMeta):
                 )
             )
 
+    @log_aware(log)
     def build_conv_event(self, cmd_output, orig_premis, conv_premis, converter_name):
         eventIdentifier = self._build_eventIdentifier()
         eventType = "migration"
@@ -346,6 +365,7 @@ class Converter(metaclass=ABCMeta):
 
         return conv_event
 
+    @log_aware(log)
     def build_crea_event(self, cmd_output, orig_premis, conv_premis, converter_name):
         eventIdentifier = self._build_eventIdentifier()
         eventType = "creation"
@@ -379,6 +399,7 @@ class Converter(metaclass=ABCMeta):
 
         return crea_event
 
+    @log_aware(log)
     def _build_relationship(self, rel_type, rel_subtype, rel_obj, rel_event, seq=None):
         relationshipType = rel_type
         relationshipSubType = rel_subtype
@@ -387,6 +408,7 @@ class Converter(metaclass=ABCMeta):
         relationship.add_relatedEventIdentifier(self._build_relatedEventIdentifier(rel_event))
         return relationship
 
+    @log_aware(log)
     def _build_relatedEventIdentifier(self, rel_event, seq=None):
         relatedEventIdentifierType = rel_event.get_eventIdentifier().get_eventIdentifierType()
         relatedEventIdentifierValue = rel_event.get_eventIdentifier().get_eventIdentifierValue()
@@ -395,6 +417,7 @@ class Converter(metaclass=ABCMeta):
             relatedEventIdentifier.set_relatedEventSequence(seq)
         return relatedEventIdentifier
 
+    @log_aware(log)
     def _build_relatedObjectIdentifier(self, obj, seq=None):
         relatedObjectIdentifierType = obj.get_objectIdentifier()[0].get_objectIdentifierType()
         relatedObjectIdentifierValue = obj.get_objectIdentifier()[0].get_objectIdentifierValue()
@@ -403,6 +426,7 @@ class Converter(metaclass=ABCMeta):
             relatedObjectIdentifier.set_relatedObjectSequence(seq)
         return relatedObjectIdentifier
 
+    @log_aware(log)
     def _build_linkingEventIdentifier(self, event_to_link, seq=None):
         linkingEventIdentifierType = event_to_link.get_eventIdentifier().get_eventIdentifierType()
         linkingEventIdentifierValue = event_to_link.get_eventIdentifier().get_eventIdentifierValue()
@@ -412,12 +436,14 @@ class Converter(metaclass=ABCMeta):
             linkingEventIdentifier.set_relatedEventSequence(seq)
         return linkingEventIdentifier
 
+    @log_aware(log)
     def _build_eventIdentifier(self):
         id_tup = IDBuilder().build('premisID').show()
         eventIdentifierType = id_tup[0]
         eventIdentifierValue = id_tup[1]
         return EventIdentifier(eventIdentifierType, eventIdentifierValue)
 
+    @log_aware(log)
     def _build_eventDetailInformation(self, eventDetailInfoStr):
         eventDetail = eventDetailInfoStr
         eventDetailInformation = EventDetailInformation(
@@ -425,6 +451,7 @@ class Converter(metaclass=ABCMeta):
         )
         return eventDetailInformation
 
+    @log_aware(log)
     def _build_eventOutcomeInformation(self, cmd_output, conv_premis):
         if conv_premis is not None:
             eventOutcome = "SUCCESS"
@@ -437,6 +464,7 @@ class Converter(metaclass=ABCMeta):
         )
         return eventOutcomeInformation
 
+    @log_aware(log)
     def _build_eventOutcomeDetail(self, cmd_output):
         eventOutcomeDetailNote = str(cmd_output[1])
         eventOutcomeDetail = EventOutcomeDetail(
@@ -444,6 +472,7 @@ class Converter(metaclass=ABCMeta):
         )
         return eventOutcomeDetail
 
+    @log_aware(log)
     def _build_linkingAgentIdentifier(self, agentRole, agent_name):
         agentID = self.look_up_agent(agent_name)
         if agentID is None:
@@ -455,6 +484,7 @@ class Converter(metaclass=ABCMeta):
         agentID.set_linkingAgentRole(agentRole)
         return agentID
 
+    @log_aware(log)
     def _build_linkingObjectIdentifier(self, premis_to_link, linkRole):
         linkingObjectIdentifierType = premis_to_link.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierType()
         linkingObjectIdentifierValue = premis_to_link.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
@@ -462,6 +492,7 @@ class Converter(metaclass=ABCMeta):
         x.set_linkingObjectRole(linkRole)
         return x
 
+    @log_aware(log)
     def look_up_agent(self, x):
         """
         TODO: Looks up an agent from a centralized source
@@ -469,6 +500,7 @@ class Converter(metaclass=ABCMeta):
         # TODO
         return None
 
+    @log_aware(log)
     def convert(self):
         """
         The general interface for all converter classes.

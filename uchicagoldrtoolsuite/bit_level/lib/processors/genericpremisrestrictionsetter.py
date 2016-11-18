@@ -7,6 +7,7 @@ from logging import getLogger
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from ..ldritems.ldrpath import LDRPath
 from ..misc.premisextensionnodes import Restriction
@@ -32,6 +33,7 @@ class GenericPREMISRestrictionSetter(object):
     Ingests a Stage which already has PREMIS records in it and sets a
     restriction node in each of their records
     """
+    @log_aware(log)
     def __init__(self, stage, restriction, reasons=None,
                  donor_stipulations=None, restrictingAgentIds=None,
                  active=True):
@@ -64,6 +66,7 @@ class GenericPREMISRestrictionSetter(object):
             "GenericPREMISRestrictionSetter spawned: {}".format(str(self))
         )
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'stage': str(self.stage),
@@ -88,6 +91,7 @@ class GenericPREMISRestrictionSetter(object):
         return "<GenericPREMISRestrictionSetter {}>".format(
             dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def process(self):
         log.debug("Beginning PREMIS restriction setting.")
         s_num = 0
@@ -134,6 +138,7 @@ class GenericPREMISRestrictionSetter(object):
                             )
                         )
 
+    @log_aware(log)
     def instantiate_and_set_restriction(self, item):
         """
         do the work on the record
@@ -188,6 +193,7 @@ class GenericPREMISRestrictionSetter(object):
         return_item = LDRPath(new_record)
         return return_item
 
+    @log_aware(log)
     def build_rights_extension_node(self,
                                     restriction_code,
                                     obj_to_link,
@@ -215,16 +221,19 @@ class GenericPREMISRestrictionSetter(object):
         )
         return rights_extension
 
+    @log_aware(log)
     def build_rightsExtensionIdentifier(self):
         idb = IDBuilder()
         id_tup = idb.build("premisID").show()
         return RightsExtensionIdentifier(id_tup[0], id_tup[1])
 
+    @log_aware(log)
     def build_restrictingAgentIdentifier(self):
         idb = IDBuilder()
         id_tup = idb.build("premisID").show()
         return RestrictingAgentIdentifier(id_tup[0], id_tup[1])
 
+    @log_aware(log)
     def build_restriction_node(self,
                                restriction_code,
                                obj_to_link,
@@ -249,6 +258,7 @@ class GenericPREMISRestrictionSetter(object):
                 restrictionNode.add_restrictingAgentIdentifier(x)
         return restrictionNode
 
+    @log_aware(log)
     def build_restrictedObjectIdentifierFromObj(self, obj_to_link):
         objIDType = \
             obj_to_link.get_objectIdentifier(0).get_objectIdentifierType()

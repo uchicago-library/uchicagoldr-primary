@@ -2,6 +2,7 @@ from tempfile import TemporaryDirectory
 from json import dumps
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from ..ldritems.abc.ldritem import LDRItem
 from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 
@@ -27,6 +28,7 @@ class GenericTechnicalMetadataCreator(object):
     Ingests a stage structure and produces a FITS xml record for every
     file in it.
     """
+    @log_aware(log)
     def __init__(self, stage, techmd_creators):
         """
         spawn a technical metadata creator that should work regardless of
@@ -45,6 +47,7 @@ class GenericTechnicalMetadataCreator(object):
         self.techmd_creators = techmd_creators
         log.debug("GenericTechnicalMetadataCreator spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'stage': str(self.stage),
@@ -53,6 +56,7 @@ class GenericTechnicalMetadataCreator(object):
         }
         return "<GenericTechnicalMetadataCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def process(self, skip_existing=False, data_transfer_obj={}):
         """
         create technical metadata for the provided stage

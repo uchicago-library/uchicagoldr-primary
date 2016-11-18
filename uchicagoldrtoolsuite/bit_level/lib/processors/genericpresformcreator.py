@@ -8,6 +8,7 @@ from logging import getLogger
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import \
     is_presform_materialsuite, ldritem_to_premisrecord
 from ..ldritems.ldrpath import LDRPath
@@ -30,6 +31,7 @@ class GenericPresformCreator(object):
     """
     Ingests a stage structure and produces presforms of files therein
     """
+    @log_aware(log)
     def __init__(self, stage, converters):
         """
         spawn a presform creator that should work regardless of
@@ -49,6 +51,7 @@ class GenericPresformCreator(object):
         self.converters = converters
         log.debug("GenericPresformCreator spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'stage': str(self.stage),
@@ -57,6 +60,7 @@ class GenericPresformCreator(object):
         }
         return "<GenericPresformCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def process(self, skip_existing=False, presform_presforms=False,
                 data_transfer_obj={}):
         """
@@ -99,6 +103,7 @@ class GenericPresformCreator(object):
             for x in stuff_to_add_to_segment:
                 segment.add_materialsuite(x)
 
+    @log_aware(log)
     def instantiate_and_make_presforms(self, ms, data_transfer_obj={}):
         """
         write the file to disk an examine it, update its PREMIS

@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
+from logging import getLogger
 from uuid import uuid1
 
+from uchicagoldrtoolsuite import log_aware
 from .abc.serializationreader import SerializationReader
 from ...structures.stage import Stage
 
@@ -13,6 +15,9 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+log = getLogger(__name__)
+
+
 class StageSerializationReader(SerializationReader, metaclass=ABCMeta):
     """
     A base class for all Staging Structure Serialization Readers
@@ -21,12 +26,15 @@ class StageSerializationReader(SerializationReader, metaclass=ABCMeta):
     _stage_id = None
 
     @abstractmethod
+    @log_aware(log)
     def __init__(self):
         self.set_struct(Stage(str(uuid1())))
 
+    @log_aware(log)
     def get_stage_id(self):
         return self._stage_id
 
+    @log_aware(log)
     def set_stage_id(self, value):
         self._stage_id = value
 

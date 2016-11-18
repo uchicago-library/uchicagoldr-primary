@@ -7,6 +7,7 @@ from logging import getLogger
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.abc.ldritem import LDRItem
 from .abc.technicalmetadatacreator import TechnicalMetadataCreator
@@ -27,6 +28,7 @@ log = getLogger(__name__)
 # TODO: Technical metadata creators probably need a go over like the converters
 
 class FITsCreator(TechnicalMetadataCreator):
+    @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None,
                  data_transfer_obj={}):
         super().__init__(materialsuite, working_dir, timeout)
@@ -36,6 +38,7 @@ class FITsCreator(TechnicalMetadataCreator):
                              'transfer object!')
         log.debug("FITsCreator spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'source_materialsuite': str(self.source_materialsuite),
@@ -44,6 +47,7 @@ class FITsCreator(TechnicalMetadataCreator):
         }
         return "<FITsCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def process(self):
         if not isinstance(self.get_source_materialsuite().get_premis(),
                           LDRItem):

@@ -6,6 +6,7 @@ from os.path import join
 
 from pypremis.lib import PremisRecord
 
+from uchicagoldrtoolsuite import log_aware
 from .abc.packager import Packager
 from ...structures.materialsuite import MaterialSuite
 
@@ -37,6 +38,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     simply eats these.
     """
     @abstractmethod
+    @log_aware(log)
     def __init__(self):
         # TODO: The init here is slightly different from the StageReader init,
         # which sets the identifier to a uuid4(), this is due to a difference in
@@ -57,6 +59,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     def get_techmd_list(self):
         pass
 
+    @log_aware(log)
     def get_identifier(self, premis_ldritem):
         """
         Instantiate the premis in a tempfile, read it, grab the identifier
@@ -72,6 +75,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
             ident = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
         return ident
 
+    @log_aware(log)
     def package(self):
         """
         default package implementation

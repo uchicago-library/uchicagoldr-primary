@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from pypairtree.utils import identifier_to_path
 
+from uchicagoldrtoolsuite import log_aware
 from .abc.stageserializationwriter import StageSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
@@ -14,6 +15,7 @@ from ..ldritems.ldritemoperations import hash_ldritem
 log = getLogger(__name__)
 
 
+@log_aware(log)
 def makedirs(x):
     """
     wrap makedirs, so it doesn't freak out if the dir is already there
@@ -28,6 +30,7 @@ class FileSystemStageWriter(StageSerializationWriter):
     Converters the structure and contained bytestreams into files/dirs
     on disk
     """
+    @log_aware(log)
     def __init__(self, aStructure, aRoot, eq_detect="bytes"):
         """
         Create a new FileSystemStageWriter instance
@@ -47,6 +50,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         self.set_implementation('pairtree filesystem')
         self.eq_detect = eq_detect
 
+    @log_aware(log)
     def _build_skeleton(self):
         required_dirs = []
         for x in ['admin', 'segments']:
@@ -58,6 +62,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         for x in required_dirs:
             makedirs(str(x))
 
+    @log_aware(log)
     def _write_accessionrecords(self):
         for x in self.struct.accessionrecord_list:
             if x.item_name:
@@ -70,6 +75,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             copier = LDRItemCopier(x, target_item, eq_detect=self.eq_detect)
             copier.copy()
 
+    @log_aware(log)
     def _write_adminnotes(self):
         for x in self.struct.adminnote_list:
             if x.item_name:
@@ -84,6 +90,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             if not cr['src_eqs_dst']:
                 raise ValueError()
 
+    @log_aware(log)
     def _write_legalnotes(self):
         for x in self.struct.legalnote_list:
             if x.item_name:
@@ -98,6 +105,7 @@ class FileSystemStageWriter(StageSerializationWriter):
             if not cr['src_eqs_dst']:
                 raise ValueError()
 
+    @log_aware(log)
     def write(self):
         """
         Serialize the stage to the provided location
@@ -121,6 +129,7 @@ class FileSystemSegmentWriter(object):
     Converters the structure and contained bytestreams into files/dirs
     on disk
     """
+    @log_aware(log)
     def __init__(self, aStructure, aRoot, eq_detect="bytes"):
         """
         Create a new FileSystemSegmentWriter
@@ -138,10 +147,12 @@ class FileSystemSegmentWriter(object):
         self.segment_root = Path(aRoot, self.struct.identifier)
         self.eq_detect = eq_detect
 
+    @log_aware(log)
     def _write_skeleton(self):
         materialsuites_root = self.segment_root
         makedirs(str(materialsuites_root))
 
+    @log_aware(log)
     def write(self):
         """
         Serialize the segment to the provided location
@@ -163,6 +174,7 @@ class FileSystemMaterialSuiteWriter(object):
     Converters the structure and contained bytestreams into files/dirs
     on disk
     """
+    @log_aware(log)
     def __init__(self, aStructure, aRoot, eq_detect="bytes"):
         """
         Create a new FileSystemMaterialSuiteWriter
@@ -183,9 +195,11 @@ class FileSystemMaterialSuiteWriter(object):
         )
         self.eq_detect = eq_detect
 
+    @log_aware(log)
     def _write_skeleton(self):
         makedirs(str(Path(self.materialsuite_root, 'TECHMD')))
 
+    @log_aware(log)
     def write(self):
         """
         Serialize the material suite to the provided location

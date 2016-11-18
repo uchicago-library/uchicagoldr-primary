@@ -5,6 +5,7 @@ from os import scandir
 from pypairtree.utils import path_to_identifier, identifier_to_path
 
 from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
+from uchicagoldrtoolsuite import log_aware
 from .abc.stageserializationreader import StageSerializationReader
 from .abc.segmentpackager import SegmentPackager
 from .abc.materialsuitepackager import MaterialSuitePackager
@@ -24,6 +25,7 @@ class FileSystemStageReader(StageSerializationReader):
     # TODO: Should this be changed to be more similar to the archive reader,
     # which accepts an environment path and an identifier rather than just a
     # single path? Probably. - BNB
+    @log_aware(log)
     def __init__(self, path):
         """
         Create a new FileSystemStageReader
@@ -37,6 +39,7 @@ class FileSystemStageReader(StageSerializationReader):
         self.path = path
         self.struct.set_identifier(str(Path(path).parts[-1]))
 
+    @log_aware(log)
     def assert_skeleton(self):
         accessionrecords_dir = Path(self.path, 'admin', 'accessionrecords')
         legalnotes_dir = Path(self.path, 'admin', 'legalnotes')
@@ -48,6 +51,7 @@ class FileSystemStageReader(StageSerializationReader):
                 return False
         return True
 
+    @log_aware(log)
     def read(self):
         """
         Reads the structure at the given location
@@ -91,6 +95,7 @@ class FileSystemSegmentReader(SegmentPackager):
     Given the path and identifier components of a Segment, package that segment
     up and return it
     """
+    @log_aware(log)
     def __init__(self, path, label_text, label_number):
         """
         Create a new FileSystemSegmentReader
@@ -105,6 +110,7 @@ class FileSystemSegmentReader(SegmentPackager):
         self.path = path
         self.set_struct(Segment(label_text, int(label_number)))
 
+    @log_aware(log)
     def _gather_identifiers(self):
         identifiers = []
         for f in recursive_scandir(self.path):
@@ -119,6 +125,7 @@ class FileSystemSegmentReader(SegmentPackager):
             identifiers.append(path_to_identifier(id_dir_path))
         return identifiers
 
+    @log_aware(log)
     def package(self):
         """
         Packages the structure at the given location
@@ -144,6 +151,7 @@ class FileSystemMaterialSuiteReader(MaterialSuitePackager):
     Given the path where the MaterialSuite is stored, the identifier, and the
     pairtree encapsulation string, packages a MaterialSuite
     """
+    @log_aware(log)
     def __init__(self, seg_path, identifier, encapsulation='srf'):
         """
         Create a new FileSystemMaterialSuiteReader
@@ -168,19 +176,23 @@ class FileSystemMaterialSuiteReader(MaterialSuitePackager):
 
     # Clobber the ABC function here, this is faster and doesn't instantiate
     # a new file for no reason
+    @log_aware(log)
     def get_identifier(self, _):
         return self.identifier
 
+    @log_aware(log)
     def get_content(self):
         p = Path(self.path, 'content.file')
         if p.is_file():
             return LDRPath(str(p))
 
+    @log_aware(log)
     def get_premis(self):
         p = Path(self.path, 'premis.xml')
         if p.is_file():
             return LDRPath(str(p))
 
+    @log_aware(log)
     def get_techmd_list(self):
         return [LDRPath(x.path) for x in
                 scandir(str(Path(self.path, 'TECHMD')))]

@@ -8,6 +8,7 @@ from pypremis.lib import PremisRecord
 from pypairtree.pairtree import PairTree
 from pypairtree.utils import identifier_to_path
 
+from uchicagoldrtoolsuite import log_aware
 from .abc.archiveserializationreader import ArchiveSerializationReader
 from ..structures.segment import Segment
 from ..structures.materialsuite import MaterialSuite
@@ -25,6 +26,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
     of an archive structure reconstructs the archive structure from byte
     streams serialized as files on disk.
     """
+    @log_aware(log)
     def __init__(self, lts_path, identifier):
         """
         Create a new FileSystemArchiveReader
@@ -39,6 +41,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         self.lts_path = lts_path
         self.identifier = identifier
 
+    @log_aware(log)
     def _read_skeleton(self, lts_path, identifier):
         arch_root = join(self.lts_path, str(identifier_to_path(identifier)),
                          "arf")
@@ -78,6 +81,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             data_manifest_path, accrec_dir_path, adminnotes_path, \
             legalnotes_path
 
+    @log_aware(log)
     def _confirm_data_manifest_matches_filesystem(self, data_manifest,
                                                   identifier, pairtree):
         if not data_manifest['acc_id'] == identifier:
@@ -95,6 +99,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             raise ValueError("ID(s) in the manifest that aren't on the " +
                              "file system!")
 
+    @log_aware(log)
     def _read_data(self, data_manifest_path, identifier, pairtree):
         data_manifest = None
         with open(data_manifest_path, 'r') as f:
@@ -132,6 +137,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                                          data_manifest)
             )
 
+    @log_aware(log)
     def _pack_materialsuite(self, ms_entry, data_manifest):
         ms = MaterialSuite()
         original_name = None
@@ -153,6 +159,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             ms.content.item_name = original_name
         return ms
 
+    @log_aware(log)
     def _read_admin(self, admin_manifest_path, accrec_dir_path, adminnotes_path,
                     legalnotes_path, admin_root):
         # TODO: Add comparison with the manifest, probably, to mimic data
@@ -174,6 +181,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             legalnote.item_name = relpath(x.path, legalnotes_path)
             self.get_struct().add_legalnote(legalnote)
 
+    @log_aware(log)
     def read(self):
         """
         Reads the structure at the given location with the given identifier

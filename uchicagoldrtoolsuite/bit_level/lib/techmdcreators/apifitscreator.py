@@ -9,7 +9,7 @@ from logging import getLogger
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.abc.ldritem import LDRItem
@@ -30,6 +30,7 @@ eh = ExceptionHandler()
 
 
 class APIFITsCreator(TechnicalMetadataCreator):
+    @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None,
                  data_transfer_obj={}):
         super().__init__(materialsuite, working_dir, timeout)
@@ -39,6 +40,7 @@ class APIFITsCreator(TechnicalMetadataCreator):
                              'transfer object!')
         log.debug("APIFITsCreator spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'source_materialsuite': str(self.source_materialsuite),
@@ -48,6 +50,7 @@ class APIFITsCreator(TechnicalMetadataCreator):
         }
         return "<APIFITsCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def process(self):
         log.debug(
             "Attempting to create FITS for {}".format(

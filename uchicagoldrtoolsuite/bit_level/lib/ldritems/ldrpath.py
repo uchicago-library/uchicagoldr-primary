@@ -4,6 +4,7 @@ from json import dumps
 from logging import getLogger
 
 from .abc.ldritem import LDRItem
+from uchicagoldrtoolsuite import log_aware
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -21,6 +22,7 @@ class LDRPath(LDRItem):
     """
     Allows a file path to a file on the file system to be treated as an LDRItem
     """
+    @log_aware(log)
     def __init__(self, param1, root=None):
         self.path = Path(param1)
         if root is None:
@@ -31,6 +33,7 @@ class LDRPath(LDRItem):
         self.is_flo = True
         log.debug("LDRPath spawned: {}".format(str(self)))
 
+    @log_aware(log)
     def __repr__(self):
         attrib_dict = {
             'item_name': self.item_name,
@@ -38,12 +41,14 @@ class LDRPath(LDRItem):
         }
         return "<LDRPath {}>".format(dumps(attrib_dict, sort_keys=True))
 
+    @log_aware(log)
     def read(self, blocksize=1024*1000*100):
         log.debug("{} being read".format(str(self)))
         if not self.pipe:
             raise OSError('{} not open for reading'.format(str(self.path)))
         return self.pipe.read(blocksize)
 
+    @log_aware(log)
     def open(self, mode='rb', buffering=-1, errors=None):
         log.debug(
             "{} opened. Mode: {}. Buffering {}".format(
@@ -60,6 +65,7 @@ class LDRPath(LDRItem):
                          buffering=buffering, errors=errors)
         return self
 
+    @log_aware(log)
     def close(self):
         log.debug("{} closed".format(str(self)))
         if not self.pipe:
@@ -68,10 +74,12 @@ class LDRPath(LDRItem):
             self.pipe.close()
             self.pipe = None
 
+    @log_aware(log)
     def exists(self):
         log.debug("{} existence checked".format(str(self)))
         return self.path.exists()
 
+    @log_aware(log)
     def delete(self, final=False):
         if final:
             log.debug("{} deleted".format(str(self)))
@@ -85,6 +93,7 @@ class LDRPath(LDRItem):
             log.debug("{} pseudo-deleted".format(str(self)))
             return (False, "{} will be removed.".format(self.item_name))
 
+    @log_aware(log)
     def write(self, data):
         log.debug("Writing data to {}".format(str(self)))
         if self.pipe:
@@ -94,6 +103,7 @@ class LDRPath(LDRItem):
             raise ValueError("file {} is not opened and " +
                              "therefore cannot write".format(self.item_name))
 
+    @log_aware(log)
     def get_size(self, buffering=1024*1000*100):
         """
         Overwrite LDRItem.get_size(), because this is faster.

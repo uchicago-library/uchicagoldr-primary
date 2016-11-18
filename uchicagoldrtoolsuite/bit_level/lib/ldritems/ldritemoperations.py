@@ -2,6 +2,7 @@ from os.path import join, split
 from tempfile import TemporaryFile
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from .ldrpath import LDRPath
@@ -16,7 +17,7 @@ __version__ = "0.0.1dev"
 
 log = getLogger(__name__)
 
-
+@log_aware(log)
 def read_metadata_from_file_object(attribute_string,
                                    parser_object, msuite=None, ldritem=None):
     """
@@ -60,6 +61,7 @@ def read_metadata_from_file_object(attribute_string,
     return output
 
 
+@log_aware(log)
 def get_an_agent_id(id_string, in_package=True):
     def get_premis_agents_file():
         if in_package:
@@ -97,6 +99,7 @@ def get_an_agent_id(id_string, in_package=True):
     return new_id[1]
 
 
+@log_aware(log)
 def move(src, dst, clobber=False, eq_detect='bytes'):
     from .ldritemcopier import LDRItemCopier
     """
@@ -121,6 +124,7 @@ def move(src, dst, clobber=False, eq_detect='bytes'):
         return False
 
 
+@log_aware(log)
 def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
     """
     hash any flavor of LDRItem
