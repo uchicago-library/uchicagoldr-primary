@@ -15,7 +15,6 @@ from pypremis.nodes import *
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
 from ..ldritems.ldrpath import LDRPath
@@ -30,7 +29,6 @@ __version__ = "0.0.1dev"
 
 
 log = getLogger(__name__)
-eh = ExceptionHandler()
 
 
 class GenericPREMISCreator(object):
@@ -101,15 +99,12 @@ class GenericPREMISCreator(object):
                     if isinstance(materialsuite.get_premis(), LDRItem):
                         log.debug("PREMIS detected: Skipping")
                         continue
-                try:
-                    log.debug("No PREMIS detected: Creating")
-                    materialsuite.set_premis(
-                        self.instantiate_and_make_premis(materialsuite.content,
-                                                         self.working_dir_path,
-                                                         set_originalName=set_originalName)
-                    )
-                except Exception as e:
-                    eh.handle(e)
+                log.debug("No PREMIS detected: Creating")
+                materialsuite.set_premis(
+                    self.instantiate_and_make_premis(materialsuite.content,
+                                                     self.working_dir_path,
+                                                     set_originalName=set_originalName)
+                )
 
     @classmethod
     @log_aware(log)

@@ -4,7 +4,6 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from ..ldritems.abc.ldritem import LDRItem
-from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 
 
 __author__ = "Brian Balsamo"
@@ -20,7 +19,6 @@ __version__ = "0.0.1dev"
 # whatever reason that should probably be remedied.
 
 log = getLogger(__name__)
-eh = ExceptionHandler()
 
 
 class GenericTechnicalMetadataCreator(object):
@@ -81,13 +79,10 @@ class GenericTechnicalMetadataCreator(object):
                     str(ms_num),
                     str(len(segment.materialsuite_list)))
                 )
-                try:
-                    if not isinstance(materialsuite.get_premis(), LDRItem):
-                        raise ValueError("All material suites must have a PREMIS " +
-                                        "record in order to generated technical " +
-                                        "metadata records.")
-                except Exception as e:
-                    eh.handle(e)
+                if not isinstance(materialsuite.get_premis(), LDRItem):
+                    raise ValueError("All material suites must have a PREMIS " +
+                                    "record in order to generated technical " +
+                                    "metadata records.")
                     continue
                 if not materialsuite.content:
                     continue
@@ -97,11 +92,8 @@ class GenericTechnicalMetadataCreator(object):
                                     LDRItem):
                             log.debug("Detected TECHMD: Skipping")
                             continue
-                try:
-                    log.debug("No TECHMD detected: Creating")
-                    for techmd_creator in self.techmd_creators:
-                        c = techmd_creator(materialsuite, self.working_dir_path,
-                                           data_transfer_obj=data_transfer_obj)
-                        c.process()
-                except Exception as e:
-                    eh.handle(e)
+                log.debug("No TECHMD detected: Creating")
+                for techmd_creator in self.techmd_creators:
+                    c = techmd_creator(materialsuite, self.working_dir_path,
+                                        data_transfer_obj=data_transfer_obj)
+                    c.process()

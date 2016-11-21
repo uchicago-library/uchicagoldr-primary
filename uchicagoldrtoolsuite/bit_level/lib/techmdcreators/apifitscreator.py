@@ -10,7 +10,6 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from uchicagoldrtoolsuite import log_aware
-from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.abc.ldritem import LDRItem
 from .abc.technicalmetadatacreator import TechnicalMetadataCreator
@@ -26,7 +25,6 @@ __version__ = "0.0.1dev"
 
 
 log = getLogger(__name__)
-eh = ExceptionHandler()
 
 
 class APIFITsCreator(TechnicalMetadataCreator):
@@ -106,9 +104,7 @@ class APIFITsCreator(TechnicalMetadataCreator):
                     f.write(r.text)
             log.debug("FITS creation successful")
         except Exception as e:
-            exc = e
-            log.debug("FITS creation failed")
-            eh.handle(e, raise_exceptions=False)
+            log.warn("FITS creation failed: {}".format(str(e)))
         log.debug("Updating PREMIS")
         if isfile(fits_file_path):
             self.get_source_materialsuite().add_technicalmetadata(
