@@ -6,6 +6,7 @@ from logging import getLogger
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from .abc.converter import Converter
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"
@@ -66,15 +67,17 @@ class AudioConverter(Converter):
         * data_transfer_obj (dict): A dictionary carrying potential converter-
             specific configuration values.
         """
-        log.debug("Attempting to instantiate a new AudioConverter")
+        log_init_attempt(self, log, locals())
+        log.debug("Entering ABC init")
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
+        log.debug("Exiting ABC init")
         self.converter_name = "ffmpeg audio converter"
         self.ffmpeg_path = data_transfer_obj.get('ffmpeg_path', None)
         if self.ffmpeg_path is None:
             raise ValueError('No ffmpeg_path specified in the data ' +
                              'transfer object!')
-        log.info("AudioConverter spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

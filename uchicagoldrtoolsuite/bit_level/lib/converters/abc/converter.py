@@ -77,7 +77,6 @@ class Converter(metaclass=ABCMeta):
             After {timeout} seconds have gone by SIGTERM is sent to the external
             process.
         """
-        log.debug("Attempting to instantiate a new converter")
         self._source_materialsuite = None
         self._working_dir = None
         self._timeout = None
@@ -87,7 +86,6 @@ class Converter(metaclass=ABCMeta):
         self.set_source_materialsuite(input_materialsuite)
         self.set_working_dir(working_dir)
         self.set_timeout(timeout)
-        log.info("Instantiated a new converter")
 
     @classmethod
     @log_aware(log)

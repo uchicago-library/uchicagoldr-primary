@@ -374,6 +374,8 @@ def retrieve_controlled_vocabulary(vocab_name, built=True):
 
 def log_init_attempt(inst, log, _locals=None):
     if _locals is not None:
+        if "self" in _locals:
+            _locals['self'] = "omitted"
         log.debug(
             "Attempting init a new {} with locals {}".format(
                 inst.__class__.__name__, str(_locals)
@@ -385,3 +387,27 @@ def log_init_attempt(inst, log, _locals=None):
                 inst.__class__.__name__
             )
         )
+
+def log_init_success(inst, log, log_repr=False):
+
+    def _log_repr(inst, log):
+        log.debug(
+            "{} instance init'd successfully: {}".format(
+                inst.__class__.__name__, inst.__repr__()
+            )
+        )
+
+    def _no_log_repr(inst, log):
+        log.debug(
+            "{} instance init'd successfully".format(
+                inst.__class__.__name__
+            )
+        )
+
+    if log_repr:
+        try:
+            _log_repr(inst, log)
+        except:
+            _no_log_repr(inst, log)
+    else:
+        _no_log_repr(inst, log)
