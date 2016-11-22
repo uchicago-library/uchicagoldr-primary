@@ -372,6 +372,7 @@ def retrieve_controlled_vocabulary(vocab_name, built=True):
         cv = cv.build()
     return cv
 
+
 def log_init_attempt(inst, log, _locals=None):
     if _locals is not None:
         if "self" in _locals:
@@ -387,6 +388,7 @@ def log_init_attempt(inst, log, _locals=None):
                 inst.__class__.__name__
             )
         )
+
 
 def log_init_success(inst, log, log_repr=False):
 
