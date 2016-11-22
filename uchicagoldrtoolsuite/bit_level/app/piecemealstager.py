@@ -1,6 +1,7 @@
 from os.path import join, dirname, expanduser, expandvars
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
@@ -46,6 +47,7 @@ class PiecemealStager(CLIApp):
     after itself after each MaterialSuite. This eliminates the required for
     the staging machines tmp directory to be larger than any single segment.
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +

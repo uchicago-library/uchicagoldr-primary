@@ -65,6 +65,7 @@ class ImageConverter(Converter):
         * data_transfer_obj (dict): A dictionary carrying potential converter-
             specific configuration values.
         """
+        log.debug("Attempting to instantiate a new ImageConverter")
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
         self.converter_name = "ffmpeg image converter"
@@ -72,7 +73,7 @@ class ImageConverter(Converter):
         if self.ffmpeg_path is None:
             raise ValueError('No ffmpeg_path specified in the data ' +
                              'transfer object!')
-        log.debug("ImageConverter spanwed: {}".format(str(self)))
+        log.info("ImageConverter spawned: {}".format(str(self)))
 
     @log_aware(log)
     def __repr__(self):

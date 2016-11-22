@@ -4,6 +4,7 @@ from os.path import exists, join
 from re import compile as re_compile
 from json import dumps
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.processors.genericpruner import GenericPruner
@@ -41,6 +42,7 @@ class Pruner(CLIApp):
     Looks through staging directories for files whose names match
     a given set of patterns and removes them if they do
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +

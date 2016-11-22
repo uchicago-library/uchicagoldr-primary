@@ -77,6 +77,7 @@ class Converter(metaclass=ABCMeta):
             After {timeout} seconds have gone by SIGTERM is sent to the external
             process.
         """
+        log.debug("Attempting to instantiate a new converter")
         self._source_materialsuite = None
         self._working_dir = None
         self._timeout = None
@@ -86,6 +87,7 @@ class Converter(metaclass=ABCMeta):
         self.set_source_materialsuite(input_materialsuite)
         self.set_working_dir(working_dir)
         self.set_timeout(timeout)
+        log.info("Instantiated a new converter")
 
     @classmethod
     @log_aware(log)
@@ -97,13 +99,18 @@ class Converter(metaclass=ABCMeta):
         # This might be faster if I made _claimed_mimes a set - but with
         # datasets of this size I suspect it wouldn't buy anymore than a few
         # micro(nano?) seconds speedup, and would make the class syntax weirder
+        log.debug("Converter attempting to claim mimes")
         if not cls._claimed_list_initd:
+            log.debug("Convert class mimes not init'd, initing...")
             mimetypes.init()
             for x in cls._claimed_extensions:
                 x = mimetypes.types_map.get(x, None)
                 if x is not None and x not in cls._claimed_mimes:
                     cls._claimed_mimes.append(x)
+        else:
+            log.debug("Convert class mimes init'd, returning them.")
         cls._claimed_list_initd = True
+        log.info("Converter claimed mimes")
 
     @classmethod
     @log_aware(log)
@@ -119,9 +126,13 @@ class Converter(metaclass=ABCMeta):
 
         (bool): True if the mime is handled, false otherwise
         """
+        log.debug("Converter attempting to determine ability to handle " +
+                  "{}".format(mime))
         cls.claim_mimes_from_extensions()
         if mime in cls._claimed_mimes:
+            log.debug("Converter can handle {}".format(mime))
             return True
+        log.debug("Converter can't handle {}".format(mime))
         return False
 
     @log_aware(log)
@@ -178,30 +189,43 @@ class Converter(metaclass=ABCMeta):
         * target_path (str): The path the instantiated original byte data is
             now at.
         """
+        log.debug("Attempting to instantiate original file from LDRItem")
         target_path = str(Path(self.working_dir, uuid4().hex))
         # if we have the PREMIS try to set an extension, just in case the
         # converter requires it
         if premis is not None:
+            log.debug("Got PREMIS, extrapolating extension")
             path_altered = False
             try:
                 ext = splitext(premis.get_object_list()[0].get_originalName())[1]
                 if ext is not '':
                     target_path = target_path + ext
                     path_altered = True
+                    log.debug("extension extrapolated from originalName: " +
+                              "{}".format(ext))
             except:
+                log.debug("extension extrapolation from originalName failed")
                 pass
             if not path_altered:
+                log.debug("attempting to extrapolate extension from mime")
                 try:
                     ext = mimetypes.guess_extension(premis.get_object_list()[0].get_objectCharacteristics()[0].get_format()[0].get_formatName())
                     target_path = target_path + ext
+                    log.debug("extension extrapolated from mime: {}".format(
+                        ext))
                 except:
+                    log.debug("extension extrapolation from mime failed")
                     pass
+        else:
+            log.debug("No PREMIS provided - no extension extrapolation.")
 
         target_ldritem = LDRPath(target_path)
+        log.debug("Attempting to copy original item to {}".format(target_path))
         c = LDRItemCopier(self.source_materialsuite.content, target_ldritem)
         r = c.copy()
         if r['src_eqs_dst'] is not True:
             raise RuntimeError("Bad Copy!")
+        log.info("instantiated original file for conversion")
         return target_path
 
     @log_aware(log)
@@ -213,12 +237,15 @@ class Converter(metaclass=ABCMeta):
 
         (PremisRecord): A PREMIS metadata record object.
         """
+        log.debug("instantiating original PREMIS")
         target_path = Path(self.working_dir, uuid4().hex)
         target_ldritem = LDRPath(str(target_path))
+        log.debug("Attempting to copy PREMIS to {}".format(target_path))
         c = LDRItemCopier(self.source_materialsuite.premis, target_ldritem)
         r = c.copy()
         if r['src_eqs_dst'] is not True:
             raise RuntimeError("Bad Copy!")
+        log.info("instantiated PREMIS of original file")
         return PremisRecord(frompath=str(target_path))
 
     @abstractmethod
@@ -260,6 +287,7 @@ class Converter(metaclass=ABCMeta):
         (PremisRecord): A stub PREMIS record describing the file at
             {presform_path}
         """
+        log.info("Generating presforms PREMIS record")
         return GenericPREMISCreator.make_record(presform_path)
 
     @log_aware(log)
@@ -331,6 +359,8 @@ class Converter(metaclass=ABCMeta):
 
     @log_aware(log)
     def build_conv_event(self, cmd_output, orig_premis, conv_premis, converter_name):
+        log.debug("Building conversion event")
+        # TODO: Make logging more verbose in this PREMIS business
         eventIdentifier = self._build_eventIdentifier()
         eventType = "migration"
         eventDateTime = iso8601_dt()
@@ -363,10 +393,12 @@ class Converter(metaclass=ABCMeta):
                 self._build_linkingObjectIdentifier(conv_premis, "converted file")
             )
 
+        log.info("Conversion event built")
         return conv_event
 
     @log_aware(log)
     def build_crea_event(self, cmd_output, orig_premis, conv_premis, converter_name):
+        log.debug("Building creation event")
         eventIdentifier = self._build_eventIdentifier()
         eventType = "creation"
         eventDateTime = iso8601_dt()
@@ -397,6 +429,7 @@ class Converter(metaclass=ABCMeta):
             self._build_linkingObjectIdentifier(conv_premis, "converted file")
         )
 
+        log.info("Creation event built")
         return crea_event
 
     @log_aware(log)
@@ -513,26 +546,39 @@ class Converter(metaclass=ABCMeta):
         * f (MaterialSuite) || (None): The resulting MaterialSuite, or None
             in the event of a failed conversion
         """
+        log.debug("Conversion process started")
+        log.debug("Attempting to instantiate and read original PREMIS")
         orig_premis = self.instantiate_and_read_original_premis()
+        log.debug("Attempting to instantiate the original file")
         target = self.instantiate_original(premis=orig_premis)
+        log.debug("Attempting to create presforms of original file")
         results = self.run_converter(target)
+        log.debug("Searching for results...")
         outpath = results.get('outpath', None)
         if outpath is not None:
+            log.debug("Converter results found, generating PREMIS")
             presform_premis = self.generate_presform_premis_record(outpath)
         else:
+            log.debug("No conversion results found")
             presform_premis = None
+        log.debug("Updating/linking PREMIS")
         self.handle_premis(results['cmd_output'], orig_premis, presform_premis, self.converter_name)
         updated_premis_fp = Path(self.working_dir, uuid4().hex)
+        log.debug("Writing updated PREMIS")
         orig_premis.write_to_file(str(updated_premis_fp))
+        log.debug("Installing new PREMIS in MaterialSuite")
         self.source_materialsuite.premis = LDRPath(str(updated_premis_fp))
         if outpath is not None:
+            log.debug("Packaging presform materialsuite")
             presform_premis_fp = str(Path(self.working_dir, uuid4().hex))
             presform_premis.write_to_file(presform_premis_fp)
             f = MaterialSuite()
             f.identifier = presform_premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
             f.content = LDRPath(outpath)
             f.premis = LDRPath(presform_premis_fp)
+            log.info("Converter produced presform materialsuites")
             return f
+        log.info("Converter did not produce presform materialsuites.")
 
     claimed_mimes = property(get_claimed_mimes)
     source_materialsuite = property(get_source_materialsuite, set_source_materialsuite)

@@ -58,6 +58,7 @@ class OfficeToCSVConverter(Converter):
         * data_transfer_obj (dict): A dictionary carrying potential converter-
             specific configuration values.
         """
+        log.debug("Attempting to instantiate a new OfficeToCSVConverter")
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
         self.converter_name = "LibreOffice CSV converter"
@@ -65,7 +66,7 @@ class OfficeToCSVConverter(Converter):
         if self.libre_office_path is None:
             raise ValueError('No libre_office_path specificed in the data' +
                              'transfer object!')
-        log.debug("OfficeToCSVConverter spawned: {}".format(str(self)))
+        log.info("OfficeToCSVConverter spawned: {}".format(str(self)))
 
     @log_aware(log)
     def __repr__(self):
@@ -105,11 +106,14 @@ class OfficeToCSVConverter(Converter):
                             in_path]
         convert_cmd = BashCommand(convert_cmd_args)
         convert_cmd.set_timeout(self.timeout)
+        log.debug("Trying to convert to CSV")
         convert_cmd.run_command()
         try:
+            log.debug("File found in outdir")
             where_it_is = join(outdir, [x.name for x in scandir(outdir)][0])
             assert(isfile(where_it_is))
         except:
+            log.debug("No files found in outdir")
             where_it_is = None
 
         return {'outpath': where_it_is, 'cmd_output': convert_cmd.get_data()}

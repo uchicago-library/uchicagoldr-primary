@@ -371,3 +371,17 @@ def retrieve_controlled_vocabulary(vocab_name, built=True):
     if built:
         cv = cv.build()
     return cv
+
+def log_init_attempt(inst, log, _locals=None):
+    if _locals is not None:
+        log.debug(
+            "Attempting init a new {} with locals {}".format(
+                inst.__class__.__name__, str(_locals)
+            )
+        )
+    else:
+        log.debug(
+            "Attempting init a new {}".format(
+                inst.__class__.__name__
+            )
+        )

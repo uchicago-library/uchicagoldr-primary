@@ -2,6 +2,7 @@ from sys import stdout
 from os.path import join
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
@@ -38,6 +39,7 @@ class PremisRestrictionSetter(CLIApp):
     """
     Sets restrictions in PREMIS records
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +

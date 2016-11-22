@@ -62,6 +62,7 @@ class VideoConverter(Converter):
         * timeout (int): A timeout (in seconds) to kill the conversion process
             after.
         """
+        log.debug("initing")
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
         self.converter_name = "ffmpeg video converter"
@@ -89,7 +90,7 @@ class VideoConverter(Converter):
         materialsuites that we manage to make and updating its PREMIS record
         accordingly
         """
-        conv_file_path = join(self.working_dir, uuid4().hex + ".tif")
+        conv_file_path = join(self.working_dir, uuid4().hex + ".flac")
 
         convert_cmd_args = [self.ffmpeg_path, '-n', '-i', in_path,
                             '-vcodec', 'rawvideo', '-acodec', 'pcm_u24le',
@@ -98,7 +99,7 @@ class VideoConverter(Converter):
 
         convert_cmd = BashCommand(convert_cmd_args)
         convert_cmd.set_timeout(self.timeout)
-        log.debug("Trying to convert to tif")
+        log.debug("Trying to convert to flac")
         convert_cmd.run_command()
 
         try:

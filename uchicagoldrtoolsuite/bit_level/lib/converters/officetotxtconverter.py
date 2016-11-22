@@ -70,6 +70,7 @@ class OfficeToTXTConverter(Converter):
         * data_transfer_obj (dict): A dictionary carrying potential converter-
             specific configuration values.
         """
+        log.debug("initing")
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
         self.converter_name = "LibreOffice TXT converter"
@@ -117,11 +118,14 @@ class OfficeToTXTConverter(Converter):
                             in_path]
         convert_cmd = BashCommand(convert_cmd_args)
         convert_cmd.set_timeout(self.timeout)
+        log.debug("Attempting conversion to txt")
         convert_cmd.run_command()
         try:
+            log.debug("Conversion success, file located in the outdir")
             where_it_is = join(outdir, [x.name for x in scandir(outdir)][0])
             assert(isfile(where_it_is))
         except:
+            log.debug("Conversion failure, no file in outdir")
             where_it_is = None
 
         return {'outpath': where_it_is, 'cmd_output': convert_cmd.get_data()}

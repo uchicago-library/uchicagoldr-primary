@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from uuid import uuid1
 from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
@@ -40,6 +41,7 @@ class AdminNoteAdder(CLIApp):
     """
     Create an administrative note in a Stage
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="Adds a file as an administrative " +

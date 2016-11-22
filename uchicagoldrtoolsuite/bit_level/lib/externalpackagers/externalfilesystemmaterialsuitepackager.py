@@ -52,6 +52,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         * root (str/bytes): A subpath of the fullpath. The canonical name of
             the file then becomes its path relative to this root.
         """
+        log.debug('initing')
         self._str_path = None
         self._bytes_path = None
         self._str_root = None
@@ -63,6 +64,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.working_dir = TemporaryDirectory()
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
+        log.debug("init'd")
 
     @log_aware(log)
     def package(self):
@@ -149,14 +151,18 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         def write_minimal_premis(minimal_premis_record):
             minimal_premis_record.write_to_file(self.instantiated_premis)
 
+        log.info("Copying external file to tmp location")
         ingestion_event = copy_to_working()
+        log.info("Creating ingest PREMIS")
         minimal_premis_record = generate_minimal_premis(ingestion_event)
         link_em_all_up(minimal_premis_record)
+        log.info("Writing ingest PREMIS")
         write_minimal_premis(minimal_premis_record)
         return LDRPath(self.instantiated_premis)
 
     @log_aware(log)
     def get_content(self):
+        log.info("Packaging original file as an LDRPath")
         x = LDRPath(self.working_path)
         if self.root is not None:
             x.item_name = str(Path(self.path).relative_to(self.root))
@@ -180,6 +186,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
 
     @log_aware(log)
     def set_path(self, x):
+        log.debug("Attempting to set path as both str and bytes...")
         self._str_path = fsdecode(x)
         self._bytes_paths = fsencode(x)
 

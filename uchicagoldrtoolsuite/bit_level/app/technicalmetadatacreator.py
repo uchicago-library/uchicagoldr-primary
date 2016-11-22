@@ -3,6 +3,7 @@ from logging import getLogger
 from os.path import join
 from configparser import NoOptionError
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
@@ -42,6 +43,7 @@ class TechnicalMetadataCreator(CLIApp):
     """
     Creates technical metadata (FITs) for all the material suites in a stage.
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +

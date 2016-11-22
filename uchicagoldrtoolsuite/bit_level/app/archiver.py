@@ -3,6 +3,7 @@ from logging import getLogger
 
 from pypairtree.utils import identifier_to_path
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.writers.filesystemarchivewriter import FileSystemArchiveWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
@@ -41,6 +42,7 @@ class Archiver(CLIApp):
     takes an external location and formats it's contents into the
     beginnings of a staging structure and writes that to disk.
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
