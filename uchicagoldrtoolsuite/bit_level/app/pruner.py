@@ -74,9 +74,7 @@ class Pruner(CLIApp):
                                  action='append', default=[])
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-
-        # Set conf
-        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+        self.process_universal_args(args)
 
         # App code
 

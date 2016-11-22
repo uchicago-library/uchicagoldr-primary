@@ -4,10 +4,6 @@ from os.path import join
 from configparser import NoOptionError
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite import \
-    activate_master_log_file, \
-    activate_job_log_file, \
-    activate_stdout_log
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.processors.genericpresformcreator import \
@@ -23,8 +19,6 @@ __version__ = "0.0.1dev"
 
 
 log = getLogger(__name__)
-activate_master_log_file()
-activate_job_log_file()
 
 
 def launch():
@@ -109,11 +103,7 @@ class PresformCreator(CLIApp):
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-
-        activate_stdout_log(args.verbosity)
-
-        # Set conf
-        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+        self.process_universal_args(args)
 
         # App code
 

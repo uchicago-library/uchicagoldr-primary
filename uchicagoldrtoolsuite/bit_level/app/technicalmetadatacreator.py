@@ -1,5 +1,5 @@
 from sys import stdout
-from logging imnport getLogger
+from logging import getLogger
 from os.path import join
 from configparser import NoOptionError
 
@@ -10,10 +10,6 @@ from ..lib.processors.generictechnicalmetadatacreator import \
     GenericTechnicalMetadataCreator
 from ..lib.techmdcreators.fitscreator import FITsCreator
 from ..lib.techmdcreators.apifitscreator import APIFITsCreator
-from uchicagoldrtoolsuite import \
-    activate_master_log_file, \
-    activate_job_log_file, \
-    activate_stdout_log
 
 
 __author__ = "Brian Balsamo"
@@ -23,9 +19,9 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+
 log = getLogger(__name__)
-activate_master_log_file()
-activate_job_log_file()
+
 
 def launch():
     """
@@ -88,11 +84,7 @@ class TechnicalMetadataCreator(CLIApp):
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-
-        activate_stdout_log(verbosity=args.verbosity)
-
-        # Set conf
-        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+        self.process_universal_args(args)
 
         # App code
 

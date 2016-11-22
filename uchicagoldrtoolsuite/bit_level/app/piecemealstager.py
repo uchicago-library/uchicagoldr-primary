@@ -3,9 +3,6 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
-from uchicagoldrtoolsuite import \
-    activate_master_log_file, \
-    activate_job_log_file
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.externalpackagers.externalfilesystemmaterialsuitepackager import \
     ExternalFileSystemMaterialSuitePackager
@@ -95,7 +92,8 @@ class PiecemealStager(CLIApp):
         if args.staging_env:
             destination_root = args.staging_env
         else:
-            destination_root = self.conf.get("Paths", "staging_environment_path")
+            destination_root = self.conf.get("Paths",
+                                             "staging_environment_path")
 
         if args.source_root:
             root = args.source_root
