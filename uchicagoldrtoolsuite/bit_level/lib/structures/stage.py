@@ -5,6 +5,7 @@ from uchicagoldrtoolsuite import log_aware
 from .abc.structure import Structure
 from .segment import Segment
 from ..ldritems.abc.ldritem import LDRItem
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -29,13 +30,14 @@ class Stage(Structure):
 
     @log_aware(log)
     def __init__(self, param1):
+        log_init_attempt(self, log, locals())
         self._identifier = None
         self._segment = []
         self._accessionrecord = []
         self._adminnote = []
         self._legalnote = []
         self.set_identifier(param1)
-        log.debug("Stage spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

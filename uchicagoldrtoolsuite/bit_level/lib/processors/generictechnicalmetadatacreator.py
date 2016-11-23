@@ -4,6 +4,7 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from ..ldritems.abc.ldritem import LDRItem
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"
@@ -36,6 +37,7 @@ class GenericTechnicalMetadataCreator(object):
 
         stage (Stage): the Stage to operate on
         """
+        log_init_attempt(self, log, locals())
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -43,7 +45,7 @@ class GenericTechnicalMetadataCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
         self.techmd_creators = techmd_creators
-        log.debug("GenericTechnicalMetadataCreator spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

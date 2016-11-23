@@ -11,6 +11,7 @@ from .abc.segmentpackager import SegmentPackager
 from .abc.materialsuitepackager import MaterialSuitePackager
 from ..structures.segment import Segment
 from ..ldritems.ldrpath import LDRPath
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 log = getLogger(__name__)
@@ -35,9 +36,11 @@ class FileSystemStageReader(StageSerializationReader):
         1. path (str): The path to the stage on disk. The leaf component should
             be the stage identifier
         """
+        log_init_attempt(self, log, locals())
         super().__init__()
         self.path = path
         self.struct.set_identifier(str(Path(path).parts[-1]))
+        log_init_success(self, log)
 
     @log_aware(log)
     def assert_skeleton(self):

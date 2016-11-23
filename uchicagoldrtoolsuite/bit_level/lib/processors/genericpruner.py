@@ -8,6 +8,7 @@ from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import ldritem_to_premisrecord
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import TemporaryFilePath
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 from ..ldritems.ldrpath import LDRPath
 
 
@@ -88,12 +89,14 @@ class GenericPruner(object):
         * in_place_delete (bool): If True && final --> fire the LDRItem.delete()
             method on the content of MaterialSuites matched by the callback
         """
+        log_init_attempt(self, log, locals())
         self.stage = stage
         self.final = final
         self.in_place_delete = in_place_delete
         self.callback = callback
         self.callback_args = callback_args
         self.callback_kwargs = callback_kwargs
+        log_init_success(self, log)
 
     @log_aware(log)
     def prune(self, callback=None, callback_args=None, callback_kwargs=None,

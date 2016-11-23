@@ -4,6 +4,7 @@ from logging import getLogger
 from uchicagoldrtoolsuite import log_aware
 from .abc.structure import Structure
 from .materialsuite import MaterialSuite
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -39,6 +40,7 @@ class Segment(Structure):
 
     @log_aware(log)
     def __init__(self, label, run_no):
+        log_init_attempt(self, log, locals())
         self._label = None
         self._run = None
         self._materialsuite = []
@@ -46,7 +48,7 @@ class Segment(Structure):
         self.set_label(label)
         self.set_run(run_no)
         self.set_materialsuite_list([])
-        log.debug("Segment spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

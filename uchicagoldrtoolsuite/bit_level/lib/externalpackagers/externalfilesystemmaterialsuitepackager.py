@@ -16,6 +16,7 @@ from ..processors.genericpremiscreator import GenericPREMISCreator
 from ..readers.abc.materialsuitepackager import MaterialSuitePackager
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 log = getLogger(__name__)
@@ -52,7 +53,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         * root (str/bytes): A subpath of the fullpath. The canonical name of
             the file then becomes its path relative to this root.
         """
-        log.debug('initing')
+        log_init_attempt(self, log, locals())
         self._str_path = None
         self._bytes_path = None
         self._str_root = None
@@ -64,7 +65,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.working_dir = TemporaryDirectory()
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
-        log.debug("init'd")
+        log_init_success(self, log)
 
     @log_aware(log)
     def package(self):

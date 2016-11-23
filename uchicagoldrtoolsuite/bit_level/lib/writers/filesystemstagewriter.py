@@ -10,6 +10,7 @@ from .abc.stageserializationwriter import StageSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldritemoperations import hash_ldritem
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 log = getLogger(__name__)
@@ -44,11 +45,13 @@ class FileSystemStageWriter(StageSerializationWriter):
 
         * eq_detect (str): The equality metric to use during serialization
         """
+        log_init_attempt(self, log, locals())
         super().__init__(aStructure)
         self.stage_env_path = Path(aRoot)
         self.stage_root = Path(self.stage_env_path, self.struct.identifier)
         self.set_implementation('pairtree filesystem')
         self.eq_detect = eq_detect
+        log_init_success(self, log)
 
     @log_aware(log)
     def _build_skeleton(self):
@@ -143,9 +146,11 @@ class FileSystemSegmentWriter(object):
 
         * eq_detect (str): The equality metric to use during serialization
         """
+        log_init_attempt(self, log, locals())
         self.struct = aStructure
         self.segment_root = Path(aRoot, self.struct.identifier)
         self.eq_detect = eq_detect
+        log_init_success(self, log)
 
     @log_aware(log)
     def _write_skeleton(self):
@@ -188,12 +193,14 @@ class FileSystemMaterialSuiteWriter(object):
 
         * eq_detect (str): The equality metric to use during serialization
         """
+        log_init_attempt(self, log, locals())
         self.struct = aStructure
         self.materialsuite_root = Path(
             identifier_to_path(self.struct.identifier, root=aRoot),
             "srf"
         )
         self.eq_detect = eq_detect
+        log_init_success(self, log)
 
     @log_aware(log)
     def _write_skeleton(self):

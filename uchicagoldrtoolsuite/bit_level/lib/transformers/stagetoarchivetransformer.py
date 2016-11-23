@@ -5,6 +5,7 @@ from uchicagoldrtoolsuite.core.lib.ark import Ark
 from .abc.transformer import Transformer
 from ..structures.archive import Archive
 from ..structures.stage import Stage
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 __author__ = "Tyler Danstrom, Brian Balsamo"
 __email__ = " tdanstrom@uchicago.edu, balsamo@uchicago.edu"
@@ -32,11 +33,13 @@ class StageToArchiveTransformer(Transformer):
         1. origin_structure (Stage) : a fully realized instance of a
         Stage structure
         """
+        log_init_attempt(self, log, locals())
         self.origin_structure = origin_structure
         self.destination_structure = None
+        log_init_success(self, log)
 
     @log_aware(log)
-    def transform(self, archive_identifier=None):
+    def transform(self, archive_identifier=None, noid_minter_url=None):
         """returns a fully realized Archive structure containing the contents
         of the origin Stage structure.
 
@@ -46,8 +49,11 @@ class StageToArchiveTransformer(Transformer):
         """
         if self.destination_structure is not None:
             raise TypeError("a transformation already occured.")
+        if archive_identifier == noid_minter_url == None:
+            raise RuntimeError("An identifier must be explicitly provided " +
+                               "or the URL of a noid minter must be provided.")
         if archive_identifier is None:
-            archive_identifier = Ark().value
+            archive_identifier = Ark(noid_minter_url).value
         self.destination_structure = Archive(archive_identifier)
 
         for n_segment in self.origin_structure.segment_list:

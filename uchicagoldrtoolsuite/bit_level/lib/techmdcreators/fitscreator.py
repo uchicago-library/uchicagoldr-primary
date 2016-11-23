@@ -13,6 +13,7 @@ from ..ldritems.abc.ldritem import LDRItem
 from .abc.technicalmetadatacreator import TechnicalMetadataCreator
 from ..ldritems.ldritemcopier import LDRItemCopier
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"
@@ -31,12 +32,13 @@ class FITsCreator(TechnicalMetadataCreator):
     @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None,
                  data_transfer_obj={}):
+        log_init_attempt(self, log, locals())
         super().__init__(materialsuite, working_dir, timeout)
         self.fits_path = data_transfer_obj.get('fits_path', None)
         if self.fits_path is None:
             raise ValueError('No fits_path specified in the data ' +
                              'transfer object!')
-        log.debug("FITsCreator spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

@@ -30,9 +30,11 @@ class Structure(metaclass=ABCMeta):
     @abstractmethod
     @log_aware(log)
     def validate(self):
+        log.debug("Entering ABC validate()")
         for thing in self.get_required_parts():
             if  getattr(self, thing, None) == None:
                 return (False, "missing rec part: {}".format(thing))
+        log.debug("Exiting ABC validate()")
         return True
 
     @log_aware(log)

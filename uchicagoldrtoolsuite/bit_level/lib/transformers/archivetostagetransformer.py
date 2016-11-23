@@ -5,6 +5,7 @@ from uchicagoldrtoolsuite import log_aware
 from .abc.transformer import Transformer
 from ..structures.archive import Archive
 from ..structures.stage import Stage
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 __author__ = "Tyler Danstrom, Brian Balsamo"
 __email__ = " tdanstrom@uchicago.edu, balsamo@uchicago.edu"
@@ -32,8 +33,10 @@ class ArchiveToStageTransformer(Transformer):
         1. origin_structure (Archive) : a fully realized instance of a
         Archive structure
         """
+        log_init_attempt(self, log, locals())
         self.origin_structure = origin_structure
         self.destination_structure = None
+        log_init_success(self, log)
 
     @log_aware(log)
     def transform(self, stage_identifier=None):

@@ -68,10 +68,8 @@ class AudioConverter(Converter):
             specific configuration values.
         """
         log_init_attempt(self, log, locals())
-        log.debug("Entering ABC init")
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
-        log.debug("Exiting ABC init")
         self.converter_name = "ffmpeg audio converter"
         self.ffmpeg_path = data_transfer_obj.get('ffmpeg_path', None)
         if self.ffmpeg_path is None:

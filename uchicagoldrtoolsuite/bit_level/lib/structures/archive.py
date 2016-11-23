@@ -5,6 +5,7 @@ from uchicagoldrtoolsuite import log_aware
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
 from .segment import Segment
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 __author__ = "Tyler Danstrom, Brian Balsamo"
 __email__ = "tdanstrom@uchicago.edu, balsamo@uchicago.edu"
@@ -23,6 +24,7 @@ class Archive(Structure):
     """
     @log_aware(log)
     def __init__(self, identifier):
+        log_init_attempt(self, log, locals())
         self._identifier = None
         self._segment = []
         self._accessionrecord = []
@@ -38,6 +40,7 @@ class Archive(Structure):
         self.accessionrecord_list = []
         self.legalnote_list = []
         self.adminnote_list = []
+        log_init_success(self, log)
 
     @log_aware(log)
     def _validate_materialsuite(self, materialsuite):

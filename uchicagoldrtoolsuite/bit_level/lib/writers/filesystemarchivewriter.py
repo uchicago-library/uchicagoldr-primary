@@ -21,6 +21,7 @@ from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldritemoperations import hash_ldritem
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"
@@ -69,10 +70,11 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         * eq_detect (str): What equality detection metric to use while
             serializing
         """
+        log_init_attempt(self, log, locals())
         super().__init__(anArchive)
         self.lts_env_path = aRoot
         self.eq_detect = eq_detect
-        log.debug("FileSystemArchiveWriter spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

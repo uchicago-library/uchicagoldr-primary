@@ -14,6 +14,7 @@ from uchicagoldrtoolsuite.core.lib.convenience import \
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"
@@ -42,6 +43,7 @@ class GenericPresformCreator(object):
         1. stage (Stage): the Stage to operate on
         2. converters ([Converter]): an array of the converters to use
         """
+        log_init_attempt(self, log, locals())
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -49,7 +51,7 @@ class GenericPresformCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
         self.converters = converters
-        log.debug("GenericPresformCreator spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

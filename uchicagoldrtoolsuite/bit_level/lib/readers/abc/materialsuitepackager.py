@@ -45,7 +45,9 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         # the underlying structures themselves - Stage's init require an
         # identifier. This should probably be made consistant, one way or
         # another.
+        log.debug("Entering the ABC init")
         self.struct = MaterialSuite()
+        log.debug("Exciting the ABC init")
 
     @abstractmethod
     def get_content(self):

@@ -14,6 +14,7 @@ from pypremis.nodes import *
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
@@ -49,6 +50,7 @@ class GenericPREMISCreator(object):
 
         1. stage (Stage): The Stage to generate PREMIS object records for
         """
+        log_init_attempt(self, log, locals())
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -59,7 +61,7 @@ class GenericPREMISCreator(object):
             "GenericPREMISCreator created tmpdir @ {}".format(
                 self.working_dir_path)
         )
-        log.debug("GenericPREMISCreator spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

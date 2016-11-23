@@ -282,7 +282,8 @@ def sane_hash(hash_algo, flo, buf=65536):
 
 
 def log_init_attempt(inst, log, _locals=None):
-    if _locals is not None:
+
+    def log_with_locals(inst, log, loc):
         if "self" in _locals:
             _locals['self'] = "omitted"
         log.debug(
@@ -290,15 +291,33 @@ def log_init_attempt(inst, log, _locals=None):
                 inst.__class__.__name__, str(_locals)
             )
         )
-    else:
+
+    def log_no_locals(inst, log):
         log.debug(
-            "Attempting init a new {}".format(
+            "Attempting to init a new {}".format(
                 inst.__class__.__name__
             )
         )
 
+    if _locals is not None:
+        try:
+            log_with_locals(inst, log, _locals)
+        except:
+            # Most likely source of issues (I think) will be the locals not
+            # being repr-able, so try without them in case of exceptions.
+            # Justification here is that _some_ logging is better than none.
+            # Emits a warning about using the fallback as well.
+            log.warn(
+                "Init attempt logging exception in {}, trying fallback.".format(
+                    inst.__class__.__name__
+                )
+            )
+            log_no_locals(inst, log)
+    else:
+        log_no_locals(inst, log)
 
-def log_init_success(inst, log, log_repr=False):
+
+def log_init_success(inst, log, log_repr=True):
 
     def _log_repr(inst, log):
         log.debug(
@@ -318,6 +337,15 @@ def log_init_success(inst, log, log_repr=False):
         try:
             _log_repr(inst, log)
         except:
+            # Most likely source of issues (I think) will be the class reprs
+            # themselves in this case, so try without it in case of exceptions.
+            # Justification here is that _some_ logging is better than none.
+            # Emits a warning about using the fallback as well.
+            log.warn(
+                "Init success logging exception in {}, trying fallback.".format(
+                    inst.__class__.__name__
+                )
+            )
             _no_log_repr(inst, log)
     else:
         _no_log_repr(inst, log)

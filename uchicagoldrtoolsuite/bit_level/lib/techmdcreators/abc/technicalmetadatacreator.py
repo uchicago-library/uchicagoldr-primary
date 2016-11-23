@@ -33,9 +33,11 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
     @abstractmethod
     @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None):
+        log.debug("Entering the ABC init")
         self.set_source_materialsuite(materialsuite)
         self.set_working_dir(working_dir)
         self.set_timeout(timeout)
+        log.debug("Exiting the ABC init")
 
     @log_aware(log)
     def get_source_materialsuite(self):

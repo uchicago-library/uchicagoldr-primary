@@ -20,4 +20,6 @@ log = getLogger(__name__)
 class ArchiveSerializationReader(SerializationReader, metaclass=ABCMeta):
     @abstractmethod
     def __init__(self):
+        log.debug("Entering the ABC init")
         self.set_struct(Archive(str(uuid1())))
+        log.debug("Exiting the ABC init")

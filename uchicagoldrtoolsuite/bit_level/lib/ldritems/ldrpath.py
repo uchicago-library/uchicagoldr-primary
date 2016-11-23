@@ -5,6 +5,7 @@ from logging import getLogger
 
 from .abc.ldritem import LDRItem
 from uchicagoldrtoolsuite import log_aware
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -24,6 +25,7 @@ class LDRPath(LDRItem):
     """
     @log_aware(log)
     def __init__(self, param1, root=None):
+        log_init_attempt(self, log, locals())
         self.path = Path(param1)
         if root is None:
             self.item_name = str(self.path)
@@ -31,7 +33,7 @@ class LDRPath(LDRItem):
             self.item_name = str(self.path.relative_to(root))
         self.pipe = None
         self.is_flo = True
-        log.debug("LDRPath spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

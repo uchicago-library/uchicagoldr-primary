@@ -28,7 +28,9 @@ class StageSerializationReader(SerializationReader, metaclass=ABCMeta):
     @abstractmethod
     @log_aware(log)
     def __init__(self):
+        log.debug("Entering the ABC init")
         self.set_struct(Stage(str(uuid1())))
+        log.debug("Exiting the ABC init")
 
     @log_aware(log)
     def get_stage_id(self):

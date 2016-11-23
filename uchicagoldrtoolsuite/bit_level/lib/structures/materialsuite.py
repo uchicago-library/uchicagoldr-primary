@@ -4,6 +4,7 @@ from logging import getLogger
 from uchicagoldrtoolsuite import log_aware
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -27,12 +28,13 @@ class MaterialSuite(Structure):
                       'technicalmetadata_list']
     @log_aware(log)
     def __init__(self):
+        log_init_attempt(self, log, locals())
         self._content = None
         self._premis = None
         self._technicalmetadata = []
         self._identifier = None
+        log_init_success(self, log)
 
-        log.debug("MaterialSuite spawned: {}".format(str(self)))
 
     @log_aware(log)
     def __repr__(self):

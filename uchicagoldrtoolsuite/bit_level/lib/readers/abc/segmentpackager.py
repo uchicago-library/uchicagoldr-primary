@@ -32,7 +32,9 @@ class SegmentPackager(Packager, metaclass=ABCMeta):
     @abstractmethod
     @log_aware(log)
     def __init__(self):
+        log.debug("Entering the ABC init")
         super().__init__()
+        log.debug("Exiting the ABC init")
 
     @log_aware(log)
     def set_msuite_packager(self, value):

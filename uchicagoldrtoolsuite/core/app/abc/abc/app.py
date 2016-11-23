@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from configparser import ConfigParser
 from os.path import join, isfile
 from xdg import BaseDirectory
+from logging import getLogger
 
 from uchicagoldrtoolsuite import retrieve_resource_filepath
 
@@ -12,6 +13,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
 
 
 class App(metaclass=ABCMeta):

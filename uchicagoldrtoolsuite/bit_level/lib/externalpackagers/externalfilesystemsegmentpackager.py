@@ -6,7 +6,7 @@ from ..structures.segment import Segment
 from .externalfilesystemmaterialsuitepackager import\
     ExternalFileSystemMaterialSuitePackager
 from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir, \
-    log_init_attempt
+    log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"
@@ -16,7 +16,9 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
+
 log = getLogger(__name__)
+
 
 class ExternalFileSystemSegmentPackager(SegmentPackager):
     @log_aware(log)
@@ -41,7 +43,6 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             default this will be the containing directory of the specified
             directory
         """
-#        log.debug("Instantiating a new ExternalFileSystemSegmentPackager")
         log_init_attempt(self, log, locals())
         super().__init__()
         self.path = path
@@ -52,7 +53,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
         self.set_struct(Segment(self.get_id_prefix(), int(self.get_id_num())))
         self.root = root
         self.filter_pattern = filter_pattern
-        log.debug("init'd")
+        log_init_success(self, log)
 
     @log_aware(log)
     def package(self):

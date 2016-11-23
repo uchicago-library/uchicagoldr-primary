@@ -6,7 +6,7 @@ from logging import getLogger
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from .abc.converter import Converter
-
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
@@ -62,7 +62,7 @@ class VideoConverter(Converter):
         * timeout (int): A timeout (in seconds) to kill the conversion process
             after.
         """
-        log.debug("initing")
+        log_init_attempt(self, log, locals())
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
         self.converter_name = "ffmpeg video converter"
@@ -70,7 +70,7 @@ class VideoConverter(Converter):
         if self.ffmpeg_path is None:
             raise ValueError('No ffmpeg_path specified in the data' +
                              'transfer object!')
-        log.debug("VideoConverter spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

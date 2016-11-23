@@ -13,6 +13,7 @@ from .abc.archiveserializationreader import ArchiveSerializationReader
 from ..structures.segment import Segment
 from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldrpath import LDRPath
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 log = getLogger(__name__)
@@ -37,9 +38,11 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         2. identifier (str): The identifier of the archive structure stored
             in the given long term storage environment
         """
+        log_init_attempt(self, log, locals())
         super().__init__()
         self.lts_path = lts_path
         self.identifier = identifier
+        log_init_success(self, log)
 
     @log_aware(log)
     def _read_skeleton(self, lts_path, identifier):

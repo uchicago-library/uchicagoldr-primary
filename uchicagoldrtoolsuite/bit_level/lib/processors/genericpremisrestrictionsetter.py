@@ -15,6 +15,7 @@ from ..misc.premisextensionnodes import RightsExtensionIdentifier
 from ..misc.premisextensionnodes import RestrictedObjectIdentifier
 from ..misc.premisextensionnodes import RestrictingAgentIdentifier
 from ..ldritems.ldritemcopier import LDRItemCopier
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"
@@ -54,6 +55,7 @@ class GenericPREMISRestrictionSetter(object):
             are relevant to this restriction
         * active (bool): Whether or not this restriction is currently active
         """
+        log_init_attempt(self, log, locals())
         self.stage = stage
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
@@ -62,9 +64,7 @@ class GenericPREMISRestrictionSetter(object):
         self.donor_stipulations = donor_stipulations
         self.restrictingAgentIds = restrictingAgentIds
         self.active = active
-        log.debug(
-            "GenericPREMISRestrictionSetter spawned: {}".format(str(self))
-        )
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):

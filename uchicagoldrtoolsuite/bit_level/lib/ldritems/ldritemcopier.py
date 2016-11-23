@@ -4,6 +4,7 @@ from logging import getLogger
 from uchicagoldrtoolsuite import log_aware
 from .abc.ldritem import LDRItem
 from .ldritemoperations import hash_ldritem
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 log = getLogger(__name__)
@@ -32,13 +33,14 @@ class LDRItemCopier(object):
         * buffering (int): How many bytes to load into RAM for copying/
             comparison operations
         """
+        log_init_attempt(self, log, locals())
         self.src = src
         self.dst = dst
         self.clobber = clobber
         self.eq_detect = eq_detect
         self.max_retries = max_retries
         self.buffering = buffering
-        log.debug("LDRItemCopier spawned. {}".format(str(self)))
+        log_init_success(self, log)
 
     @log_aware(log)
     def __repr__(self):
