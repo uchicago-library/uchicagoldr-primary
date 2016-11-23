@@ -67,6 +67,10 @@ class Archiver(CLIApp):
                                  "LDRItemCopier for supported schemes.",
                                  type=str, action='store',
                                  default="bytes")
+        self.parser.add_argument("--noid_minter_url", help="Manually specify " +
+                                 "the url of the noid minter to use. " +
+                                 "Defaults to the config value.",
+                                 type=str, action='store')
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -78,19 +82,27 @@ class Archiver(CLIApp):
             staging_env = args.staging_env
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
+        staging_env = self.expand_path(staging_env)
 
         if args.lts_env:
             lts_env = args.lts_env
         else:
             lts_env = self.conf.get("Paths",
                                     "long_term_storage_environment_path")
+        lts_env = self.expand_path(lts_env)
+
+        if args.noid_minter_url:
+            noid_minter_url = args.noid_minter_url
+        else:
+            noid_minter_url = self.conf.get("URLs", "noid_minter")
+
 
         stage_path = join(staging_env, args.stage_id)
         log.info("Stage Path: {}".format(stage_path))
         log.info("Reading Stage...")
         stage = FileSystemStageReader(stage_path).read()
         log.info("Transforming Stage into Archive")
-        archive = StageToArchiveTransformer(stage).transform()
+        archive = StageToArchiveTransformer(stage).transform(noid_minter_url=noid_minter_url)
         log.info("Validating Archive...")
         if not archive.validate():
             log.critical("Invalid Archive! Aborting!")

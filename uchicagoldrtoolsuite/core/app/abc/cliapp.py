@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from sys import stdout, stderr
-from os.path import isabs, join, isdir, isfile, exists, split
+from os.path import isabs, join, isdir, isfile, exists, split, expanduser, \
+    expandvars
 from os import makedirs
 from abc import ABCMeta
 from logging import getLogger
@@ -103,13 +104,18 @@ class CLIApp(App, metaclass=ABCMeta):
 
     @log_aware(log)
     def process_universal_args(self, args):
-        self.conf = self.build_conf(args.conf_path, args.disable_default_conf,
-                                    args.disable_builtin_conf)
+        self.conf = self.build_conf(
+            [self.expand_path(x) for x in args.conf_path],
+            args.disable_default_conf,
+            args.disable_builtin_conf
+        )
         logdir = None
         if args.logdir:
             logdir = args.logdir
         if logdir is None:
             logdir = self.conf.get('Logging', 'log_dir_path', fallback=None)
+        if logdir:
+            logdir = self.expand_path(logdir)
         if logdir is not None:
             job_logdir = join(logdir, "jobs")
         else:
@@ -123,6 +129,10 @@ class CLIApp(App, metaclass=ABCMeta):
                                   verbosity=args.disk_log_verbosity)
         if args.stdout_log_verbosity is not "DISABLE":
             activate_stdout_log(verbosity=args.stdout_log_verbosity)
+
+    @staticmethod
+    def expand_path(p):
+        return expandvars(expanduser(p))
 
     def prompt(self, prompt, default=None, disp_default=None, closing=None):
         if not disp_default:

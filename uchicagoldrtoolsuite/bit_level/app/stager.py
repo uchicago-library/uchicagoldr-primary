@@ -1,12 +1,15 @@
-from os.path import join, dirname, expanduser, expandvars
+from os.path import join, dirname
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
+from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
-from ..lib.externalpackagers.externalfilesystemsegmentpackager import \
-    ExternalFileSystemSegmentPackager
+from ..lib.externalpackagers.externalfilesystemmaterialsuitepackager import \
+    ExternalFileSystemMaterialSuitePackager
+from ..lib.writers.filesystemstagewriter import FileSystemMaterialSuiteWriter
+from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
+from ..lib.structures.stage import Stage
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -39,6 +42,12 @@ class Stager(CLIApp):
     """
     takes an external location and formats it's contents into the
     beginnings of a staging structure and writes that to disk.
+
+    This stager iteration is serialization specific - it computes where
+    the directory should be in the pairtree based FileSystemStageWriter
+    serialization and writes things one MaterialSuite at a time - cleaning up
+    after itself after each MaterialSuite. This eliminates the required for
+    the staging machines tmp directory to be larger than any single segment.
     """
     @log_aware(log)
     def main(self):
@@ -89,12 +98,25 @@ class Stager(CLIApp):
         else:
             destination_root = self.conf.get("Paths",
                                              "staging_environment_path")
+        destination_root = self.expand_path(destination_root)
 
-        destination_root = expandvars(expanduser(destination_root))
-        args.directory = expandvars(expanduser(args.directory))
+        if args.source_root:
+            root = args.source_root
+        else:
+            root = dirname(args.directory)
+        root = self.expand_path(root)
 
+        args.directory = self.expand_path(args.directory)
+
+        log.info("Source: " + args.directory)
+        log.info("Source Root: " + root)
+
+        log.info("Reading Stage...")
         stage = FileSystemStageReader(join(destination_root,
                                            args.staging_id)).read()
+
+        log.info("Stage: " + join(destination_root, args.staging_id))
+
         if args.resume:
             seg_num = args.resume
         else:
@@ -110,30 +132,36 @@ class Stager(CLIApp):
                 seg_num = segment_nums[-1]+1
             else:
                 seg_num = 1
-        if args.source_root:
-            root = args.source_root
-        else:
-            root = dirname(args.directory)
 
-        ext_seg_packager = ExternalFileSystemSegmentPackager(
-            args.directory,
-            args.prefix,
-            seg_num,
-            root=root,
-            filter_pattern=args.filter_pattern)
 
-        log.info("Source: " + args.directory)
-        log.info("Source Root: " + root)
-        log.info("Stage: " + join(destination_root, args.staging_id))
         log.info("Segment: " + args.prefix + "-" + str(seg_num))
 
         log.info("Processing...")
-
-        seg = ext_seg_packager.package()
-        stage.add_segment(seg)
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, destination_root, eq_detect=args.eq_detect)
-        writer.write()
+
+        computed_stage_path = join(destination_root, args.staging_id)
+        # We need a stage writer here just for the stage skeleton, we're going
+        # to manually handle dealing with the nested writers so we can stage
+        # things file by file rather than having to load the whole incoming
+        # directory into the tmp dir
+        stage_writer = FileSystemStageWriter(Stage(args.staging_id), destination_root)
+        stage_writer._build_skeleton()
+        computed_segment_path = join(
+            destination_root, args.staging_id, 'segments',
+            args.prefix + "-" + str(seg_num)
+        )
+
+        for x in recursive_scandir(args.directory):
+            if not x.is_file():
+                continue
+            p = ExternalFileSystemMaterialSuitePackager(x.path, root=root)
+            ms = p.package()
+            w = FileSystemMaterialSuiteWriter(
+                ms, computed_segment_path, eq_detect=args.eq_detect
+            )
+            w.write()
+            del p
+
         log.info("Complete")
 
 

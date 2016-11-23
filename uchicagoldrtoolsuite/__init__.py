@@ -1,11 +1,12 @@
 from sys import exc_info
 from os import makedirs
-from os.path import join, expanduser
+from os.path import join, expanduser, exists, dirname, isdir
 from logging import getLogger, StreamHandler, Formatter, FileHandler
 from logging.handlers import RotatingFileHandler
 from tempfile import gettempdir
 from functools import wraps
 from uuid import uuid4
+from logging import INFO
 
 from pkg_resources import Requirement, resource_filename, resource_stream, \
     resource_string
@@ -82,6 +83,13 @@ def retrieve_resource_stream(resource_path, pkg_name=None):
 root_log = getLogger(__name__)
 root_log.setLevel("DEBUG")
 
+def liblog_filter(record, override_level=20):
+    if record.levelno > override_level:
+        return 1
+    if ".lib." in record.name:
+        return 0
+    return 1
+
 # This mess is just a hassle to keep more than one place
 _f = Formatter("[%(levelname)8s] [%(asctime)s] [%(name)s] = %(message)s",
                datefmt="%Y-%m-%dT%H:%M:%S")
@@ -119,6 +127,10 @@ def activate_master_log_file(logdir=None, max_log_size=1000000000,
     if logdir is None:
         logdir = get_log_dir()
     mlog_filepath = join(logdir, __name__ + ".log")
+    if not isdir(dirname(mlog_filepath)):
+        if exists(dirname(mlog_filepath)):
+            raise ValueError('Logging dir would clobber something!')
+        makedirs(dirname(mlog_filepath), exist_ok=True)
     h1 = MultiprocessRotatingFileHandler(mlog_filepath,
                                          maxBytes=int(max_log_size/5),
                                          backupCount=num_backups)
@@ -129,10 +141,12 @@ def activate_master_log_file(logdir=None, max_log_size=1000000000,
                   "{} @ {}".format(mlog_filepath, verbosity))
 
 
-def activate_stdout_log(verbosity="INFO"):
+def activate_stdout_log(verbosity="INFO", filter_lib=True):
     h = StreamHandler()
     h.setLevel(verbosity)
     h.setFormatter(_f)
+    if filter_lib:
+        h.addFilter(liblog_filter)
     root_log.addHandler(h)
     root_log.info("Now logging to stdout @ {}".format(verbosity))
 
@@ -150,6 +164,8 @@ def activate_job_log_file(job_logdir=None, verbosity="DEBUG"):
         job_logdir = join(get_log_dir(), "jobs")
     makedirs(job_logdir, exist_ok=True)
     jlog_filepath = join(job_logdir, iso8601_dt() + "_" + uuid4().hex)
+    if exists(jlog_filepath):
+        raise ValueError('The randomly generated job log file already exists!')
     h2 = FileHandler(jlog_filepath)
     h2.setLevel(verbosity)
     h2.setFormatter(_f)

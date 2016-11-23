@@ -51,6 +51,7 @@ class FileSystemStageReader(StageSerializationReader):
         for x in [accessionrecords_dir, legalnotes_dir,
                   adminnotes_dir, segments_dir]:
             if not x.is_dir():
+                log.debug("Failed assert_skeleton(), missing {}".format(str(x)))
                 return False
         return True
 
@@ -67,6 +68,7 @@ class FileSystemStageReader(StageSerializationReader):
         # blank staging structure. Whether or not this should "fail" silently or
         # raise an error might warrant inclusion as a kwarg/CLI flag?
         if not self.assert_skeleton():
+            log.warn("No stage detected - assuming a blank stage")
             return self.struct
 
         accessionrecords_dir = Path(self.path, 'admin', 'accessionrecords')

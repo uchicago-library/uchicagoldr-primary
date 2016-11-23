@@ -87,6 +87,7 @@ class PremisRestrictionSetter(CLIApp):
             staging_env = args.staging_env
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
+        staging_env = self.expand_path(staging_env)
 
         stage_fullpath = join(staging_env, args.stage_id)
         reader = FileSystemStageReader(stage_fullpath)

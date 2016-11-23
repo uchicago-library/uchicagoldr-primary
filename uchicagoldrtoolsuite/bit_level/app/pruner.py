@@ -84,6 +84,7 @@ class Pruner(CLIApp):
             staging_env = args.staging_env
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
+        staging_env = self.expand_path(staging_env)
 
         stage_fullpath = join(staging_env, args.stage_id)
         staging_directory_reader = FileSystemStageReader(stage_fullpath)
@@ -94,6 +95,8 @@ class Pruner(CLIApp):
                               callback_kwargs={'exclude_patterns': [re_compile(x) for x in args.exclusion_pattern]},
                               final=args.final_decision, in_place_delete=True)
             r = p.prune()
+            # TODO: Probably handle this in some more informative/pretty way
+            # then just dumping contextless JSON to stdout.
             print(dumps(r, indent=4))
             w = FileSystemStageWriter(staging_structure, staging_env,
                                       eq_detect="adler32")

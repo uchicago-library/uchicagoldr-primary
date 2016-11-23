@@ -63,6 +63,12 @@ class FileSystemStageWriter(StageSerializationWriter):
             required_dirs.append(Path(self.stage_root, 'admin', x))
 
         for x in required_dirs:
+            if x.exists():
+                if not x.is_dir():
+                    raise RuntimeError("Stage writer can't clobber a file " +
+                                       "where a directory should be! " +
+                                       "{}".format(str(x)))
+                log.info('{} exists, skipping creation'.format(str(x)))
             makedirs(str(x))
 
     @log_aware(log)

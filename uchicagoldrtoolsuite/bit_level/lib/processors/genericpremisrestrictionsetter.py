@@ -120,23 +120,6 @@ class GenericPREMISRestrictionSetter(object):
                         materialsuite.get_premis()
                     )
                 )
-                if materialsuite.get_presform_list():
-                    for presform_ms in materialsuite.get_presform_list():
-                        if not presform_ms.get_premis():
-                            raise AttributeError("All material suites must " +
-                                                 "have PREMIS records in " +
-                                                 "order to set restrictions" +
-                                                 "in them.")
-                        log.debug(
-                            "Setting restriction in PREMIS for {}.".format(
-                                presform_ms.content.item_name
-                            )
-                        )
-                        presform_ms.set_premis(
-                            self.instantiate_and_set_restriction(
-                                presform_ms.get_premis()
-                            )
-                        )
 
     @log_aware(log)
     def instantiate_and_set_restriction(self, item):
