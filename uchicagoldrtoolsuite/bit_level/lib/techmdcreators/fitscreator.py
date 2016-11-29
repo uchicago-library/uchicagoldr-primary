@@ -102,7 +102,9 @@ class FITsCreator(TechnicalMetadataCreator):
             self.handle_premis(cmd_data, self.get_source_materialsuite(),
                                "FITs", True)
         else:
-            log.debug("FITS creation failed.")
+            log.warn("FITS creation failed on {}".format(
+                self.get_source_materialsuite().identifier)
+            )
             self.handle_premis(cmd_data, self.get_source_materialsuite(),
                                "FITs", False)
 
