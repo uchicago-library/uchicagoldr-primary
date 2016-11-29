@@ -112,7 +112,7 @@ class GenericPREMISRestrictionSetter(object):
                                          "restrictions in them.")
                 log.debug(
                     "Setting restriction in PREMIS for {}.".format(
-                        materialsuite.content.item_name
+                        materialsuite.identifier
                     )
                 )
                 materialsuite.set_premis(

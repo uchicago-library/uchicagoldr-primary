@@ -243,10 +243,9 @@ class LDRItemCopier(object):
             return r
         else:
             if not eat_exceptions:
-                log.critical("!!! BAD COPY !!!")
-                raise OSError("!!! BAD COPY !!! - {} - COPY NOT COMPLETE - {} !=  {}".format(str(ex), self.src.item_name, self.dst.item_name))
+                raise OSError("!!! BAD COPY !!! - {} - COPY NOT COMPLETE - {} !=  {} (metric: {})".format(str(ex), self.src.item_name, self.dst.item_name, self.eq_detect))
             else:
-                log.debug("{}".format(dumps(r)))
+                log.warn("{}".format(dumps(r)))
                 return r
 
     @log_aware(log)

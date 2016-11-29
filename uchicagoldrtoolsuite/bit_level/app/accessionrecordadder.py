@@ -1,6 +1,6 @@
 from sys import stdout
 from logging import getLogger
-from os.path import join
+from os.path import join, isfile
 from tempfile import TemporaryDirectory
 from uuid import uuid1
 
@@ -87,6 +87,23 @@ class AccessionRecordAdder(CLIApp):
         self.process_universal_args(args)
 
         # App code
+        x = None
+        if args.file:
+            if not isfile(args.note):
+                raise OSError("No file exists at {}".format(args.note))
+            x = LDRPath(args.note)
+            x.set_name(args.note_title)
+        elif args.text:
+            tmpdir = TemporaryDirectory()
+            text_file_path = join(tmpdir.name, str(uuid1()))
+            with open(text_file_path, 'a') as f:
+                f.write(args.note)
+                f.write('\n')
+            x = LDRPath(text_file_path)
+            x.set_name(args.note_title)
+        else:
+            raise AssertionError('Either file or text should be selected')
+
         if args.staging_env:
             staging_env = args.staging_env
         else:
@@ -99,22 +116,7 @@ class AccessionRecordAdder(CLIApp):
         log.info("Stage: " + stage_fullpath)
 
         log.info("Processing...")
-
-        if args.file:
-            x = LDRPath(args.note)
-            x.set_name(args.note_title)
-            stage.add_accessionrecord(x)
-        elif args.text:
-            tmpdir = TemporaryDirectory()
-            text_file_path = join(tmpdir.name, str(uuid1()))
-            with open(text_file_path, 'a') as f:
-                f.write(args.note)
-                f.write('\n')
-            x = LDRPath(text_file_path)
-            x.set_name(args.note_title)
-            stage.add_accessionrecord(x)
-        else:
-            raise AssertionError('Either file or text should be selected')
+        stage.add_accessionrecord(x)
 
         log.info("Writing...")
         writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)

@@ -82,7 +82,11 @@ class FileSystemStageWriter(StageSerializationWriter):
                                'accessionrecords', item_name)
             target_item = LDRPath(str(target_path))
             copier = LDRItemCopier(x, target_item, eq_detect=self.eq_detect)
-            copier.copy()
+            cr = copier.copy()
+            if not cr['src_eqs_dst'] and \
+                    not cr['dst_existed'] and \
+                    not cr['clobbered_dst']:
+                raise ValueError("{}".format(str(cr)))
 
     @log_aware(log)
     def _write_adminnotes(self):
@@ -96,8 +100,10 @@ class FileSystemStageWriter(StageSerializationWriter):
             target_item = LDRPath(str(target_path))
             copier = LDRItemCopier(x, target_item, eq_detect=self.eq_detect)
             cr = copier.copy()
-            if not cr['src_eqs_dst']:
-                raise ValueError()
+            if not cr['src_eqs_dst'] and \
+                    not cr['dst_existed'] and \
+                    not cr['clobbered_dst']:
+                raise ValueError("{}".format(str(cr)))
 
     @log_aware(log)
     def _write_legalnotes(self):
@@ -111,8 +117,10 @@ class FileSystemStageWriter(StageSerializationWriter):
             target_item = LDRPath(str(target_path))
             copier = LDRItemCopier(x, target_item, eq_detect=self.eq_detect)
             cr = copier.copy()
-            if not cr['src_eqs_dst']:
-                raise ValueError()
+            if not cr['src_eqs_dst'] and \
+                    not cr['dst_existed'] and \
+                    not cr['clobbered_dst']:
+                raise ValueError("{}".format(str(cr)))
 
     @log_aware(log)
     def write(self):

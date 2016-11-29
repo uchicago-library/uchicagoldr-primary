@@ -125,27 +125,31 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                                          seg_id, pair_tree):
         obj_id = self._get_premis_obj_id(materialsuite.premis)
         o = SegmentedPairTreeObject(identifier=obj_id, encapsulation="arf")
+        iobs = []
         o.seg_id = seg_id
-        content = IntraObjectByteStream(
-            materialsuite.content,
-            intraobjectaddress="content.file"
-        )
+        if materialsuite.content is not None:
+            content = IntraObjectByteStream(
+                materialsuite.content,
+                intraobjectaddress="content.file"
+            )
+            iobs.append(content)
+            if len(materialsuite.technicalmetadata_list) > 1:
+                raise NotImplementedError(
+                    "The Archive serializer currently only supports " +
+                    "serializing a single FITs record as technical metadata."
+                )
+            fits = IntraObjectByteStream(
+                materialsuite.technicalmetadata_list[0],
+                intraobjectaddress="fits.xml"
+            )
+            iobs.append(fits)
         premis = IntraObjectByteStream(
             materialsuite.premis,
             intraobjectaddress="premis.xml"
         )
-        if len(materialsuite.technicalmetadata_list) > 1:
-            raise NotImplementedError(
-                "The Archive serializer currently only supports " +
-                "serializing a single FITs record as technical metadata."
-            )
-        fits = IntraObjectByteStream(
-            materialsuite.technicalmetadata_list[0],
-            intraobjectaddress="fits.xml"
-        )
-        o.add_bytestream(content)
-        o.add_bytestream(premis)
-        o.add_bytestream(fits)
+        iobs.append(premis)
+        for x in iobs:
+            o.add_bytestream(x)
         pair_tree.add_object(o)
 
     @log_aware(log)
@@ -208,10 +212,19 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     manifest_dict['type'] = "technical metadata"
                     manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
                     manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                # Whether or not to recompute the md5 and the sha256 for the
+                # content on ingest is debatable, the copier confirms (using the
+                # specified fixity metric) that the copy has gone off correctly,
+                # and in theory both of these values _should_ exist in the
+                # PREMIS already. All that said, perhaps here it is better to
+                # opt for "belt and suspenders" which also allows for avoiding
+                # the offputing omission of the md5 and sha256 from the write
+                # manifest at time of ingest? I'm opting for it, at the moment
+                # -BNB, 11/28/16
                 elif bytestream.intraobjectaddress == "content.file":
                     manifest_dict['type'] = "file content"
-                    manifest_dict['md5'] = None
-                    manifest_dict['sha256'] = None
+                    manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                    manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
                 else:
                     raise ValueError("Unrecognized intraobject address!")
                 manifest_entry['bytestreams'].append(manifest_dict)

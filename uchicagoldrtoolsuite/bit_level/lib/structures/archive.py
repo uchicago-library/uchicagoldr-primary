@@ -45,13 +45,21 @@ class Archive(Structure):
     @log_aware(log)
     def _validate_materialsuite(self, materialsuite):
         try:
-            if not isinstance(materialsuite.content, LDRItem):
+            if not isinstance(materialsuite.content, LDRItem) and \
+                    not isinstance(materialsuite.content, type(None)):
                 return False
             if not isinstance(materialsuite.premis, LDRItem):
                 return False
-            if not len(materialsuite.technicalmetadata_list) > 0:
+            # TODO: Decide if mandating technical metadata (when there's
+            # content) is a solid idea, is this an implementation specific
+            # detail?
+            if not len(materialsuite.technicalmetadata_list) > 0 and \
+                    isinstance(materialsuite.content, LDRItem):
                 return False
-        except:
+        except Exception as e:
+            print("###############")
+            print(e)
+            print("###############")
             return False
         return True
 
@@ -60,8 +68,10 @@ class Archive(Structure):
         for segment in self.segment_list:
             for materialsuite in segment.materialsuite_list:
                 if self._validate_materialsuite(materialsuite) is False:
+                    print("Problem in a MaterialSuite")
                     return False
         if len(self.accessionrecord_list) < 1:
+            print("Missing acc record")
             return False
         return super().validate()
 
