@@ -7,6 +7,7 @@ from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from .ldrpath import LDRPath
 
+
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
 __company__ = "The University of Chicago Library"
