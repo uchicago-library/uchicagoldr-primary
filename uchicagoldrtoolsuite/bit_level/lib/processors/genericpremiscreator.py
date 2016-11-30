@@ -123,6 +123,13 @@ class GenericPREMISCreator(object):
 
         * originalName (str): The originalName to set in the PREMIS record
         """
+        log.debug(
+            "Processing MaterialSuite, supplied originalName: {}".format(
+                str(originalName)
+            )
+        )
+
+        log.debug("Establishing temporary file locations")
         tmp_file_path = TemporaryFilePath()
         new_premis_path = TemporaryFilePath()
         try:
@@ -131,10 +138,13 @@ class GenericPREMISCreator(object):
         except:
             materialsuite.tmp_files = [new_premis_path]
         tmp_ldritem = LDRPath(tmp_file_path.path)
+        log.debug("Instantiating content")
         c = LDRItemCopier(materialsuite.content, tmp_ldritem)
         cr = c.copy()
         assert(cr['src_eqs_dst'] is True)
+        log.debug("Creating PREMIS")
         premis = make_record(tmp_file_path.path, original_name=originalName)
+        log.debug("Writing created PREMIS to tmp file.")
         premis.write_to_file(new_premis_path.path)
         materialsuite.premis = LDRPath(new_premis_path.path)
 
@@ -153,8 +163,11 @@ class GenericPREMISCreator(object):
 
         1. (PremisRecord): The populated record instance
         """
+        log.debug("Generating PREMIS from supplied file path")
         obj = cls._make_object(file_path, original_name)
-        return PremisRecord(objects=[obj])
+        rec = PremisRecord(objects=[obj])
+        log.debug("PremisRecord generated")
+        return rec
 
     @classmethod
     @log_aware(log)

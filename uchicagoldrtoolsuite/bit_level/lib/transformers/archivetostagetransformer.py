@@ -47,32 +47,39 @@ class ArchiveToStageTransformer(Transformer):
         and sets the data attribute destination_structure before returning said
         destination structure data attribute value.
         """
+        log.info("Transforming an Archive into a Stage")
         if self.destination_structure is not None:
             raise TypeError("a transformation already occured.")
         if stage_identifier is None:
+            log.debug("No stage identifier provided, setting to a uuid")
             stage_identifier = uuid4().hex
         self.destination_structure = Stage(stage_identifier)
 
+        log.debug("Moving segments into the Stage")
         for n_segment in self.origin_structure.segment_list:
             self.destination_structure.add_segment(
                 n_segment
             )
 
+        log.debug("Moving accession records into the Stage")
         for n_accessionrecord in self.origin_structure.accessionrecord_list:
             self.destination_structure.add_accessionrecord(
                 n_accessionrecord
             )
 
+        log.debug("Moving legalnotes into the Stage")
         for n_legalnote in self.origin_structure.legalnote_list:
             self.destination_structure.add_legalnote(
                 n_legalnote
             )
 
+        log.debug("Moving adminnotes into the Stage")
         for n_adminnote in self.origin_structure.adminnote_list:
             self.destination_structure.add_adminnote(
                 n_adminnote
             )
 
+        log.debug("Transformation complete, returning result")
         return self.destination_structure
 
     @log_aware(log)

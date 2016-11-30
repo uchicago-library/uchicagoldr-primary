@@ -10,7 +10,7 @@ from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir, \
 
 
 __author__ = "Brian Balsamo"
-__email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
+__email__ = "balsamo@uchicago.edu"
 __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
@@ -62,12 +62,17 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
         coerce them into MaterialSuites, add those materialsuites to a segment
         and return the segment.
         """
+        log.info("Beginning segment packaging for {}".format(
+            self.struct.identifier)
+        )
         for x in recursive_scandir(self.path):
             if not x.is_file():
                 continue
             # TODO
             # Filter pattern should probably be reintroduced HERE, in a try
             # catch type re-encoding of the filename from bytes.
+            log.debug("Instantiating MaterialSuite packagers and adding the
+                      "results to the segment")
             self.struct.add_materialsuite(
                 self.get_msuite_packager()(x.path, root=self.root).package()
             )

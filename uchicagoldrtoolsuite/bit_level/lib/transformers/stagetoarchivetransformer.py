@@ -47,30 +47,36 @@ class StageToArchiveTransformer(Transformer):
         and sets the data attribute destination_structure before returning said
         destination structure data attribute value.
         """
+        log.info("Transforming a Stage into an equivalent Archive")
         if self.destination_structure is not None:
             raise TypeError("a transformation already occured.")
         if archive_identifier == noid_minter_url == None:
             raise RuntimeError("An identifier must be explicitly provided " +
                                "or the URL of a noid minter must be provided.")
         if archive_identifier is None:
+            log.debug("No Archive identifier provided, minting a noid")
             archive_identifier = Ark(noid_minter_url).value
         self.destination_structure = Archive(archive_identifier)
 
+        log.debug("Adding segments to the Archive")
         for n_segment in self.origin_structure.segment_list:
             self.destination_structure.add_segment(
                 n_segment
             )
 
+        log.debug("Adding accession records to the Archive")
         for n_accessionrecord in self.origin_structure.accessionrecord_list:
             self.destination_structure.add_accessionrecord(
                 n_accessionrecord
             )
 
+        log.debug("Adding legalnotes to the Archive")
         for n_legalnote in self.origin_structure.legalnote_list:
             self.destination_structure.add_legalnote(
                 n_legalnote
             )
 
+        log.debug("Adding adminnotes to the Archive")
         for n_adminnote in self.origin_structure.adminnote_list:
             self.destination_structure.add_adminnote(
                 n_adminnote

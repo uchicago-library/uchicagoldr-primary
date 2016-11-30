@@ -235,6 +235,11 @@ class LDRItemCopier(object):
                 # other than a direct bytes comparison to audit the copy
                 complete = self.are_the_same(eq_detect="bytes")
             except Exception as e:
+                log.warn("An exception occured while the copier was " +
+                         "attempting to copy a file: {}.".format(str(e)) +
+                         "If this error occured before reaching max_retries " +
+                         "the copy will be attempted again. Otherwise an " +
+                         "exception will be raised if this was a vital copy.")
                 ex = e
         if complete:
             r['src_eqs_dst'] = True
@@ -312,8 +317,8 @@ class LDRItemCopier(object):
             log.debug("{} == {} (hash)".format(
                 self.src.item_name, self.dst.item_name))
             return True
-        log.debug("{} != {} (hash)".format(
-            self.src.item_name, self.dst.item_name))
+        log.debug("{} != {} ({})".format(
+            self.src.item_name, self.dst.item_name, str(x)))
         return False
 
     @log_aware(log)

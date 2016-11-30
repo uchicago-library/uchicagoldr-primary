@@ -124,6 +124,7 @@ class GenericPruner(object):
             MaterialSuites
         """
         def write_premis_deletion_event(ms):
+            log.debug("Writing PREMIS deletion event")
             premis_location = TemporaryFilePath()
             ms._tmp_premis_loc = premis_location
 
@@ -139,6 +140,7 @@ class GenericPruner(object):
             ms.premis = LDRPath(premis_location.path)
 
         def write_premis_mock_deletion_event(ms):
+            log.debug("Writing PREMIS mock-deletion event")
             premis_location = TemporaryFilePath()
             ms._tmp_premis_loc = premis_location
             premis = ldritem_to_premisrecord(ms.premis)
@@ -170,8 +172,15 @@ class GenericPruner(object):
                 identifier = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
                 if callback(premis, *callback_args, **callback_kwargs) is True:
                     matched_identifiers.append(identifier)
+                    log.debug(
+                        "Pruning callback returned True for {}".format(
+                            identifier
+                        )
+                    )
                     if final is True:
+                        log.debug("Pruning content")
                         if self.in_place_delete is True:
+                            log.debug("Deleting content in place")
                             ms.content.delete(final=True)
                         del ms.content
                         write_premis_deletion_event(ms)

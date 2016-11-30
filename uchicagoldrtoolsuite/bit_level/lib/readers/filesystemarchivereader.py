@@ -46,6 +46,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
 
     @log_aware(log)
     def _read_skeleton(self, lts_path, identifier):
+        log.info("Reading the essential subdirs of the Archive serialization")
         arch_root = join(self.lts_path, str(identifier_to_path(identifier)),
                          "arf")
         pairtree_root = join(arch_root, "pairtree_root")
@@ -74,12 +75,13 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             raise ValueError("No data_manifest.json in Archive ({})!".format(
                 self.identifier))
         if not isdir(accrec_dir_path):
-            raise ValueError()
+            raise ValueError("No accession record subdir")
         if not isdir(adminnotes_path):
-            raise ValueError()
+            raise ValueError("No adminnotes subdir")
         if not isdir(legalnotes_path):
-            raise ValueError()
+            raise ValueError("No legalnotes subdir")
 
+        log.info("Archive skeleton read/located")
         return arch_root, pairtree_root, admin_root, admin_manifest_path, \
             data_manifest_path, accrec_dir_path, adminnotes_path, \
             legalnotes_path
@@ -87,6 +89,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
     @log_aware(log)
     def _confirm_data_manifest_matches_filesystem(self, data_manifest,
                                                   identifier, pairtree):
+        log.debug("Comparing the file system to the manifest")
         if not data_manifest['acc_id'] == identifier:
             raise ValueError("Identifier mismatch with data_manifest.json")
 
@@ -100,10 +103,12 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             i += 1
         if i != num_ids_from_manifest:
             raise ValueError("ID(s) in the manifest that aren't on the " +
-                             "file system!")
+                             "file system! or vice versa")
+        log.debug("Comparison of the file system to the manifest complete")
 
     @log_aware(log)
     def _read_data(self, data_manifest_path, identifier, pairtree):
+        log.info("Reading archive data")
         data_manifest = None
         with open(data_manifest_path, 'r') as f:
             data_manifest = load(f)
@@ -112,36 +117,39 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                                                        identifier,
                                                        pairtree)
 
+        log.debug("Packaging objects...")
         for ms_entry in data_manifest['objs']:
             # Create a segment if one doesn't exist with that identifier
             # otherwise grab the existing segment from the structure
+            log.debug("Packaging object")
             seg = None
+            log.debug("Determining object segment")
             for x in self.get_struct().segment_list:
                 if x.identifier == ms_entry['origin_segment']:
                     seg = x
+                    log.debug("Segment already exists on Archive")
             if seg is None:
+                log.debug("Segment does not exist on Archive, creating")
                 seg = Segment(
                     ms_entry['origin_segment'].split("-")[0],
                     int(ms_entry['origin_segment'].split("-")[1])
                 )
+                log.debug(
+                    "Adding Segment({}) to Archive".format(seg.identifier)
+                )
                 self.get_struct().add_segment(seg)
-#            premis_path = None
-#            for bytestream_entry in ms_entry['bytestreams']:
-#                if bytestream_entry['type'] == "PREMIS":
-#                    premis_path = bytestream_entry['dst']
-#                    premis = PremisRecord(frompath=premis_path)
-#                    try:
-#                        relationships = premis.get_object_list()[0].\
-#                            get_relationship()
-#                    except KeyError:
-#                        relationships = []
+            log.debug("Delegating to MaterialSuite packager and adding " +
+                      "result to the segment")
             seg.add_materialsuite(
                 self._pack_materialsuite(ms_entry,
                                          data_manifest)
             )
+            log.debug("Object packaging complete")
+        log.debug("Finished packaging objects")
 
     @log_aware(log)
     def _pack_materialsuite(self, ms_entry, data_manifest):
+        log.debug("Packaging a MaterialSuite from disk")
         ms = MaterialSuite()
         original_name = None
         premis = None
@@ -160,6 +168,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                 ms.identifier = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
         if original_name:
             ms.content.item_name = original_name
+        log.debug("MaterialSuite packaged")
         return ms
 
     @log_aware(log)
@@ -168,17 +177,18 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         # TODO: Add comparison with the manifest, probably, to mimic data
         # manifest behavior, even though this one uses the file system instead
         # of the manifest to find files.
-#        admin_manifest = None
-#        with open(admin_manifest_path, 'r') as f:
-#            admin_manifest = load(f)
+        log.info("Reading the administrative data from disk")
+        log.debug("Reading accession records")
         for x in scandir(accrec_dir_path):
             accrec = LDRPath(x.path)
             accrec.item_name = relpath(x.path, accrec_dir_path)
             self.get_struct().add_accessionrecord(accrec)
+        log.debug("Reading adminnotes")
         for x in scandir(adminnotes_path):
             adminnote = LDRPath(x.path)
             adminnote.item_name = relpath(x.path, adminnotes_path)
             self.get_struct().add_adminnote(adminnote)
+        log.debug("Reading legalnotes")
         for x in scandir(legalnotes_path):
             legalnote = LDRPath(x.path)
             legalnote.item_name = relpath(x.path, legalnotes_path)
@@ -193,6 +203,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
 
         self.struct (Archive): The archive structure
         """
+        log.info("Reading Archive from disk serialization")
         self.get_struct().identifier = self.identifier
         arch_root, pairtree_root, admin_root, admin_manifest_path, \
             data_manifest_path, accrec_dir_path, adminnotes_path, \
@@ -204,4 +215,5 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
 
         self._read_admin(admin_manifest_path, accrec_dir_path, adminnotes_path,
                          legalnotes_path, admin_root)
+        log.debug("Read complete")
         return self.get_struct()

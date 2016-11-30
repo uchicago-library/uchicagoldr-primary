@@ -119,8 +119,10 @@ def move(src, dst, clobber=False, eq_detect='bytes'):
         raise OSError("src != dst")
     src.delete(final=True)
     if not src.exists() and dst.exists():
+        log.debug("Move successful")
         return True
     else:
+        log.warn("Move failed")
         return False
 
 
@@ -145,7 +147,9 @@ def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
     x (str): The str-ified hash hexdigest
     """
 
-    log.debug("Hashing {} with algo={}".format(ldritem.item_name, algo))
+    log.debug("Hashing {} with algo={}. Buffering={}".format(
+        ldritem.item_name, algo, str(buffering))
+    )
 
     with ldritem.open() as f:
         x = sane_hash(algo, f, buffering)

@@ -84,6 +84,7 @@ class LDRItem(metaclass=ABCMeta):
 
     @log_aware(log)
     def get_size(self, buffering=1024*1000*100):
+        log.debug("Computing size of LDRItem serially")
         if self.exists():
             size = 0
             with self.open() as f:

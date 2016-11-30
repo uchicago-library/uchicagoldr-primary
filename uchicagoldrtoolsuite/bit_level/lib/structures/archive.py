@@ -44,34 +44,38 @@ class Archive(Structure):
 
     @log_aware(log)
     def _validate_materialsuite(self, materialsuite):
+        log.debug("Validating MaterialSuite for inclusion in an Archive")
         try:
             if not isinstance(materialsuite.content, LDRItem) and \
                     not isinstance(materialsuite.content, type(None)):
+                log.warn("Incorrect object (not LDRItem or None) in a " +
+                         "MaterialSuite content slot")
                 return False
             if not isinstance(materialsuite.premis, LDRItem):
+                log.warn("MaterialSuite missing PREMIS metadata")
                 return False
             # TODO: Decide if mandating technical metadata (when there's
             # content) is a solid idea, is this an implementation specific
             # detail?
             if not len(materialsuite.technicalmetadata_list) > 0 and \
                     isinstance(materialsuite.content, LDRItem):
+                log.warn("Content exists with no technical metadata")
                 return False
         except Exception as e:
-            print("###############")
-            print(e)
-            print("###############")
+            log.critical("Problem in MaterialSuite validation")
             return False
         return True
 
     @log_aware(log)
     def validate(self):
+        log.info("Validating included components")
         for segment in self.segment_list:
             for materialsuite in segment.materialsuite_list:
                 if self._validate_materialsuite(materialsuite) is False:
-                    print("Problem in a MaterialSuite")
+                    log.warn("A MaterialSuite is malformed")
                     return False
         if len(self.accessionrecord_list) < 1:
-            print("Missing acc record")
+            log.warn("Missing an accession record")
             return False
         return super().validate()
 

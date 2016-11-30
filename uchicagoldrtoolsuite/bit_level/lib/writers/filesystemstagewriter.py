@@ -55,6 +55,7 @@ class FileSystemStageWriter(StageSerializationWriter):
 
     @log_aware(log)
     def _build_skeleton(self):
+        log.info("Creating required dirs/subdirs for the Stage serialization")
         required_dirs = []
         for x in ['admin', 'segments']:
             required_dirs.append(Path(self.stage_root, x))
@@ -63,16 +64,15 @@ class FileSystemStageWriter(StageSerializationWriter):
             required_dirs.append(Path(self.stage_root, 'admin', x))
 
         for x in required_dirs:
-            if x.exists():
-                if not x.is_dir():
-                    raise RuntimeError("Stage writer can't clobber a file " +
-                                       "where a directory should be! " +
-                                       "{}".format(str(x)))
-                log.info('{} exists, skipping creation'.format(str(x)))
+            if x.exists() and not x.is_dir():
+                raise RuntimeError("Stage writer can't clobber a file " +
+                                    "where a directory should be! " +
+                                    "{}".format(str(x)))
             makedirs(str(x))
 
     @log_aware(log)
     def _write_accessionrecords(self):
+        log.info("Writing accession records")
         for x in self.struct.accessionrecord_list:
             if x.item_name:
                 item_name = x.item_name
@@ -90,6 +90,7 @@ class FileSystemStageWriter(StageSerializationWriter):
 
     @log_aware(log)
     def _write_adminnotes(self):
+        log.info("Writing adminnotes")
         for x in self.struct.adminnote_list:
             if x.item_name:
                 item_name = x.item_name
@@ -107,6 +108,7 @@ class FileSystemStageWriter(StageSerializationWriter):
 
     @log_aware(log)
     def _write_legalnotes(self):
+        log.info("Writing legalnotes")
         for x in self.struct.legalnote_list:
             if x.item_name:
                 item_name = x.item_name
@@ -127,16 +129,19 @@ class FileSystemStageWriter(StageSerializationWriter):
         """
         Serialize the stage to the provided location
         """
+        log.info("Writing stage")
         self._build_skeleton()
         self._write_accessionrecords()
         self._write_adminnotes()
         self._write_legalnotes()
+        log.debug("Delegating segment writes to FileSystemSegmentWriter...")
         for x in self.struct.segment_list:
             ptfssw = FileSystemSegmentWriter(
                 x, str(Path(self.stage_root, 'segments')),
                 eq_detect=self.eq_detect
             )
             ptfssw.write()
+        log.info("Stage written")
 
 
 class FileSystemSegmentWriter(object):
@@ -168,7 +173,12 @@ class FileSystemSegmentWriter(object):
 
     @log_aware(log)
     def _write_skeleton(self):
+        log.info("Writing required dirs/subdirs for segment")
         materialsuites_root = self.segment_root
+        if materialsuites_root.exists() and not materialsuites_root.is_dir():
+            raise RuntimeError("Segment writer can't clobber a file " +
+                               "where a directory should be! " +
+                               "{}".format(str(materialsuites_root)))
         makedirs(str(materialsuites_root))
 
     @log_aware(log)
@@ -176,7 +186,10 @@ class FileSystemSegmentWriter(object):
         """
         Serialize the segment to the provided location
         """
+        log.info("Writing segment")
         self._write_skeleton()
+        log.debug("Delegating MaterialSuite writes to "
+                  "FileSystemMaterialSuite writer...")
         for x in self.struct.materialsuite_list:
             ptfsmsw = FileSystemMaterialSuiteWriter(
                 x,
@@ -184,6 +197,7 @@ class FileSystemSegmentWriter(object):
                 eq_detect=self.eq_detect
             )
             ptfsmsw.write()
+        log.info("Segment written")
 
 
 class FileSystemMaterialSuiteWriter(object):
@@ -218,6 +232,13 @@ class FileSystemMaterialSuiteWriter(object):
 
     @log_aware(log)
     def _write_skeleton(self):
+        log.info("Writing required dirs/subdirs for a "
+                 "MaterialSuite serialization")
+        if self.materialsuite_root.exists() and \
+                not self.materialsuite_root.is_dir():
+            raise RuntimeError("MaterialSuite writer can't clobber a file " +
+                               "where a directory should be! " +
+                               "{}".format(str(self.materialsuite_root)))
         makedirs(str(Path(self.materialsuite_root, 'TECHMD')))
 
     @log_aware(log)
@@ -225,7 +246,9 @@ class FileSystemMaterialSuiteWriter(object):
         """
         Serialize the material suite to the provided location
         """
+        log.info("Writing MaterialSuite")
         self._write_skeleton()
+        log.debug("Constructing target paths")
         target_content_path = Path(self.materialsuite_root, 'content.file')
         target_content_item = LDRPath(str(target_content_path))
         target_premis_path = Path(self.materialsuite_root, 'premis.xml')
@@ -240,6 +263,7 @@ class FileSystemMaterialSuiteWriter(object):
             copiers.append(LDRItemCopier(self.struct.content, target_content_item,
                                          clobber=True))
 
+        log.debug("Computing techmd file names")
         for x in self.struct.technicalmetadata_list:
             # Use a quick checksum as the file name, this should prevent
             # un-needed writing so long as the records don't change in between
@@ -254,7 +278,9 @@ class FileSystemMaterialSuiteWriter(object):
             target_techmd_item = LDRPath(str(target_techmd_path))
             copiers.append(LDRItemCopier(x, target_techmd_item, clobber=True))
 
+        log.debug("Copying MaterialSuite bytestreams to disk")
         for x in copiers:
             cr = x.copy()
             if not cr['src_eqs_dst']:
                 raise ValueError()
+        log.info("MaterialSuite written")

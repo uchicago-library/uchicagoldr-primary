@@ -67,6 +67,7 @@ class FileSystemStageReader(StageSerializationReader):
         # If there's not a valid stage skeleton on the file system here return a
         # blank staging structure. Whether or not this should "fail" silently or
         # raise an error might warrant inclusion as a kwarg/CLI flag?
+        log.info("Reading stage")
         if not self.assert_skeleton():
             log.warn("No stage detected - assuming a blank stage")
             return self.struct
@@ -76,12 +77,17 @@ class FileSystemStageReader(StageSerializationReader):
         adminnotes_dir = Path(self.path, 'admin', 'adminnotes')
         segments_dir = Path(self.path, 'segments')
 
+        log.debug("Adding accession records")
         for x in [x.path for x in scandir(str(accessionrecords_dir))]:
             self.struct.add_accessionrecord(LDRPath(x))
+        log.debug("Adding legalnotes")
         for x in [x.path for x in scandir(str(legalnotes_dir))]:
             self.struct.add_legalnote(LDRPath(x))
+        log.debug("Adding adminnotes")
         for x in [x.path for x in scandir(str(adminnotes_dir))]:
             self.struct.add_adminnote(LDRPath(x))
+        log.debug("Adding segments resulting from delegation to the " +
+                  "FileSystemSegmentReader")
         for x in [x.path for x in scandir(str(segments_dir))]:
             self.struct.add_segment(
                 FileSystemSegmentReader(
@@ -90,6 +96,7 @@ class FileSystemStageReader(StageSerializationReader):
                     str(Path(x).parts[-1]).split("-")[1]
                 ).package()
             )
+        log.info("Stage read")
         return self.struct
 
 
@@ -117,6 +124,7 @@ class FileSystemSegmentReader(SegmentPackager):
 
     @log_aware(log)
     def _gather_identifiers(self):
+        log.debug("Scanning filesystem to compute materialsuite identifiers")
         identifiers = []
         for f in recursive_scandir(self.path):
             if not f.is_file():
@@ -139,13 +147,17 @@ class FileSystemSegmentReader(SegmentPackager):
 
         self.struct (Segment): The segment
         """
+        log.info("Packaging Segment")
         for ident in self._gather_identifiers():
+            log.debug("Adding result of delegation to " +
+                      "FileSystemMaterialSuiteReader")
             self.struct.add_materialsuite(
                 FileSystemMaterialSuiteReader(
                     self.path,
                     ident
                 ).package()
             )
+        log.info("Segment packaged")
         return self.struct
 
 
@@ -187,17 +199,33 @@ class FileSystemMaterialSuiteReader(MaterialSuitePackager):
 
     @log_aware(log)
     def get_content(self):
+        log.debug('Searching for content')
         p = Path(self.path, 'content.file')
         if p.is_file():
+            log.debug("content located")
             return LDRPath(str(p))
+        log.debug("Content not found")
 
     @log_aware(log)
     def get_premis(self):
+        log.debug("Searching for PREMIS")
         p = Path(self.path, 'premis.xml')
         if p.is_file():
+            log.debug("PREMIS located")
             return LDRPath(str(p))
+        log.warn(
+            "Premis not found for materialsuite @ {}".format(self.identifier)
+        )
 
     @log_aware(log)
     def get_techmd_list(self):
-        return [LDRPath(x.path) for x in
-                scandir(str(Path(self.path, 'TECHMD')))]
+        log.debug("searching for technical metadata")
+        techmds = [LDRPath(x.path) for x in
+                   scandir(str(Path(self.path, 'TECHMD')))]
+        if not techmds:
+            log.debug(
+                "No techmd found for materialsuite @ {}".format(self.identifier)
+            )
+        else:
+            log.debug("Techmd located")
+            return techmds

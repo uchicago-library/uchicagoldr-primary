@@ -45,7 +45,6 @@ class LDRPath(LDRItem):
 
     @log_aware(log)
     def read(self, blocksize=1024*1000*100):
-        log.debug("{} being read".format(str(self)))
         if not self.pipe:
             raise OSError('{} not open for reading'.format(str(self.path)))
         return self.pipe.read(blocksize)
@@ -97,7 +96,6 @@ class LDRPath(LDRItem):
 
     @log_aware(log)
     def write(self, data):
-        log.debug("Writing data to {}".format(str(self)))
         if self.pipe:
             self.pipe.write(data)
             return True
