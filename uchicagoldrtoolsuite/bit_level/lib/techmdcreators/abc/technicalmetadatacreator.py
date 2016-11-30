@@ -25,6 +25,12 @@ log = getLogger(__name__)
 
 
 class TechnicalMetadataCreator(metaclass=ABCMeta):
+    """
+    The abstract base class for TechnicalMetadataCreators
+    specifies the .process() interface method, as well as provided
+    a helper init to be called in subclasses and the logic for handling
+    PREMIS updates given the results operations in the .process() method.
+    """
 
     _source_materialsuite = None
     _working_dir = None
@@ -33,6 +39,18 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
     @abstractmethod
     @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None):
+        """
+        A helper init to ease handling of init vars in child classes.
+
+        __Args__
+
+        1. materialsuite (MaterialSuite): The MaterialSuite to create
+            technical metadata for
+        2. working_dir (str): A directory in which the converter class
+            can write files
+        3. timeout (int): A timeout for the technical metadata creation
+            process, after which the techmd creator will fail out.
+        """
         log.debug("Entering the ABC init")
         self.set_source_materialsuite(materialsuite)
         self.set_working_dir(working_dir)
@@ -71,6 +89,22 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
     @log_aware(log)
     def handle_premis(self, cmd_output, material_suite, techmdcreator_name,
                       success):
+        """
+        Handles altering the MaterialSuites PREMIS after processing.
+        Either records successful techmd creation, or failure.
+
+        This function should be called *within* a child classes .process()
+
+        __Args__
+
+        1. cmd_output (.__repr__()-able): Gets written into the
+            eventOutcomeDetailNote
+        2. material_suite (MaterialSuite): The MaterialSuite which was acted on
+        3. techmdcreator_name (str): What the techmd creator should be referred
+            to as in the PREMIS record
+        4. success (bool): If true records the event outcome as successful,
+            otherwise records the event outcome as a failure.
+        """
         premis_path = join(self.working_dir, str(uuid1()))
         LDRItemCopier(material_suite.get_premis(), LDRPath(premis_path)).copy()
         orig_premis = PremisRecord(frompath=premis_path)
@@ -173,6 +207,7 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
 
     @log_aware(log)
     def look_up_agent(self, x):
+        # TODO
         return None
 
     source_materialsuite = property(

@@ -23,6 +23,13 @@ class ArchiveSerializationWriter(SerializationWriter, metaclass=ABCMeta):
     @abstractmethod
     @log_aware(log)
     def __init__(self, struct):
+        """
+        another teeny helper init
+
+        __Args__
+
+        1. struct (Archive): the archive to write
+        """
         log.debug("Entering the ABC init")
         self.set_struct(struct)
         log.debug("Exiting the ABC init")

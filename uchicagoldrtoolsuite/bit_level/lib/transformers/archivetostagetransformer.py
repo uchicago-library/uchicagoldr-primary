@@ -24,7 +24,7 @@ class ArchiveToStageTransformer(Transformer):
     """
     @log_aware(log)
     def __init__(self, origin_structure):
-        """instantiates an instance of a StageToARrchiveTansformer
+        """instantiates an instance of a StageToArchiveTansformer
 
         It starts with the origin structure passed as a parameter
         and sets an empty destination structure.

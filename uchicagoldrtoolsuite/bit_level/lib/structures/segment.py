@@ -40,6 +40,16 @@ class Segment(Structure):
 
     @log_aware(log)
     def __init__(self, label, run_no):
+        """
+        Creates a new Segment
+
+        __Args__
+
+        1. label (str): The label portion of the segment identifier
+        2, run_no (int): The numerical portion of the segment identifier.
+            Most often driven by how many Segments in the same structure
+            have the same label.
+        """
         log_init_attempt(self, log, locals())
         self._label = None
         self._run = None

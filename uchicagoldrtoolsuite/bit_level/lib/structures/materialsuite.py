@@ -20,14 +20,17 @@ log = getLogger(__name__)
 
 class MaterialSuite(Structure):
     """
-    A structure which holds all LDR Items pertaining to an "original" and that
-    original itself
+    A structure which holds all LDR Items pertaining to a piece of content
+    and the content itself
     """
 
     required_parts = ['identifier', 'content', 'original', 'premis',
                       'technicalmetadata_list']
     @log_aware(log)
     def __init__(self):
+        """
+        Creates a new MaterialSuite
+        """
         log_init_attempt(self, log, locals())
         self._content = None
         self._premis = None
@@ -130,14 +133,15 @@ class MaterialSuite(Structure):
 
     @log_aware(log)
     def validate(self):
-        if not isinstance(self.get_content(), LDRItem):
-            return False
-        if self.get_original() is not None:
-            if not isinstance(self.get_original(), LDRItem):
-                return False
+        """
+        Determines if a MaterialSuite is well formed
+        """
         if self.get_premis() is not None:
             if not isinstance(self.get_premis(), LDRItem):
                 return False
+        if self.get_content() is not None and \
+                not len(self.get_technicalmetadata_list()) > 0:
+            return False
         if len(self.get_technicalmetadata_list()) > 0:
             for x in self.get_technicalmetadata_list():
                 if not isinstance(x, LDRItem):

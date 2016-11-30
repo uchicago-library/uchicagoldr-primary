@@ -19,12 +19,12 @@ log = getLogger(__name__)
 
 
 class StageToArchiveTransformer(Transformer):
-    """The StageToARrchiveTransformer takes an instance of a Stage structure
+    """The StageToArchiveTransformer takes an instance of a Stage structure
     and copies its contents into an instance of an Archive structure
     """
     @log_aware(log)
     def __init__(self, origin_structure):
-        """instantiates an instance of a StageToArrchiveTansformer
+        """instantiates an instance of a StageToArchiveTansformer
 
         It starts with the origin structure passed as a parameter
         and sets an empty destination structure.

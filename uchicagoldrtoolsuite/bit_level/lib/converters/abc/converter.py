@@ -326,6 +326,9 @@ class Converter(metaclass=ABCMeta):
             # be required with decoding/re-encoding the hex escaped string
             # This will break some old serializers - but shouldn't effect
             # the pairtree serializer in any way
+            # Note: I'm not hex escaping filenames anymore, but I still think
+            # this decision stands owing to the description of the originalName
+            # field as provided by the PREMISv3 guidelines.
 
             conv_premis.get_object_list()[0].add_linkingEventIdentifier(
                 self._build_linkingEventIdentifier(conv_event)

@@ -32,6 +32,23 @@ class APIFITsCreator(TechnicalMetadataCreator):
     @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None,
                  data_transfer_obj={}):
+        """
+        Creates a new instance of an APIFitsCreator.
+
+        __Args__
+
+        1. materialsuite (MaterialSuite): The MaterialSuite which
+            contains the content to generate technical metadata for.
+        2. working_dir (str): A location on disk where the FITsCreator
+            can write files
+
+        __KWArgs__
+
+        * timeout (int): A timeout for the techmd creation process, after
+            which the creator will fail out.
+        * data_transfer_obj (dict): A dictionary for passing converter
+            specific information into the class from a wrapper.
+        """
         log_init_attempt(self, log, locals())
         super().__init__(materialsuite, working_dir, timeout)
         self.fits_api_url = data_transfer_obj.get('fits_api_url', None)
@@ -52,6 +69,11 @@ class APIFITsCreator(TechnicalMetadataCreator):
 
     @log_aware(log)
     def process(self):
+        """
+        Attempts to create the technical metadata for the MaterialSuite.
+
+        Alters the MaterialSuite in place.
+        """
         log.debug(
             "Attempting to create FITS for {}".format(
                 self.get_source_materialsuite().get_content().item_name

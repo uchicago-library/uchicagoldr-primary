@@ -30,6 +30,13 @@ class Stage(Structure):
 
     @log_aware(log)
     def __init__(self, param1):
+        """
+        Creates a new Stage
+
+        __Args__
+
+        param1 (str): The identifier that will be assigned to the Stage
+        """
         log_init_attempt(self, log, locals())
         self._identifier = None
         self._segment = []
@@ -196,6 +203,9 @@ class Stage(Structure):
 
     @log_aware(log)
     def validate(self):
+        """
+        Determines if the Stage is valid
+        """
         log.debug("Validating Stage({})".format(self.identifier))
         for n_thing in self.segment_list:
             if isinstance(n_thing, Segment):

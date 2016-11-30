@@ -45,6 +45,9 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         # the underlying structures themselves - Stage's init require an
         # identifier. This should probably be made consistant, one way or
         # another.
+        """
+        helper init that sets the objects struct property
+        """
         log.debug("Entering the ABC init")
         self.struct = MaterialSuite()
         log.debug("Exciting the ABC init")
@@ -65,6 +68,15 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     def get_identifier(self, premis_ldritem):
         """
         Instantiate the premis in a tempfile, read it, grab the identifier
+
+        __Args__
+
+        * premis_ldritem (LDRItem): an LDRItem with bytes for a PremisRecord
+            serialization in it
+
+        __Returns__
+
+        * ident (str): The object identifier
         """
         # TODO: make this use ldritem_to_premisrecord
         log.debug("Computing identifier from PREMIS record")
@@ -83,6 +95,11 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
     def package(self):
         """
         default package implementation
+
+
+        __Returns__
+
+        * self.struct (MaterialSuite): The packaged MaterialSuite
         """
         log.info("Packaging")
 

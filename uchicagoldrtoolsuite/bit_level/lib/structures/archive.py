@@ -24,6 +24,13 @@ class Archive(Structure):
     """
     @log_aware(log)
     def __init__(self, identifier):
+        """
+        create a new Archive structure
+
+        __Args__
+
+        1. identifier (str): The identifier of the archive structure
+        """
         log_init_attempt(self, log, locals())
         self._identifier = None
         self._segment = []
@@ -44,6 +51,9 @@ class Archive(Structure):
 
     @log_aware(log)
     def _validate_materialsuite(self, materialsuite):
+        """
+        Determines a MaterialSuite is valid for inclusion in an Archive struct
+        """
         log.debug("Validating MaterialSuite for inclusion in an Archive")
         try:
             if not isinstance(materialsuite.content, LDRItem) and \
@@ -68,6 +78,10 @@ class Archive(Structure):
 
     @log_aware(log)
     def validate(self):
+        """
+        Determines if the structure includes all the required components
+        and that they are all well formed.
+        """
         log.info("Validating included components")
         for segment in self.segment_list:
             for materialsuite in segment.materialsuite_list:

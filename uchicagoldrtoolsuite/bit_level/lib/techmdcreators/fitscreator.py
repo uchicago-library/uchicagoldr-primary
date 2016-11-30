@@ -29,9 +29,30 @@ log = getLogger(__name__)
 # TODO: Technical metadata creators probably need a go over like the converters
 
 class FITsCreator(TechnicalMetadataCreator):
+    """
+    A TechnicalMetadataCreator which runs a local FITs instance against the
+    content of a MaterialSuite in order to generate a technical metadata entry
+    """
     @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None,
                  data_transfer_obj={}):
+        """
+        Creates a new FITsCreator
+
+        __Args__
+
+        1. materialsuite (MaterialSuite): The materialsuite whose content to
+            create the technical metadata for
+        2. working_dir (str): A path to a directory where the techmd creator
+            can write files
+
+        __KWArgs__
+
+        * timeout (int): A timeout (in seconds) after which the technical
+            metadata creation process will fail out, if it hasn't finished
+        * data_transfer_obj (dict): A dictionary for passing techmd creator
+            specific configuration values into the class from a wrapper.
+        """
         log_init_attempt(self, log, locals())
         super().__init__(materialsuite, working_dir, timeout)
         self.fits_path = data_transfer_obj.get('fits_path', None)
@@ -51,6 +72,9 @@ class FITsCreator(TechnicalMetadataCreator):
 
     @log_aware(log)
     def process(self):
+        """
+        runs a local FITs installation against the MaterialSuite's content
+        """
         if not isinstance(self.get_source_materialsuite().get_premis(),
                           LDRItem):
             raise ValueError("All material suites must have a PREMIS record " +

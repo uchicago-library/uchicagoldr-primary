@@ -112,6 +112,10 @@ def move(src, dst, clobber=False, eq_detect='bytes'):
     1. origin_loc (LDRItem): origin_loc is the source data to move
     2. destination_loc (LDRItem): destination_loc is where the source
     should be moved
+
+    __Returns__
+
+    * (bool): True if its been moved, otherwise false
     """
     log.debug("Moving {} to {}".format(src.item_name, dst.item_name))
     c = LDRItemCopier(src, dst, clobber=clobber, eq_detect=eq_detect)
@@ -145,7 +149,7 @@ def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
 
     __Returns__
 
-    x (str): The str-ified hash hexdigest
+    * (str): The str-ified hash hexdigest
     """
 
     log.debug("Hashing {} with algo={}. Buffering={}".format(
