@@ -53,6 +53,7 @@ class TechnicalMetadataCreator(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
+        log.debug("Adding application specific cli app arguments")
         self.parser.add_argument("stage_id", help="The id of the stage",
                                  type=str, action='store')
         self.parser.add_argument("--skip_existing", help="Skip material " +

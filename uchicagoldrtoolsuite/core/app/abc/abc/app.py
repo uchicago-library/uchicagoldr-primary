@@ -88,6 +88,14 @@ class App(metaclass=ABCMeta):
         conf location
         * and_builtin (bool): Whether or not to check/use the builtin conf
         """
+        log.debug(
+            "Building a conf: user_specified={}, and_default={}, " +
+            "and_builtin={}".format(
+                str(user_specified),
+                str(and_default),
+                str(and_builtin)
+            )
+        )
         # Look in the default location, if we can
         if and_default:
             default_dir = join(BaseDirectory.xdg_config_home, 'ldr')
@@ -117,6 +125,7 @@ class App(metaclass=ABCMeta):
             subparsers.append(subparser)
 
         # Build our master parser
+        log.debug("conf built")
         return cls.mux_parsers(subparsers)
 
     def get_conf(self):

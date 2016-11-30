@@ -50,6 +50,7 @@ class AdminNoteAdder(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
+        log.debug("Adding application specific cli app arguments")
         self.parser.add_argument("stage_id", help="The id of the stage",
                                  type=str, action='store')
         group = self.parser.add_mutually_exclusive_group(required=True)

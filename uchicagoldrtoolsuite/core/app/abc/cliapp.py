@@ -46,6 +46,7 @@ class CLIApp(App, metaclass=ABCMeta):
     """
     @log_aware(log)
     def spawn_parser(self, **kwargs):
+        log.debug("Constructing default CLI app argument parser")
         parser = ArgumentParser(**kwargs)
 
         # Always allow the user to specify an alternate conf dir
@@ -104,6 +105,8 @@ class CLIApp(App, metaclass=ABCMeta):
 
     @log_aware(log)
     def process_universal_args(self, args):
+        log.debug("Processing and acting on arguments from the default " +
+                  "CLI app argument parser")
         self.conf = self.build_conf(
             [self.expand_path(x) for x in args.conf_path],
             args.disable_default_conf,

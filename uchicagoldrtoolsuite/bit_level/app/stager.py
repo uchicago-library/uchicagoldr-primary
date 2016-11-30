@@ -58,6 +58,7 @@ class Stager(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
+        log.debug("Adding application specific cli app arguments")
         self.parser.add_argument("directory", help="The directory that " +
                                  "needs to be staged.",
                                  type=str, action='store')

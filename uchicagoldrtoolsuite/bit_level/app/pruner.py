@@ -52,6 +52,7 @@ class Pruner(CLIApp):
                           "{}".format(self.__email__),
                           fromfile_prefix_chars='@')
         # Add application specific flags/arguments
+        log.debug("Adding application specific cli app arguments")
         self.parser.add_argument('--final_decision',
                                  help="A flag to set when you really want to" +
                                  " delete the files matching the pattern",
@@ -87,9 +88,12 @@ class Pruner(CLIApp):
         staging_env = self.expand_path(staging_env)
 
         stage_fullpath = join(staging_env, args.stage_id)
+        log.info("Stage: {}".format(stage_fullpath))
         staging_directory_reader = FileSystemStageReader(stage_fullpath)
+        log.info("Reading...")
         staging_structure = staging_directory_reader.read()
         try:
+            log.info("Pruning... (final={})".format(str(args.final_decision)))
             p = GenericPruner(staging_structure,
                               callback_args=[[re_compile(x) for x in args.selection_patterns]],
                               callback_kwargs={'exclude_patterns': [re_compile(x) for x in args.exclusion_pattern]},
@@ -98,9 +102,11 @@ class Pruner(CLIApp):
             # TODO: Probably handle this in some more informative/pretty way
             # then just dumping contextless JSON to stdout.
             print(dumps(r, indent=4))
+            log.info("Writing...")
             w = FileSystemStageWriter(staging_structure, staging_env,
                                       eq_detect="adler32")
             w.write()
+            log.info("Complete")
         except KeyboardInterrupt:
             return 131
 
