@@ -18,6 +18,11 @@ log = getLogger(__name__)
 
 
 class ArchiveSerializationReader(SerializationReader, metaclass=ABCMeta):
+    """
+    The ABC for Archive serialization readers
+
+    implements a helper init
+    """
     @abstractmethod
     def __init__(self):
         log.debug("Entering the ABC init")

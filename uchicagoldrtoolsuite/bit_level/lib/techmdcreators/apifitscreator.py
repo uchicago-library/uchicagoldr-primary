@@ -30,6 +30,9 @@ log = getLogger(__name__)
 
 
 class APIFITsCreator(TechnicalMetadataCreator):
+    """
+    Utilizes a remove server FITs servlet to create technical metadata records
+    """
     @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None,
                  data_transfer_obj={}):
