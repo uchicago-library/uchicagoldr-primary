@@ -3,9 +3,9 @@ from pathlib import Path
 from json import dumps
 from logging import getLogger
 
-from .abc.ldritem import LDRItem
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from .abc.ldritem import LDRItem
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

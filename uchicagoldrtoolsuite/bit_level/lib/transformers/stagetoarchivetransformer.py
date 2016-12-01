@@ -2,10 +2,10 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.ark import Ark
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 from .abc.transformer import Transformer
 from ..structures.archive import Archive
 from ..structures.stage import Stage
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 __author__ = "Tyler Danstrom, Brian Balsamo"
 __email__ = " tdanstrom@uchicago.edu, balsamo@uchicago.edu"

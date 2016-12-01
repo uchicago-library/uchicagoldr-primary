@@ -11,10 +11,10 @@ from pypremis.nodes import *
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import \
     is_presform_materialsuite, ldritem_to_premisrecord
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"

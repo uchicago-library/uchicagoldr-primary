@@ -7,9 +7,9 @@ from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
 from uchicagoldrtoolsuite import log_aware
-from ...ldritems.ldrpath import LDRPath
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from ...ldritems.ldrpath import LDRPath
 from ...ldritems.ldritemcopier import LDRItemCopier
 
 

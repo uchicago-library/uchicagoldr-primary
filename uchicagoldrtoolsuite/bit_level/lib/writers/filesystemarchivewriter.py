@@ -8,7 +8,6 @@ from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
-
 from pypairtree.utils import identifier_to_path
 from pypairtree.pairtree import PairTree
 from pypairtree.pairtreeobject import PairTreeObject
@@ -16,12 +15,13 @@ from pypairtree.intraobjectbytestream import IntraObjectByteStream
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from uchicagoldrtoolsuite.core.lib.doi import DOI
-from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldritemoperations import hash_ldritem
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from .abc.archiveserializationwriter import ArchiveSerializationWriter
 
 
 __author__ = "Brian Balsamo"

@@ -11,10 +11,10 @@ from pypremis.lib import PremisRecord
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from uchicagoldrtoolsuite.bit_level.lib.ldritems.ldrpath import LDRPath
-from uchicagoldrtoolsuite.bit_level.lib.structures.materialsuite import MaterialSuite
-from uchicagoldrtoolsuite.bit_level.lib.ldritems.ldritemcopier import LDRItemCopier
-from uchicagoldrtoolsuite.bit_level.lib.processors.genericpremiscreator import GenericPREMISCreator
+from ...ldritems.ldrpath import LDRPath
+from ...structures.materialsuite import MaterialSuite
+from ...ldritems.ldritemcopier import LDRItemCopier
+from ...processors.genericpremiscreator import GenericPREMISCreator
 
 
 __author__ = "Brian Balsamo"

@@ -12,11 +12,11 @@ from pypremis.factories import LinkingObjectIdentifierFactory
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 from ..processors.genericpremiscreator import GenericPREMISCreator
 from ..readers.abc.materialsuitepackager import MaterialSuitePackager
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"

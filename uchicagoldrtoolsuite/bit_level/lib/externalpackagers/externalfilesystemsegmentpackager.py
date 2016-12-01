@@ -1,12 +1,12 @@
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
+from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir, \
+    log_init_attempt, log_init_success
 from ..readers.abc.segmentpackager import SegmentPackager
 from ..structures.segment import Segment
 from .externalfilesystemmaterialsuitepackager import\
     ExternalFileSystemMaterialSuitePackager
-from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir, \
-    log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"

@@ -2,8 +2,8 @@ from abc import ABCMeta, abstractmethod
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
-from .abc.serializationwriter import SerializationWriter
 from ...structures.stage import Stage
+from .abc.serializationwriter import SerializationWriter
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

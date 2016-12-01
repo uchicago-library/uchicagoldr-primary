@@ -9,11 +9,11 @@ from pypairtree.pairtree import PairTree
 from pypairtree.utils import identifier_to_path
 
 from uchicagoldrtoolsuite import log_aware
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 from .abc.archiveserializationreader import ArchiveSerializationReader
 from ..structures.segment import Segment
 from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldrpath import LDRPath
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
 
 
 __author__ = "Brian Balsamo"

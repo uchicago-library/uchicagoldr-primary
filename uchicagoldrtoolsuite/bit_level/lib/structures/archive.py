@@ -2,10 +2,10 @@ from json import dumps
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
-from .abc.structure import Structure
-from ..ldritems.abc.ldritem import LDRItem
-from .segment import Segment
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from ..ldritems.abc.ldritem import LDRItem
+from .abc.structure import Structure
+from .segment import Segment
 
 __author__ = "Tyler Danstrom, Brian Balsamo"
 __email__ = "tdanstrom@uchicago.edu, balsamo@uchicago.edu"

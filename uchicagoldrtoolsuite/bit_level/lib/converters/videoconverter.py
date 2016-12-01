@@ -5,8 +5,8 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
-from .abc.converter import Converter
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from .abc.converter import Converter
 
 __author__ = "Brian Balsamo"
 __email__ = "balsamo@uchicago.edu"
