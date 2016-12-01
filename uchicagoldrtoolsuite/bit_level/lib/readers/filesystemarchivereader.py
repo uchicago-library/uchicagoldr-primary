@@ -20,15 +20,19 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         self.lts_path = lts_path
         self.identifier = identifier
 
-    def _read_skeleton(self, lts_path, identifier):
-        arch_root = join(self.lts_path, str(identifier_to_path(identifier)),
+    def _read_skeleton(self, lts_path=None, identifier=None):
+        if lts_path is None:
+            lts_path = self.lts_path
+        if identifier is None:
+            identifier = self.identifier
+        arch_root = join(lts_path, str(identifier_to_path(identifier)),
                          "arf")
         pairtree_root = join(arch_root, "pairtree_root")
         admin_root = join(arch_root, "admin")
         if not isdir(arch_root):
             raise ValueError("No such identifier ({}) in the long term " +
                              "storage environment ({})!".format(
-                                 self.lts_path, self.identifier))
+                                 lts_path, identifier))
         if not isdir(pairtree_root):
             raise ValueError("No pairtree root in Archive ({})!".format(
                 self.identifier))
