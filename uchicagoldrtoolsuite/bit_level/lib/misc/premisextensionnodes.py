@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from pypremis.nodes import ExtensionNode
 from controlledvocab.lib import ControlledVocabulary as CV
 
@@ -8,6 +10,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
 
 
 class linkingRightsExtensionIdentifier(ExtensionNode):
@@ -265,24 +270,3 @@ class RestrictingAgentIdentifier(ExtensionNode):
 
     def get_restrictingAgentIdentifierRole(self):
         return self.get_field('restrictingAgentIdentifierRole')
-
-    def __init__(self, organizationName, internalIdentfier):
-        ExtensionNode.__init__(self)
-        self.set_organizationName(organizationName)
-        self.set_internalIdentifier(internalIdentifier)
-
-    def set_organizationName(self, organizationName):
-        pass
-
-    def get_organizationName(self):
-        pass
-
-    def set_internalIdentifier(self, internalIdentifier):
-        pass
-
-    def get_internalIdentifier(self):
-        pass
-
-    def add_internalIdentifier(self, internalIdentifier):
-        pass
-

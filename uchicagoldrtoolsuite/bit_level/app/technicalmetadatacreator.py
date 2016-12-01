@@ -1,7 +1,8 @@
-from sys import stdout
+from logging import getLogger
 from os.path import join
 from configparser import NoOptionError
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
@@ -9,11 +10,6 @@ from ..lib.processors.generictechnicalmetadatacreator import \
     GenericTechnicalMetadataCreator
 from ..lib.techmdcreators.fitscreator import FITsCreator
 from ..lib.techmdcreators.apifitscreator import APIFITsCreator
-from uchicagoldrtoolsuite.core.lib.masterlog import \
-    spawn_logger, \
-    activate_master_log_file, \
-    activate_job_log_file, \
-    activate_stdout_log
 
 
 __author__ = "Brian Balsamo"
@@ -23,9 +19,9 @@ __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
 
-log = spawn_logger(__name__)
-activate_master_log_file()
-activate_job_log_file()
+
+log = getLogger(__name__)
+
 
 def launch():
     """
@@ -46,6 +42,7 @@ class TechnicalMetadataCreator(CLIApp):
     """
     Creates technical metadata (FITs) for all the material suites in a stage.
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
@@ -55,6 +52,7 @@ class TechnicalMetadataCreator(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
+        log.debug("Adding application specific cli app arguments")
         self.parser.add_argument("stage_id", help="The id of the stage",
                                  type=str, action='store')
         self.parser.add_argument("--skip_existing", help="Skip material " +
@@ -88,11 +86,7 @@ class TechnicalMetadataCreator(CLIApp):
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-
-        activate_stdout_log(verbosity=args.verbosity)
-
-        # Set conf
-        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+        self.process_universal_args(args)
 
         # App code
 
@@ -100,6 +94,7 @@ class TechnicalMetadataCreator(CLIApp):
             staging_env = args.staging_env
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
+        staging_env = self.expand_path(staging_env)
 
         dto = {}
         try:
@@ -110,7 +105,6 @@ class TechnicalMetadataCreator(CLIApp):
             dto['fits_api_url'] = self.conf.get("URLs", "fits_api_url")
         except NoOptionError:
             pass
-
 
         if args.fits_api_url is not None:
             dto['fits_api_url'] = args.fits_api_url
@@ -135,7 +129,8 @@ class TechnicalMetadataCreator(CLIApp):
                                data_transfer_obj=dto)
 
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
+        writer = FileSystemStageWriter(stage, staging_env,
+                                       eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
 

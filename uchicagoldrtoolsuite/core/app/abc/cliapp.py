@@ -1,11 +1,14 @@
 from argparse import ArgumentParser
 from sys import stdout, stderr
-from os.path import isabs, join, isdir, isfile, exists, split
+from os.path import isabs, join, isdir, isfile, exists, split, expanduser, \
+    expandvars
 from os import makedirs
 from abc import ABCMeta
+from logging import getLogger
 
+from uchicagoldrtoolsuite import activate_master_log_file, \
+    activate_job_log_file, activate_stdout_log, log_aware
 from .abc.app import App
-from ...lib.confreader import ConfReader
 
 
 __author__ = "Brian Balsamo"
@@ -14,6 +17,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
 
 
 class CLIApp(App, metaclass=ABCMeta):
@@ -38,31 +44,98 @@ class CLIApp(App, metaclass=ABCMeta):
     * Utility
         * create_path: Makes a file or a dir at some path
     """
+    @log_aware(log)
     def spawn_parser(self, **kwargs):
+        log.debug("Constructing default CLI app argument parser")
         parser = ArgumentParser(**kwargs)
 
         # Always allow the user to specify an alternate conf dir
         parser.add_argument(
-            '--conf_dir',
-            default=None,
-            help="Specify a custom configuration directory to be parsed "
-            "with precedence over the default and builtin configs."
+            '--conf_path',
+            action='append',
+            help="Specify a custom configuration path to be parsed "
+            "with precedence over the default and builtin configs.",
+            default=[]
         )
-        # Always allow the user to specify an alternate conf file
         parser.add_argument(
-            '--conf_file',
-            default=None,
-            help="Specify a custom configuration filename, if required."
+            '--disable_builtin_conf',
+            action='store_false',
+            help='Disable parsing of the builtin configuration'
+        )
+        parser.add_argument(
+            '--disable_default_conf',
+            action='store_false',
+            help='Disable parsing of the default configuration'
         )
         # Always allow the user to specify verbosity
         parser.add_argument(
             '-v',
-            '--verbosity',
-            help="Cause the program to output verbosely. Options: " + \
-            "'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.",
+            '--stdout_log_verbosity',
+            help="Specify the verbosity of the stdout log. Default: 'INFO'" +
+            "Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', " +
+            "'DISABLE'.",
             default='INFO'
         )
+        parser.add_argument(
+            '--disk_log_verbosity',
+            help="Specify the verbosity of disk logs. Default: 'DEBUG'. " +
+            "Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', " +
+            "'DISABLE'.",
+            default='DEBUG'
+        )
+        parser.add_argument(
+            '--logdir',
+            help="Specify the directory in which to store the audit logs",
+            default=None
+        )
+        parser.add_argument(
+            '--max_log_size',
+            type=int,
+            help="Specify the maximum size of audit logs, in bytes. " +
+            "Default: 1GB",
+            default=1000000000
+        )
+        parser.add_argument(
+            '--max_log_backups',
+            type=int,
+            help="Specify the maximum number of backups logs. Default: 4",
+            default=4
+        )
         self.parser = parser
+
+    @log_aware(log)
+    def process_universal_args(self, args):
+        log.debug("Processing and acting on arguments from the default " +
+                  "CLI app argument parser")
+        self.conf = self.build_conf(
+            [self.expand_path(x) for x in args.conf_path],
+            args.disable_default_conf,
+            args.disable_builtin_conf
+        )
+        logdir = None
+        if args.logdir:
+            logdir = args.logdir
+        if logdir is None:
+            logdir = self.conf.get('Logging', 'log_dir_path', fallback=None)
+        if logdir:
+            logdir = self.expand_path(logdir)
+        if logdir is not None:
+            job_logdir = join(logdir, "jobs")
+        else:
+            job_logdir = None
+        if args.disk_log_verbosity is not "DISABLE":
+            activate_master_log_file(logdir=logdir,
+                                     max_log_size=args.max_log_size,
+                                     num_backups=args.max_log_backups,
+                                     verbosity=args.disk_log_verbosity)
+            activate_job_log_file(job_logdir=job_logdir,
+                                  verbosity=args.disk_log_verbosity)
+        if args.stdout_log_verbosity is not "DISABLE":
+            activate_stdout_log(verbosity=args.stdout_log_verbosity)
+
+    @staticmethod
+    def expand_path(p):
+        return expandvars(expanduser(p))
 
     def prompt(self, prompt, default=None, disp_default=None, closing=None):
         if not disp_default:
@@ -187,7 +260,3 @@ class CLIApp(App, metaclass=ABCMeta):
             message = str(message)
             end = str(end)
         stderr.write(message+end)
-
-    def get_config(self, config_directory=None, config_file=None):
-        return ConfReader(config_directory=config_directory,
-                          config_file=config_file,)

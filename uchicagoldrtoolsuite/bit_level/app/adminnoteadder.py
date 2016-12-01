@@ -1,14 +1,10 @@
-from sys import stdout
-from os.path import join
+from os.path import join, isfile
 from tempfile import TemporaryDirectory
 from uuid import uuid1
+from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.masterlog import \
-    spawn_logger, \
-    activate_master_log_file, \
-    activate_job_log_file, \
-    activate_stdout_log
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.ldritems.ldrpath import LDRPath
@@ -22,9 +18,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
-activate_master_log_file()
-activate_job_log_file()
+log = getLogger(__name__)
 
 
 def launch():
@@ -46,6 +40,7 @@ class AdminNoteAdder(CLIApp):
     """
     Create an administrative note in a Stage
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="Adds a file as an administrative " +
@@ -54,6 +49,7 @@ class AdminNoteAdder(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
+        log.debug("Adding application specific cli app arguments")
         self.parser.add_argument("stage_id", help="The id of the stage",
                                  type=str, action='store')
         group = self.parser.add_mutually_exclusive_group(required=True)
@@ -88,30 +84,15 @@ class AdminNoteAdder(CLIApp):
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-
-        activate_stdout_log(args.verbosity)
-
-        # Set conf
-        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+        self.process_universal_args(args)
 
         # App code
-
-        if args.staging_env:
-            staging_env = args.staging_env
-        else:
-            staging_env = self.conf.get("Paths", "staging_environment_path")
-
-        stage_fullpath = join(staging_env, args.stage_id)
-        reader = FileSystemStageReader(stage_fullpath)
-        stage = reader.read()
-        log.info("Stage: " + stage_fullpath)
-
-        log.info("Processing...")
-
+        x = None
         if args.file:
+            if not isfile(args.note):
+                raise OSError("No file exists at {}".format(args.note))
             x = LDRPath(args.note)
             x.set_name(args.note_title)
-            stage.add_adminnote(x)
         elif args.text:
             tmpdir = TemporaryDirectory()
             text_file_path = join(tmpdir.name, str(uuid1()))
@@ -120,12 +101,26 @@ class AdminNoteAdder(CLIApp):
                 f.write('\n')
             x = LDRPath(text_file_path)
             x.set_name(args.note_title)
-            stage.add_adminnote(x)
         else:
             raise AssertionError('Either file or text should be selected')
 
+        if args.staging_env:
+            staging_env = args.staging_env
+        else:
+            staging_env = self.conf.get("Paths", "staging_environment_path")
+        staging_env = self.expand_path(staging_env)
+
+        stage_fullpath = join(staging_env, args.stage_id)
+        reader = FileSystemStageReader(stage_fullpath)
+        stage = reader.read()
+        log.info("Stage: " + stage_fullpath)
+
+        log.info("Processing...")
+        stage.add_adminnote(x)
+
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
+        writer = FileSystemStageWriter(stage, staging_env,
+                                       eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
 

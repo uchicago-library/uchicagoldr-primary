@@ -2,12 +2,15 @@ from tempfile import TemporaryDirectory
 from json import dumps
 from os.path import join
 from uuid import uuid1
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from ..ldritems.ldrpath import LDRPath
 from ..misc.premisextensionnodes import Restriction
 from ..misc.premisextensionnodes import RightsExtensionIdentifier
@@ -24,7 +27,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class GenericPREMISRestrictionSetter(object):
@@ -32,6 +35,7 @@ class GenericPREMISRestrictionSetter(object):
     Ingests a Stage which already has PREMIS records in it and sets a
     restriction node in each of their records
     """
+    @log_aware(log)
     def __init__(self, stage, restriction, reasons=None,
                  donor_stipulations=None, restrictingAgentIds=None,
                  active=True):
@@ -52,6 +56,7 @@ class GenericPREMISRestrictionSetter(object):
             are relevant to this restriction
         * active (bool): Whether or not this restriction is currently active
         """
+        log_init_attempt(self, log, locals())
         self.stage = stage
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
@@ -60,10 +65,9 @@ class GenericPREMISRestrictionSetter(object):
         self.donor_stipulations = donor_stipulations
         self.restrictingAgentIds = restrictingAgentIds
         self.active = active
-        log.debug(
-            "GenericPREMISRestrictionSetter spawned: {}".format(str(self))
-        )
+        log_init_success(self, log)
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'stage': str(self.stage),
@@ -88,6 +92,7 @@ class GenericPREMISRestrictionSetter(object):
         return "<GenericPREMISRestrictionSetter {}>".format(
             dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def process(self):
         log.debug("Beginning PREMIS restriction setting.")
         s_num = 0
@@ -108,7 +113,7 @@ class GenericPREMISRestrictionSetter(object):
                                          "restrictions in them.")
                 log.debug(
                     "Setting restriction in PREMIS for {}.".format(
-                        materialsuite.content.item_name
+                        materialsuite.identifier
                     )
                 )
                 materialsuite.set_premis(
@@ -116,24 +121,8 @@ class GenericPREMISRestrictionSetter(object):
                         materialsuite.get_premis()
                     )
                 )
-                if materialsuite.get_presform_list():
-                    for presform_ms in materialsuite.get_presform_list():
-                        if not presform_ms.get_premis():
-                            raise AttributeError("All material suites must " +
-                                                 "have PREMIS records in " +
-                                                 "order to set restrictions" +
-                                                 "in them.")
-                        log.debug(
-                            "Setting restriction in PREMIS for {}.".format(
-                                presform_ms.content.item_name
-                            )
-                        )
-                        presform_ms.set_premis(
-                            self.instantiate_and_set_restriction(
-                                presform_ms.get_premis()
-                            )
-                        )
 
+    @log_aware(log)
     def instantiate_and_set_restriction(self, item):
         """
         do the work on the record
@@ -188,6 +177,7 @@ class GenericPREMISRestrictionSetter(object):
         return_item = LDRPath(new_record)
         return return_item
 
+    @log_aware(log)
     def build_rights_extension_node(self,
                                     restriction_code,
                                     obj_to_link,
@@ -215,16 +205,19 @@ class GenericPREMISRestrictionSetter(object):
         )
         return rights_extension
 
+    @log_aware(log)
     def build_rightsExtensionIdentifier(self):
         idb = IDBuilder()
         id_tup = idb.build("premisID").show()
         return RightsExtensionIdentifier(id_tup[0], id_tup[1])
 
+    @log_aware(log)
     def build_restrictingAgentIdentifier(self):
         idb = IDBuilder()
         id_tup = idb.build("premisID").show()
         return RestrictingAgentIdentifier(id_tup[0], id_tup[1])
 
+    @log_aware(log)
     def build_restriction_node(self,
                                restriction_code,
                                obj_to_link,
@@ -249,6 +242,7 @@ class GenericPREMISRestrictionSetter(object):
                 restrictionNode.add_restrictingAgentIdentifier(x)
         return restrictionNode
 
+    @log_aware(log)
     def build_restrictedObjectIdentifierFromObj(self, obj_to_link):
         objIDType = \
             obj_to_link.get_objectIdentifier(0).get_objectIdentifierType()

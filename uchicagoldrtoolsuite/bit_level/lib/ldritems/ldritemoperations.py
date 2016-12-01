@@ -1,10 +1,12 @@
 from os.path import join, split
 from tempfile import TemporaryFile
-from hashlib import md5, sha256
+from logging import getLogger
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
 from .ldrpath import LDRPath
+
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
 __email__ = "balsamo@uchicago.edu, tdanstrom@uchicago.edu"
@@ -14,9 +16,10 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
+@log_aware(log)
 def read_metadata_from_file_object(attribute_string,
                                    parser_object, msuite=None, ldritem=None):
     """
@@ -60,6 +63,7 @@ def read_metadata_from_file_object(attribute_string,
     return output
 
 
+@log_aware(log)
 def get_an_agent_id(id_string, in_package=True):
     def get_premis_agents_file():
         if in_package:
@@ -97,6 +101,7 @@ def get_an_agent_id(id_string, in_package=True):
     return new_id[1]
 
 
+@log_aware(log)
 def move(src, dst, clobber=False, eq_detect='bytes'):
     from .ldritemcopier import LDRItemCopier
     """
@@ -108,6 +113,10 @@ def move(src, dst, clobber=False, eq_detect='bytes'):
     1. origin_loc (LDRItem): origin_loc is the source data to move
     2. destination_loc (LDRItem): destination_loc is where the source
     should be moved
+
+    __Returns__
+
+    * (bool): True if its been moved, otherwise false
     """
     log.debug("Moving {} to {}".format(src.item_name, dst.item_name))
     c = LDRItemCopier(src, dst, clobber=clobber, eq_detect=eq_detect)
@@ -116,14 +125,19 @@ def move(src, dst, clobber=False, eq_detect='bytes'):
         raise OSError("src != dst")
     src.delete(final=True)
     if not src.exists() and dst.exists():
+        log.debug("Move successful")
         return True
     else:
+        log.warn("Move failed")
         return False
 
 
+@log_aware(log)
 def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
     """
     hash any flavor of LDRItem
+    see the sane_hash function in uchicagoldrtoolsuite.core.lib.convenience
+    for the cannonical list of supported hashes (and hash like operations)
 
     __Args__
 
@@ -136,36 +150,13 @@ def hash_ldritem(ldritem, algo="md5", buffering=1024*1000*100):
 
     __Returns__
 
-    hash_str (str): The str-ified hash hexdigest
+    * (str): The str-ified hash hexdigest
     """
 
-    log.debug("Hashing {} with algo={}".format(ldritem.item_name, algo))
-
-    supported_hashes = [
-        "md5",
-        "sha256"
-    ]
-
-    if algo not in supported_hashes:
-        raise ValueError("{} is not a supported hash.".format(str(algo)) +
-                         "Supported Hashes include:\n"
-                         "{}".format(", ".join(supported_hashes)))
-
-    if algo == "md5":
-        hasher = md5()
-    elif algo == "sha256":
-        hasher = sha256()
-    else:
-        raise AssertionError("Implementation goofs in the LDR Item hasher.")
-
-    hash_str = None
+    log.debug("Hashing {} with algo={}. Buffering={}".format(
+        ldritem.item_name, algo, str(buffering))
+    )
 
     with ldritem.open() as f:
-        data = f.read(buffering)
-        while data:
-            hasher.update(data)
-            data = f.read(buffering)
-        hash_hex = hasher.hexdigest()
-        hash_str = str(hash_hex)
-
-    return hash_str
+        x = sane_hash(algo, f, buffering)
+    return x

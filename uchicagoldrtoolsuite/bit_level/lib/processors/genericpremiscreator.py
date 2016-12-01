@@ -1,21 +1,22 @@
 from tempfile import TemporaryDirectory
+from os import fsdecode
 from os.path import getsize
 from mimetypes import guess_type
-from uuid import uuid1
-from os.path import join
 from json import dumps
+from logging import getLogger
 
-from pypremis.lib import PremisRecord
-from pypremis.nodes import *
 try:
     from magic import from_file
 except:
     pass
+from pypremis.lib import PremisRecord
+from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
-from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
 from ..ldritems.ldrpath import LDRPath
@@ -29,15 +30,19 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
-eh = ExceptionHandler()
+log = getLogger(__name__)
 
 
 class GenericPREMISCreator(object):
     """
     Ingests a stage structure and produces a PREMIS stub object
     record for everything in it
+
+    This class itself is kind of a loose wrapper around the real workhorse
+    class methods, which are employed fairly often themselves in other
+    processors at the MaterialSuite level
     """
+    @log_aware(log)
     def __init__(self, stage):
         """
         spawn a premis creator that should work for any LDRItems
@@ -46,6 +51,7 @@ class GenericPREMISCreator(object):
 
         1. stage (Stage): The Stage to generate PREMIS object records for
         """
+        log_init_attempt(self, log, locals())
         self.stage = stage
         # This instance var should hold the dir open until the instance is
         # deleted from whatever script spawned it. Aka move this stuff
@@ -56,8 +62,9 @@ class GenericPREMISCreator(object):
             "GenericPREMISCreator created tmpdir @ {}".format(
                 self.working_dir_path)
         )
-        log.debug("GenericPREMISCreator spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'stage': str(self.stage),
@@ -66,7 +73,8 @@ class GenericPREMISCreator(object):
         return "<GenericPREMISCreator {}>".format(
             dumps(attr_dict, sort_keys=True))
 
-    def process(self, skip_existing=False):
+    @log_aware(log)
+    def process(self, skip_existing=False, set_originalName=True):
         """
         make the premis records for everything
 
@@ -94,45 +102,58 @@ class GenericPREMISCreator(object):
                     if isinstance(materialsuite.get_premis(), LDRItem):
                         log.debug("PREMIS detected: Skipping")
                         continue
-                try:
-                    log.debug("No PREMIS detected: Creating")
-                    materialsuite.set_premis(
-                        self.instantiate_and_make_premis(materialsuite.content,
-                                                         self.working_dir_path)
+                log.debug("No PREMIS detected: Creating")
+                materialsuite.set_premis(
+                    self.instantiate_and_make_premis(
+                        materialsuite.content,
+                        self.working_dir_path,
+                        set_originalName=set_originalName
                     )
-                except Exception as e:
-                    eh.handle(e)
+                )
 
     @classmethod
-    def instantiate_and_make_premis(cls, item, working_dir_path):
+    @log_aware(log)
+    def process_materialsuite(cls, materialsuite, originalName=None):
         """
-        Write an item to a tempdir, examine it and make a PREMIS record
+        Ingests a MaterialSuite and sets its PREMIS data
 
         __Args__
 
-        1. item (LDRItem): The LDRItem to create a premis record for
+        1. materialsuite (MaterialSuite): The MaterialSuite to produce the
+            PREMIS data for
 
         __KWArgs__
 
-        * working_dir_path (str): Where to write things to disk. Defaults
-            to the current instances working_dir_path
-
-        __Returns__
-
-        * (LDRPath): The item representing the PREMIS record
+        * originalName (str): The originalName to set in the PREMIS record
         """
-        recv_file = join(working_dir_path, str(uuid1()))
-        premis_file = join(working_dir_path, str(uuid1()))
-        recv_item = LDRPath(recv_file)
-        c = LDRItemCopier(item, recv_item, clobber=True)
-        r = c.copy()
-        rec = cls.make_record(recv_file, item)
-        rec.write_to_file(premis_file)
-        recv_item.delete(final=True)
-        return LDRPath(premis_file)
+        log.debug(
+            "Processing MaterialSuite, supplied originalName: {}".format(
+                str(originalName)
+            )
+        )
+
+        log.debug("Establishing temporary file locations")
+        tmp_file_path = TemporaryFilePath()
+        new_premis_path = TemporaryFilePath()
+        try:
+            tmp_files = getattr(materialsuite, tmp_files)
+            tmp_files.append(new_premis_path)
+        except:
+            materialsuite.tmp_files = [new_premis_path]
+        tmp_ldritem = LDRPath(tmp_file_path.path)
+        log.debug("Instantiating content")
+        c = LDRItemCopier(materialsuite.content, tmp_ldritem)
+        cr = c.copy()
+        assert(cr['src_eqs_dst'] is True)
+        log.debug("Creating PREMIS")
+        premis = make_record(tmp_file_path.path, original_name=originalName)
+        log.debug("Writing created PREMIS to tmp file.")
+        premis.write_to_file(new_premis_path.path)
+        materialsuite.premis = LDRPath(new_premis_path.path)
 
     @classmethod
-    def make_record(cls, file_path, item):
+    @log_aware(log)
+    def make_record(cls, file_path, original_name=None):
         """
         build a PremisNode.Object from a file and use it to instantiate a record
 
@@ -145,11 +166,15 @@ class GenericPREMISCreator(object):
 
         1. (PremisRecord): The populated record instance
         """
-        obj = cls._make_object(file_path, item)
-        return PremisRecord(objects=[obj])
+        log.debug("Generating PREMIS from supplied file path")
+        obj = cls._make_object(file_path, original_name)
+        rec = PremisRecord(objects=[obj])
+        log.debug("PremisRecord generated")
+        return rec
 
     @classmethod
-    def _make_object(cls, file_path, item):
+    @log_aware(log)
+    def _make_object(cls, file_path, original_name=None):
         """
         make an object entry auto-populated with the required information
 
@@ -164,15 +189,16 @@ class GenericPREMISCreator(object):
         """
         objectIdentifier = cls._make_objectIdentifier()
         objectCategory = 'file'
-        objectCharacteristics = cls._make_objectCharacteristics(file_path, item)
-        originalName = item.item_name
+        objectCharacteristics = cls._make_objectCharacteristics(file_path, original_name)
         storage = cls._make_Storage(file_path)
         obj = Object(objectIdentifier, objectCategory, objectCharacteristics)
-        obj.set_originalName(originalName)
+        if original_name is not None:
+            obj.set_originalName(original_name)
         obj.set_storage(storage)
         return obj
 
     @classmethod
+    @log_aware(log)
     def _make_objectIdentifier(cls):
         """
         mint a new object identifier
@@ -190,7 +216,8 @@ class GenericPREMISCreator(object):
         return ObjectIdentifier(identifier_tup[0], identifier_tup[1])
 
     @classmethod
-    def _make_objectCharacteristics(cls, file_path, item):
+    @log_aware(log)
+    def _make_objectCharacteristics(cls, file_path, original_name):
         """
         make a new objectCharacteristics node for a file
 
@@ -204,19 +231,21 @@ class GenericPREMISCreator(object):
         1. (PremisNode.ObjectCharacteristics): a populated ObjectCharacteristics
         node
         """
-        fixity1, fixity2 = cls._make_fixity(file_path)
+        fixitys = cls._make_fixity(file_path)
         size = str(getsize(file_path))
-        formats = cls._make_format(file_path, item)
+        formats = cls._make_format(file_path, original_name)
         objChar = ObjectCharacteristics(formats[0])
         if len(formats) > 1:
             for x in formats[1:]:
                 objChar.add_format(x)
-        objChar.set_fixity(fixity1)
-        objChar.add_fixity(fixity2)
+        for x in fixitys:
+            if x is not None:
+                objChar.add_fixity(x)
         objChar.set_size(size)
         return objChar
 
     @classmethod
+    @log_aware(log)
     def _make_Storage(cls, file_path):
         """
         make a new storage node for a file
@@ -235,6 +264,7 @@ class GenericPREMISCreator(object):
         return stor
 
     @classmethod
+    @log_aware(log)
     def _make_fixity(cls, file_path):
         """
         make a fixity node for md5 and one for sha256 for a file
@@ -245,17 +275,43 @@ class GenericPREMISCreator(object):
 
         __Returns__
 
-        1. (PremisNode.Fixity): The md5 fixity node
-        2. (PremisNode.Fixity): the sha256 fixity node
+        1. fixitys ([PremisNode.Fixity]): fixity nodes including computed
+            values
         """
-        md5_fixity = Fixity('md5', sane_hash('md5', file_path))
-        md5_fixity.set_messageDigestOriginator('python3 hashlib.md5')
-        sha256_fixity = Fixity('sha256', sane_hash('sha256', file_path))
-        sha256_fixity.set_messageDigestOriginator('python3 hashlib.sha256')
-        return md5_fixity, sha256_fixity
+        fixitys = []
+        with open(file_path, 'rb') as f:
+            try:
+                md5_fixity = Fixity('md5', sane_hash('md5', f))
+                md5_fixity.set_messageDigestOriginator('python3 hashlib.md5')
+                fixitys.append(md5_fixity)
+            except:
+                pass
+        with open(file_path, 'rb') as f:
+            try:
+                sha256_fixity = Fixity('sha256', sane_hash('sha256', f))
+                sha256_fixity.set_messageDigestOriginator('python3 hashlib.sha256')
+                fixitys.append(sha256_fixity)
+            except:
+                pass
+        with open(file_path, 'rb') as f:
+            try:
+                crc32_fixity = Fixity('crc32', sane_hash('crc32', f))
+                crc32_fixity.set_messageDigestOriginator('python3 zlib.crc32')
+                fixitys.append(crc32_fixity)
+            except:
+                pass
+        with open(file_path, 'rb') as f:
+            try:
+                adler32_fixity = Fixity('adler32', sane_hash('adler32', f))
+                adler32_fixity.set_messageDigestOriginator('python3 zlib.adler32')
+                fixitys.append(adler32_fixity)
+            except:
+                pass
+        return fixitys
 
     @classmethod
-    def _make_format(cls, file_path, item):
+    @log_aware(log)
+    def _make_format(cls, file_path, original_name):
         """
         make new format nodes for a file
 
@@ -268,7 +324,7 @@ class GenericPREMISCreator(object):
 
         1. (list): a list of format nodes
         """
-        magic_num, guess = cls._detect_mime(file_path, item)
+        magic_num, guess = cls._detect_mime(file_path, original_name)
         formats = []
         if magic_num:
             premis_magic_format_desig = FormatDesignation(magic_num)
@@ -301,6 +357,7 @@ class GenericPREMISCreator(object):
         return formats
 
     @classmethod
+    @log_aware(log)
     def _make_contentLocation(cls, file_path):
         """
         make a new contentLocation node for a file
@@ -313,10 +370,11 @@ class GenericPREMISCreator(object):
 
         1. (PremisNode): The populated contentLocation node
         """
-        return ContentLocation("Unix File Path", file_path)
+        return ContentLocation("Unix File Path", fsdecode(file_path))
 
     @classmethod
-    def _detect_mime(cls, file_path, item):
+    @log_aware(log)
+    def _detect_mime(cls, file_path, original_name):
         """
         use both magic number and file extension mime detection on a file
 
@@ -331,11 +389,11 @@ class GenericPREMISCreator(object):
         2. (str): file extension mime detected
         """
         try:
-            magic_num = from_file(file_path, mime=True).decode()
+            magic_num = from_file(file_path, mime=True)
         except:
             magic_num = None
         try:
-            guess = guess_type(item.item_name)[0]
+            guess = guess_type(original_name)[0]
         except:
             guess = None
         return magic_num, guess

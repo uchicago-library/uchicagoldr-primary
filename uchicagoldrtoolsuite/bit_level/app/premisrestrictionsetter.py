@@ -1,15 +1,12 @@
-from sys import stdout
 from os.path import join
+from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.masterlog import \
-    spawn_logger, \
-    activate_master_log_file, \
-    activate_job_log_file, \
-    activate_stdout_log
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
-from ..lib.processors.genericpremisrestrictionsetter import GenericPREMISRestrictionSetter
+from ..lib.processors.genericpremisrestrictionsetter import \
+    GenericPREMISRestrictionSetter
 
 
 __author__ = "Brian Balsamo"
@@ -20,9 +17,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
-activate_master_log_file()
-activate_job_log_file()
+log = getLogger(__name__)
 
 
 def launch():
@@ -44,6 +39,7 @@ class PremisRestrictionSetter(CLIApp):
     """
     Sets restrictions in PREMIS records
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
@@ -53,6 +49,7 @@ class PremisRestrictionSetter(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
+        log.debug("Adding application specific cli app arguments")
         self.parser.add_argument("stage_id", help="The stage identifier",
                                  type=str, action='store')
         self.parser.add_argument("restriction", help="The restriction to set.",
@@ -83,11 +80,7 @@ class PremisRestrictionSetter(CLIApp):
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-
-        activate_stdout_log(args.verbosity)
-
-        # Set conf
-        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+        self.process_universal_args(args)
 
         # App code
 
@@ -95,6 +88,7 @@ class PremisRestrictionSetter(CLIApp):
             staging_env = args.staging_env
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
+        staging_env = self.expand_path(staging_env)
 
         stage_fullpath = join(staging_env, args.stage_id)
         reader = FileSystemStageReader(stage_fullpath)
@@ -114,7 +108,8 @@ class PremisRestrictionSetter(CLIApp):
         premis_restriction_setter.process()
 
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
+        writer = FileSystemStageWriter(stage, staging_env,
+                                       eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
 

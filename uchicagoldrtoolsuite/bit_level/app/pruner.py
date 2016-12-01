@@ -1,10 +1,13 @@
-from argparse import Action
-from os.path import exists, join
-import re
-from sys import stdout
+from logging import getLogger
+from os.path import join
+from re import compile as re_compile
+from json import dumps
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from ..lib.filesystemstagereader import FileSystemStageReader
+from ..lib.readers.filesystemstagereader import FileSystemStageReader
+from ..lib.processors.genericpruner import GenericPruner
+from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -13,6 +16,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
 
 
 def launch():
@@ -30,23 +36,12 @@ def launch():
     app.main()
 
 
-class ValidateDirectory(Action):
-    """
-    Argparse Action class for determining a directory exists
-    when passed as an argument
-    """
-    def __call__(self, parser, namespace, value, option_string=None):
-        if not exists(value):
-            print(value)
-            raise IOError("{} does not exist on the filesystem")
-        setattr(namespace, self.dest, value)
-
-
 class Pruner(CLIApp):
     """
     Looks through staging directories for files whose names match
     a given set of patterns and removes them if they do
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
@@ -56,15 +51,16 @@ class Pruner(CLIApp):
                           "{}".format(self.__email__),
                           fromfile_prefix_chars='@')
         # Add application specific flags/arguments
-        self.parser.add_argument('--final_decision', type=bool,
+        log.debug("Adding application specific cli app arguments")
+        self.parser.add_argument('--final_decision',
                                  help="A flag to set when you really want to" +
                                  " delete the files matching the pattern",
-                                 default=False)
+                                 default=False, action='store_true')
         self.parser.add_argument("stage_id",
                                  help="Enter a valid directory that needs " +
                                  "to be pruned",
                                  action='store')
-        self.parser.add_argument("patterns",
+        self.parser.add_argument("selection_patterns",
                                  help="Enter a list of regular " +
                                  "expressions matching file names that can " +
                                  "be deleted from the staging directory",
@@ -73,11 +69,14 @@ class Pruner(CLIApp):
                                  "staging environment",
                                  type=str,
                                  default=None)
+        self.parser.add_argument("--exclusion_pattern",
+                                 help="Specify a list of patterns which" +
+                                 "'save' an item whose item name matches " +
+                                 "a deletion pattern from being removed.",
+                                 action='append', default=[])
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-
-        # Set conf
-        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+        self.process_universal_args(args)
 
         # App code
 
@@ -85,25 +84,30 @@ class Pruner(CLIApp):
             staging_env = args.staging_env
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
+        staging_env = self.expand_path(staging_env)
 
         stage_fullpath = join(staging_env, args.stage_id)
+        log.info("Stage: {}".format(stage_fullpath))
         staging_directory_reader = FileSystemStageReader(stage_fullpath)
+        log.info("Reading...")
         staging_structure = staging_directory_reader.read()
         try:
-            for n_segment in staging_structure.segment:
-                for n_suite in n_segment.materialsuite:
-                    for req_part in n_suite.required_parts:
-                        if isinstance(getattr(n_suite, req_part), list):
-                            for n_file in getattr(n_suite, req_part):
-                                for pattern in args.patterns:
-                                    match_pattern = re.compile(pattern)
-                                    if match_pattern.match(n_file.item_name):
-                                        success, message = n_file.delete(
-                                            final=args.final_decision
-                                        )
-                                        stdout.write("{}\n".format(message))
-
-            return 0
+            log.info("Pruning... (final={})".format(str(args.final_decision)))
+            p = GenericPruner(
+                staging_structure,
+                callback_args=[[re_compile(x) for x in args.selection_patterns]],
+                callback_kwargs={'exclude_patterns': [re_compile(x) for x in args.exclusion_pattern]},
+                final=args.final_decision, in_place_delete=True
+            )
+            r = p.prune()
+            # TODO: Probably handle this in some more informative/pretty way
+            # then just dumping contextless JSON to stdout.
+            print(dumps(r, indent=4))
+            log.info("Writing...")
+            w = FileSystemStageWriter(staging_structure, staging_env,
+                                      eq_detect="adler32")
+            w.write()
+            log.info("Complete")
         except KeyboardInterrupt:
             return 131
 

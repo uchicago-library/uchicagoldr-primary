@@ -16,6 +16,10 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
+# This class is half proof of concept, half brainstorm - don't actually invoke
+# it in production code.
+
+
 class LDRURL(LDRItem):
     """
     Allows any readable URL to be treated as an LDRItem with limited

@@ -1,13 +1,10 @@
-from os.path import join, dirname, expanduser, expandvars
+from os.path import join
+from logging import getLogger
 
 from pypairtree.utils import identifier_to_path
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.masterlog import \
-    spawn_logger, \
-    activate_master_log_file, \
-    activate_job_log_file, \
-    activate_stdout_log
 from ..lib.writers.filesystemarchivewriter import FileSystemArchiveWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.transformers.stagetoarchivetransformer import \
@@ -22,9 +19,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
-activate_master_log_file()
-activate_job_log_file()
+log = getLogger(__name__)
 
 
 def launch():
@@ -47,6 +42,7 @@ class Archiver(CLIApp):
     takes an external location and formats it's contents into the
     beginnings of a staging structure and writes that to disk.
     """
+    @log_aware(log)
     def main(self):
         # Instantiate boilerplate parser
         self.spawn_parser(description="The UChicago LDR Tool Suite utility " +
@@ -55,6 +51,7 @@ class Archiver(CLIApp):
                           "{}\n".format(self.__author__) +
                           "{}".format(self.__email__))
         # Add application specific flags/arguments
+        log.debug("Adding application specific cli app arguments")
         self.parser.add_argument("stage_id", help="The identifying name " +
                                  "for the new staging directory",
                                  type=str, action='store')
@@ -71,15 +68,14 @@ class Archiver(CLIApp):
                                  "LDRItemCopier for supported schemes.",
                                  type=str, action='store',
                                  default="bytes")
+        self.parser.add_argument("--noid_minter_url", help="Manually specify " +
+                                 "the url of the noid minter to use. " +
+                                 "Defaults to the config value.",
+                                 type=str, action='store')
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
-
-        # Fire a stdout handler at our preferred verbosity
-        activate_stdout_log(args.verbosity)
-
-        # Set conf
-        self.set_conf(conf_dir=args.conf_dir, conf_filename=args.conf_file)
+        self.process_universal_args(args)
 
         # App code
 
@@ -87,19 +83,28 @@ class Archiver(CLIApp):
             staging_env = args.staging_env
         else:
             staging_env = self.conf.get("Paths", "staging_environment_path")
+        staging_env = self.expand_path(staging_env)
 
         if args.lts_env:
             lts_env = args.lts_env
         else:
             lts_env = self.conf.get("Paths",
                                     "long_term_storage_environment_path")
+        lts_env = self.expand_path(lts_env)
+
+        if args.noid_minter_url:
+            noid_minter_url = args.noid_minter_url
+        else:
+            noid_minter_url = self.conf.get("URLs", "noid_minter")
 
         stage_path = join(staging_env, args.stage_id)
         log.info("Stage Path: {}".format(stage_path))
         log.info("Reading Stage...")
         stage = FileSystemStageReader(stage_path).read()
         log.info("Transforming Stage into Archive")
-        archive = StageToArchiveTransformer(stage).transform()
+        archive = StageToArchiveTransformer(stage).transform(
+            noid_minter_url=noid_minter_url
+        )
         log.info("Validating Archive...")
         if not archive.validate():
             log.critical("Invalid Archive! Aborting!")

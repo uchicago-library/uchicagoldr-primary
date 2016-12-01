@@ -1,19 +1,14 @@
 from os import scandir, makedirs
 from json import dumps
-from os.path import join, dirname, isfile
-from uuid import uuid1
-import mimetypes
+from os.path import join, isfile
+from uuid import uuid4
+from logging import getLogger
 
-from pypremis.lib import PremisRecord
-from pypremis.nodes import *
-
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.converter import Converter
-from ..structures.presformmaterialsuite import PresformMaterialSuite
-from ..ldritems.ldritemcopier import LDRItemCopier
-from ..ldritems.ldrpath import LDRPath
-from ..processors.genericpremiscreator import GenericPREMISCreator
 
 
 __author__ = "Brian Balsamo"
@@ -24,7 +19,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class OfficeToTXTConverter(Converter):
@@ -54,21 +49,10 @@ class OfficeToTXTConverter(Converter):
         '.fodp',
         '.odf',
         '.pdf',
-        '.rtf',
+        '.rtf'
     ]
 
-    # Add the stuff we want looked up to the _claimed_mimes array if it's in
-    # the python mimetypes lib database. Otherwise pass.
-    mimetypes.init()
-    for x in _claimed_extensions:
-        try:
-            _claimed_mimes.append(mimetypes.types_map[x])
-        except KeyError:
-            pass
-
-    # Get rid of any duplicates in our list
-    _claimed_mimes = list(set(_claimed_mimes))
-
+    @log_aware(log)
     def __init__(self, input_materialsuite, working_dir,
                  timeout=None, data_transfer_obj={}):
         """
@@ -85,16 +69,22 @@ class OfficeToTXTConverter(Converter):
 
         * timeout (int): A timeout (in seconds) to kill the conversion process
             after.
+        * data_transfer_obj (dict): A dictionary carrying potential converter-
+            specific configuration values.
         """
+        log_init_attempt(self, log, locals())
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
-        self.target_extension = ".txt"
-        self.libre_office_path = data_transfer_obj.get('libre_office_path', None)
+        self.converter_name = "LibreOffice TXT converter"
+        self.libre_office_path = data_transfer_obj.get(
+            'libre_office_path', None
+        )
         if self.libre_office_path is None:
             raise ValueError('No libre_office_path specificed in the data' +
                              'transfer object!')
-        log.debug("OfficeToTXTConverter spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
+    @log_aware(log)
     def __repr__(self):
         attrib_dict = {
             'source_materialsuite': str(self.source_materialsuite),
@@ -106,102 +96,40 @@ class OfficeToTXTConverter(Converter):
         return "<OfficeToTXTConverter {}>".format(
             dumps(attrib_dict, sort_keys=True))
 
-    def convert(self):
+    @log_aware(log)
+    def run_converter(self, in_path):
         """
-        Edit the source materialsuite in place, adding any new presform
-        materialsuites that we manage to make and updating its PREMIS record
-        accordingly
+        Runs libreoffice against {in_path} in order to generate a txt file
+
+        See the Converter ABC to see how this fits into the whole workflow
+
+        __Args__
+
+        in_path (str): The path where the original file is located
+
+        __Returns__
+
+        (dict): A dictionary used by the converter ABC
         """
-        log.debug("Building conversion environment for {}".format(str(self)))
-        initd_premis_file = join(self.working_dir, str(uuid1()))
-        log.debug(
-            "Attempting to instantiate PREMIS @ {}".format(initd_premis_file)
-        )
-        LDRItemCopier(
-            self.source_materialsuite.premis, LDRPath(initd_premis_file)
-        ).copy()
-        log.debug("Reading PREMIS")
-        orig_premis = PremisRecord(frompath=initd_premis_file)
-        orig_name = orig_premis.get_object_list()[0].get_originalName()
-        # LibreOffice CLI won't let us just specify an output file name, so make
-        # a while directory *just for it*.
-        # ...
-        # It also needs the input filename to be intact, I think, better safe
-        # than sorry anyways.
-
-        # Where we are putting our original file
-        target_containing_dir = join(self.working_dir, str(uuid1()))
-        target_path = join(target_containing_dir, orig_name)
-        makedirs(dirname(target_path), exist_ok=True)
-        original_holder = LDRPath(target_path)
-        log.debug("Attempting to instantiate content @ {}".format(target_path))
-        LDRItemCopier(self.source_materialsuite.content, original_holder).copy()
-
-        # Where we are aiming the LibreOffice CLI converter
-        outdir = join(self.working_dir, str(uuid1()))
-        makedirs(outdir)
-
-        # Fire 'er up
+        # LibreOffice is a little crazy, and won't let us specify a complete
+        # outpath for the file - just an outdir, so we make one just for it and
+        # then assume that the only file in there is the result of the
+        # conversion (which it should be)
+        outdir = join(self.working_dir, uuid4().hex)
+        makedirs(outdir, exist_ok=True)
         convert_cmd_args = [self.libre_office_path, '--headless',
                             '--convert-to', 'txt:Text', '--outdir', outdir,
-                            target_path]
+                            in_path]
         convert_cmd = BashCommand(convert_cmd_args)
         convert_cmd.set_timeout(self.timeout)
-        log.debug("Trying to convert {} to txt".format(
-            orig_name)
-        )
+        log.debug("Attempting conversion to txt")
         convert_cmd.run_command()
-
-        # If there's anything in the outdir we gave libreoffice thats what we
-        # want, if there isn't the conversion failed for some reason
-        # we need to assign presform_ldrpath and conv_file_premis_rec to None
         try:
+            log.debug("Conversion success, file located in the outdir")
             where_it_is = join(outdir, [x.name for x in scandir(outdir)][0])
             assert(isfile(where_it_is))
-            presform_ldrpath = LDRPath(where_it_is)
-            conv_file_premis = GenericPREMISCreator.instantiate_and_make_premis(
-                presform_ldrpath,
-                working_dir_path=self.working_dir
-            )
-            conv_file_premis_rec = PremisRecord(
-                frompath=str(conv_file_premis.path)
-            )
-            log.debug("Conversion successful")
-        except Exception:
-            presform_ldrpath = None
-            conv_file_premis_rec = None
-            log.debug("Conversion failed")
+        except:
+            log.debug("Conversion failure, no file in outdir")
+            where_it_is = None
 
-        # Write a billion things into the PREMIS file(s)
-        # This function handles None in the third arg sensibly, just updating
-        # the original PREMIS file we have to specify a failed conversion
-        log.debug("Updating PREMIS")
-        self.handle_premis(convert_cmd.get_data(),
-                           orig_premis,
-                           conv_file_premis_rec,
-                           "LibreOffice CLI TXT Converter")
-
-        # Update the original PREMIS regardless
-        updated_premis_outpath = join(self.working_dir, str(uuid1()))
-        orig_premis.write_to_file(updated_premis_outpath)
-        self.get_source_materialsuite().set_premis(
-            LDRPath(updated_premis_outpath)
-        )
-
-        # If the conversion was successful construct our PresformMaterialSuite
-        # and add it to our source MaterialSuite
-        if presform_ldrpath and conv_file_premis_rec:
-            log.debug("Adding PresformMaterialSuite to original MaterialSuite")
-            presform_ms = PresformMaterialSuite()
-            presform_ms.set_extension(self.target_extension)
-            presform_ms.content = presform_ldrpath
-            presform_premis_path = join(self.working_dir, str(uuid1()))
-            conv_file_premis_rec.write_to_file(presform_premis_path)
-            presform_ms.premis = LDRPath(presform_premis_path)
-            self.source_materialsuite.add_presform(presform_ms)
-
-        log.debug("Conversion Complete: {}".format(str(self)))
-
-        # Cleanup
-        log.debug("Deleting temporary file instantiation")
-        original_holder.delete(final=True)
+        return {'outpath': where_it_is, 'cmd_output': convert_cmd.get_data()}
