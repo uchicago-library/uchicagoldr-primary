@@ -4,22 +4,24 @@ from os.path import exists, join, dirname, split
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 import xml.etree.ElementTree as ET
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
-
 from pypairtree.utils import identifier_to_path
 from pypairtree.pairtree import PairTree
 from pypairtree.pairtreeobject import PairTreeObject
 from pypairtree.intraobjectbytestream import IntraObjectByteStream
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from uchicagoldrtoolsuite.core.lib.doi import DOI
-from .abc.archiveserializationwriter import ArchiveSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.ldritemoperations import hash_ldritem
+from .abc.archiveserializationwriter import ArchiveSerializationWriter
 
 
 __author__ = "Brian Balsamo"
@@ -29,7 +31,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class SegmentedPairTreeObject(PairTreeObject):
@@ -53,6 +55,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     Writes an archive structure to disk utilizing PairTrees as a series
     of directories and files.
     """
+    @log_aware(log)
     def __init__(self, anArchive, aRoot, eq_detect="bytes"):
         """
         spawn a writer for the pairtree based Archive serialization
@@ -67,11 +70,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         * eq_detect (str): What equality detection metric to use while
             serializing
         """
+        log_init_attempt(self, log, locals())
         super().__init__(anArchive)
         self.lts_env_path = aRoot
         self.eq_detect = eq_detect
-        log.debug("FileSystemArchiveWriter spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'lts_env_path': self.lts_env_path,
@@ -81,7 +86,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         return "<FileSystemArchiveWriter {}>".format(dumps(attr_dict,
                                                            sort_keys=True))
 
+    @log_aware(log)
     def _write_ark_dir(self, clobber=False):
+        log.info("Writing ARK directory")
         ark_path = join(
             str(identifier_to_path(self.get_struct().identifier,
                                    root=self.lts_env_path)),
@@ -98,7 +105,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self._write_file_acc_namaste_tag(ark_path)
         return ark_path
 
+    @log_aware(log)
     def _write_dirs_skeleton(self, ark_path):
+        log.info("Writing required subdirs for an Archive serialization.")
         admin_dir_path = join(ark_path, "admin")
         pairtree_root = join(ark_path, "pairtree_root")
         makedirs(pairtree_root, exist_ok=True)
@@ -109,54 +118,71 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
         for x in [admin_dir_path, pairtree_root, accession_records_dir_path,
                   adminnotes_dir_path, legalnotes_dir_path]:
+            log.debug("Creating dir at {}".format(x))
             makedirs(x, exist_ok=True)
         return admin_dir_path, pairtree_root, accession_records_dir_path, \
             adminnotes_dir_path, legalnotes_dir_path
 
+    @log_aware(log)
     def _put_materialsuite_into_pairtree(self, materialsuite,
                                          seg_id, pair_tree):
+        log.debug("Constructing PairTree object from MaterialSuite")
         obj_id = self._get_premis_obj_id(materialsuite.premis)
         o = SegmentedPairTreeObject(identifier=obj_id, encapsulation="arf")
+        iobs = []
         o.seg_id = seg_id
-        content = IntraObjectByteStream(
-            materialsuite.content,
-            intraobjectaddress="content.file"
-        )
+        if materialsuite.content is not None:
+            content = IntraObjectByteStream(
+                materialsuite.content,
+                intraobjectaddress="content.file"
+            )
+            iobs.append(content)
+            if len(materialsuite.technicalmetadata_list) > 1:
+                raise NotImplementedError(
+                    "The Archive serializer currently only supports " +
+                    "serializing a single FITs record as technical metadata."
+                )
+            fits = IntraObjectByteStream(
+                materialsuite.technicalmetadata_list[0],
+                intraobjectaddress="fits.xml"
+            )
+            iobs.append(fits)
         premis = IntraObjectByteStream(
             materialsuite.premis,
             intraobjectaddress="premis.xml"
         )
-        if len(materialsuite.technicalmetadata_list) > 1:
-            raise NotImplementedError(
-                "The Archive serializer currently only supports " +
-                "serializing a single FITs record as technical metadata."
-            )
-        fits = IntraObjectByteStream(
-            materialsuite.technicalmetadata_list[0],
-            intraobjectaddress="fits.xml"
-        )
-        o.add_bytestream(content)
-        o.add_bytestream(premis)
-        o.add_bytestream(fits)
+        iobs.append(premis)
+        for x in iobs:
+            o.add_bytestream(x)
+        log.debug("Adding constructed object to Pairtree object")
         pair_tree.add_object(o)
 
+    @log_aware(log)
     def _get_premis_obj_id(self, premis_ldritem):
+        log.debug("Attempting to determine PREMIS ID from a bytestream...")
         with TemporaryDirectory() as tmp_dir:
             premis_path = join(tmp_dir, uuid4().hex)
             tmp_item = LDRPath(premis_path)
             LDRItemCopier(premis_ldritem, tmp_item).copy()
             premis = PremisRecord(frompath=premis_path)
-            return premis.get_object_list()[0].\
+            premis_id = premis.get_object_list()[0].\
                 get_objectIdentifier()[0].get_objectIdentifierValue()
+            log.debug("PREMIS ID found: {}".format(premis_id))
+            return premis_id
 
+    @log_aware(log)
     def _pack_archive_into_pairtree(self, pair_tree):
+        log.info("Packing the archive into a PairTree object")
         for seg in self.get_struct().segment_list:
             seg_id = seg.identifier
             for materialsuite in seg.materialsuite_list:
                 self._put_materialsuite_into_pairtree(materialsuite, seg_id,
                                                       pair_tree)
+        log.info("Pairtree packed")
 
+    @log_aware(log)
     def _write_data(self, pair_tree, ark_path, data_manifest):
+        log.info("Writing archive data")
         data_manifest['acc_id'] = self.get_struct().identifier
         data_manifest['objs'] = []
         for obj in pair_tree.objects:
@@ -197,15 +223,28 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                     manifest_dict['type'] = "technical metadata"
                     manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
                     manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
+                # Whether or not to recompute the md5 and the sha256 for the
+                # content on ingest is debatable, the copier confirms (using the
+                # specified fixity metric) that the copy has gone off correctly,
+                # and in theory both of these values _should_ exist in the
+                # PREMIS already. All that said, perhaps here it is better to
+                # opt for "belt and suspenders" which also allows for avoiding
+                # the offputing omission of the md5 and sha256 from the write
+                # manifest at time of ingest? I'm opting for it, at the moment
+                # -BNB, 11/28/16
                 elif bytestream.intraobjectaddress == "content.file":
                     manifest_dict['type'] = "file content"
-                    manifest_dict['md5'] = None
-                    manifest_dict['sha256'] = None
+                    manifest_dict['md5'] = hash_ldritem(dst_item, algo='md5')
+                    manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
                 else:
                     raise ValueError("Unrecognized intraobject address!")
                 manifest_entry['bytestreams'].append(manifest_dict)
+        log.info("Archive data written")
 
+    @log_aware(log)
     def _add_premis_acc_event(self, premis_rec):
+        log.debug("Adding accessioning event to PREMIS")
+
         def _build_eventDetailInformation():
             return EventDetailInformation(eventDetail="bystream copied into " +
                                           "the long term storage environment.")
@@ -224,7 +263,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
         premis_rec.add_event(_build_event())
 
+    @log_aware(log)
     def _update_premis_in_place(self, premis_path, obj_path):
+        log.debug("Performing final PREMIS update in LTS")
         premis = PremisRecord(frompath=premis_path)
         premis.get_object_list()[0].\
             get_storage()[0].get_contentLocation().set_contentLocationValue(
@@ -233,7 +274,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self._add_premis_acc_event(premis)
         premis.write_to_file(premis_path)
 
+    @log_aware(log)
     def _update_fits_in_place(self, fits_path, obj_path):
+        log.debug("Updating the FITS to accurately represent the file in LTS")
         ET.register_namespace('', "http://hul.harvard.edu/ois/xml/ns/fits/fits_output")
         ET.register_namespace('xsi', "http://www.w3.org/2001/XMLSchema-instance")
         tree = ET.parse(fits_path)
@@ -247,23 +290,30 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                         y.text = split(obj_path)[1]
         tree.write(fits_path)
 
+    @log_aware(log)
     def _write_data_manifest(self, data_manifest, admin_dir_path):
+        log.debug("Writing data manifest")
         with open(join(admin_dir_path, "data_manifest.json"), 'w') as f:
             dump(data_manifest, f, indent=4, sort_keys=True)
 
+    @log_aware(log)
     def _write_file_acc_namaste_tag(self, dir_path):
         with open(join(dir_path, "0=icu-file-accession_0.1"), 'w') as f:
             f.write("icu-file-accession 0.1")
 
+    @log_aware(log)
     def _write_pairtree_namaste_tag(self, dir_path):
         with open(join(dir_path, "0=pairtree_0.1"), 'w') as f:
             f.write("pairtree 0.1")
 
+    @log_aware(log)
     def _write_materialsuite_namaste_tag(self, dir_path):
         with open(join(dir_path, "0=icu-materialsuite_0.1"), 'w') as f:
             f.write("icu-materialsuite 0.1")
 
+    @log_aware(log)
     def _write_adminnotes(self, adminnotes_dir_path, admin_manifest):
+        log.info("Writing adminnotes")
         if self.get_struct().adminnote_list:
             for x in self.get_struct().adminnote_list:
                 dst_path = join(adminnotes_dir_path, hash_ldritem(x, algo="crc32"))
@@ -282,7 +332,9 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
                 admin_manifest.append(manifest_dict)
 
+    @log_aware(log)
     def _write_legalnotes(self, legalnotes_dir_path, admin_manifest):
+        log.info("Writing legalnotes")
         if self.get_struct().legalnote_list:
             for x in self.get_struct().legalnote_list:
                 dst_path = join(legalnotes_dir_path, hash_ldritem(x, algo="crc32"))
@@ -301,8 +353,10 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
                 admin_manifest.append(manifest_dict)
 
+    @log_aware(log)
     def _write_accessionrecords(self, accessionrecords_dir_path,
                                 admin_manifest):
+        log.info("Writing accession records")
         for x in self.get_struct().accessionrecord_list:
             dst_path = join(accessionrecords_dir_path, hash_ldritem(x, algo="crc32"))
             manifest_dict = {
@@ -320,8 +374,11 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             manifest_dict['sha256'] = hash_ldritem(dst_item, algo='sha256')
             admin_manifest.append(manifest_dict)
 
+    @log_aware(log)
     def _add_data_manifest_to_admin_manifest(self, admin_dir_path,
                                              admin_manifest):
+        log.debug("Computing manifest values of data manifest to add to " +
+                  "the admin manifest")
         data_manifest_item = LDRPath(join(admin_dir_path, 'data_manifest.json'))
         manifest_dict = {
             'origin': None,
@@ -335,11 +392,15 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         manifest_dict['sha256'] = sha256_hash_str
         admin_manifest.append(manifest_dict)
 
+    @log_aware(log)
     def _write_admin_manifest(self, admin_manifest, admin_dir_path):
+        log.debug("Writing admin manifest")
         with open(join(admin_dir_path, 'admin_manifest.json'), 'w') as f:
             dump(admin_manifest, f, indent=4, sort_keys=True)
 
+    @log_aware(log)
     def _write_WRITE_FINISHED(self, admin_dir_path):
+        log.debug("Writing archive cap")
         with open(join(admin_dir_path, "WRITE_FINISHED.json"), 'w') as f:
             dump(
                 {"FINISHED_TIME": iso8601_dt(),
@@ -347,11 +408,12 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
                 f, indent=4, sort_keys=True
             )
 
+    @log_aware(log)
     def write(self):
         """
         write the archive to disk at the specified location
         """
-        log.debug("Writing Archive")
+        log.info("Writing Archive")
 
         ark_path = self._write_ark_dir()
         admin_dir_path, pairtree_root, accession_records_dir_path, \
@@ -371,3 +433,4 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self._add_data_manifest_to_admin_manifest(admin_dir_path, admin_manifest)
         self._write_admin_manifest(admin_manifest, admin_dir_path)
         self._write_WRITE_FINISHED(admin_dir_path)
+        log.info("Archive written")

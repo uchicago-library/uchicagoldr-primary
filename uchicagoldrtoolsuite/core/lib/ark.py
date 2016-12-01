@@ -1,11 +1,10 @@
 from urllib.request import urlopen, URLError
 from configparser import NoOptionError
+from logging import getLogger
 
 from requests import get
 from requests.exceptions import SSLError
 
-from uchicagoldrtoolsuite.core.lib.confreader import ConfReader
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
 from .identifier import Identifier
 
 
@@ -17,24 +16,18 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class Ark(Identifier):
     """Is a LDR version of a DOI identifier. The identifer value is a uuid1
     the category is DOI
     """
-    def __init__(self, noid_minter_url=None):
+    def __init__(self, noid_minter_url):
         """returns a DOI identifer subclass
         It calls the init for the super class identifier to set the category
         """
         super().__init__('noid')
-        if noid_minter_url is None:
-            try:
-                noid_minter_url = ConfReader().get("URLs", "noid_minter")
-            except NoOptionError:
-                raise ValueError("No noid_minter_url provided. Provide " +
-                                 "a url via a kwarg or a conf value.")
         self.value = self.generate(noid_minter_url)
         log.debug("Spawned an ARK: {}".format(str(self)))
 

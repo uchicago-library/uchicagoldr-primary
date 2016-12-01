@@ -4,15 +4,17 @@ from uuid import uuid1
 from requests import post
 from xml.etree.ElementTree import fromstring
 from json import dumps
+from logging import getLogger
 
 from pypremis.lib import PremisRecord
 from pypremis.nodes import *
 
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
-from uchicagoldrtoolsuite.core.lib.exceptionhandler import ExceptionHandler
+from uchicagoldrtoolsuite import log_aware
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
+from .abc.technicalmetadatacreator import TechnicalMetadataCreator
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.abc.ldritem import LDRItem
-from .abc.technicalmetadatacreator import TechnicalMetadataCreator
 from ..ldritems.ldritemcopier import LDRItemCopier
 
 
@@ -24,20 +26,42 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
-eh = ExceptionHandler()
+log = getLogger(__name__)
 
 
 class APIFITsCreator(TechnicalMetadataCreator):
+    """
+    Utilizes a remove server FITs servlet to create technical metadata records
+    """
+    @log_aware(log)
     def __init__(self, materialsuite, working_dir, timeout=None,
                  data_transfer_obj={}):
+        """
+        Creates a new instance of an APIFitsCreator.
+
+        __Args__
+
+        1. materialsuite (MaterialSuite): The MaterialSuite which
+            contains the content to generate technical metadata for.
+        2. working_dir (str): A location on disk where the FITsCreator
+            can write files
+
+        __KWArgs__
+
+        * timeout (int): A timeout for the techmd creation process, after
+            which the creator will fail out.
+        * data_transfer_obj (dict): A dictionary for passing converter
+            specific information into the class from a wrapper.
+        """
+        log_init_attempt(self, log, locals())
         super().__init__(materialsuite, working_dir, timeout)
         self.fits_api_url = data_transfer_obj.get('fits_api_url', None)
         if self.fits_api_url is None:
             raise ValueError('No fits_api_url specified in the data ' +
                              'transfer object!')
-        log.debug("APIFITsCreator spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
+    @log_aware(log)
     def __repr__(self):
         attr_dict = {
             'source_materialsuite': str(self.source_materialsuite),
@@ -47,7 +71,13 @@ class APIFITsCreator(TechnicalMetadataCreator):
         }
         return "<APIFITsCreator {}>".format(dumps(attr_dict, sort_keys=True))
 
+    @log_aware(log)
     def process(self):
+        """
+        Attempts to create the technical metadata for the MaterialSuite.
+
+        Alters the MaterialSuite in place.
+        """
         log.debug(
             "Attempting to create FITS for {}".format(
                 self.get_source_materialsuite().get_content().item_name
@@ -102,9 +132,7 @@ class APIFITsCreator(TechnicalMetadataCreator):
                     f.write(r.text)
             log.debug("FITS creation successful")
         except Exception as e:
-            exc = e
-            log.debug("FITS creation failed")
-            eh.handle(e, raise_exceptions=False)
+            log.warn("FITS creation failed: {}".format(str(e)))
         log.debug("Updating PREMIS")
         if isfile(fits_file_path):
             self.get_source_materialsuite().add_technicalmetadata(

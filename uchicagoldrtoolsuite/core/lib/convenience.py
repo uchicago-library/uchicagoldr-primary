@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 from os.path import join
 from os import scandir
 from functools import wraps
+from logging import getLogger
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -16,28 +17,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-def handle_and_raise(func):
-    from .exceptionhandler import ExceptionHandler
-    eh = ExceptionHandler()
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            eh.handle(e, raise_exceptions=True)
-    return decorated_function
-
-
-def handle_and_pass(func):
-    from .exceptionhandler import ExceptionHandler
-    eh = ExceptionHandler()
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            eh.handle(e, raise_exceptions=False)
-    return decorated_function
+log = getLogger(__name__)
 
 
 def recursive_scandir(path="."):
@@ -301,93 +281,71 @@ def sane_hash(hash_algo, flo, buf=65536):
     return hasher.hexdigest()
 
 
-def retrieve_resource_filepath(resource_path, pkg_name=None):
-    """
-    retrieves the filepath of some package resource, extracting it if need be
+def log_init_attempt(inst, log, _locals=None):
 
-    __Args__
+    def log_with_locals(inst, log, loc):
+        if "self" in _locals:
+            _locals['self'] = "omitted"
+        log.debug(
+            "Attempting init a new {} with locals {}".format(
+                inst.__class__.__name__, str(_locals)
+            )
+        )
 
-    1. resource_path (str): The path to the resource in the package
+    def log_no_locals(inst, log):
+        log.debug(
+            "Attempting to init a new {}".format(
+                inst.__class__.__name__
+            )
+        )
 
-    __KWArgs__
-
-    * pkg_name (str): The name of a package. Defaults to the project name
-
-    __Returns__
-
-    * (str): The filepath to the resource
-    """
-    from pkg_resources import Requirement, resource_filename
-    if pkg_name is None:
-        pkg_name = __name__.split('.')[0]
-    return resource_filename(Requirement.parse(pkg_name), resource_path)
-
-
-def retrieve_resource_string(resource_path, pkg_name=None):
-    """
-    retrieves the string contents of some package resource
-
-    __Args__
-
-    1. resource_path (str): The path to the resource in the package
-
-    __KWArgs__
-
-    * pkg_name (str): The name of a package. Defaults to the project name
-
-    __Returns__
-
-    * (str): the resource contents
-    """
-    from pkg_resources import Requirement, resource_string
-    if pkg_name is None:
-        pkg_name = __name__.split('.')[0]
-    return resource_string(Requirement.parse(pkg_name), resource_path)
+    if _locals is not None:
+        try:
+            log_with_locals(inst, log, _locals)
+        except:
+            # Most likely source of issues (I think) will be the locals not
+            # being repr-able, so try without them in case of exceptions.
+            # Justification here is that _some_ logging is better than none.
+            # Emits a warning about using the fallback as well.
+            log.warn(
+                "Init attempt logging exception in {}, trying fallback.".format(
+                    inst.__class__.__name__
+                )
+            )
+            log_no_locals(inst, log)
+    else:
+        log_no_locals(inst, log)
 
 
-def retrieve_resource_stream(resource_path, pkg_name=None):
-    """
-    retrieves a stream of the contents of some package resource
+def log_init_success(inst, log, log_repr=True):
 
-    __Args__
+    def _log_repr(inst, log):
+        log.debug(
+            "{} instance init'd successfully: {}".format(
+                inst.__class__.__name__, inst.__repr__()
+            )
+        )
 
-    1. resource_path (str): The path to the resource in the package
+    def _no_log_repr(inst, log):
+        log.debug(
+            "{} instance init'd successfully".format(
+                inst.__class__.__name__
+            )
+        )
 
-    __KWArgs__
-
-    * pkg_name (str): The name of a package. Defaults to the project name
-
-    __Returns__
-
-    * (io): an io stream
-    """
-    from pkg_resources import Requirement, resource_stream
-    if pkg_name is None:
-        pkg_name = __name__.split('.')[0]
-    return resource_stream(Requirement.parse(pkg_name), resource_path)
-
-
-def retrieve_controlled_vocabulary(vocab_name, built=True):
-    """
-    retrieves a controlled vocabulary from the package resources
-
-    __Args__
-
-    1. vocab_name (str): The name of some cv in controlledvocabs/ sans .json
-
-    __KWArgs__
-
-    * built (bool): Whether or not to build the FromJson object. Defaults
-    to true. (This is not the same as building the cv itself)
-
-    __Returns__
-
-    * if built==True: An unbuilt controlled vocabulary
-    * if built==False: An unbuilt ControlledVocabularyFromSource object
-    """
-    from controlledvocab.lib import ControlledVocabFromJson
-    fname = retrieve_resource_filepath('controlledvocabs/'+vocab_name+'.json')
-    cv = ControlledVocabFromJson(fname)
-    if built:
-        cv = cv.build()
-    return cv
+    if log_repr:
+        try:
+            _log_repr(inst, log)
+        except:
+            # Most likely source of issues (I think) will be the class reprs
+            # themselves in this case, so try without it in case of exceptions.
+            # Justification here is that _some_ logging is better than none.
+            # Emits a warning about using the fallback as well.
+            log.warn(
+                "Init success logging exception in {}, trying fallback.".format(
+                    inst.__class__.__name__
+                )
+            )
+            _no_log_repr(inst, log)
+    else:
+        _no_log_repr(inst, log)

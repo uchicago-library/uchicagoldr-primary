@@ -1,14 +1,30 @@
 from uuid import uuid4
+from logging import getLogger
 
 from pypremis.factories import LinkingObjectIdentifierFactory
 from pypremis.nodes import *
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import ldritem_to_premisrecord
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import TemporaryFilePath
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from ..ldritems.ldrpath import LDRPath
 
 
+__author__ = "Brian Balsamo"
+__email__ = "balsamo@uchicago.edu"
+__company__ = "The University of Chicago Library"
+__copyright__ = "Copyright University of Chicago, 2016"
+__publication__ = ""
+__version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
+
+
+@log_aware(log)
 def default_callback(premis, patterns, exclude_patterns=None):
     """
     See if an originalName field matches any of a set of patterns
@@ -59,6 +75,7 @@ class GenericPruner(object):
     which operates on the MaterialSuite's PREMIS record to determine whether
     or not to prune
     """
+    @log_aware(log)
     def __init__(self, stage, callback=default_callback, callback_args=[],
                  callback_kwargs={}, final=False, in_place_delete=False):
         """
@@ -81,13 +98,16 @@ class GenericPruner(object):
         * in_place_delete (bool): If True && final --> fire the LDRItem.delete()
             method on the content of MaterialSuites matched by the callback
         """
+        log_init_attempt(self, log, locals())
         self.stage = stage
         self.final = final
         self.in_place_delete = in_place_delete
         self.callback = callback
         self.callback_args = callback_args
         self.callback_kwargs = callback_kwargs
+        log_init_success(self, log)
 
+    @log_aware(log)
     def prune(self, callback=None, callback_args=None, callback_kwargs=None,
               final=None, in_place_delete=None):
         """
@@ -113,6 +133,7 @@ class GenericPruner(object):
             MaterialSuites
         """
         def write_premis_deletion_event(ms):
+            log.debug("Writing PREMIS deletion event")
             premis_location = TemporaryFilePath()
             ms._tmp_premis_loc = premis_location
 
@@ -121,13 +142,16 @@ class GenericPruner(object):
             eventIdentifier = EventIdentifier("uuid", uuid4().hex)
             event = Event(eventIdentifier, "deletion", iso8601_dt())
             event.add_linkingObjectIdentifier(
-                LinkingObjectIdentifierFactory(obj).produce_linking_node(role="deletion target")
+                LinkingObjectIdentifierFactory(obj).produce_linking_node(
+                    role="deletion target"
+                )
             )
             premis.add_event(event)
             premis.write_to_file(premis_location.path)
             ms.premis = LDRPath(premis_location.path)
 
         def write_premis_mock_deletion_event(ms):
+            log.debug("Writing PREMIS mock-deletion event")
             premis_location = TemporaryFilePath()
             ms._tmp_premis_loc = premis_location
             premis = ldritem_to_premisrecord(ms.premis)
@@ -135,7 +159,9 @@ class GenericPruner(object):
             eventIdentifier = EventIdentifier("uuid", uuid4().hex)
             event = Event(eventIdentifier, "mock deletion", iso8601_dt())
             event.add_linkingObjectIdentifier(
-                LinkingObjectIdentifierFactory(obj).produce_linking_node(role="mock deletion target")
+                LinkingObjectIdentifierFactory(obj).produce_linking_node(
+                    role="mock deletion target"
+                )
             )
             premis.add_event(event)
             premis.write_to_file(premis_location.path)
@@ -156,11 +182,19 @@ class GenericPruner(object):
         for seg in self.stage.segment_list:
             for ms in seg.materialsuite_list:
                 premis = ldritem_to_premisrecord(ms.premis)
-                identifier = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+                identifier = premis.get_object_list()[0].\
+                    get_objectIdentifier()[0].get_objectIdentifierValue()
                 if callback(premis, *callback_args, **callback_kwargs) is True:
                     matched_identifiers.append(identifier)
+                    log.debug(
+                        "Pruning callback returned True for {}".format(
+                            identifier
+                        )
+                    )
                     if final is True:
+                        log.debug("Pruning content")
                         if self.in_place_delete is True:
+                            log.debug("Deleting content in place")
                             ms.content.delete(final=True)
                         del ms.content
                         write_premis_deletion_event(ms)

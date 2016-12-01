@@ -4,8 +4,8 @@ from tempfile import TemporaryFile
 
 from hierarchicalrecord.hierarchicalrecord import HierarchicalRecord
 
-from .abc.auditor import Auditor
 from ..ldritems.abc.ldritem import LDRItem
+from .abc.auditor import Auditor
 from .errorpackager import ErrorPackager
 
 __author__ = "Tyler Danstrom"
@@ -44,8 +44,6 @@ class AccessionRecordAuditor(Auditor):
             'Administrative Comments',
             'Access Description'
         ]
-
-
 
     def audit(self):
 

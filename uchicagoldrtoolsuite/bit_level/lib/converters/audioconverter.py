@@ -1,9 +1,12 @@
 from os.path import join, isfile
 from uuid import uuid4
 from json import dumps
+from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.converter import Converter
 
 
@@ -15,7 +18,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class AudioConverter(Converter):
@@ -44,6 +47,7 @@ class AudioConverter(Converter):
         '.midi'
     ]
 
+    @log_aware(log)
     def __init__(self, input_materialsuite, working_dir,
                  timeout=None, data_transfer_obj={}):
         """
@@ -64,6 +68,7 @@ class AudioConverter(Converter):
         * data_transfer_obj (dict): A dictionary carrying potential converter-
             specific configuration values.
         """
+        log_init_attempt(self, log, locals())
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
         self.converter_name = "ffmpeg audio converter"
@@ -71,8 +76,9 @@ class AudioConverter(Converter):
         if self.ffmpeg_path is None:
             raise ValueError('No ffmpeg_path specified in the data ' +
                              'transfer object!')
-        log.debug("AudioConverter spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
+    @log_aware(log)
     def __repr__(self):
         attrib_dict = {
             'source_materialsuite': str(self.source_materialsuite),
@@ -83,6 +89,7 @@ class AudioConverter(Converter):
 
         return "<AudioConverter {}>".format(dumps(attrib_dict, sort_keys=True))
 
+    @log_aware(log)
     def run_converter(self, in_path):
         """
         Runs ffmpeg against {in_path} in order to generate a flac file

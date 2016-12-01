@@ -2,9 +2,12 @@ from os import scandir, makedirs
 from json import dumps
 from os.path import join, isfile
 from uuid import uuid4
+from logging import getLogger
 
+from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
-from uchicagoldrtoolsuite.core.lib.masterlog import spawn_logger
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.converter import Converter
 
 
@@ -16,7 +19,7 @@ __publication__ = ""
 __version__ = "0.0.1dev"
 
 
-log = spawn_logger(__name__)
+log = getLogger(__name__)
 
 
 class OfficeToTXTConverter(Converter):
@@ -49,6 +52,7 @@ class OfficeToTXTConverter(Converter):
         '.rtf'
     ]
 
+    @log_aware(log)
     def __init__(self, input_materialsuite, working_dir,
                  timeout=None, data_transfer_obj={}):
         """
@@ -68,15 +72,19 @@ class OfficeToTXTConverter(Converter):
         * data_transfer_obj (dict): A dictionary carrying potential converter-
             specific configuration values.
         """
+        log_init_attempt(self, log, locals())
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
         self.converter_name = "LibreOffice TXT converter"
-        self.libre_office_path = data_transfer_obj.get('libre_office_path', None)
+        self.libre_office_path = data_transfer_obj.get(
+            'libre_office_path', None
+        )
         if self.libre_office_path is None:
             raise ValueError('No libre_office_path specificed in the data' +
                              'transfer object!')
-        log.debug("OfficeToTXTConverter spawned: {}".format(str(self)))
+        log_init_success(self, log)
 
+    @log_aware(log)
     def __repr__(self):
         attrib_dict = {
             'source_materialsuite': str(self.source_materialsuite),
@@ -88,6 +96,7 @@ class OfficeToTXTConverter(Converter):
         return "<OfficeToTXTConverter {}>".format(
             dumps(attrib_dict, sort_keys=True))
 
+    @log_aware(log)
     def run_converter(self, in_path):
         """
         Runs libreoffice against {in_path} in order to generate a txt file
@@ -113,11 +122,14 @@ class OfficeToTXTConverter(Converter):
                             in_path]
         convert_cmd = BashCommand(convert_cmd_args)
         convert_cmd.set_timeout(self.timeout)
+        log.debug("Attempting conversion to txt")
         convert_cmd.run_command()
         try:
+            log.debug("Conversion success, file located in the outdir")
             where_it_is = join(outdir, [x.name for x in scandir(outdir)][0])
             assert(isfile(where_it_is))
         except:
+            log.debug("Conversion failure, no file in outdir")
             where_it_is = None
 
         return {'outpath': where_it_is, 'cmd_output': convert_cmd.get_data()}

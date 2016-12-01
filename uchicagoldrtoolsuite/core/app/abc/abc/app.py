@@ -1,6 +1,10 @@
 from abc import ABCMeta, abstractmethod
+from configparser import ConfigParser
+from os.path import join, isfile
+from xdg import BaseDirectory
+from logging import getLogger
 
-from ....lib.confreader import ConfReader
+from uchicagoldrtoolsuite import retrieve_resource_filepath
 
 
 __author__ = "Brian Balsamo"
@@ -9,6 +13,9 @@ __company__ = "The University of Chicago Library"
 __copyright__ = "Copyright University of Chicago, 2016"
 __publication__ = ""
 __version__ = "0.0.1dev"
+
+
+log = getLogger(__name__)
 
 
 class App(metaclass=ABCMeta):
@@ -36,19 +43,95 @@ class App(metaclass=ABCMeta):
         self.__publication__ = __publication__
         self.__version__ = __version__
 
-    def set_conf(self, conf_dir=None, conf_filename=None, and_default=True,
-                 and_builtin=True):
-        self._conf = ConfReader(config_directory=conf_dir,
-                                config_file=conf_filename,
-                                and_default=and_default,
-                                and_builtin=and_builtin
-                                )
+    @abstractmethod
+    def main(self):
+        pass
+
+    @staticmethod
+    def mux_parsers(ordered_subparsers):
+        """
+        mux together a list of parsers, ordered from most preferred to least
+
+        __Args__
+
+        1) ordered_subparsers (list): The other parsers, ordered from
+        most preferred to least
+
+        __Returns__
+
+        * parser (ConfigParser): A parser containing the final values
+        """
+        parser = ConfigParser()
+        # Reverse the list, so when we clobber values we end up with the most
+        # preferrential one
+        for subparser in reversed(ordered_subparsers):
+            for section in subparser.sections():
+                for option in subparser.options(section):
+                    if not parser.has_section(section):
+                        parser.add_section(section)
+                    parser[section][option] = subparser.get(section, option,
+                                                            raw=True)
+        return parser
+
+    @classmethod
+    def build_conf(cls, user_specified=None,
+                   and_default=True, and_builtin=True):
+        """
+        build and return new conf
+
+        __KWArgs__
+
+        * config_directory (str): A path to a manually specified config dir
+        * config_file (str): The filename of a primary conf in that dir
+        defaults to "ldr.ini"
+        * and_default (bool): Whether or not to check/use the default
+        conf location
+        * and_builtin (bool): Whether or not to check/use the builtin conf
+        """
+        log.debug(
+            "Building a conf: user_specified={}, and_default={}, " +
+            "and_builtin={}".format(
+                str(user_specified),
+                str(and_default),
+                str(and_builtin)
+            )
+        )
+        # Look in the default location, if we can
+        if and_default:
+            default_dir = join(BaseDirectory.xdg_config_home, 'ldr')
+            default_file = 'ldr.ini'
+            default_config_path = join(default_dir, default_file)
+        else:
+            default_config_path = None
+
+        # Look for the builtin configs, if we can
+        if and_builtin:
+            builtin_config_path = retrieve_resource_filepath('configs/ldr.ini')
+        else:
+            builtin_config_path = None
+
+        paths = [x for x in user_specified]
+        paths.append(default_config_path)
+        paths.append(builtin_config_path)
+        # Filter out None's and things that aren't files
+        paths = [x for x in paths if x is not None and isfile(x)]
+
+        # Build a parser from each one
+        subparsers = []
+        for x in paths:
+            subparser = ConfigParser()
+            with open(x, 'r') as f:
+                subparser.read_file(f)
+            subparsers.append(subparser)
+
+        # Build our master parser
+        log.debug("conf built")
+        return cls.mux_parsers(subparsers)
 
     def get_conf(self):
         return self._conf
 
-    @abstractmethod
-    def main(self):
-        pass
+    def set_conf(self, x):
+        self._conf = x
 
     conf = property(get_conf, set_conf)
