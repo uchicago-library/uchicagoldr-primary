@@ -2,7 +2,8 @@ from json import dumps
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from ..ldritems.abc.ldritem import LDRItem
 from .abc.structure import Structure
 from .segment import Segment
@@ -71,7 +72,7 @@ class Archive(Structure):
                     isinstance(materialsuite.content, LDRItem):
                 log.warn("Content exists with no technical metadata")
                 return False
-        except Exception as e:
+        except Exception:
             log.critical("Problem in MaterialSuite validation")
             return False
         return True

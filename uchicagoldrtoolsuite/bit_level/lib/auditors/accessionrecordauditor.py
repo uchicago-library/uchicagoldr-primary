@@ -45,8 +45,6 @@ class AccessionRecordAuditor(Auditor):
             'Access Description'
         ]
 
-
-
     def audit(self):
 
         fields_in_record = self.subject.keys()

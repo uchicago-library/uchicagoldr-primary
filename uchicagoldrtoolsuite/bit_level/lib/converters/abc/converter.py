@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from uuid import uuid4
 import mimetypes
-from os.path import splitext, isfile
+from os.path import splitext
 from logging import getLogger
 
 from pypremis.nodes import *

@@ -3,7 +3,6 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from .abc.packager import Packager
-from ...structures.segment import Segment
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"

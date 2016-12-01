@@ -2,7 +2,8 @@ from json import dumps
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.structure import Structure
 from .materialsuite import MaterialSuite
 

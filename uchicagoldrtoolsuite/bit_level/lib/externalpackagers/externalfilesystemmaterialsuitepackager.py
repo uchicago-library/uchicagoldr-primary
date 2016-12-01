@@ -12,7 +12,8 @@ from pypremis.factories import LinkingObjectIdentifierFactory
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from ..processors.genericpremiscreator import GenericPREMISCreator
 from ..readers.abc.materialsuitepackager import MaterialSuitePackager
 from ..ldritems.ldrpath import LDRPath
@@ -124,7 +125,9 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
                 e = Event(
                     build_eventIdentifier(), "ingestion",
                     iso8601_dt(),
-                    eventOutcomeInformation=build_eventOutcomeInformation(copyreport)
+                    eventOutcomeInformation=build_eventOutcomeInformation(
+                        copyreport
+                    )
                 )
                 return e
 

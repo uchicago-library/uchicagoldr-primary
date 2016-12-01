@@ -1,4 +1,3 @@
-from sys import stdout
 from os.path import join, isfile
 from tempfile import TemporaryDirectory
 from uuid import uuid1
@@ -120,7 +119,8 @@ class AdminNoteAdder(CLIApp):
         stage.add_adminnote(x)
 
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
+        writer = FileSystemStageWriter(stage, staging_env,
+                                       eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
 

@@ -87,7 +87,8 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
                 with open(tmp_file_path, 'wb') as tmp_file:
                     tmp_file.write(f.read())
             premis = PremisRecord(frompath=tmp_file_path)
-            ident = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+            ident = premis.get_object_list()[0].get_objectIdentifier()[0].\
+                get_objectIdentifierValue()
         log.debug("Computed identifier from PREMIS: {}".format(ident))
         return ident
 
@@ -113,7 +114,6 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         except NotImplementedError:
             raise ValueError('No PREMIS supplied by the reader')
         log.debug("PREMIS added to MaterialSuite")
-
 
         log.debug("Packaging content")
         try:

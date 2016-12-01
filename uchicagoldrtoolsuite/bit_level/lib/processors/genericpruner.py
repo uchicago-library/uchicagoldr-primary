@@ -8,7 +8,8 @@ from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import ldritem_to_premisrecord
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import TemporaryFilePath
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from ..ldritems.ldrpath import LDRPath
 
 
@@ -141,7 +142,9 @@ class GenericPruner(object):
             eventIdentifier = EventIdentifier("uuid", uuid4().hex)
             event = Event(eventIdentifier, "deletion", iso8601_dt())
             event.add_linkingObjectIdentifier(
-                LinkingObjectIdentifierFactory(obj).produce_linking_node(role="deletion target")
+                LinkingObjectIdentifierFactory(obj).produce_linking_node(
+                    role="deletion target"
+                )
             )
             premis.add_event(event)
             premis.write_to_file(premis_location.path)
@@ -156,7 +159,9 @@ class GenericPruner(object):
             eventIdentifier = EventIdentifier("uuid", uuid4().hex)
             event = Event(eventIdentifier, "mock deletion", iso8601_dt())
             event.add_linkingObjectIdentifier(
-                LinkingObjectIdentifierFactory(obj).produce_linking_node(role="mock deletion target")
+                LinkingObjectIdentifierFactory(obj).produce_linking_node(
+                    role="mock deletion target"
+                )
             )
             premis.add_event(event)
             premis.write_to_file(premis_location.path)
@@ -177,7 +182,8 @@ class GenericPruner(object):
         for seg in self.stage.segment_list:
             for ms in seg.materialsuite_list:
                 premis = ldritem_to_premisrecord(ms.premis)
-                identifier = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
+                identifier = premis.get_object_list()[0].\
+                    get_objectIdentifier()[0].get_objectIdentifierValue()
                 if callback(premis, *callback_args, **callback_kwargs) is True:
                     matched_identifiers.append(identifier)
                     log.debug(

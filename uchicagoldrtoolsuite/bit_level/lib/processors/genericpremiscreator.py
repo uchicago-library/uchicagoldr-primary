@@ -14,7 +14,8 @@ from pypremis.nodes import *
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import sane_hash
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
 from ..ldritems.ldritemcopier import LDRItemCopier
 from ..ldritems.abc.ldritem import LDRItem
@@ -103,9 +104,11 @@ class GenericPREMISCreator(object):
                         continue
                 log.debug("No PREMIS detected: Creating")
                 materialsuite.set_premis(
-                    self.instantiate_and_make_premis(materialsuite.content,
-                                                     self.working_dir_path,
-                                                     set_originalName=set_originalName)
+                    self.instantiate_and_make_premis(
+                        materialsuite.content,
+                        self.working_dir_path,
+                        set_originalName=set_originalName
+                    )
                 )
 
     @classmethod

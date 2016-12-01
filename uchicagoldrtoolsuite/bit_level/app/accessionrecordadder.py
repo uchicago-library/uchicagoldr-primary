@@ -1,4 +1,3 @@
-from sys import stdout
 from logging import getLogger
 from os.path import join, isfile
 from tempfile import TemporaryDirectory
@@ -20,6 +19,7 @@ __version__ = "0.0.1dev"
 
 
 log = getLogger(__name__)
+
 
 def launch():
     """
@@ -120,7 +120,8 @@ class AccessionRecordAdder(CLIApp):
         stage.add_accessionrecord(x)
 
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
+        writer = FileSystemStageWriter(stage, staging_env,
+                                       eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
 

@@ -134,18 +134,18 @@ class Stager(CLIApp):
             else:
                 seg_num = 1
 
-
         log.info("Segment: " + args.prefix + "-" + str(seg_num))
 
         log.info("Processing...")
         log.info("Writing...")
 
-        computed_stage_path = join(destination_root, args.staging_id)
         # We need a stage writer here just for the stage skeleton, we're going
         # to manually handle dealing with the nested writers so we can stage
         # things file by file rather than having to load the whole incoming
         # directory into the tmp dir
-        stage_writer = FileSystemStageWriter(Stage(args.staging_id), destination_root)
+        stage_writer = FileSystemStageWriter(
+            Stage(args.staging_id), destination_root
+        )
         stage_writer._build_skeleton()
         computed_segment_path = join(
             destination_root, args.staging_id, 'segments',

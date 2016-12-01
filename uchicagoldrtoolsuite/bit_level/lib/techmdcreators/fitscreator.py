@@ -4,12 +4,10 @@ from uuid import uuid4
 from json import dumps
 from logging import getLogger
 
-from pypremis.lib import PremisRecord
-from pypremis.nodes import *
-
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.abc.ldritem import LDRItem
 from ..ldritems.ldritemcopier import LDRItemCopier
@@ -26,9 +24,10 @@ __version__ = "0.0.1dev"
 
 log = getLogger(__name__)
 
-# TODO: Technical metadata creators probably need a go over like the converters
 
 class FITsCreator(TechnicalMetadataCreator):
+    # TODO: Technical metadata creators probably need a go over
+    # like the converters
     """
     A TechnicalMetadataCreator which runs a local FITs instance against the
     content of a MaterialSuite in order to generate a technical metadata entry
@@ -85,7 +84,6 @@ class FITsCreator(TechnicalMetadataCreator):
             self.get_source_materialsuite().get_premis(),
             LDRPath(premis_file_path)
         ).copy()
-        premis_record = PremisRecord(frompath=premis_file_path)
         # hacky fix for not setting the originalName in presforms during the
         # staging tearup in response to some filename encodings not being
         # interoperable on different operating systems. (OSX/BSD/Windows/Linux)
@@ -113,7 +111,9 @@ class FITsCreator(TechnicalMetadataCreator):
         if self.get_timeout() is not None:
             cmd.set_timeout(self.get_timeout())
 
-        log.debug("Running FITS on file. Timeout: {}".format(str(self.get_timeout())))
+        log.debug(
+            "Running FITS on file. Timeout: {}".format(str(self.get_timeout()))
+        )
         cmd.run_command()
 
         cmd_data = cmd.get_data()

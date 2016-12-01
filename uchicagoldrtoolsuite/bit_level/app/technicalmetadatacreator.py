@@ -1,4 +1,3 @@
-from sys import stdout
 from logging import getLogger
 from os.path import join
 from configparser import NoOptionError
@@ -107,7 +106,6 @@ class TechnicalMetadataCreator(CLIApp):
         except NoOptionError:
             pass
 
-
         if args.fits_api_url is not None:
             dto['fits_api_url'] = args.fits_api_url
         if args.fits_path is not None:
@@ -131,7 +129,8 @@ class TechnicalMetadataCreator(CLIApp):
                                data_transfer_obj=dto)
 
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
+        writer = FileSystemStageWriter(stage, staging_env,
+                                       eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
 

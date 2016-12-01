@@ -1,4 +1,3 @@
-from sys import stdout
 from logging import getLogger
 from os.path import join
 from configparser import NoOptionError
@@ -168,7 +167,8 @@ class PresformCreator(CLIApp):
                                  data_transfer_obj=dto)
 
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
+        writer = FileSystemStageWriter(stage, staging_env,
+                                       eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
 

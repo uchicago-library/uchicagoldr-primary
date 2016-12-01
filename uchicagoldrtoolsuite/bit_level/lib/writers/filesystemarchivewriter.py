@@ -244,6 +244,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     @log_aware(log)
     def _add_premis_acc_event(self, premis_rec):
         log.debug("Adding accessioning event to PREMIS")
+
         def _build_eventDetailInformation():
             return EventDetailInformation(eventDetail="bystream copied into " +
                                           "the long term storage environment.")

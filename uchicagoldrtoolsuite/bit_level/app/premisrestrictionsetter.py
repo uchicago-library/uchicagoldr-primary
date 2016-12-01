@@ -1,4 +1,3 @@
-from sys import stdout
 from os.path import join
 from logging import getLogger
 
@@ -6,7 +5,8 @@ from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
-from ..lib.processors.genericpremisrestrictionsetter import GenericPREMISRestrictionSetter
+from ..lib.processors.genericpremisrestrictionsetter import \
+    GenericPREMISRestrictionSetter
 
 
 __author__ = "Brian Balsamo"
@@ -108,7 +108,8 @@ class PremisRestrictionSetter(CLIApp):
         premis_restriction_setter.process()
 
         log.info("Writing...")
-        writer = FileSystemStageWriter(stage, staging_env, eq_detect=args.eq_detect)
+        writer = FileSystemStageWriter(stage, staging_env,
+                                       eq_detect=args.eq_detect)
         writer.write()
         log.info("Complete")
 

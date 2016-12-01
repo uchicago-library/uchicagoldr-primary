@@ -2,7 +2,8 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.ark import Ark
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.transformer import Transformer
 from ..structures.archive import Archive
 from ..structures.stage import Stage
@@ -43,14 +44,14 @@ class StageToArchiveTransformer(Transformer):
         """returns a fully realized Archive structure containing the contents
         of the origin Stage structure.
 
-        It copies the contents of the Stage structure into the new Archive structure
-        and sets the data attribute destination_structure before returning said
-        destination structure data attribute value.
+        It copies the contents of the Stage structure into the new Archive
+        structure and sets the data attribute destination_structure before
+        returning said destination structure data attribute value.
         """
         log.info("Transforming a Stage into an equivalent Archive")
         if self.destination_structure is not None:
             raise TypeError("a transformation already occured.")
-        if archive_identifier == noid_minter_url == None:
+        if archive_identifier == noid_minter_url is None:
             raise RuntimeError("An identifier must be explicitly provided " +
                                "or the URL of a noid minter must be provided.")
         if archive_identifier is None:
@@ -102,7 +103,8 @@ class StageToArchiveTransformer(Transformer):
 
     @log_aware(log)
     def get_destination_structure(self):
-        """returns the destination structure, or the structure created from transform method
+        """returns the destination structure, or the structure created from
+        transform method
         """
         return self._destination_structure
 

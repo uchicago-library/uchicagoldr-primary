@@ -1,4 +1,4 @@
-from os.path import join, dirname, expanduser, expandvars
+from os.path import join
 from logging import getLogger
 
 from pypairtree.utils import identifier_to_path
@@ -97,13 +97,14 @@ class Archiver(CLIApp):
         else:
             noid_minter_url = self.conf.get("URLs", "noid_minter")
 
-
         stage_path = join(staging_env, args.stage_id)
         log.info("Stage Path: {}".format(stage_path))
         log.info("Reading Stage...")
         stage = FileSystemStageReader(stage_path).read()
         log.info("Transforming Stage into Archive")
-        archive = StageToArchiveTransformer(stage).transform(noid_minter_url=noid_minter_url)
+        archive = StageToArchiveTransformer(stage).transform(
+            noid_minter_url=noid_minter_url
+        )
         log.info("Validating Archive...")
         if not archive.validate():
             log.critical("Invalid Archive! Aborting!")

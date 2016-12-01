@@ -6,7 +6,8 @@ from pypairtree.utils import path_to_identifier, identifier_to_path
 
 from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
 from uchicagoldrtoolsuite import log_aware
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.stageserializationreader import StageSerializationReader
 from .abc.segmentpackager import SegmentPackager
 from .abc.materialsuitepackager import MaterialSuitePackager

@@ -2,7 +2,8 @@ from json import dumps
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
 
@@ -26,6 +27,7 @@ class MaterialSuite(Structure):
 
     required_parts = ['identifier', 'content', 'original', 'premis',
                       'technicalmetadata_list']
+
     @log_aware(log)
     def __init__(self):
         """
@@ -37,7 +39,6 @@ class MaterialSuite(Structure):
         self._technicalmetadata = []
         self._identifier = None
         log_init_success(self, log)
-
 
     @log_aware(log)
     def __repr__(self):

@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractproperty, abstractmethod
+from abc import ABCMeta, abstractmethod
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
@@ -32,7 +32,7 @@ class Structure(metaclass=ABCMeta):
     def validate(self):
         log.debug("Entering ABC validate()")
         for thing in self.get_required_parts():
-            if  getattr(self, thing, None) == None:
+            if getattr(self, thing, None) == None:
                 return (False, "missing rec part: {}".format(thing))
         log.debug("Exiting ABC validate()")
         return True

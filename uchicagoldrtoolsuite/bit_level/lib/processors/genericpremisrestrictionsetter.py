@@ -9,7 +9,8 @@ from pypremis.nodes import *
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from ..ldritems.ldrpath import LDRPath
 from ..misc.premisextensionnodes import Restriction
 from ..misc.premisextensionnodes import RightsExtensionIdentifier

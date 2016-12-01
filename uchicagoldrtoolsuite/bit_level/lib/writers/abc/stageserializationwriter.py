@@ -2,7 +2,6 @@ from abc import ABCMeta, abstractmethod
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
-from ...structures.stage import Stage
 from .abc.serializationwriter import SerializationWriter
 
 

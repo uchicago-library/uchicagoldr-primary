@@ -6,7 +6,8 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.converter import Converter
 
 
@@ -91,7 +92,9 @@ class OfficeToPDFConverter(Converter):
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
         self.converter_name = "LibreOffice PDF Converter"
-        self.libre_office_path = data_transfer_obj.get('libre_office_path', None)
+        self.libre_office_path = data_transfer_obj.get(
+            'libre_office_path', None
+        )
         if self.libre_office_path is None:
             raise ValueError('No libre_office_path specificed in the data' +
                              'transfer object!')

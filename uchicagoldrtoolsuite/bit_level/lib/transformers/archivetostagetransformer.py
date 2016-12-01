@@ -2,7 +2,8 @@ from uuid import uuid4
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from .abc.transformer import Transformer
 from ..structures.archive import Archive
 from ..structures.stage import Stage
@@ -43,9 +44,9 @@ class ArchiveToStageTransformer(Transformer):
         """returns a fully realized Archive structure containing the contents
         of the origin Stage structure.
 
-        It copies the contents of the Stage structure into the new Archive structure
-        and sets the data attribute destination_structure before returning said
-        destination structure data attribute value.
+        It copies the contents of the Stage structure into the new Archive
+        structure and sets the data attribute destination_structure before
+        returning said destination structure data attribute value.
         """
         log.info("Transforming an Archive into a Stage")
         if self.destination_structure is not None:
@@ -100,7 +101,8 @@ class ArchiveToStageTransformer(Transformer):
 
     @log_aware(log)
     def get_destination_structure(self):
-        """returns the destination structure, or the structure created from transform method
+        """returns the destination structure, or the structure created from
+        transform method
         """
         return self._destination_structure
 

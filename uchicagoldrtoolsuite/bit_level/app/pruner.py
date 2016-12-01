@@ -1,6 +1,5 @@
-from argparse import Action
 from logging import getLogger
-from os.path import exists, join
+from os.path import join
 from re import compile as re_compile
 from json import dumps
 
@@ -94,10 +93,12 @@ class Pruner(CLIApp):
         staging_structure = staging_directory_reader.read()
         try:
             log.info("Pruning... (final={})".format(str(args.final_decision)))
-            p = GenericPruner(staging_structure,
-                              callback_args=[[re_compile(x) for x in args.selection_patterns]],
-                              callback_kwargs={'exclude_patterns': [re_compile(x) for x in args.exclusion_pattern]},
-                              final=args.final_decision, in_place_delete=True)
+            p = GenericPruner(
+                staging_structure,
+                callback_args=[[re_compile(x) for x in args.selection_patterns]],
+                callback_kwargs={'exclude_patterns': [re_compile(x) for x in args.exclusion_pattern]},
+                final=args.final_decision, in_place_delete=True
+            )
             r = p.prune()
             # TODO: Probably handle this in some more informative/pretty way
             # then just dumping contextless JSON to stdout.

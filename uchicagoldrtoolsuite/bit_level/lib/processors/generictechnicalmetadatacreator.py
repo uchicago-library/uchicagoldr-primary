@@ -3,7 +3,8 @@ from json import dumps
 from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
-from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, log_init_success
+from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
+    log_init_success
 from ..ldritems.abc.ldritem import LDRItem
 
 
@@ -54,7 +55,9 @@ class GenericTechnicalMetadataCreator(object):
             'working_dir_path': self.working_dir_path,
             'techmd_creators': [str(x) for x in self.techmd_creators]
         }
-        return "<GenericTechnicalMetadataCreator {}>".format(dumps(attr_dict, sort_keys=True))
+        return "<GenericTechnicalMetadataCreator {}>".format(
+            dumps(attr_dict, sort_keys=True)
+        )
 
     @log_aware(log)
     def process(self, skip_existing=False, data_transfer_obj={}):
@@ -75,27 +78,29 @@ class GenericTechnicalMetadataCreator(object):
             ms_num = 0
             for materialsuite in segment.materialsuite_list:
                 ms_num += 1
-                log.debug("Processing section {}/{}, MaterialSuite {}/{}".format(
-                    str(s_num),
-                    str(len(self.stage.segment_list)),
-                    str(ms_num),
-                    str(len(segment.materialsuite_list)))
+                log.debug(
+                    "Processing section {}/{}, MaterialSuite {}/{}".format(
+                        str(s_num),
+                        str(len(self.stage.segment_list)),
+                        str(ms_num),
+                        str(len(segment.materialsuite_list))
+                    )
                 )
                 if not isinstance(materialsuite.get_premis(), LDRItem):
                     raise ValueError("All material suites must have a PREMIS " +
-                                    "record in order to generated technical " +
-                                    "metadata records.")
+                                     "record in order to generated technical " +
+                                     "metadata records.")
                     continue
                 if not materialsuite.content:
                     continue
                 if skip_existing:
                     if materialsuite.get_technicalmetadata_list():
                         if isinstance(materialsuite.get_technicalmetadata(0),
-                                    LDRItem):
+                                      LDRItem):
                             log.debug("Detected TECHMD: Skipping")
                             continue
                 log.debug("No TECHMD detected: Creating")
                 for techmd_creator in self.techmd_creators:
                     c = techmd_creator(materialsuite, self.working_dir_path,
-                                        data_transfer_obj=data_transfer_obj)
+                                       data_transfer_obj=data_transfer_obj)
                     c.process()

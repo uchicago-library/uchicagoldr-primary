@@ -75,8 +75,8 @@ class FileSystemStageWriter(StageSerializationWriter):
         for x in required_dirs:
             if x.exists() and not x.is_dir():
                 raise RuntimeError("Stage writer can't clobber a file " +
-                                    "where a directory should be! " +
-                                    "{}".format(str(x)))
+                                   "where a directory should be! " +
+                                   "{}".format(str(x)))
             makedirs(str(x))
 
     @log_aware(log)
@@ -269,7 +269,8 @@ class FileSystemMaterialSuiteWriter(object):
                                      clobber=True))
 
         if self.struct.content is not None:
-            copiers.append(LDRItemCopier(self.struct.content, target_content_item,
+            copiers.append(LDRItemCopier(self.struct.content,
+                                         target_content_item,
                                          clobber=True))
 
         log.debug("Computing techmd file names")

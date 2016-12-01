@@ -18,6 +18,7 @@ __version__ = "0.0.1dev"
 
 log = getLogger(__name__)
 
+
 @log_aware(log)
 def read_metadata_from_file_object(attribute_string,
                                    parser_object, msuite=None, ldritem=None):

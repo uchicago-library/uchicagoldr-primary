@@ -71,7 +71,7 @@ class ExternalFileSystemSegmentPackager(SegmentPackager):
             # TODO
             # Filter pattern should probably be reintroduced HERE, in a try
             # catch type re-encoding of the filename from bytes.
-            log.debug("Instantiating MaterialSuite packagers and adding the
+            log.debug("Instantiating MaterialSuite packagers and adding the" +
                       "results to the segment")
             self.struct.add_materialsuite(
                 self.get_msuite_packager()(x.path, root=self.root).package()
