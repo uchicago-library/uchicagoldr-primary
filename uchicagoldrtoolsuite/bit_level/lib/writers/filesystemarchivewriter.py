@@ -34,22 +34,6 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
-class SegmentedPairTreeObject(PairTreeObject):
-    """
-    A quick wrapper for PairTreeObjects to store the segment id on them
-    """
-
-    _seg_id = None
-
-    def get_seg_id(self):
-        return self._seg_id
-
-    def set_seg_id(self, x):
-        self._seg_id = x
-
-    seg_id = property(get_seg_id, set_seg_id)
-
-
 class FileSystemArchiveWriter(ArchiveSerializationWriter):
     """
     Writes an archive structure to disk utilizing PairTrees as a series
@@ -124,13 +108,11 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             adminnotes_dir_path, legalnotes_dir_path
 
     @log_aware(log)
-    def _put_materialsuite_into_pairtree(self, materialsuite,
-                                         seg_id, pair_tree):
+    def _put_materialsuite_into_pairtree(self, materialsuite, pair_tree):
         log.debug("Constructing PairTree object from MaterialSuite")
         obj_id = self._get_premis_obj_id(materialsuite.premis)
-        o = SegmentedPairTreeObject(identifier=obj_id, encapsulation="arf")
+        o = PairTreeObject(identifier=obj_id, encapsulation="arf")
         iobs = []
-        o.seg_id = seg_id
         if materialsuite.content is not None:
             content = IntraObjectByteStream(
                 materialsuite.content,
@@ -173,11 +155,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     @log_aware(log)
     def _pack_archive_into_pairtree(self, pair_tree):
         log.info("Packing the archive into a PairTree object")
-        for seg in self.get_struct().segment_list:
-            seg_id = seg.identifier
-            for materialsuite in seg.materialsuite_list:
-                self._put_materialsuite_into_pairtree(materialsuite, seg_id,
-                                                      pair_tree)
+        for materialsuite in self.get_struct().materialsuite_list:
+            self._put_materialsuite_into_pairtree(materialsuite, pair_tree)
         log.info("Pairtree packed")
 
     @log_aware(log)
@@ -188,7 +167,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         for obj in pair_tree.objects:
             manifest_entry = {
                 'identifier': obj.identifier,
-                'origin_segment': obj.seg_id,
                 'bytestreams': []
             }
             data_manifest['objs'].append(manifest_entry)

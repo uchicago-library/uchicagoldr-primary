@@ -72,35 +72,30 @@ class GenericTechnicalMetadataCreator(object):
             configuration options
         """
         log.debug("Beginning TECHMD Processing")
-        s_num = 0
-        for segment in self.stage.segment_list:
-            s_num += 1
-            ms_num = 0
-            for materialsuite in segment.materialsuite_list:
-                ms_num += 1
-                log.debug(
-                    "Processing section {}/{}, MaterialSuite {}/{}".format(
-                        str(s_num),
-                        str(len(self.stage.segment_list)),
-                        str(ms_num),
-                        str(len(segment.materialsuite_list))
-                    )
+        ms_num = 0
+        for materialsuite in self.stage.materialsuite_list:
+            ms_num += 1
+            log.debug(
+                "Processing MaterialSuite {}/{}".format(
+                    str(ms_num),
+                    str(len(self.stage.materialsuite_list))
                 )
-                if not isinstance(materialsuite.get_premis(), LDRItem):
-                    raise ValueError("All material suites must have a PREMIS " +
-                                     "record in order to generated technical " +
-                                     "metadata records.")
-                    continue
-                if not materialsuite.content:
-                    continue
-                if skip_existing:
-                    if materialsuite.get_technicalmetadata_list():
-                        if isinstance(materialsuite.get_technicalmetadata(0),
-                                      LDRItem):
-                            log.debug("Detected TECHMD: Skipping")
-                            continue
-                log.debug("No TECHMD detected: Creating")
-                for techmd_creator in self.techmd_creators:
-                    c = techmd_creator(materialsuite, self.working_dir_path,
-                                       data_transfer_obj=data_transfer_obj)
-                    c.process()
+            )
+            if not isinstance(materialsuite.get_premis(), LDRItem):
+                raise ValueError("All material suites must have a PREMIS " +
+                                    "record in order to generated technical " +
+                                    "metadata records.")
+                continue
+            if not materialsuite.content:
+                continue
+            if skip_existing:
+                if materialsuite.get_technicalmetadata_list():
+                    if isinstance(materialsuite.get_technicalmetadata(0),
+                                    LDRItem):
+                        log.debug("Detected TECHMD: Skipping")
+                        continue
+            log.debug("No TECHMD detected: Creating")
+            for techmd_creator in self.techmd_creators:
+                c = techmd_creator(materialsuite, self.working_dir_path,
+                                    data_transfer_obj=data_transfer_obj)
+                c.process()

@@ -95,32 +95,28 @@ class GenericPREMISRestrictionSetter(object):
     @log_aware(log)
     def process(self):
         log.debug("Beginning PREMIS restriction setting.")
-        s_num = 0
-        for segment in self.stage.segment_list:
-            s_num += 1
-            ms_num = 0
-            for materialsuite in segment.materialsuite_list:
-                ms_num += 1
-                log.debug(
-                    "Processing Segment {}/{}, MaterialSuite {}/{}".format(
-                        str(s_num), str(len(self.stage.segment_list)),
-                        str(ms_num), str(len(segment.materialsuite_list))
-                    )
+        ms_num = 0
+        for materialsuite in self.stage.materialsuite_list:
+            ms_num += 1
+            log.debug(
+                "Processing MaterialSuite {}/{}".format(
+                    str(ms_num), str(len(self.stage.materialsuite_list))
                 )
-                if not materialsuite.get_premis():
-                    raise AttributeError("All material suites must have " +
-                                         "PREMIS records in order to set " +
-                                         "restrictions in them.")
-                log.debug(
-                    "Setting restriction in PREMIS for {}.".format(
-                        materialsuite.identifier
-                    )
+            )
+            if not materialsuite.get_premis():
+                raise AttributeError("All material suites must have " +
+                                        "PREMIS records in order to set " +
+                                        "restrictions in them.")
+            log.debug(
+                "Setting restriction in PREMIS for {}.".format(
+                    materialsuite.identifier
                 )
-                materialsuite.set_premis(
-                    self.instantiate_and_set_restriction(
-                        materialsuite.get_premis()
-                    )
+            )
+            materialsuite.set_premis(
+                self.instantiate_and_set_restriction(
+                    materialsuite.get_premis()
                 )
+            )
 
     @log_aware(log)
     def instantiate_and_set_restriction(self, item):

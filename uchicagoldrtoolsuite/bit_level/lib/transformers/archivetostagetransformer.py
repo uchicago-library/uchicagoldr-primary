@@ -56,10 +56,10 @@ class ArchiveToStageTransformer(Transformer):
             stage_identifier = uuid4().hex
         self.destination_structure = Stage(stage_identifier)
 
-        log.debug("Moving segments into the Stage")
-        for n_segment in self.origin_structure.segment_list:
-            self.destination_structure.add_segment(
-                n_segment
+        log.debug("Moving materialsuites into the Stage")
+        for n_materialsuite in self.origin_structure.materialsuite_list:
+            self.destination_structure.add_materialsuite(
+                n_materialsuite
             )
 
         log.debug("Moving accession records into the Stage")

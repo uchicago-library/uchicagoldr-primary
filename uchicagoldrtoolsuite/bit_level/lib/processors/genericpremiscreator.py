@@ -84,32 +84,28 @@ class GenericPREMISCreator(object):
             to already have PREMIS records as a part of them.
         """
         log.debug("Beginning PREMIS processing")
-        s_num = 0
-        for segment in self.stage.segment_list:
-            s_num += 1
-            ms_num = 0
-            for materialsuite in segment.materialsuite_list:
-                ms_num += 1
-                log.debug(
-                    "Processing Section {}/{}, MaterialSuite {}/{}".format(
-                        str(s_num),
-                        str(len(self.stage.segment_list)),
-                        str(ms_num),
-                        str(len(segment.materialsuite_list))
-                    )
+        ms_num = 0
+        ms_tot = len(self.stage.materialsuite_list)
+        for materialsuite in self.stage.materialsuite_list:
+            ms_num += 1
+            log.debug(
+                "Processing MaterialSuite {}/{}".format(
+                    str(ms_num),
+                    str(ms_tot)
                 )
-                if skip_existing:
-                    if isinstance(materialsuite.get_premis(), LDRItem):
-                        log.debug("PREMIS detected: Skipping")
-                        continue
-                log.debug("No PREMIS detected: Creating")
-                materialsuite.set_premis(
-                    self.instantiate_and_make_premis(
-                        materialsuite.content,
-                        self.working_dir_path,
-                        set_originalName=set_originalName
-                    )
+            )
+            if skip_existing:
+                if isinstance(materialsuite.get_premis(), LDRItem):
+                    log.debug("PREMIS detected: Skipping")
+                    continue
+            log.debug("No PREMIS detected: Creating")
+            materialsuite.set_premis(
+                self.instantiate_and_make_premis(
+                    materialsuite.content,
+                    self.working_dir_path,
+                    set_originalName=set_originalName
                 )
+            )
 
     @classmethod
     @log_aware(log)
