@@ -4,7 +4,6 @@ from logging import getLogger
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
     log_init_success
-from .abc.structure import Structure
 from ..ldritems.abc.ldritem import LDRItem
 
 
@@ -19,15 +18,11 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
-class MaterialSuite(Structure):
+class MaterialSuite(object):
     """
     A structure which holds all LDR Items pertaining to a piece of content
     and the content itself
     """
-
-    required_parts = ['identifier', 'content', 'original', 'premis',
-                      'technicalmetadata_list']
-
     @log_aware(log)
     def __init__(self):
         """

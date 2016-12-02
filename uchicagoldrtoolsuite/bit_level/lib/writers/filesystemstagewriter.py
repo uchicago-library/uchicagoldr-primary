@@ -1,4 +1,3 @@
-from os import makedirs as _makedirs
 from logging import getLogger
 from pathlib import Path
 from uuid import uuid4
@@ -7,7 +6,7 @@ from pypairtree.utils import identifier_to_path
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
-    log_init_success
+    log_init_success, makedirs
 from .abc.stageserializationwriter import StageSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
@@ -23,14 +22,6 @@ __version__ = "0.0.1dev"
 
 
 log = getLogger(__name__)
-
-
-@log_aware(log)
-def makedirs(x):
-    """
-    wrap makedirs, so it doesn't freak out if the dir is already there
-    """
-    _makedirs(x, exist_ok=True)
 
 
 class FileSystemStageWriter(StageSerializationWriter):
@@ -66,7 +57,7 @@ class FileSystemStageWriter(StageSerializationWriter):
     def _build_skeleton(self):
         log.info("Creating required dirs/subdirs for the Stage serialization")
         required_dirs = []
-        for x in ['admin', 'segments']:
+        for x in ['admin', 'pairtree_root']:
             required_dirs.append(Path(self.stage_root, x))
 
         for x in ['accessionrecords', 'adminnotes', 'legalnotes']:
@@ -144,69 +135,12 @@ class FileSystemStageWriter(StageSerializationWriter):
         self._write_adminnotes()
         self._write_legalnotes()
         log.debug("Delegating segment writes to FileSystemSegmentWriter...")
-        for x in self.struct.segment_list:
-            ptfssw = FileSystemSegmentWriter(
-                x, str(Path(self.stage_root, 'segments')),
-                eq_detect=self.eq_detect
-            )
-            ptfssw.write()
-        log.info("Stage written")
-
-
-class FileSystemSegmentWriter(object):
-    """
-    A writer for the pairtree based file system segment serialization
-
-    Converters the structure and contained bytestreams into files/dirs
-    on disk
-    """
-    @log_aware(log)
-    def __init__(self, aStructure, aRoot, eq_detect="bytes"):
-        """
-        Create a new FileSystemSegmentWriter
-
-        __Args__
-
-        1. aStructure (Segment): The structure to serialize
-        2. aRoot (str): The path to the segment root dir
-
-        __KWArgs__
-
-        * eq_detect (str): The equality metric to use during serialization
-        """
-        log_init_attempt(self, log, locals())
-        self.struct = aStructure
-        self.segment_root = Path(aRoot, self.struct.identifier)
-        self.eq_detect = eq_detect
-        log_init_success(self, log)
-
-    @log_aware(log)
-    def _write_skeleton(self):
-        log.info("Writing required dirs/subdirs for segment")
-        materialsuites_root = self.segment_root
-        if materialsuites_root.exists() and not materialsuites_root.is_dir():
-            raise RuntimeError("Segment writer can't clobber a file " +
-                               "where a directory should be! " +
-                               "{}".format(str(materialsuites_root)))
-        makedirs(str(materialsuites_root))
-
-    @log_aware(log)
-    def write(self):
-        """
-        Serialize the segment to the provided location
-        """
-        log.info("Writing segment")
-        self._write_skeleton()
-        log.debug("Delegating MaterialSuite writes to "
-                  "FileSystemMaterialSuite writer...")
         for x in self.struct.materialsuite_list:
-            ptfsmsw = FileSystemMaterialSuiteWriter(
-                x,
-                str(self.segment_root),
-                eq_detect=self.eq_detect
-            )
-            ptfsmsw.write()
-        log.info("Segment written")
+            materialsuite_serializer = FileSystemMaterialSuiteWriter(
+                x, str(Path(self.stage_root, 'pairtree_root')),
+                eq_detect=self.eq_detect)
+            materialsuite_serializer.write()
+        log.info("Stage written")
 
 
 class FileSystemMaterialSuiteWriter(object):

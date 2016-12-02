@@ -88,6 +88,11 @@ class Stager(CLIApp):
                                  "LDRItemCopier for supported schemes.",
                                  type=str, action='store',
                                  default="bytes")
+        self.parser.add_argument("--run_name", help="An optional name " +
+                                 "for this run to be recorded in PREMIS " +
+                                 "ingestion events for later querying.",
+                                 type=str, action='store',
+                                 default=None)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -119,22 +124,8 @@ class Stager(CLIApp):
         log.info("Stage: " + join(destination_root, args.staging_id))
 
         if args.resume:
-            seg_num = args.resume
-        else:
-            segment_ids = []
-            for segment in stage.segment_list:
-                segment_ids.append(segment.identifier)
-            segment_ids = [x for x in segment_ids if
-                           x.split("-")[0] == args.prefix]
-            segment_nums = [x.split("-")[1] for x in segment_ids]
-            segment_nums = [int(x) for x in segment_nums]
-            segment_nums.sort()
-            if segment_nums:
-                seg_num = segment_nums[-1]+1
-            else:
-                seg_num = 1
-
-        log.info("Segment: " + args.prefix + "-" + str(seg_num))
+            # TODO
+            pass
 
         log.info("Processing...")
         log.info("Writing...")
@@ -148,14 +139,15 @@ class Stager(CLIApp):
         )
         stage_writer._build_skeleton()
         computed_segment_path = join(
-            destination_root, args.staging_id, 'segments',
-            args.prefix + "-" + str(seg_num)
+            destination_root, args.staging_id, 'pairtree_root'
         )
 
         for x in recursive_scandir(args.directory):
             if not x.is_file():
                 continue
-            p = ExternalFileSystemMaterialSuitePackager(x.path, root=root)
+            p = ExternalFileSystemMaterialSuitePackager(
+                x.path, root=root, run_name=args.run_name
+            )
             ms = p.package()
             w = FileSystemMaterialSuiteWriter(
                 ms, computed_segment_path, eq_detect=args.eq_detect

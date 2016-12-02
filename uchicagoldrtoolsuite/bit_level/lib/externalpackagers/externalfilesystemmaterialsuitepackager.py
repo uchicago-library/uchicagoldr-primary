@@ -49,7 +49,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
     so really nothing like magic).
     """
     @log_aware(log)
-    def __init__(self, path, root=None):
+    def __init__(self, path, root=None, run_name=None):
         """
         Instantiate a new packager
 
@@ -74,6 +74,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self.working_dir = TemporaryDirectory()
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
+        self.run_name = run_name
         log_init_success(self, log)
 
     @log_aware(log)
@@ -160,11 +161,23 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
                 LinkingObjectIdentifierFactory(obj).produce_linking_node()
             )
 
+        def add_optional_eventDetailInformation(event):
+            if not self.run_name:
+                return
+            eventDetail = "User specified name for this run: {}".format(
+                str(self.run_name)
+            )
+            eventDetailInformation = EventDetailInformation(
+                eventDetail=eventDetail
+            )
+            event.add_eventDetailInformation(eventDetailInformation)
+
         def write_minimal_premis(minimal_premis_record):
             minimal_premis_record.write_to_file(self.instantiated_premis)
 
         log.info("Copying external file to tmp location")
         ingestion_event = copy_to_working()
+        add_optional_eventDetailInformation(ingestion_event)
         log.info("Creating ingest PREMIS")
         minimal_premis_record = generate_minimal_premis(ingestion_event)
         link_em_all_up(minimal_premis_record)

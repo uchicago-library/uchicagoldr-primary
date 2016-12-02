@@ -4,14 +4,11 @@ from os import scandir
 
 from pypairtree.utils import path_to_identifier, identifier_to_path
 
-from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
-    log_init_success
+    log_init_success, recursive_scandir
 from .abc.stageserializationreader import StageSerializationReader
-from .abc.segmentpackager import SegmentPackager
 from .abc.materialsuitepackager import MaterialSuitePackager
-from ..structures.segment import Segment
 from ..ldritems.ldrpath import LDRPath
 
 
@@ -36,7 +33,7 @@ class FileSystemStageReader(StageSerializationReader):
     # which accepts an environment path and an identifier rather than just a
     # single path? Probably. - BNB
     @log_aware(log)
-    def __init__(self, path):
+    def __init__(self, path, encapsulation='srf'):
         """
         Create a new FileSystemStageReader
 
@@ -49,6 +46,7 @@ class FileSystemStageReader(StageSerializationReader):
         super().__init__()
         self.path = path
         self.struct.set_identifier(str(Path(path).parts[-1]))
+        self.encapsulation = encapsulation
         log_init_success(self, log)
 
     @log_aware(log)
@@ -56,7 +54,7 @@ class FileSystemStageReader(StageSerializationReader):
         accessionrecords_dir = Path(self.path, 'admin', 'accessionrecords')
         legalnotes_dir = Path(self.path, 'admin', 'legalnotes')
         adminnotes_dir = Path(self.path, 'admin', 'adminnotes')
-        segments_dir = Path(self.path, 'segments')
+        segments_dir = Path(self.path, 'pairtree_root')
         for x in [accessionrecords_dir, legalnotes_dir,
                   adminnotes_dir, segments_dir]:
             if not x.is_dir():
@@ -84,7 +82,7 @@ class FileSystemStageReader(StageSerializationReader):
         accessionrecords_dir = Path(self.path, 'admin', 'accessionrecords')
         legalnotes_dir = Path(self.path, 'admin', 'legalnotes')
         adminnotes_dir = Path(self.path, 'admin', 'adminnotes')
-        segments_dir = Path(self.path, 'segments')
+        materialsuites_dir = Path(self.path, 'pairtree_root')
 
         log.debug("Adding accession records")
         for x in [x.path for x in scandir(str(accessionrecords_dir))]:
@@ -95,78 +93,21 @@ class FileSystemStageReader(StageSerializationReader):
         log.debug("Adding adminnotes")
         for x in [x.path for x in scandir(str(adminnotes_dir))]:
             self.struct.add_adminnote(LDRPath(x))
-        log.debug("Adding segments resulting from delegation to the " +
-                  "FileSystemSegmentReader")
-        for x in [x.path for x in scandir(str(segments_dir))]:
-            self.struct.add_segment(
-                FileSystemSegmentReader(
-                    x,
-                    str(Path(x).parts[-1]).split("-")[0],
-                    str(Path(x).parts[-1]).split("-")[1]
+        log.debug("Adding MaterialSuites resulting from delegation to the " +
+                  "FileSystemMaterialSuite")
+        # This isn't particularly pretty, and might be able to be optimized to
+        # be more general (and potentially auto-detect the encapsulation) but it
+        # works for now.
+        for x in (x.path for x in recursive_scandir(str(materialsuites_dir)) if
+                  x.name == self.encapsulation):
+            self.struct.add_materialsuite(
+                FileSystemMaterialSuiteReader(
+                    materialsuites_dir,
+                    path_to_identifier(Path(x).parent, root=materialsuites_dir),
+                    encapsulation=self.encapsulation
                 ).package()
             )
         log.info("Stage read")
-        return self.struct
-
-
-class FileSystemSegmentReader(SegmentPackager):
-    """
-    The packager for pairtree based segment serializations
-
-    Given the path and identifier components of a Segment, package that segment
-    up and return it
-    """
-    @log_aware(log)
-    def __init__(self, path, label_text, label_number):
-        """
-        Create a new FileSystemSegmentReader
-
-        __Args__
-
-        1. path (str): The path the segment is located at
-        2. label_text (str): The textual component of the segment label
-        3. label_number (str/int): The numeric component of the segment label
-        """
-        super().__init__()
-        self.path = path
-        self.set_struct(Segment(label_text, int(label_number)))
-
-    @log_aware(log)
-    def _gather_identifiers(self):
-        log.debug("Scanning filesystem to compute materialsuite identifiers")
-        identifiers = []
-        for f in recursive_scandir(self.path):
-            if not f.is_file():
-                continue
-            f = f.path
-            if not f.endswith("premis.xml"):
-                continue
-            rel_p = Path(f).relative_to(self.path)
-            # remove the file and ecapsulation
-            id_dir_path = Path(rel_p.parents[1])
-            identifiers.append(path_to_identifier(id_dir_path))
-        return identifiers
-
-    @log_aware(log)
-    def package(self):
-        """
-        Packages the structure at the given location
-
-        __Returns__
-
-        self.struct (Segment): The segment
-        """
-        log.info("Packaging Segment")
-        for ident in self._gather_identifiers():
-            log.debug("Adding result of delegation to " +
-                      "FileSystemMaterialSuiteReader")
-            self.struct.add_materialsuite(
-                FileSystemMaterialSuiteReader(
-                    self.path,
-                    ident
-                ).package()
-            )
-        log.info("Segment packaged")
         return self.struct
 
 
@@ -178,13 +119,13 @@ class FileSystemMaterialSuiteReader(MaterialSuitePackager):
     pairtree encapsulation string, packages a MaterialSuite
     """
     @log_aware(log)
-    def __init__(self, seg_path, identifier, encapsulation='srf'):
+    def __init__(self, root_path, identifier, encapsulation='srf'):
         """
         Create a new FileSystemMaterialSuiteReader
 
         __Args__
 
-        1. seg_path (str): The path to the location where the MaterialSuite
+        1. root_path (str): The path to the location where the MaterialSuite
             is stored
         2. identifier (str): The identifier of the MaterialSuite
 
@@ -194,10 +135,10 @@ class FileSystemMaterialSuiteReader(MaterialSuitePackager):
             serializer. Defaults to "srf" for "Stage Resource Folder"
         """
         super().__init__()
-        self.seg_path = seg_path
+        self.root_path = root_path
         self.identifier = identifier
         self.encapsulation = encapsulation
-        self.path = Path(self.seg_path, identifier_to_path(identifier),
+        self.path = Path(self.root_path, identifier_to_path(identifier),
                          self.encapsulation)
 
     # Clobber the ABC function here, this is faster and doesn't instantiate
@@ -217,8 +158,8 @@ class FileSystemMaterialSuiteReader(MaterialSuitePackager):
 
     @log_aware(log)
     def get_premis(self):
-        log.debug("Searching for PREMIS")
         p = Path(self.path, 'premis.xml')
+        log.debug("Searching for PREMIS @ {}".format(str(p)))
         if p.is_file():
             log.debug("PREMIS located")
             return LDRPath(str(p))
