@@ -12,7 +12,6 @@ from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
     log_init_success
 from .abc.archiveserializationreader import ArchiveSerializationReader
-from ..structures.segment import Segment
 from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldrpath import LDRPath
 
@@ -60,12 +59,12 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             identifier = self.identifier
         arch_root = join(lts_path, str(identifier_to_path(identifier)),
                          "arf")
+        log.debug("Computed archive location: {}".format(arch_root))
         pairtree_root = join(arch_root, "pairtree_root")
         admin_root = join(arch_root, "admin")
         if not isdir(arch_root):
-            raise ValueError("No such identifier ({}) in the long term " +
-                             "storage environment ({})!".format(
-                                 lts_path, identifier))
+            raise ValueError("No such identifier ({}) ".format(identifier) +
+                             "storage environment ({})!".format(lts_path))
         if not isdir(pairtree_root):
             raise ValueError("No pairtree root in Archive ({})!".format(
                 self.identifier))
@@ -130,28 +129,10 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
 
         log.debug("Packaging objects...")
         for ms_entry in data_manifest['objs']:
-            # Create a segment if one doesn't exist with that identifier
-            # otherwise grab the existing segment from the structure
             log.debug("Packaging object")
-            seg = None
-            log.debug("Determining object segment")
-            for x in self.get_struct().segment_list:
-                if x.identifier == ms_entry['origin_segment']:
-                    seg = x
-                    log.debug("Segment already exists on Archive")
-            if seg is None:
-                log.debug("Segment does not exist on Archive, creating")
-                seg = Segment(
-                    ms_entry['origin_segment'].split("-")[0],
-                    int(ms_entry['origin_segment'].split("-")[1])
-                )
-                log.debug(
-                    "Adding Segment({}) to Archive".format(seg.identifier)
-                )
-                self.get_struct().add_segment(seg)
             log.debug("Delegating to MaterialSuite packager and adding " +
-                      "result to the segment")
-            seg.add_materialsuite(
+                      "result to the archive")
+            self.get_struct().add_materialsuite(
                 self._pack_materialsuite(ms_entry,
                                          data_manifest)
             )
@@ -178,7 +159,8 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                     pass
                 ms.identifier = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
         if original_name:
-            ms.content.item_name = original_name
+            if ms.content:
+                ms.content.item_name = original_name
         log.debug("MaterialSuite packaged")
         return ms
 

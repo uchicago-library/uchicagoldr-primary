@@ -65,9 +65,6 @@ class Stager(CLIApp):
         self.parser.add_argument("staging_id", help="The identifying name " +
                                  "for the new staging directory",
                                  type=str, action='store')
-        self.parser.add_argument("prefix", help="The prefix defining the " +
-                                 "type of run that is being processed",
-                                 type=str, action='store')
         self.parser.add_argument("--staging_env", help="The path to your " +
                                  "staging environment",
                                  type=str,
