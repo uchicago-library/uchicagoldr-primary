@@ -111,10 +111,9 @@ class TechnicalMetadataCreator(CLIApp):
         if args.fits_path is not None:
             dto['fits_path'] = args.fits_path
 
-        stage_fullpath = join(staging_env, args.stage_id)
-        reader = FileSystemStageReader(stage_fullpath)
+        reader = FileSystemStageReader(staging_env, args.stage_id)
         stage = reader.read()
-        log.info("Stage: " + stage_fullpath)
+        log.info("Stage: " + join(staging_env, args.stage_id))
 
         log.info("Processing...")
 

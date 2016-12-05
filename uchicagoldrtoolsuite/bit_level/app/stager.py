@@ -9,8 +9,8 @@ from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
 from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir, \
     TemporaryFilePath
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
-from ..lib.externalpackagers.externalfilesystemmaterialsuitepackager import \
-    ExternalFileSystemMaterialSuitePackager
+from ..lib.externalreaders.externalfilesystemmaterialsuitereader import \
+    ExternalFileSystemMaterialSuiteReader
 from ..lib.writers.filesystemstagewriter import FileSystemMaterialSuiteWriter
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.structures.stage import Stage
@@ -124,8 +124,7 @@ class Stager(CLIApp):
         log.info("Source Root: " + root)
 
         log.info("Reading Stage...")
-        stage = FileSystemStageReader(join(destination_root,
-                                           args.staging_id)).read()
+        stage = FileSystemStageReader(destination_root, args.staging_id).read()
 
         log.info("Stage: " + join(destination_root, args.staging_id))
 
@@ -204,10 +203,10 @@ class Stager(CLIApp):
                         )
                     )
 
-            p = ExternalFileSystemMaterialSuitePackager(
+            p = ExternalFileSystemMaterialSuiteReader(
                 x.path, root=root, run_name=args.run_name
             )
-            ms = p.package()
+            ms = p.read()
             w = FileSystemMaterialSuiteWriter(
                 ms, computed_segment_path, eq_detect=args.eq_detect
             )

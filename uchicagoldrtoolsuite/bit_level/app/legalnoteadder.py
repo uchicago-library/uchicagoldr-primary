@@ -110,10 +110,9 @@ class LegalNoteAdder(CLIApp):
             staging_env = self.conf.get("Paths", "staging_environment_path")
         staging_env = self.expand_path(staging_env)
 
-        stage_fullpath = join(staging_env, args.stage_id)
-        reader = FileSystemStageReader(stage_fullpath)
+        reader = FileSystemStageReader(staging_env, args.stage_id)
         stage = reader.read()
-        log.info("Stage: " + stage_fullpath)
+        log.info("Stage: " + join(staging_env, args.stage_id))
 
         log.info("Processing...")
         stage.add_legalnote(x)

@@ -7,7 +7,7 @@ from os.path import join
 from pypremis.lib import PremisRecord
 
 from uchicagoldrtoolsuite import log_aware
-from .abc.packager import Packager
+from .abc.serializationreader import SerializationReader
 from ...structures.materialsuite import MaterialSuite
 
 
@@ -22,7 +22,7 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
-class MaterialSuitePackager(Packager, metaclass=ABCMeta):
+class MaterialSuiteSerializationReader(SerializationReader, metaclass=ABCMeta):
     """
     ABC for all MaterialSuitePackagers
 
@@ -93,7 +93,7 @@ class MaterialSuitePackager(Packager, metaclass=ABCMeta):
         return ident
 
     @log_aware(log)
-    def package(self):
+    def read(self):
         """
         default package implementation
 

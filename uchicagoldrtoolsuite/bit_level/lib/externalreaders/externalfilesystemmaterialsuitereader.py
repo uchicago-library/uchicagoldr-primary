@@ -15,7 +15,8 @@ from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
     log_init_success
 from ..processors.genericpremiscreator import GenericPREMISCreator
-from ..readers.abc.materialsuitepackager import MaterialSuitePackager
+from ..readers.abc.materialsuiteserializationreader import \
+    MaterialSuiteSerializationReader
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 
@@ -40,7 +41,7 @@ log = getLogger(__name__)
 # regardless of how they come in, into strings.
 
 
-class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
+class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
     """
     Point at a file - get a MaterialSuite
     It's like magic!
