@@ -149,7 +149,7 @@ class Stager(CLIApp):
                 except Exception as e:
                     log.warn(
                         "An exception occured in resumption duplicate " +
-                        "detection at in MaterialSuite({})".format(
+                        "detection in MaterialSuite({})".format(
                             ms.identifier
                         ) +
                         "The Exception was: {}".format(str(e))
