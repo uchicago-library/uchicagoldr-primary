@@ -1,5 +1,6 @@
 from os.path import join, dirname, relpath
 from logging import getLogger
+from re import compile as re_compile
 
 from pypremis.lib import PremisRecord
 
@@ -79,10 +80,9 @@ class Stager(CLIApp):
                                  "directory that needs to be staged.",
                                  type=str, action='store',
                                  default=None)
-        self.parser.add_argument("--filter_pattern", help="A regex to " +
-                                 "use to exclude files whose paths match.",
-                                 type=str, action='store',
-                                 default=None)
+        self.parser.add_argument("--filter_pattern", help="Regexes to " +
+                                 "use to exclude files whose rel paths match.",
+                                 action='append', default=[])
         self.parser.add_argument("--eq_detect", help="The equality " +
                                  "metric to use on writing, check " +
                                  "LDRItemCopier for supported schemes.",
@@ -102,6 +102,9 @@ class Stager(CLIApp):
         if args.resume and not args.run_name:
             raise RuntimeError("In order to resume a run you must specify " +
                                "a run name")
+
+        filter_patterns = [re_compile(x) for x in args.filter_pattern]
+
         if args.staging_env:
             destination_root = args.staging_env
         else:
@@ -174,6 +177,16 @@ class Stager(CLIApp):
         for x in recursive_scandir(args.directory):
             if not x.is_file():
                 continue
+            for f_patt in filter_patterns:
+                if f_patt.fullmatch(relpath(x.path, root)):
+                    log.debug(
+                        "A filter pattern matched a file path, skipping. " +
+                              "Pattern: {}, Path: {}".format(
+                                  f_patt.pattern,
+                                  relpath(x.path, root)
+                              )
+                    )
+                    continue
             if args.resume:
                 log.debug("Determining if the run name and relpath " +
                           "already exist in the stage")
