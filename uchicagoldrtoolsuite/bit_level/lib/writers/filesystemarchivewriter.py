@@ -58,6 +58,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         super().__init__(anArchive)
         self.lts_env_path = aRoot
         self.eq_detect = eq_detect
+        self.set_implementation("filesystem (pairtree)")
         log_init_success(self, log)
 
     @log_aware(log)

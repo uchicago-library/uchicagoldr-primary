@@ -3,6 +3,7 @@ from logging import getLogger
 
 from uchicagoldrtoolsuite import log_aware
 from .abc.serializationwriter import SerializationWriter
+from ...structures.archive import Archive
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -33,3 +34,13 @@ class ArchiveSerializationWriter(SerializationWriter, metaclass=ABCMeta):
         log.debug("Entering the ABC init")
         self.set_struct(struct)
         log.debug("Exiting the ABC init")
+
+    def set_struct(self, struct):
+        if not isinstance(struct, Archive):
+            raise ValueError(
+                "{} is a {} not a {}".format(
+                    str(struct), str(type(struct)), str(Archive)
+                )
+            )
+        self._struct = struct
+
