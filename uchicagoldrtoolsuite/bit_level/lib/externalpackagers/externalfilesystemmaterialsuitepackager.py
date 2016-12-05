@@ -69,8 +69,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self._bytes_root = None
         super().__init__()
         self.path = path
-        if self.root is not None:
-            self.root = root
+        self.root = root
         self.working_dir = TemporaryDirectory()
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
@@ -161,12 +160,15 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
                 LinkingObjectIdentifierFactory(obj).produce_linking_node()
             )
 
-        def add_optional_eventDetailInformation(event):
+        def add_eventDetailInformation(event):
             if not self.run_name:
-                return
-            eventDetail = "User specified name for this run: {}".format(
-                str(self.run_name)
-            )
+                eventDetail = "Run Identifier (Machine Generated): {}".format(
+                    str(uuid4().hex)
+                )
+            else:
+                eventDetail = "Run Identifier (Machine Generated): {}".format(
+                    str(self.run_name)
+                )
             eventDetailInformation = EventDetailInformation(
                 eventDetail=eventDetail
             )
@@ -177,7 +179,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
 
         log.info("Copying external file to tmp location")
         ingestion_event = copy_to_working()
-        add_optional_eventDetailInformation(ingestion_event)
+        add_eventDetailInformation(ingestion_event)
         log.info("Creating ingest PREMIS")
         minimal_premis_record = generate_minimal_premis(ingestion_event)
         link_em_all_up(minimal_premis_record)

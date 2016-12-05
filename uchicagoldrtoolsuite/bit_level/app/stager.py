@@ -1,9 +1,12 @@
-from os.path import join, dirname
+from os.path import join, dirname, relpath
 from logging import getLogger
+
+from pypremis.lib import PremisRecord
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
+from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir, \
+    TemporaryFilePath
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.externalpackagers.externalfilesystemmaterialsuitepackager import \
     ExternalFileSystemMaterialSuitePackager
@@ -69,9 +72,9 @@ class Stager(CLIApp):
                                  "staging environment",
                                  type=str,
                                  default=None)
-        self.parser.add_argument("--resume", "-r", help="An integer for a " +
-                                 "run that needs to be resumed.",
-                                 type=str, action='store', default=0)
+        self.parser.add_argument("--resume", "-r", help="Resume a previously " +
+                                 "started run.",
+                                 action='store_true')
         self.parser.add_argument("--source_root", help="The root of the  " +
                                  "directory that needs to be staged.",
                                  type=str, action='store',
@@ -96,6 +99,9 @@ class Stager(CLIApp):
         self.process_universal_args(args)
 
         # App code
+        if args.resume and not args.run_name:
+            raise RuntimeError("In order to resume a run you must specify " +
+                               "a run name")
         if args.staging_env:
             destination_root = args.staging_env
         else:
@@ -120,12 +126,38 @@ class Stager(CLIApp):
 
         log.info("Stage: " + join(destination_root, args.staging_id))
 
+        _exists = []
         if args.resume:
-            # TODO
-            pass
+            for ms in stage.materialsuite_list:
+                try:
+                    with TemporaryFilePath() as tmp_path:
+                        with ms.premis.open() as src:
+                            with open(tmp_path, 'wb') as dst:
+                                dst.write(src.read())
+                        premis = PremisRecord(frompath=tmp_path)
+                        obj = premis.get_object_list()[0]
+                        originalName = obj.get_originalName()
+                        run_id = None
+                        for event in premis.get_event_list():
+                            for eventDetailInformation in \
+                                    event.get_eventDetailInformation():
+                                eventDetail = eventDetailInformation.get_eventDetail()
+                                if eventDetail.startswith("Run Identifier"):
+                                    run_id = eventDetail.split(": ")[1]
+                        if run_id == args.run_name:
+                            _exists.append(originalName)
+                except Exception as e:
+                    log.warn(
+                        "An exception occured in resumption duplicate " +
+                        "detection at in MaterialSuite({})".format(
+                            ms.identifier
+                        ) +
+                        "The Exception was: {}".format(str(e))
+                    )
+                    raise e
+            _exists = set(_exists)
 
-        log.info("Processing...")
-        log.info("Writing...")
+        log.info("Processing & Writing...")
 
         # We need a stage writer here just for the stage skeleton, we're going
         # to manually handle dealing with the nested writers so we can stage
@@ -142,6 +174,23 @@ class Stager(CLIApp):
         for x in recursive_scandir(args.directory):
             if not x.is_file():
                 continue
+            if args.resume:
+                log.debug("Determining if the run name and relpath " +
+                          "already exist in the stage")
+                if relpath(x.path, root) in _exists:
+                    log.debug(
+                        "{} appears in the existing stage, skipping".format(
+                             relpath(x.path, root)
+                        )
+                    )
+                    continue
+                else:
+                    log.debug(
+                        "{} does not appear in the existing stage, processing".format(
+                            relpath(x.path, root)
+                        )
+                    )
+
             p = ExternalFileSystemMaterialSuitePackager(
                 x.path, root=root, run_name=args.run_name
             )
