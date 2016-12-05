@@ -55,13 +55,13 @@ def default_callback(premis, patterns, exclude_patterns=None):
 
     matched = False
     for patt in patterns:
-        if patt.match(originalName):
+        if patt.fullmatch(originalName):
             matched = True
             break
     if matched:
         if exclude_patterns:
             for ex_patt in exclude_patterns:
-                if ex_patt.match(originalName):
+                if ex_patt.fullmatch(originalName):
                     matched = False
                     break
     if matched:
