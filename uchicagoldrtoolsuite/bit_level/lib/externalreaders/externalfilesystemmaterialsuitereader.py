@@ -167,7 +167,7 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
                     str(uuid4().hex)
                 )
             else:
-                eventDetail = "Run Identifier (Machine Generated): {}".format(
+                eventDetail = "Run Identifier (Human Generated): {}".format(
                     str(self.run_name)
                 )
             eventDetailInformation = EventDetailInformation(

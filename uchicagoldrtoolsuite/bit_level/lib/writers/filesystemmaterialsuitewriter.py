@@ -1,6 +1,8 @@
 from logging import getLogger
 from pathlib import Path
 
+from pypremis.lib import PremisRecord
+from pypremis.nodes import EventOutcomeDetail, EventOutcomeInformation
 from pypairtree.utils import identifier_to_path
 
 from uchicagoldrtoolsuite import log_aware
@@ -32,7 +34,9 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
     on disk
     """
     @log_aware(log)
-    def __init__(self, aStructure, aRoot, eq_detect="bytes"):
+    def __init__(self, aStructure, aRoot, eq_detect="bytes",
+                 encapsulation="srf", premis_event=None,
+                 update_content_location=False, clobber=True):
         """
         Create a new FileSystemMaterialSuiteWriter
 
@@ -49,10 +53,13 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         self.struct = aStructure
         self.materialsuite_root = Path(
             identifier_to_path(self.struct.identifier, root=aRoot),
-            "srf"
+            encapsulation
         )
         self.eq_detect = eq_detect
         self.set_implementation("filesystem (pairtree)")
+        self.clobber = clobber
+        self.premis_event_entry = premis_event
+        self.update_content_location = update_content_location
         log_init_success(self, log)
 
     @log_aware(log)
@@ -65,6 +72,26 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
                                "where a directory should be! " +
                                "{}".format(str(self.materialsuite_root)))
         makedirs(str(Path(self.materialsuite_root, 'TECHMD')))
+
+    def _add_copy_event(self, premis, e, cr):
+        if cr is None:
+            return
+        eventOutcomeDetail = EventOutcomeDetail(
+            eventOutcomeDetailNote=str(cr)
+        )
+        eventOutcomeInformation = EventOutcomeInformation(
+            eventOutcomeDetail=eventOutcomeDetail,
+            eventOutcome="SUCCESS"
+        )
+        e.add_eventOutcomeInformation(eventOutcomeInformation)
+        premis.add_event(e)
+
+    def _update_content_location(self, premis, path):
+        log.debug("Updating PREMIS contentLocation field")
+        premis.get_object_list()[0].\
+            get_storage()[0].get_contentLocation().set_contentLocationValue(
+                path
+            )
 
     @log_aware(log)
     def write(self):
@@ -79,17 +106,16 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         target_premis_path = Path(self.materialsuite_root, 'premis.xml')
         target_premis_item = LDRPath(str(target_premis_path))
 
-        copiers = []
-
-        copiers.append(LDRItemCopier(self.struct.premis, target_premis_item,
-                                     clobber=True))
-
+        premis_copier = LDRItemCopier(self.struct.premis, target_premis_item,
+                                      clobber=self.clobber)
+        content_copier = None
         if self.struct.content is not None:
-            copiers.append(LDRItemCopier(self.struct.content,
-                                         target_content_item,
-                                         clobber=True))
+            content_copier = LDRItemCopier(self.struct.content,
+                                           target_content_item,
+                                           clobber=self.clobber)
 
         log.debug("Computing techmd file names")
+        techmd_copiers = []
         for x in self.struct.technicalmetadata_list:
             # Use a quick checksum as the file name, this should prevent
             # un-needed writing so long as the records don't change in between
@@ -102,11 +128,27 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
             target_techmd_path = Path(self.materialsuite_root,
                                       'TECHMD', h)
             target_techmd_item = LDRPath(str(target_techmd_path))
-            copiers.append(LDRItemCopier(x, target_techmd_item, clobber=True))
+            techmd_copiers.append(LDRItemCopier(x, target_techmd_item,
+                                                clobber=self.clobber))
 
         log.debug("Copying MaterialSuite bytestreams to disk")
-        for x in copiers:
-            cr = x.copy()
-            if not cr['src_eqs_dst']:
-                raise ValueError()
+        content_cr = None
+        for x in [premis_copier, content_copier] + techmd_copiers:
+            if x is not None:
+                cr = x.copy()
+                if not cr['src_eqs_dst']:
+                    raise ValueError()
+                if x == content_copier:
+                    content_cr = cr
+
+        if self.premis_event_entry or self.update_content_location:
+            premis = PremisRecord(frompath=str(target_premis_path))
+            if self.update_content_location:
+                self._update_content_location(premis, str(target_premis_path))
+            if self.premis_event_entry:
+                self._add_copy_event(
+                    premis, self.premis_event_entry, content_cr
+                )
+            premis.write_to_file(str(target_premis_path))
+
         log.info("MaterialSuite written")
