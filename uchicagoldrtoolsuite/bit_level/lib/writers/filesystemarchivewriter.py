@@ -34,7 +34,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     of directories and files.
     """
     @log_aware(log)
-    def __init__(self, anArchive, aRoot, eq_detect="bytes"):
+    def __init__(self, anArchive, aRoot, eq_detect="bytes",
+                 materialsuite_serializer=FileSystemMaterialSuiteWriter):
         """
         spawn a writer for the pairtree based Archive serialization
 
@@ -53,6 +54,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self.lts_env_path = aRoot
         self.eq_detect = eq_detect
         self.set_implementation("filesystem (pairtree)")
+        self.materialsuite_serializer = materialsuite_serializer
         log_init_success(self, log)
 
     @log_aware(log)
@@ -124,7 +126,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
         log.info("Writing archive data")
         for x in self.struct.materialsuite_list:
-            ms_writer = FileSystemMaterialSuiteWriter(
+            ms_writer = self.materialsuite_serializer(
                 x, pairtree_root, encapsulation="arf",
                 update_content_location=True, premis_event=_build_event(),
                 clobber=False

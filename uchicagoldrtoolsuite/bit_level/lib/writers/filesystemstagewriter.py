@@ -30,7 +30,8 @@ class FileSystemStageWriter(StageSerializationWriter):
     on disk
     """
     @log_aware(log)
-    def __init__(self, aStructure, aRoot, eq_detect="bytes"):
+    def __init__(self, aStructure, aRoot, eq_detect="bytes",
+                 materialsuite_serializer=FileSystemMaterialSuiteWriter):
         """
         Create a new FileSystemStageWriter instance
 
@@ -49,6 +50,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         self.stage_root = Path(self.stage_env_path, self.struct.identifier)
         self.set_implementation('filesystem (pairtree)')
         self.eq_detect = eq_detect
+        self.materialsuite_serializer = materialsuite_serializer
         log_init_success(self, log)
 
     @log_aware(log)
@@ -134,7 +136,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         self._write_legalnotes()
         log.debug("Delegating segment writes to FileSystemSegmentWriter...")
         for x in self.struct.materialsuite_list:
-            materialsuite_serializer = FileSystemMaterialSuiteWriter(
+            materialsuite_serializer = self.materialsuite_serializer(
                 x, str(Path(self.stage_root, 'pairtree_root')),
                 eq_detect=self.eq_detect)
             materialsuite_serializer.write()

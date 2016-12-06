@@ -34,7 +34,8 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
     streams serialized as files on disk.
     """
     @log_aware(log)
-    def __init__(self, lts_path, identifier):
+    def __init__(self, lts_path, identifier,
+                 materialsuite_deserializer=FileSystemMaterialSuiteReader):
         """
         Create a new FileSystemArchiveReader
 
@@ -48,6 +49,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         super().__init__()
         self.lts_path = lts_path
         self.identifier = identifier
+        self.materialsuite_deserializer = materialsuite_deserializer
         log_init_success(self, log)
 
     def _read_skeleton(self, lts_path=None, identifier=None):
@@ -93,7 +95,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             identifier = path_to_identifier(Path(x.path).parent.parent,
                                             root=Path(pairtree_root))
             self.struct.add_materialsuite(
-                FileSystemMaterialSuiteReader(
+                self.materialsuite_deserializer(
                     pairtree_root, identifier, encapsulation="arf"
                 ).read()
             )
