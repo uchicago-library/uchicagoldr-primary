@@ -2,7 +2,6 @@ from logging import getLogger
 from pathlib import Path
 
 from pypremis.lib import PremisRecord
-from pypremis.nodes import EventOutcomeDetail, EventOutcomeInformation
 from pypairtree.utils import identifier_to_path
 
 from uchicagoldrtoolsuite import log_aware
@@ -50,16 +49,17 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         * eq_detect (str): The equality metric to use during serialization
         """
         log_init_attempt(self, log, locals())
-        self.struct = aStructure
+        super().__init__(
+            aStructure, aRoot, update_content_location=update_content_location,
+            premis_event=premis_event
+        )
         self.materialsuite_root = Path(
-            identifier_to_path(self.struct.identifier, root=aRoot),
+            identifier_to_path(self.struct.identifier, root=self.root),
             encapsulation
         )
         self.eq_detect = eq_detect
         self.set_implementation("filesystem (pairtree)")
         self.clobber = clobber
-        self.premis_event_entry = premis_event
-        self.update_content_location = update_content_location
         log_init_success(self, log)
 
     @log_aware(log)
@@ -72,26 +72,6 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
                                "where a directory should be! " +
                                "{}".format(str(self.materialsuite_root)))
         makedirs(str(Path(self.materialsuite_root, 'TECHMD')))
-
-    def _add_copy_event(self, premis, e, cr):
-        if cr is None:
-            return
-        eventOutcomeDetail = EventOutcomeDetail(
-            eventOutcomeDetailNote=str(cr)
-        )
-        eventOutcomeInformation = EventOutcomeInformation(
-            eventOutcomeDetail=eventOutcomeDetail,
-            eventOutcome="SUCCESS"
-        )
-        e.add_eventOutcomeInformation(eventOutcomeInformation)
-        premis.add_event(e)
-
-    def _update_content_location(self, premis, path):
-        log.debug("Updating PREMIS contentLocation field")
-        premis.get_object_list()[0].\
-            get_storage()[0].get_contentLocation().set_contentLocationValue(
-                path
-            )
 
     @log_aware(log)
     def write(self):
@@ -144,10 +124,11 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         if self.premis_event_entry or self.update_content_location:
             premis = PremisRecord(frompath=str(target_premis_path))
             if self.update_content_location:
-                self._update_content_location(premis, str(target_premis_path))
+                self.content_location_update(premis, str(target_premis_path))
             if self.premis_event_entry:
-                self._add_copy_event(
-                    premis, self.premis_event_entry, content_cr
+                self.finalize_event(
+                    premis, self.premis_event_entry,
+                    eventOutcomeDetailNote=content_cr
                 )
             premis.write_to_file(str(target_premis_path))
 

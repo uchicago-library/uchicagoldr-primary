@@ -50,29 +50,17 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             serializing
         """
         log_init_attempt(self, log, locals())
-        super().__init__(anArchive)
-        self.lts_env_path = aRoot
-        self.eq_detect = eq_detect
+        super().__init__(anArchive, aRoot, materialsuite_serializer,
+                         eq_detect=eq_detect)
         self.set_implementation("filesystem (pairtree)")
-        self.materialsuite_serializer = materialsuite_serializer
         log_init_success(self, log)
-
-    @log_aware(log)
-    def __repr__(self):
-        attr_dict = {
-            'lts_env_path': self.lts_env_path,
-            'eq_detect': self.eq_detect,
-            'struct': str(self.get_struct())
-        }
-        return "<FileSystemArchiveWriter {}>".format(dumps(attr_dict,
-                                                           sort_keys=True))
 
     @log_aware(log)
     def _write_ark_dir(self, clobber=False):
         log.info("Writing ARK directory")
         ark_path = join(
             str(identifier_to_path(self.get_struct().identifier,
-                                   root=self.lts_env_path)),
+                                   root=self.root)),
             "arf"
         )
         if exists(ark_path) and not clobber:
@@ -239,3 +227,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         self._write_admin_manifest(admin_manifest, admin_dir_path)
         self._write_WRITE_FINISHED(admin_dir_path)
         log.info("Archive written")
+
+    @log_aware(log)
+    def set_root(self, x):
+        if not isinstance(x, str):
+            raise TypeError(
+                "{} is a {}, not a str!".format(
+                    str(x), str(type(x))
+                )
+            )
+        self._root = x

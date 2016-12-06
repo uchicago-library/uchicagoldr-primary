@@ -45,9 +45,9 @@ class FileSystemStageWriter(StageSerializationWriter):
         * eq_detect (str): The equality metric to use during serialization
         """
         log_init_attempt(self, log, locals())
-        super().__init__(aStructure)
-        self.stage_env_path = Path(aRoot)
-        self.stage_root = Path(self.stage_env_path, self.struct.identifier)
+        super().__init__(aStructure, aRoot, materialsuite_serializer,
+                         eq_detect=eq_detect)
+        self.stage_root = Path(self.root, self.struct.identifier)
         self.set_implementation('filesystem (pairtree)')
         self.eq_detect = eq_detect
         self.materialsuite_serializer = materialsuite_serializer
@@ -141,3 +141,13 @@ class FileSystemStageWriter(StageSerializationWriter):
                 eq_detect=self.eq_detect)
             materialsuite_serializer.write()
         log.info("Stage written")
+
+    @log_aware(log)
+    def set_root(self, x):
+        if not isinstance(x, str):
+            raise TypeError(
+                "{} is a {}, not a str!".format(
+                    str(x), str(type(x))
+                )
+            )
+        self._root = x
