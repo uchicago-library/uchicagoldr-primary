@@ -30,8 +30,10 @@ class FileSystemStageWriter(StageSerializationWriter):
     on disk
     """
     @log_aware(log)
-    def __init__(self, aStructure, aRoot, eq_detect="bytes",
-                 materialsuite_serializer=FileSystemMaterialSuiteWriter):
+    def __init__(self, aStructure, aRoot,
+                 materialsuite_serializer=FileSystemMaterialSuiteWriter,
+                 eq_detect="bytes", materialsuite_serializer_kwargs={},
+                 encapsulation="srf"):
         """
         Create a new FileSystemStageWriter instance
 
@@ -45,8 +47,14 @@ class FileSystemStageWriter(StageSerializationWriter):
         * eq_detect (str): The equality metric to use during serialization
         """
         log_init_attempt(self, log, locals())
-        super().__init__(aStructure, aRoot, materialsuite_serializer,
-                         eq_detect=eq_detect)
+        super().__init__(
+            aStructure, aRoot, materialsuite_serializer, eq_detect=eq_detect,
+            materialsuite_serializer_kwargs=materialsuite_serializer_kwargs
+        )
+        self.encapsulation = encapsulation
+        if 'encapsulation' not in self.materialsuite_serializer_kwargs.keys():
+            self.materialsuite_serializer_kwargs['encapsulation'] = \
+                self.encapsulation
         self.stage_root = Path(self.root, self.struct.identifier)
         self.set_implementation('filesystem (pairtree)')
         log_init_success(self, log)
@@ -136,7 +144,7 @@ class FileSystemStageWriter(StageSerializationWriter):
         for x in self.struct.materialsuite_list:
             materialsuite_serializer = self.materialsuite_serializer(
                 x, str(Path(self.stage_root, 'pairtree_root')),
-                eq_detect=self.eq_detect)
+                **self.materialsuite_serializer_kwargs)
             materialsuite_serializer.write()
         log.info("Stage written")
 

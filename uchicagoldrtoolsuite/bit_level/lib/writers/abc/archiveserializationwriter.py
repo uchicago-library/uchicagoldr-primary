@@ -26,7 +26,7 @@ class ArchiveSerializationWriter(SerializationWriter, metaclass=ABCMeta):
     @abstractmethod
     @log_aware(log)
     def __init__(self, struct, root, materialsuite_serializer,
-                 eq_detect="bytes"):
+                 eq_detect="bytes", materialsuite_serializer_kwargs={}):
         """
         another teeny helper init
 
@@ -38,6 +38,9 @@ class ArchiveSerializationWriter(SerializationWriter, metaclass=ABCMeta):
         super().__init__(struct, root, eq_detect=eq_detect)
         self._materialsuite_serializer = None
         self.materialsuite_serializer = materialsuite_serializer
+        if 'eq_detect' not in materialsuite_serializer_kwargs.keys():
+            materialsuite_serializer_kwargs['eq_detect'] = self.eq_detect
+        self.materialsuite_serializer_kwargs = materialsuite_serializer_kwargs
         log.debug("Exiting the ABC init")
 
     def set_struct(self, struct):
@@ -64,5 +67,17 @@ class ArchiveSerializationWriter(SerializationWriter, metaclass=ABCMeta):
             )
         self._materialsuite_serializer = x
 
+    def get_materialsuite_serializer_kwargs(self):
+        return self._materialsuite_serializer_kwargs
+
+    def set_materialsuite_serializer_kwargs(self, x):
+        if not isinstance(x, dict):
+            raise TypeError()
+        self._materialsuite_serializer_kwargs = x
+
     materialsuite_serializer = property(get_materialsuite_serializer,
                                         set_materialsuite_serializer)
+    materialsuite_serializer_kwargs = property(
+        get_materialsuite_serializer_kwargs,
+        set_materialsuite_serializer_kwargs
+    )

@@ -25,10 +25,13 @@ class StageSerializationReader(SerializationReader, metaclass=ABCMeta):
     """
     @abstractmethod
     @log_aware(log)
-    def __init__(self, root, target_identifier, materialsuite_deserializer):
+    def __init__(self, root, target_identifier, materialsuite_deserializer,
+                 materialsuite_deserializer_kwargs={}):
         log.debug("Entering the ABC init")
         super().__init__(root, target_identifier)
         self.materialsuite_deserializer = materialsuite_deserializer
+        self.materialsuite_deserializer_kwargs = \
+            materialsuite_deserializer_kwargs
         self.struct = Stage(self.target_identifier)
         log.debug("Exiting the ABC init")
 
@@ -49,5 +52,18 @@ class StageSerializationReader(SerializationReader, metaclass=ABCMeta):
             raise TypeError()
         self._materialsuite_deserializer = x
 
+    def get_materialsuite_deserializer_kwargs(self):
+        return self._materialsuite_deserializer_kwargs
+
+    def set_materialsuite_deserializer_kwargs(self, x):
+        if not isinstance(x, dict):
+            raise TypeError()
+        self._materialsuite_deserializer_kwargs = x
+
     materialsuite_deserializer = property(get_materialsuite_deserializer,
                                           set_materialsuite_deserializer)
+
+    materialsuite_deserializer_kwargs = property(
+        get_materialsuite_deserializer_kwargs,
+        set_materialsuite_deserializer_kwargs
+    )

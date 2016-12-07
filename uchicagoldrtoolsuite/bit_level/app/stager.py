@@ -208,7 +208,8 @@ class Stager(CLIApp):
             )
             ms = p.read()
             w = FileSystemMaterialSuiteWriter(
-                ms, computed_segment_path, eq_detect=args.eq_detect
+                ms, computed_segment_path, eq_detect=args.eq_detect,
+                encapsulation=stage_writer.encapsulation
             )
             w.write()
             del p

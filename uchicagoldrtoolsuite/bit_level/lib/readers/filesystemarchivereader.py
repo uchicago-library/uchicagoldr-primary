@@ -33,8 +33,11 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
     streams serialized as files on disk.
     """
     @log_aware(log)
-    def __init__(self, root, target_identifier,
-                 materialsuite_deserializer=FileSystemMaterialSuiteReader):
+    def __init__(
+        self, root, target_identifier, encapsulation="arf",
+        materialsuite_deserializer=FileSystemMaterialSuiteReader,
+        materialsuite_deserializer_kwargs={}
+    ):
         """
         Create a new FileSystemArchiveReader
 
@@ -45,7 +48,14 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             in the given long term storage environment
         """
         log_init_attempt(self, log, locals())
-        super().__init__(root, target_identifier, materialsuite_deserializer)
+        super().__init__(root, target_identifier, materialsuite_deserializer,
+                         materialsuite_deserializer_kwargs)
+        self.encapsulation = encapsulation
+        # If the ms deserializer needs encapsulation inherit it if none is
+        # provided
+        if not 'encapsulation' in self.materialsuite_deserializer_kwargs.keys():
+            self.materialsuite_deserializer_kwargs['encapsulation'] = \
+                self.encapsulation
         log_init_success(self, log)
 
     def _read_skeleton(self, lts_path=None, identifier=None):
@@ -54,7 +64,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         if identifier is None:
             identifier = self.target_identifier
         arch_root = join(lts_path, str(identifier_to_path(identifier)),
-                         "arf")
+                         self.encapsulation)
         log.debug("Computed archive location: {}".format(arch_root))
         pairtree_root = join(arch_root, "pairtree_root")
         admin_root = join(arch_root, "admin")
@@ -92,7 +102,8 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                                             root=Path(pairtree_root))
             self.struct.add_materialsuite(
                 self.materialsuite_deserializer(
-                    pairtree_root, identifier, encapsulation="arf"
+                    pairtree_root, identifier,
+                    **self.materialsuite_deserializer_kwargs
                 ).read()
             )
 

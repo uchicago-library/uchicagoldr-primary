@@ -33,8 +33,11 @@ class FileSystemStageReader(StageSerializationReader):
     # which accepts an environment path and an identifier rather than just a
     # single path? Probably. - BNB
     @log_aware(log)
-    def __init__(self, root, target_identifier, encapsulation='srf',
-                 materialsuite_deserializer=FileSystemMaterialSuiteReader):
+    def __init__(
+        self, root, target_identifier, encapsulation='srf',
+        materialsuite_deserializer=FileSystemMaterialSuiteReader,
+        materialsuite_deserializer_kwargs={}
+    ):
         """
         Create a new FileSystemStageReader
 
@@ -44,9 +47,15 @@ class FileSystemStageReader(StageSerializationReader):
             be the stage identifier
         """
         log_init_attempt(self, log, locals())
-        super().__init__(root, target_identifier, materialsuite_deserializer)
+        super().__init__(root, target_identifier, materialsuite_deserializer,
+                         materialsuite_deserializer_kwargs)
         self.path = str(Path(self.root, self.target_identifier))
         self.encapsulation = encapsulation
+        # If the ms deserializer needs encapsulation inherit it if none is
+        # provided
+        if not 'encapsulation' in self.materialsuite_deserializer_kwargs.keys():
+            self.materialsuite_deserializer_kwargs['encapsulation'] = \
+                self.encapsulation
         log_init_success(self, log)
 
     @log_aware(log)
@@ -104,7 +113,7 @@ class FileSystemStageReader(StageSerializationReader):
                 self.materialsuite_deserializer(
                     materialsuites_dir,
                     path_to_identifier(Path(x).parent, root=materialsuites_dir),
-                    encapsulation=self.encapsulation
+                    **self.materialsuite_deserializer_kwargs
                 ).read()
             )
         log.info("Stage read")

@@ -33,9 +33,7 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
     on disk
     """
     @log_aware(log)
-    def __init__(self, aStructure, aRoot, eq_detect="bytes",
-                 encapsulation="srf", premis_event=None,
-                 update_content_location=False, clobber=True):
+    def __init__(self, aStructure, aRoot, **kwargs):
         """
         Create a new FileSystemMaterialSuiteWriter
 
@@ -49,6 +47,13 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         * eq_detect (str): The equality metric to use during serialization
         """
         log_init_attempt(self, log, locals())
+        encapsulation = kwargs.get('encapsulation')
+        if encapsulation is None:
+            raise TypeError("'encapsulation' kwarg must be provided {}".format(str(kwargs)))
+        eq_detect = kwargs.get('eq_detect', 'bytes')
+        premis_event = kwargs.get('premis_event')
+        update_content_location = kwargs.get('update_content_location', False)
+        clobber = kwargs.get('clobber', True)
         super().__init__(
             aStructure, aRoot, update_content_location=update_content_location,
             premis_event=premis_event, eq_detect=eq_detect

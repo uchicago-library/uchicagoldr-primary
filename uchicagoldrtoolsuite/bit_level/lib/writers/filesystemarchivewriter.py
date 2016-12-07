@@ -1,4 +1,4 @@
-from json import dumps, dump
+from json import dump
 from os import makedirs
 from os.path import exists, join
 from logging import getLogger
@@ -28,6 +28,21 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
+def _build_eventDetailInformation():
+    return EventDetailInformation(eventDetail="bystream copied into " +
+                                  "the long term storage environment.")
+
+
+def _build_eventIdentifier():
+    return EventIdentifier("DOI", DOI().value)
+
+
+def _build_event():
+    e = Event(_build_eventIdentifier(), "ingestion", iso8601_dt())
+    e.add_eventDetailInformation(_build_eventDetailInformation())
+    return e
+
+
 class FileSystemArchiveWriter(ArchiveSerializationWriter):
     """
     Writes an archive structure to disk utilizing PairTrees as a series
@@ -35,7 +50,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     """
     @log_aware(log)
     def __init__(self, anArchive, aRoot, eq_detect="bytes",
-                 materialsuite_serializer=FileSystemMaterialSuiteWriter):
+                 materialsuite_serializer=FileSystemMaterialSuiteWriter,
+                 materialsuite_serializer_kwargs={}, encapsulation="arf"):
         """
         spawn a writer for the pairtree based Archive serialization
 
@@ -50,9 +66,18 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             serializing
         """
         log_init_attempt(self, log, locals())
-        super().__init__(anArchive, aRoot, materialsuite_serializer,
-                         eq_detect=eq_detect)
+        super().__init__(
+            anArchive, aRoot, materialsuite_serializer, eq_detect=eq_detect,
+            materialsuite_serializer_kwargs=materialsuite_serializer_kwargs
+        )
         self.set_implementation("filesystem (pairtree)")
+        self.encapsulation = encapsulation
+        if 'encapsulation' not in self.materialsuite_serializer_kwargs.keys():
+            self.materialsuite_serializer_kwargs['encapsulation'] = \
+                self.encapsulation
+        self.materialsuite_serializer_kwargs['update_content_location'] = True
+        self.materialsuite_serializer_kwargs['premis_event'] = _build_event()
+        self.materialsuite_serializer_kwargs['clobber'] = False
         log_init_success(self, log)
 
     @log_aware(log)
@@ -61,7 +86,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         ark_path = join(
             str(identifier_to_path(self.get_struct().identifier,
                                    root=self.root)),
-            "arf"
+            self.encapsulation
         )
         if exists(ark_path) and not clobber:
             err_text = "The Ark path ({}) ".format(ark_path) + \
@@ -100,24 +125,11 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
     @log_aware(log)
     def _write_data(self, pairtree_root):
 
-        def _build_eventDetailInformation():
-            return EventDetailInformation(eventDetail="bystream copied into " +
-                                          "the long term storage environment.")
-
-        def _build_event():
-            e = Event(_build_eventIdentifier(), "ingestion", iso8601_dt())
-            e.add_eventDetailInformation(_build_eventDetailInformation())
-            return e
-
-        def _build_eventIdentifier():
-            return EventIdentifier("DOI", DOI().value)
-
         log.info("Writing archive data")
         for x in self.struct.materialsuite_list:
             ms_writer = self.materialsuite_serializer(
-                x, pairtree_root, encapsulation="arf",
-                update_content_location=True, premis_event=_build_event(),
-                clobber=False
+                x, pairtree_root,
+                **self.materialsuite_serializer_kwargs
             )
             ms_writer.write()
         log.info("Archive data written")

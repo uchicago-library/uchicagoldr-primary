@@ -31,7 +31,7 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
     pairtree encapsulation string, packages a MaterialSuite
     """
     @log_aware(log)
-    def __init__(self, root, target_identifier, encapsulation='srf'):
+    def __init__(self, root, target_identifier, **kwargs):
         """
         Create a new FileSystemMaterialSuiteReader
 
@@ -48,7 +48,9 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
         """
         log_init_attempt(self, log, locals())
         super().__init__(root, target_identifier)
-        self.encapsulation = encapsulation
+        self.encapsulation = kwargs.get('encapsulation')
+        if self.encapsulation is None:
+            raise TypeError("Must supply the 'encapsulation' kwarg")
         self.path = Path(self.root, identifier_to_path(self.target_identifier),
                          self.encapsulation)
         log_init_success(self, log)
