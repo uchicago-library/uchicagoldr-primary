@@ -83,7 +83,6 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
             self.materialsuite_serializer_kwargs['encapsulation'] = \
                 self.encapsulation
         self.materialsuite_serializer_kwargs['update_content_location'] = True
-        self.materialsuite_serializer_kwargs['premis_event'] = _build_event()
         self.materialsuite_serializer_kwargs['clobber'] = False
         log_init_success(self, log)
 
@@ -134,6 +133,7 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
         log.info("Writing archive data")
         for x in self.struct.materialsuite_list:
+            self.materialsuite_serializer_kwargs['premis_event'] = _build_event()
             ms_writer = self.materialsuite_serializer(
                 x, pairtree_root,
                 **self.materialsuite_serializer_kwargs
