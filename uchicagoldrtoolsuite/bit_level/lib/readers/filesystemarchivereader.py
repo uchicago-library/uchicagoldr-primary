@@ -43,9 +43,20 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
 
         __Args__
 
-        1. lts_path (str): The file system path to the long term storage env
-        2. identifier (str): The identifier of the archive structure stored
-            in the given long term storage environment
+        1. root (str): The file system path to the long term storage env
+        2. target_identifier (str): The identifier of an archive structure
+            stored in the given long term storage environment
+
+        __KWArgs__
+
+        * encapsulation (str): A string to use to encapsulation the pairtree
+            objects
+        * materialsuite_deserializer (.abc.MaterialSuiteSerializerionReader):
+            The materialsuite reader class to delegate handling of the
+            MaterialSuite reads to.
+        * materialsuite_deserializer_kwargs (dict): Any kwargs to be forwarded
+            to the materialsuite deserializing class. Encapsulation is inherited
+            automatically, unless otherwise specified
         """
         log_init_attempt(self, log, locals())
         super().__init__(root, target_identifier, materialsuite_deserializer,

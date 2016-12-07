@@ -41,16 +41,14 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
             is stored
         2. identifier (str): The identifier of the MaterialSuite
 
-        __KWArgs__
+        __KWArgs__ (That this reader looks for)
 
         * encapsulation (str): The pairtree encapsulation utilized by the
-            serializer. Defaults to "srf" for "Stage Resource Folder"
+            serializer. Defaults to arf.
         """
         log_init_attempt(self, log, locals())
         super().__init__(root, target_identifier)
-        self.encapsulation = kwargs.get('encapsulation')
-        if self.encapsulation is None:
-            raise TypeError("Must supply the 'encapsulation' kwarg")
+        self.encapsulation = kwargs.get('encapsulation', 'arf')
         self.path = Path(self.root, identifier_to_path(self.target_identifier),
                          self.encapsulation)
         log_init_success(self, log)

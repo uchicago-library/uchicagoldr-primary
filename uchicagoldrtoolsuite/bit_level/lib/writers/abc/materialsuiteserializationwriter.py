@@ -32,15 +32,19 @@ class MaterialSuiteSerializationWriter(SerializationWriter, metaclass=ABCMeta):
             )
         self._struct = struct
 
+    @log_aware(log)
     def get_update_content_location(self):
         return self._update_content_location
 
+    @log_aware(log)
     def set_update_content_location(self, x):
         self._update_content_location = bool(x)
 
+    @log_aware(log)
     def get_premis_event(self):
         return self._premis_event
 
+    @log_aware(log)
     def set_premis_event(self, x):
         if not (isinstance(x, Event) or isinstance(x, None)):
             raise TypeError(
@@ -50,6 +54,7 @@ class MaterialSuiteSerializationWriter(SerializationWriter, metaclass=ABCMeta):
             )
         self._premis_event = x
 
+    @log_aware(log)
     def content_location_update(self, premis_rec, loc):
         log.debug("Updating PREMIS contentLocation field")
         premis_rec.get_object_list()[0].\
@@ -57,6 +62,7 @@ class MaterialSuiteSerializationWriter(SerializationWriter, metaclass=ABCMeta):
                 loc
             )
 
+    @log_aware(log)
     def finalize_event(self, premis, e, eventOutcomeDetailNote=None):
         eventOutcomeInformation = EventOutcomeInformation(
             eventOutcome="SUCCESS"

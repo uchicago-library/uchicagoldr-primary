@@ -62,6 +62,10 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
 
         * root (str/bytes): A subpath of the fullpath. The canonical name of
             the file then becomes its path relative to this root.
+        * run_name (str): A human readable/manually created run name to use in
+            the ingestion event which refers to a bulk ingest that this
+            MaterialSuite was created in. If one isn't provided a uuid4().hex
+            will be used instead
         """
         log_init_attempt(self, log, locals())
         self._str_path = None

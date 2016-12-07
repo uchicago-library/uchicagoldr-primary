@@ -42,9 +42,14 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         1. aStructure (MaterialSuite): The structure to serialize
         2. aRoot (str): The path to the materialsuite root dir
 
-        __KWArgs__
+        __KWArgs__ (That this is looking for)
 
         * eq_detect (str): The equality metric to use during serialization
+        * premis_event (pypremis.nodes.Event): An event node to write to the
+            PREMIS including the write event of this serialization
+        * update_content_location (bool): Whether or not to update the content
+            location in the PREMIS record
+        * clobber (bool): Whether or not be willing to clobber on writes.
         """
         log_init_attempt(self, log, locals())
         encapsulation = kwargs.get('encapsulation')

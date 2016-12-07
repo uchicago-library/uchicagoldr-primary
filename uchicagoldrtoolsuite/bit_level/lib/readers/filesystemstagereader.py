@@ -43,8 +43,20 @@ class FileSystemStageReader(StageSerializationReader):
 
         __Args__
 
-        1. path (str): The path to the stage on disk. The leaf component should
-            be the stage identifier
+        1. root (str): The path to the staging environment
+        2. target_identifier (str): An identifier for a stage in the staging
+            environment
+
+        __KWArgs__
+
+        * encapsulation (str): The encapsulation to use in this serialization,
+            if none is provided explicitly in the materialsuite deserializer
+            kwargs this value will be inherited by the materialsuite
+            deserializer
+        * materialsuite_deserializer (.abc.MaterialsuiteSerializationReader):
+            A class to delegate reading the MaterialSuites to
+        * materialsuite_deserializer_kwargs (dict): kwargs to pass to the class
+            that is delegated to.
         """
         log_init_attempt(self, log, locals())
         super().__init__(root, target_identifier, materialsuite_deserializer,

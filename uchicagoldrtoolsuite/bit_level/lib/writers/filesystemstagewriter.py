@@ -45,6 +45,13 @@ class FileSystemStageWriter(StageSerializationWriter):
         __KWArgs__
 
         * eq_detect (str): The equality metric to use during serialization
+        * materialsuite_serializer (.abc.MaterialSuiteSerializationWriter):
+            A class to delegate writing the materialsuites to
+        * materialsuite_serializer_kwargs (dict): kwargs to pass to the class
+            which is delegated to
+        * encapsulation (str): A dirname to use to encapsulate the pairtree
+            objects, is inherited by the materialsuite serializer if not
+            explicitly set in the above mentioned kwargs dict
         """
         log_init_attempt(self, log, locals())
         super().__init__(

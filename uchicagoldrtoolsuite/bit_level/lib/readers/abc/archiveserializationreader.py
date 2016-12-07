@@ -47,17 +47,21 @@ class ArchiveSerializationReader(SerializationReader, metaclass=ABCMeta):
             )
         self._struct = struct
 
+    @log_aware(log)
     def get_materialsuite_deserializer(self):
         return self._materialsuite_deserializer
 
+    @log_aware(log)
     def set_materialsuite_deserializer(self, x):
         if MaterialSuiteSerializationReader not in getmro(x):
             raise TypeError()
         self._materialsuite_deserializer = x
 
+    @log_aware(log)
     def get_materialsuite_deserializer_kwargs(self):
         return self._materialsuite_deserializer_kwargs
 
+    @log_aware(log)
     def set_materialsuite_deserializer_kwargs(self, x):
         if not isinstance(x, dict):
             raise TypeError()

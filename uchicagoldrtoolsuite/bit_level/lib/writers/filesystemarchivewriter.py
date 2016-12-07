@@ -64,6 +64,13 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
 
         * eq_detect (str): What equality detection metric to use while
             serializing
+        * materialsuite_serializer (.abc.MaterialsuiteSerializationWriter):
+            A class to delegate writing the MaterialSuites to
+        * materialsuite_serializer_kwargs (dict): kwargs to pass to the class
+            which is delegated to
+        * encapsulation (str): A string to use as the encapsulation directory
+            name for the pairtrees. The MaterialSuite writer will automatically
+            inherit this if isn't explicitly set in the kwarg dict
         """
         log_init_attempt(self, log, locals())
         super().__init__(

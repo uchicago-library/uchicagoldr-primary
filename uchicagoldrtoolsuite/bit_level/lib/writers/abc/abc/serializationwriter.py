@@ -55,15 +55,19 @@ class SerializationWriter(metaclass=ABCMeta):
     def get_implementation(self):
         return self._implementation
 
+    @log_aware(log)
     def get_root(self):
         return self._root
 
+    @log_aware(log)
     def set_root(self, root):
         self._root = root
 
+    @log_aware(log)
     def get_eq_detect(self):
         return self._eq_detect
 
+    @log_aware(log)
     def set_eq_detect(self, x):
         self._eq_detect = x
 

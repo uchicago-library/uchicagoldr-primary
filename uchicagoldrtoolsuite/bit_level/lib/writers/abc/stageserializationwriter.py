@@ -43,6 +43,7 @@ class StageSerializationWriter(SerializationWriter, metaclass=ABCMeta):
         self.materialsuite_serializer_kwargs = materialsuite_serializer_kwargs
         log.debug("Exiting the ABC init")
 
+    @log_aware(log)
     def set_struct(self, struct):
         if not isinstance(struct, Stage):
             raise TypeError(
@@ -52,9 +53,11 @@ class StageSerializationWriter(SerializationWriter, metaclass=ABCMeta):
             )
         self._struct = struct
 
+    @log_aware(log)
     def get_materialsuite_serializer(self):
         return self._materialsuite_serializer
 
+    @log_aware(log)
     def set_materialsuite_serializer(self, x):
         # The ABCMeta metaclass weirdly breaks using isinstance() here, as well
         # as getclasstree(), so though examining the MRO is a bit crazy, I guess
@@ -67,9 +70,11 @@ class StageSerializationWriter(SerializationWriter, metaclass=ABCMeta):
             )
         self._materialsuite_serializer = x
 
+    @log_aware(log)
     def get_materialsuite_serializer_kwargs(self):
         return self._materialsuite_serializer_kwargs
 
+    @log_aware(log)
     def set_materialsuite_serializer_kwargs(self, x):
         if not isinstance(x, dict):
             raise TypeError("{} != dict".format(str(x)))
