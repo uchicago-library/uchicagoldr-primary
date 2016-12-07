@@ -2,13 +2,13 @@ from pathlib import Path
 from logging import getLogger
 from os import scandir
 
-from pypairtree.utils import path_to_identifier, identifier_to_path
+from pypairtree.utils import path_to_identifier
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
     log_init_success, recursive_scandir
+from .filesystemmaterialsuitereader import FileSystemMaterialSuiteReader
 from .abc.stageserializationreader import StageSerializationReader
-from .abc.materialsuitepackager import MaterialSuitePackager
 from ..ldritems.ldrpath import LDRPath
 
 
@@ -33,7 +33,8 @@ class FileSystemStageReader(StageSerializationReader):
     # which accepts an environment path and an identifier rather than just a
     # single path? Probably. - BNB
     @log_aware(log)
-    def __init__(self, path, encapsulation='srf'):
+    def __init__(self, root, target_identifier, encapsulation='srf',
+                 materialsuite_deserializer=FileSystemMaterialSuiteReader):
         """
         Create a new FileSystemStageReader
 
@@ -43,9 +44,8 @@ class FileSystemStageReader(StageSerializationReader):
             be the stage identifier
         """
         log_init_attempt(self, log, locals())
-        super().__init__()
-        self.path = path
-        self.struct.set_identifier(str(Path(path).parts[-1]))
+        super().__init__(root, target_identifier, materialsuite_deserializer)
+        self.path = str(Path(self.root, self.target_identifier))
         self.encapsulation = encapsulation
         log_init_success(self, log)
 
@@ -101,81 +101,11 @@ class FileSystemStageReader(StageSerializationReader):
         for x in (x.path for x in recursive_scandir(str(materialsuites_dir)) if
                   x.name == self.encapsulation):
             self.struct.add_materialsuite(
-                FileSystemMaterialSuiteReader(
+                self.materialsuite_deserializer(
                     materialsuites_dir,
                     path_to_identifier(Path(x).parent, root=materialsuites_dir),
                     encapsulation=self.encapsulation
-                ).package()
+                ).read()
             )
         log.info("Stage read")
         return self.struct
-
-
-class FileSystemMaterialSuiteReader(MaterialSuitePackager):
-    """
-    The packager for pairtree based MaterialSuite serializations
-
-    Given the path where the MaterialSuite is stored, the identifier, and the
-    pairtree encapsulation string, packages a MaterialSuite
-    """
-    @log_aware(log)
-    def __init__(self, root_path, identifier, encapsulation='srf'):
-        """
-        Create a new FileSystemMaterialSuiteReader
-
-        __Args__
-
-        1. root_path (str): The path to the location where the MaterialSuite
-            is stored
-        2. identifier (str): The identifier of the MaterialSuite
-
-        __KWArgs__
-
-        * encapsulation (str): The pairtree encapsulation utilized by the
-            serializer. Defaults to "srf" for "Stage Resource Folder"
-        """
-        super().__init__()
-        self.root_path = root_path
-        self.identifier = identifier
-        self.encapsulation = encapsulation
-        self.path = Path(self.root_path, identifier_to_path(identifier),
-                         self.encapsulation)
-
-    # Clobber the ABC function here, this is faster and doesn't instantiate
-    # a new file for no reason
-    @log_aware(log)
-    def get_identifier(self, _):
-        return self.identifier
-
-    @log_aware(log)
-    def get_content(self):
-        log.debug('Searching for content')
-        p = Path(self.path, 'content.file')
-        if p.is_file():
-            log.debug("content located")
-            return LDRPath(str(p))
-        log.debug("Content not found")
-
-    @log_aware(log)
-    def get_premis(self):
-        p = Path(self.path, 'premis.xml')
-        log.debug("Searching for PREMIS @ {}".format(str(p)))
-        if p.is_file():
-            log.debug("PREMIS located")
-            return LDRPath(str(p))
-        log.warn(
-            "Premis not found for materialsuite @ {}".format(self.identifier)
-        )
-
-    @log_aware(log)
-    def get_techmd_list(self):
-        log.debug("searching for technical metadata")
-        techmds = [LDRPath(x.path) for x in
-                   scandir(str(Path(self.path, 'TECHMD')))]
-        if not techmds:
-            log.debug(
-                "No techmd found for materialsuite @ {}".format(self.identifier)
-            )
-        else:
-            log.debug("Techmd located")
-            return techmds

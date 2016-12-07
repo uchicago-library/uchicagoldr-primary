@@ -15,7 +15,8 @@ from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
     log_init_success
 from ..processors.genericpremiscreator import GenericPREMISCreator
-from ..readers.abc.materialsuitepackager import MaterialSuitePackager
+from ..readers.abc.materialsuiteserializationreader import \
+    MaterialSuiteSerializationReader
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 
@@ -40,7 +41,7 @@ log = getLogger(__name__)
 # regardless of how they come in, into strings.
 
 
-class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
+class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
     """
     Point at a file - get a MaterialSuite
     It's like magic!
@@ -67,9 +68,8 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         self._bytes_path = None
         self._str_root = None
         self._bytes_root = None
-        super().__init__()
+        super().__init__(root, uuid4().hex)
         self.path = path
-        self.root = root
         self.working_dir = TemporaryDirectory()
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
@@ -166,7 +166,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
                     str(uuid4().hex)
                 )
             else:
-                eventDetail = "Run Identifier (Machine Generated): {}".format(
+                eventDetail = "Run Identifier (Human Generated): {}".format(
                     str(self.run_name)
                 )
             eventDetailInformation = EventDetailInformation(

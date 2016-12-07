@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
-from uuid import uuid1
+from inspect import getmro
 
 from uchicagoldrtoolsuite import log_aware
+from .materialsuiteserializationreader import MaterialSuiteSerializationReader
 from .abc.serializationreader import SerializationReader
 from ...structures.stage import Stage
 
@@ -22,22 +23,31 @@ class StageSerializationReader(SerializationReader, metaclass=ABCMeta):
     """
     A base class for all Staging Structure Serialization Readers
     """
-
-    _stage_id = None
-
     @abstractmethod
     @log_aware(log)
-    def __init__(self):
+    def __init__(self, root, target_identifier, materialsuite_deserializer):
         log.debug("Entering the ABC init")
-        self.set_struct(Stage(str(uuid1())))
+        super().__init__(root, target_identifier)
+        self.materialsuite_deserializer = materialsuite_deserializer
+        self.struct = Stage(self.target_identifier)
         log.debug("Exiting the ABC init")
 
-    @log_aware(log)
-    def get_stage_id(self):
-        return self._stage_id
+    def set_struct(self, x):
+        if not isinstance(x, Stage):
+            raise TypeError(
+                "{} is a {}, not a {}".format(
+                    str(x), str(type(x)), str(Stage)
+                )
+            )
+        self._struct = x
 
-    @log_aware(log)
-    def set_stage_id(self, value):
-        self._stage_id = value
+    def get_materialsuite_deserializer(self):
+        return self._materialsuite_deserializer
 
-    stage_id = property(get_stage_id, set_stage_id)
+    def set_materialsuite_deserializer(self, x):
+        if MaterialSuiteSerializationReader not in getmro(x):
+            raise TypeError()
+        self._materialsuite_deserializer = x
+
+    materialsuite_deserializer = property(get_materialsuite_deserializer,
+                                          set_materialsuite_deserializer)

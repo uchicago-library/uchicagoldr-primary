@@ -1,18 +1,15 @@
 from os import scandir
-from os.path import join, isdir, isfile, relpath
-from json import load
+from os.path import join, isdir, relpath
 from logging import getLogger
+from pathlib import Path
 
-from pypremis.lib import PremisRecord
-
-from pypairtree.pairtree import PairTree
-from pypairtree.utils import identifier_to_path
+from pypairtree.utils import identifier_to_path, path_to_identifier
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
-    log_init_success
+    log_init_success, recursive_scandir
+from .filesystemmaterialsuitereader import FileSystemMaterialSuiteReader
 from .abc.archiveserializationreader import ArchiveSerializationReader
-from ..structures.materialsuite import MaterialSuite
 from ..ldritems.ldrpath import LDRPath
 
 
@@ -36,7 +33,8 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
     streams serialized as files on disk.
     """
     @log_aware(log)
-    def __init__(self, lts_path, identifier):
+    def __init__(self, root, target_identifier,
+                 materialsuite_deserializer=FileSystemMaterialSuiteReader):
         """
         Create a new FileSystemArchiveReader
 
@@ -47,16 +45,14 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             in the given long term storage environment
         """
         log_init_attempt(self, log, locals())
-        super().__init__()
-        self.lts_path = lts_path
-        self.identifier = identifier
+        super().__init__(root, target_identifier, materialsuite_deserializer)
         log_init_success(self, log)
 
     def _read_skeleton(self, lts_path=None, identifier=None):
         if lts_path is None:
-            lts_path = self.lts_path
+            lts_path = self.root
         if identifier is None:
-            identifier = self.identifier
+            identifier = self.target_identifier
         arch_root = join(lts_path, str(identifier_to_path(identifier)),
                          "arf")
         log.debug("Computed archive location: {}".format(arch_root))
@@ -67,23 +63,15 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                              "storage environment ({})!".format(lts_path))
         if not isdir(pairtree_root):
             raise ValueError("No pairtree root in Archive ({})!".format(
-                self.identifier))
+                identifier))
         if not isdir(admin_root):
             raise ValueError("No admin directory in Archive ({})!".format(
-                self.identifier))
+                identifier))
 
-        admin_manifest_path = join(admin_root, "admin_manifest.json")
-        data_manifest_path = join(admin_root, "data_manifest.json")
         accrec_dir_path = join(admin_root, "accession_records")
         adminnotes_path = join(admin_root, "adminnotes")
         legalnotes_path = join(admin_root, "legalnotes")
 
-        if not isfile(admin_manifest_path):
-            raise ValueError("No admin_manifest.json in Archive ({})!".format(
-                self.identifier))
-        if not isfile(data_manifest_path):
-            raise ValueError("No data_manifest.json in Archive ({})!".format(
-                self.identifier))
         if not isdir(accrec_dir_path):
             raise ValueError("No accession record subdir")
         if not isdir(adminnotes_path):
@@ -92,84 +80,25 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             raise ValueError("No legalnotes subdir")
 
         log.info("Archive skeleton read/located")
-        return arch_root, pairtree_root, admin_root, admin_manifest_path, \
-            data_manifest_path, accrec_dir_path, adminnotes_path, \
+        return arch_root, pairtree_root, admin_root, \
+            accrec_dir_path, adminnotes_path, \
             legalnotes_path
 
     @log_aware(log)
-    def _confirm_data_manifest_matches_filesystem(self, data_manifest,
-                                                  identifier, pairtree):
-        log.debug("Comparing the file system to the manifest")
-        if not data_manifest['acc_id'] == identifier:
-            raise ValueError("Identifier mismatch with data_manifest.json")
-
-        ids_from_manifest = [x['identifier'] for x in data_manifest['objs']]
-        num_ids_from_manifest = len(ids_from_manifest)
-        i = 0
-        for obj in pairtree.objects:
-            if obj.identifier not in ids_from_manifest:
-                raise ValueError("ID on filesystem that isn't in the " +
-                                 "manifest: {}".format(obj.identifier))
-            i += 1
-        if i != num_ids_from_manifest:
-            raise ValueError("ID(s) in the manifest that aren't on the " +
-                             "file system! or vice versa")
-        log.debug("Comparison of the file system to the manifest complete")
-
-    @log_aware(log)
-    def _read_data(self, data_manifest_path, identifier, pairtree):
-        log.info("Reading archive data")
-        data_manifest = None
-        with open(data_manifest_path, 'r') as f:
-            data_manifest = load(f)
-
-        self._confirm_data_manifest_matches_filesystem(data_manifest,
-                                                       identifier,
-                                                       pairtree)
-
-        log.debug("Packaging objects...")
-        for ms_entry in data_manifest['objs']:
-            log.debug("Packaging object")
-            log.debug("Delegating to MaterialSuite packager and adding " +
-                      "result to the archive")
-            self.get_struct().add_materialsuite(
-                self._pack_materialsuite(ms_entry,
-                                         data_manifest)
+    def _read_data(self, pairtree_root):
+        for x in (x for x in recursive_scandir(pairtree_root) if
+                  x.name == "premis.xml"):
+            identifier = path_to_identifier(Path(x.path).parent.parent,
+                                            root=Path(pairtree_root))
+            self.struct.add_materialsuite(
+                self.materialsuite_deserializer(
+                    pairtree_root, identifier, encapsulation="arf"
+                ).read()
             )
-            log.debug("Object packaging complete")
-        log.debug("Finished packaging objects")
 
     @log_aware(log)
-    def _pack_materialsuite(self, ms_entry, data_manifest):
-        log.debug("Packaging a MaterialSuite from disk")
-        ms = MaterialSuite()
-        original_name = None
-        premis = None
-        for bytestream_entry in ms_entry['bytestreams']:
-            if bytestream_entry['type'] == "file content":
-                ms.content = LDRPath(bytestream_entry['dst'])
-            if bytestream_entry['type'] == "technical metadata":
-                ms.add_technicalmetadata(LDRPath(bytestream_entry['dst']))
-            if bytestream_entry['type'] == "PREMIS":
-                ms.premis = LDRPath(bytestream_entry['dst'])
-                premis = PremisRecord(frompath=bytestream_entry['dst'])
-                try:
-                    original_name = premis.get_object_list()[0].get_originalName()
-                except KeyError:
-                    pass
-                ms.identifier = premis.get_object_list()[0].get_objectIdentifier()[0].get_objectIdentifierValue()
-        if original_name:
-            if ms.content:
-                ms.content.item_name = original_name
-        log.debug("MaterialSuite packaged")
-        return ms
-
-    @log_aware(log)
-    def _read_admin(self, admin_manifest_path, accrec_dir_path, adminnotes_path,
+    def _read_admin(self, accrec_dir_path, adminnotes_path,
                     legalnotes_path, admin_root):
-        # TODO: Add comparison with the manifest, probably, to mimic data
-        # manifest behavior, even though this one uses the file system instead
-        # of the manifest to find files.
         log.info("Reading the administrative data from disk")
         log.debug("Reading accession records")
         for x in scandir(accrec_dir_path):
@@ -197,16 +126,13 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         self.struct (Archive): The archive structure
         """
         log.info("Reading Archive from disk serialization")
-        self.get_struct().identifier = self.identifier
-        arch_root, pairtree_root, admin_root, admin_manifest_path, \
-            data_manifest_path, accrec_dir_path, adminnotes_path, \
+        arch_root, pairtree_root, admin_root, \
+            accrec_dir_path, adminnotes_path, \
             legalnotes_path = self._read_skeleton()
 
-        pairtree = PairTree(containing_dir=arch_root)
-        pairtree.gather_objects()
-        self._read_data(data_manifest_path, self.identifier, pairtree)
+        self._read_data(pairtree_root)
 
-        self._read_admin(admin_manifest_path, accrec_dir_path, adminnotes_path,
+        self._read_admin(accrec_dir_path, adminnotes_path,
                          legalnotes_path, admin_root)
         log.debug("Read complete")
         return self.get_struct()

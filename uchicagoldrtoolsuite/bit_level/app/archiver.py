@@ -102,10 +102,9 @@ class Archiver(CLIApp):
         else:
             noid_minter_url = self.conf.get("URLs", "noid_minter")
 
-        stage_path = join(staging_env, args.stage_id)
-        log.info("Stage Path: {}".format(stage_path))
+        log.info("Stage Path: {}".format(join(staging_env, args.stage_id)))
         log.info("Reading Stage...")
-        stage = FileSystemStageReader(stage_path).read()
+        stage = FileSystemStageReader(staging_env, args.stage_id).read()
         log.info("Transforming Stage into Archive")
         archive = StageToArchiveTransformer(stage).transform(
             noid_minter_url=noid_minter_url,
