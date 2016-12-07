@@ -1,10 +1,5 @@
 from abc import abstractmethod, ABCMeta
 from logging import getLogger
-from tempfile import TemporaryDirectory
-from uuid import uuid4
-from os.path import join
-
-from pypremis.lib import PremisRecord
 
 from uchicagoldrtoolsuite import log_aware
 from .abc.serializationreader import SerializationReader
@@ -39,7 +34,7 @@ class MaterialSuiteSerializationReader(SerializationReader, metaclass=ABCMeta):
     """
     @abstractmethod
     @log_aware(log)
-    def __init__(self):
+    def __init__(self, root, target_identifier):
         # TODO: The init here is slightly different from the StageReader init,
         # which sets the identifier to a uuid4(), this is due to a difference in
         # the underlying structures themselves - Stage's init require an
@@ -49,7 +44,8 @@ class MaterialSuiteSerializationReader(SerializationReader, metaclass=ABCMeta):
         helper init that sets the objects struct property
         """
         log.debug("Entering the ABC init")
-        self.struct = MaterialSuite()
+        super().__init__(root, target_identifier)
+        self.struct = MaterialSuite(self.target_identifier)
         log.debug("Exciting the ABC init")
 
     @abstractmethod
@@ -65,34 +61,6 @@ class MaterialSuiteSerializationReader(SerializationReader, metaclass=ABCMeta):
         pass
 
     @log_aware(log)
-    def get_identifier(self, premis_ldritem):
-        """
-        Instantiate the premis in a tempfile, read it, grab the identifier
-
-        __Args__
-
-        * premis_ldritem (LDRItem): an LDRItem with bytes for a PremisRecord
-            serialization in it
-
-        __Returns__
-
-        * ident (str): The object identifier
-        """
-        # TODO: make this use ldritem_to_premisrecord
-        log.debug("Computing identifier from PREMIS record")
-        with TemporaryDirectory() as tmp_dir:
-            tmp_file_name = uuid4().hex
-            tmp_file_path = join(tmp_dir, tmp_file_name)
-            with premis_ldritem.open('rb') as f:
-                with open(tmp_file_path, 'wb') as tmp_file:
-                    tmp_file.write(f.read())
-            premis = PremisRecord(frompath=tmp_file_path)
-            ident = premis.get_object_list()[0].get_objectIdentifier()[0].\
-                get_objectIdentifierValue()
-        log.debug("Computed identifier from PREMIS: {}".format(ident))
-        return ident
-
-    @log_aware(log)
     def read(self):
         """
         default package implementation
@@ -106,11 +74,7 @@ class MaterialSuiteSerializationReader(SerializationReader, metaclass=ABCMeta):
 
         log.debug("Packaging PREMIS")
         try:
-            premis = self.get_premis()
-            if not premis:
-                raise ValueError()
-            self.struct.identifier = self.get_identifier(premis)
-            self.struct.premis = premis
+            self.struct.premis = self.get_premis()
         except NotImplementedError:
             raise ValueError('No PREMIS supplied by the reader')
         log.debug("PREMIS added to MaterialSuite")

@@ -51,13 +51,12 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         log_init_attempt(self, log, locals())
         super().__init__(
             aStructure, aRoot, update_content_location=update_content_location,
-            premis_event=premis_event
+            premis_event=premis_event, eq_detect=eq_detect
         )
         self.materialsuite_root = Path(
             identifier_to_path(self.struct.identifier, root=self.root),
             encapsulation
         )
-        self.eq_detect = eq_detect
         self.set_implementation("filesystem (pairtree)")
         self.clobber = clobber
         log_init_success(self, log)
@@ -121,13 +120,13 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
                 if x == content_copier:
                     content_cr = cr
 
-        if self.premis_event_entry or self.update_content_location:
+        if self.premis_event or self.update_content_location:
             premis = PremisRecord(frompath=str(target_premis_path))
             if self.update_content_location:
                 self.content_location_update(premis, str(target_premis_path))
-            if self.premis_event_entry:
+            if self.premis_event:
                 self.finalize_event(
-                    premis, self.premis_event_entry,
+                    premis, self.premis_event,
                     eventOutcomeDetailNote=content_cr
                 )
             premis.write_to_file(str(target_premis_path))

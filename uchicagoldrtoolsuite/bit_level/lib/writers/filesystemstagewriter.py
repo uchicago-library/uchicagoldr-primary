@@ -49,8 +49,6 @@ class FileSystemStageWriter(StageSerializationWriter):
                          eq_detect=eq_detect)
         self.stage_root = Path(self.root, self.struct.identifier)
         self.set_implementation('filesystem (pairtree)')
-        self.eq_detect = eq_detect
-        self.materialsuite_serializer = materialsuite_serializer
         log_init_success(self, log)
 
     @log_aware(log)

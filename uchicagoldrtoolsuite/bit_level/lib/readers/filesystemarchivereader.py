@@ -3,7 +3,6 @@ from os.path import join, isdir, relpath
 from logging import getLogger
 from pathlib import Path
 
-from pypairtree.pairtree import PairTree
 from pypairtree.utils import identifier_to_path, path_to_identifier
 
 from uchicagoldrtoolsuite import log_aware
@@ -34,7 +33,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
     streams serialized as files on disk.
     """
     @log_aware(log)
-    def __init__(self, lts_path, identifier,
+    def __init__(self, root, target_identifier,
                  materialsuite_deserializer=FileSystemMaterialSuiteReader):
         """
         Create a new FileSystemArchiveReader
@@ -46,17 +45,14 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
             in the given long term storage environment
         """
         log_init_attempt(self, log, locals())
-        super().__init__()
-        self.lts_path = lts_path
-        self.identifier = identifier
-        self.materialsuite_deserializer = materialsuite_deserializer
+        super().__init__(root, target_identifier, materialsuite_deserializer)
         log_init_success(self, log)
 
     def _read_skeleton(self, lts_path=None, identifier=None):
         if lts_path is None:
-            lts_path = self.lts_path
+            lts_path = self.root
         if identifier is None:
-            identifier = self.identifier
+            identifier = self.target_identifier
         arch_root = join(lts_path, str(identifier_to_path(identifier)),
                          "arf")
         log.debug("Computed archive location: {}".format(arch_root))
@@ -67,10 +63,10 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
                              "storage environment ({})!".format(lts_path))
         if not isdir(pairtree_root):
             raise ValueError("No pairtree root in Archive ({})!".format(
-                self.identifier))
+                identifier))
         if not isdir(admin_root):
             raise ValueError("No admin directory in Archive ({})!".format(
-                self.identifier))
+                identifier))
 
         accrec_dir_path = join(admin_root, "accession_records")
         adminnotes_path = join(admin_root, "adminnotes")
@@ -130,13 +126,10 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         self.struct (Archive): The archive structure
         """
         log.info("Reading Archive from disk serialization")
-        self.get_struct().identifier = self.identifier
         arch_root, pairtree_root, admin_root, \
             accrec_dir_path, adminnotes_path, \
             legalnotes_path = self._read_skeleton()
 
-        pairtree = PairTree(containing_dir=arch_root)
-        pairtree.gather_objects()
         self._read_data(pairtree_root)
 
         self._read_admin(accrec_dir_path, adminnotes_path,

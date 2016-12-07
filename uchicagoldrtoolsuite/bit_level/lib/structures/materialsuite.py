@@ -24,7 +24,7 @@ class MaterialSuite(object):
     and the content itself
     """
     @log_aware(log)
-    def __init__(self):
+    def __init__(self, identifier):
         """
         Creates a new MaterialSuite
         """
@@ -33,6 +33,7 @@ class MaterialSuite(object):
         self._premis = None
         self._technicalmetadata = []
         self._identifier = None
+        self.identifier = identifier
         log_init_success(self, log)
 
     @log_aware(log)

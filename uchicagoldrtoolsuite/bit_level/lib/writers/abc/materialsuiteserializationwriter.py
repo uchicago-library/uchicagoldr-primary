@@ -68,3 +68,7 @@ class MaterialSuiteSerializationWriter(SerializationWriter, metaclass=ABCMeta):
             eventOutcomeInformation.add_eventOutcomeDetail(eventOutcomeDetail)
         e.add_eventOutcomeInformation(eventOutcomeInformation)
         premis.add_event(e)
+
+    update_content_location = property(get_update_content_location,
+                                       set_update_content_location)
+    premis_event = property(get_premis_event, set_premis_event)

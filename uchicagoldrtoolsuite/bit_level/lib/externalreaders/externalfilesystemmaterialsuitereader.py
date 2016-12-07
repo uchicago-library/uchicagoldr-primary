@@ -68,9 +68,8 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
         self._bytes_path = None
         self._str_root = None
         self._bytes_root = None
-        super().__init__()
+        super().__init__(root, uuid4().hex)
         self.path = path
-        self.root = root
         self.working_dir = TemporaryDirectory()
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)

@@ -31,7 +31,7 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
     pairtree encapsulation string, packages a MaterialSuite
     """
     @log_aware(log)
-    def __init__(self, root_path, identifier, encapsulation='srf'):
+    def __init__(self, root, target_identifier, encapsulation='srf'):
         """
         Create a new FileSystemMaterialSuiteReader
 
@@ -47,19 +47,11 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
             serializer. Defaults to "srf" for "Stage Resource Folder"
         """
         log_init_attempt(self, log, locals())
-        super().__init__()
-        self.root_path = root_path
-        self.identifier = identifier
+        super().__init__(root, target_identifier)
         self.encapsulation = encapsulation
-        self.path = Path(self.root_path, identifier_to_path(identifier),
+        self.path = Path(self.root, identifier_to_path(self.target_identifier),
                          self.encapsulation)
         log_init_success(self, log)
-
-    # Clobber the ABC function here, this is faster and doesn't instantiate
-    # a new file for no reason
-    @log_aware(log)
-    def get_identifier(self, _):
-        return self.identifier
 
     @log_aware(log)
     def get_content(self):
@@ -78,7 +70,7 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
             log.debug("PREMIS located")
             return LDRPath(str(p))
         log.warn(
-            "Premis not found for materialsuite @ {}".format(self.identifier)
+            "Premis not found for materialsuite @ {}".format(self.target_identifier)
         )
 
     @log_aware(log)
@@ -88,7 +80,7 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
                    scandir(str(Path(self.path, 'TECHMD')))]
         if not techmds:
             log.debug(
-                "No techmd found for materialsuite @ {}".format(self.identifier)
+                "No techmd found for materialsuite @ {}".format(self.target_identifier)
             )
         else:
             log.debug("Techmd located")

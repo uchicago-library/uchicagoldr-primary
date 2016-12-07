@@ -33,7 +33,7 @@ class FileSystemStageReader(StageSerializationReader):
     # which accepts an environment path and an identifier rather than just a
     # single path? Probably. - BNB
     @log_aware(log)
-    def __init__(self, env_path, identifier, encapsulation='srf',
+    def __init__(self, root, target_identifier, encapsulation='srf',
                  materialsuite_deserializer=FileSystemMaterialSuiteReader):
         """
         Create a new FileSystemStageReader
@@ -44,11 +44,9 @@ class FileSystemStageReader(StageSerializationReader):
             be the stage identifier
         """
         log_init_attempt(self, log, locals())
-        super().__init__()
-        self.path = str(Path(env_path, identifier))
-        self.struct.set_identifier(identifier)
+        super().__init__(root, target_identifier, materialsuite_deserializer)
+        self.path = str(Path(self.root, self.target_identifier))
         self.encapsulation = encapsulation
-        self.materialsuite_deserializer = materialsuite_deserializer
         log_init_success(self, log)
 
     @log_aware(log)
