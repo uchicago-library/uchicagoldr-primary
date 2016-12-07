@@ -72,16 +72,3 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
         log.warn(
             "Premis not found for materialsuite @ {}".format(self.target_identifier)
         )
-
-    @log_aware(log)
-    def get_techmd_list(self):
-        log.debug("searching for technical metadata")
-        techmds = [LDRPath(x.path) for x in
-                   scandir(str(Path(self.path, 'TECHMD')))]
-        if not techmds:
-            log.debug(
-                "No techmd found for materialsuite @ {}".format(self.target_identifier)
-            )
-        else:
-            log.debug("Techmd located")
-            return techmds

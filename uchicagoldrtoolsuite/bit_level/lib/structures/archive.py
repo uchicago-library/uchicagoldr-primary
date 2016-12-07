@@ -53,13 +53,6 @@ class Archive(AccessionContainer):
             if not isinstance(materialsuite.premis, LDRItem):
                 log.warn("MaterialSuite missing PREMIS metadata")
                 return False
-            # TODO: Decide if mandating technical metadata (when there's
-            # content) is a solid idea, is this an implementation specific
-            # detail?
-            if not len(materialsuite.technicalmetadata_list) > 0 and \
-                    isinstance(materialsuite.content, LDRItem):
-                log.warn("Content exists with no technical metadata")
-                return False
         except Exception:
             log.critical("Problem in MaterialSuite validation")
             return False

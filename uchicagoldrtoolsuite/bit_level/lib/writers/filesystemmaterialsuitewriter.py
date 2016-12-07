@@ -11,7 +11,6 @@ from .abc.materialsuiteserializationwriter import \
     MaterialSuiteSerializationWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
-from ..ldritems.ldritemoperations import hash_ldritem
 
 
 __author__ = "Brian Balsamo"
@@ -80,7 +79,7 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
             raise RuntimeError("MaterialSuite writer can't clobber a file " +
                                "where a directory should be! " +
                                "{}".format(str(self.materialsuite_root)))
-        makedirs(str(Path(self.materialsuite_root, 'TECHMD')))
+        makedirs(str(Path(self.materialsuite_root)))
 
     @log_aware(log)
     def write(self):
@@ -103,26 +102,9 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
                                            target_content_item,
                                            clobber=self.clobber)
 
-        log.debug("Computing techmd file names")
-        techmd_copiers = []
-        for x in self.struct.technicalmetadata_list:
-            # Use a quick checksum as the file name, this should prevent
-            # un-needed writing so long as the records don't change in between
-            # reading and writing a stage where the TECHMD already exists.
-            # It also keeps the names equivalent if a stage is moved
-            # from one root to another.
-            # So long as the file sizes stay small the overhead of computing
-            # a quick checksum like adler should be negligible.
-            h = hash_ldritem(x, algo="adler32")
-            target_techmd_path = Path(self.materialsuite_root,
-                                      'TECHMD', h)
-            target_techmd_item = LDRPath(str(target_techmd_path))
-            techmd_copiers.append(LDRItemCopier(x, target_techmd_item,
-                                                clobber=self.clobber))
-
         log.debug("Copying MaterialSuite bytestreams to disk")
         content_cr = None
-        for x in [premis_copier, content_copier] + techmd_copiers:
+        for x in [premis_copier, content_copier]:
             if x is not None:
                 cr = x.copy()
                 if not cr['src_eqs_dst']:

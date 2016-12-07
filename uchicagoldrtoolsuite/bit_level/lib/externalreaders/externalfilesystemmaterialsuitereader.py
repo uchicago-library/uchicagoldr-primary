@@ -201,12 +201,6 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
             x.item_name = self.path
         return x
 
-    def get_techmd_list(self):
-        raise NotImplementedError()
-
-    def get_presform_list(self):
-        raise NotImplementedError()
-
     @log_aware(log)
     def get_bytes_path(self):
         return self._bytes_path

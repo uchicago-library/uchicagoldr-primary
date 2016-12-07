@@ -138,10 +138,6 @@ class APIFITsCreator(TechnicalMetadataCreator):
         if isfile(fits_file_path):
             success = True
             log.debug("FITS successfully created")
-            # Chop this bit out
-            self.get_source_materialsuite().add_technicalmetadata(
-                LDRPath(fits_file_path)
-            )
         else:
             success = False
             log.warn("FITS creation failed on {}".format(
