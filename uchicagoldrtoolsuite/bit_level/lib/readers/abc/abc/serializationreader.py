@@ -24,10 +24,10 @@ class SerializationReader(metaclass=ABCMeta):
     @abstractmethod
     @log_aware(log)
     def __init__(self, root, target_identifier):
-        _struct = None
-        _root = None
-        _target_identifier = None
-        _implementation = None
+        self._struct = None
+        self._root = None
+        self._target_identifier = None
+        self._implementation = None
         self.root = root
         self.target_identifier = target_identifier
 

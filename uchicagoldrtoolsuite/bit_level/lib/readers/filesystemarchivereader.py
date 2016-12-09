@@ -64,7 +64,7 @@ class FileSystemArchiveReader(ArchiveSerializationReader):
         self.encapsulation = encapsulation
         # If the ms deserializer needs encapsulation inherit it if none is
         # provided
-        if not 'encapsulation' in self.materialsuite_deserializer_kwargs.keys():
+        if 'encapsulation' not in self.materialsuite_deserializer_kwargs.keys():
             self.materialsuite_deserializer_kwargs['encapsulation'] = \
                 self.encapsulation
         log_init_success(self, log)

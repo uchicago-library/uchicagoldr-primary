@@ -118,7 +118,6 @@ class APIFITsCreator(TechnicalMetadataCreator):
             log.debug("The API FITS generator doesn't support timeouts.")
 
         log.debug("POSTing file to endpoint.")
-        exc = None
         try:
             r = post(
                 self.fits_api_url,
@@ -144,6 +143,6 @@ class APIFITsCreator(TechnicalMetadataCreator):
                 self.get_source_materialsuite().identifier)
             )
         self.handle_premis(cmd_data, self.get_source_materialsuite(),
-                            "FITs", success, "fitsRecord", fits_file_path)
+                           "FITs", success, "fitsRecord", fits_file_path)
         log.debug("Deleting temporary holder file")
         original_holder.delete(final=True)

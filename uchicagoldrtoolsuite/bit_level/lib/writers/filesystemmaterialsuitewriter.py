@@ -53,7 +53,11 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         log_init_attempt(self, log, locals())
         encapsulation = kwargs.get('encapsulation')
         if encapsulation is None:
-            raise TypeError("'encapsulation' kwarg must be provided {}".format(str(kwargs)))
+            raise TypeError(
+                "'encapsulation' kwarg must be provided {}".format(
+                    str(kwargs)
+                )
+            )
         eq_detect = kwargs.get('eq_detect', 'bytes')
         premis_event = kwargs.get('premis_event')
         update_content_location = kwargs.get('update_content_location', False)

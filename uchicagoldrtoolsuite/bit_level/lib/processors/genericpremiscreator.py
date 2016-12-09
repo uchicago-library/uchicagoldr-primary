@@ -185,7 +185,9 @@ class GenericPREMISCreator(object):
         """
         objectIdentifier = cls._make_objectIdentifier()
         objectCategory = 'file'
-        objectCharacteristics = cls._make_objectCharacteristics(file_path, original_name)
+        objectCharacteristics = cls._make_objectCharacteristics(
+            file_path, original_name
+        )
         storage = cls._make_Storage(file_path)
         obj = Object(objectIdentifier, objectCategory, objectCharacteristics)
         if original_name is not None:
@@ -278,28 +280,36 @@ class GenericPREMISCreator(object):
         with open(file_path, 'rb') as f:
             try:
                 md5_fixity = Fixity('md5', sane_hash('md5', f))
-                md5_fixity.set_messageDigestOriginator('python3 hashlib.md5')
+                md5_fixity.set_messageDigestOriginator(
+                    'python3 hashlib.md5'
+                )
                 fixitys.append(md5_fixity)
             except:
                 pass
         with open(file_path, 'rb') as f:
             try:
                 sha256_fixity = Fixity('sha256', sane_hash('sha256', f))
-                sha256_fixity.set_messageDigestOriginator('python3 hashlib.sha256')
+                sha256_fixity.set_messageDigestOriginator(
+                    'python3 hashlib.sha256'
+                )
                 fixitys.append(sha256_fixity)
             except:
                 pass
         with open(file_path, 'rb') as f:
             try:
                 crc32_fixity = Fixity('crc32', sane_hash('crc32', f))
-                crc32_fixity.set_messageDigestOriginator('python3 zlib.crc32')
+                crc32_fixity.set_messageDigestOriginator(
+                    'python3 zlib.crc32'
+                )
                 fixitys.append(crc32_fixity)
             except:
                 pass
         with open(file_path, 'rb') as f:
             try:
                 adler32_fixity = Fixity('adler32', sane_hash('adler32', f))
-                adler32_fixity.set_messageDigestOriginator('python3 zlib.adler32')
+                adler32_fixity.set_messageDigestOriginator(
+                    'python3 zlib.adler32'
+                )
                 fixitys.append(adler32_fixity)
             except:
                 pass

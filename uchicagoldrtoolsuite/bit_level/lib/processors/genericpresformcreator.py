@@ -88,11 +88,11 @@ class GenericPresformCreator(object):
             )
             if not isinstance(materialsuite.get_premis(), LDRItem):
                 raise ValueError("All material suites must have a PREMIS " +
-                                    "record in order to generate presforms.")
+                                 "record in order to generate presforms.")
             if is_presform_materialsuite(materialsuite) and not \
                     presform_presforms:
                 log.debug("Materialsuite contains a presform and " +
-                            "presform_presforms == False. Skipping.")
+                          "presform_presforms == False. Skipping.")
                 continue
             if skip_existing:
                 has_presforms = False
@@ -107,13 +107,13 @@ class GenericPresformCreator(object):
                     pass
                 if has_presforms:
                     log.debug("MaterialSuite already has at least one " +
-                                "presform and skip_existing == True. " +
-                                "Skipping.")
+                              "presform and skip_existing == True. " +
+                              "Skipping.")
                     continue
             for x in self.instantiate_and_make_presforms(materialsuite,
-                                                            self.working_dir_path,
-                                                            self.converters,
-                                                            data_transfer_obj=data_transfer_obj):
+                                                         self.working_dir_path,
+                                                         self.converters,
+                                                         data_transfer_obj=data_transfer_obj):
                 self.stage.add_materialsuite(x)
 
     @staticmethod

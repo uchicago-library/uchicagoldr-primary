@@ -83,19 +83,19 @@ class GenericTechnicalMetadataCreator(object):
             )
             if not isinstance(materialsuite.get_premis(), LDRItem):
                 raise ValueError("All material suites must have a PREMIS " +
-                                    "record in order to generated technical " +
-                                    "metadata records.")
+                                 "record in order to generated technical " +
+                                 "metadata records.")
                 continue
             if not materialsuite.content:
                 continue
             if skip_existing:
                 if materialsuite.get_technicalmetadata_list():
                     if isinstance(materialsuite.get_technicalmetadata(0),
-                                    LDRItem):
+                                  LDRItem):
                         log.debug("Detected TECHMD: Skipping")
                         continue
             log.debug("No TECHMD detected: Creating")
             for techmd_creator in self.techmd_creators:
                 c = techmd_creator(materialsuite, self.working_dir_path,
-                                    data_transfer_obj=data_transfer_obj)
+                                   data_transfer_obj=data_transfer_obj)
                 c.process()

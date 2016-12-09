@@ -105,8 +105,8 @@ class GenericPREMISRestrictionSetter(object):
             )
             if not materialsuite.get_premis():
                 raise AttributeError("All material suites must have " +
-                                        "PREMIS records in order to set " +
-                                        "restrictions in them.")
+                                     "PREMIS records in order to set " +
+                                     "restrictions in them.")
             log.debug(
                 "Setting restriction in PREMIS for {}.".format(
                     materialsuite.identifier

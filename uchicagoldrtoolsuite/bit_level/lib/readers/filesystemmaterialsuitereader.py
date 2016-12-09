@@ -1,6 +1,5 @@
 from pathlib import Path
 from logging import getLogger
-from os import scandir
 
 from pypairtree.utils import identifier_to_path
 
@@ -70,5 +69,7 @@ class FileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
             log.debug("PREMIS located")
             return LDRPath(str(p))
         log.warn(
-            "Premis not found for materialsuite @ {}".format(self.target_identifier)
+            "Premis not found for materialsuite @ {}".format(
+                self.target_identifier
+            )
         )

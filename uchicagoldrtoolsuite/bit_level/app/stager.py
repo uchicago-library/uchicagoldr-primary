@@ -181,10 +181,10 @@ class Stager(CLIApp):
                 if f_patt.fullmatch(relpath(x.path, root)):
                     log.debug(
                         "A filter pattern matched a file path, skipping. " +
-                              "Pattern: {}, Path: {}".format(
-                                  f_patt.pattern,
-                                  relpath(x.path, root)
-                              )
+                        "Pattern: {}, Path: {}".format(
+                            f_patt.pattern,
+                            relpath(x.path, root)
+                        )
                     )
                     _filter = True
                     break
