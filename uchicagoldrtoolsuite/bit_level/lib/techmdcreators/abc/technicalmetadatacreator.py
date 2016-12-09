@@ -88,7 +88,7 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
 
     @log_aware(log)
     def handle_premis(self, cmd_output, material_suite, techmdcreator_name,
-                      success):
+                      success, record_entry_name, record_path):
         """
         Handles altering the MaterialSuites PREMIS after processing.
         Either records successful techmd creation, or failure.
@@ -115,6 +115,16 @@ class TechnicalMetadataCreator(metaclass=ABCMeta):
         orig_premis.get_object_list()[0].add_linkingEventIdentifier(
             self._build_linkingEventIdentifier(event)
         )
+        if success:
+            objectCharacteristicsExtension = ObjectCharacteristicsExtension()
+            with open(record_path, 'r') as f:
+                record_str = f.read()
+            objectCharacteristicsExtension.set_field(record_entry_name,
+                                                     record_str)
+            orig_premis.get_object_list()[0].get_objectCharacteristics()[0].\
+                add_objectCharacteristicsExtension(
+                    objectCharacteristicsExtension
+                )
 
         updated_premis_path = join(self.working_dir, str(uuid1()))
         orig_premis.write_to_file(updated_premis_path)

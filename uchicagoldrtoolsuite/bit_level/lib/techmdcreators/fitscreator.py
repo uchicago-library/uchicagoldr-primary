@@ -4,6 +4,9 @@ from uuid import uuid4
 from json import dumps
 from logging import getLogger
 
+from pypremis.lib import PremisRecord
+from pypremis.nodes import ObjectCharacteristicsExtension
+
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
@@ -119,18 +122,14 @@ class FITsCreator(TechnicalMetadataCreator):
         cmd_data = cmd.get_data()
 
         if isfile(fits_file_path):
+            success = True
             log.debug("FITS successfully created")
-            self.get_source_materialsuite().add_technicalmetadata(
-                LDRPath(fits_file_path)
-            )
-            self.handle_premis(cmd_data, self.get_source_materialsuite(),
-                               "FITs", True)
         else:
+            success = False
             log.warn("FITS creation failed on {}".format(
                 self.get_source_materialsuite().identifier)
             )
-            self.handle_premis(cmd_data, self.get_source_materialsuite(),
-                               "FITs", False)
-
+        self.handle_premis(cmd_data, self.get_source_materialsuite(),
+                            "FITs", success, "fitsRecord", fits_file_path)
         log.debug("Cleaning up temporary file instantiation")
         original_holder.delete(final=True)

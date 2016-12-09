@@ -24,7 +24,6 @@ class MaterialSuiteSerializationReader(SerializationReader, metaclass=ABCMeta):
     mandates:
         * .get_original()
         * .get_premis()
-        * .get_techmd_list()
 
     all of which should return LDRItem subclasses or iters of them, if list
     is specified in the method name.
@@ -54,10 +53,6 @@ class MaterialSuiteSerializationReader(SerializationReader, metaclass=ABCMeta):
 
     @abstractmethod
     def get_premis(self):
-        pass
-
-    @abstractmethod
-    def get_techmd_list(self):
         pass
 
     @log_aware(log)
@@ -90,15 +85,5 @@ class MaterialSuiteSerializationReader(SerializationReader, metaclass=ABCMeta):
         except NotImplementedError:
             log.debug("Reader does not implement get_content()")
 
-        log.debug("Packaing technical metadata")
-        try:
-            techmd_list = self.get_techmd_list()
-            if techmd_list:
-                log.debug("Technical metadata located")
-                self.struct.set_technicalmetadata_list(techmd_list)
-            else:
-                log.debug("No technical metadata located")
-        except NotImplementedError:
-            log.debug("Reader does not implement get_techmd_list()")
         log.info("Packaging complete")
         return self.struct

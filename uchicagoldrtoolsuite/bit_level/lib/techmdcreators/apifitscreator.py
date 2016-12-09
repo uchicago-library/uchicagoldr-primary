@@ -134,21 +134,16 @@ class APIFITsCreator(TechnicalMetadataCreator):
         except Exception as e:
             log.warn("FITS creation failed: {}".format(str(e)))
         log.debug("Updating PREMIS")
-        if isfile(fits_file_path):
-            self.get_source_materialsuite().add_technicalmetadata(
-                LDRPath(fits_file_path)
-            )
-            self.handle_premis(
-                "Successfully retrieved FITS from API",
-                self.get_source_materialsuite(),
-                "FITs", True
-            )
-        else:
-            self.handle_premis(
-                "Failed Retrieving FITS from API ({})".format(str(exc)),
-                self.get_source_materialsuite(),
-                "FITs", False
-            )
 
+        if isfile(fits_file_path):
+            success = True
+            log.debug("FITS successfully created")
+        else:
+            success = False
+            log.warn("FITS creation failed on {}".format(
+                self.get_source_materialsuite().identifier)
+            )
+        self.handle_premis(cmd_data, self.get_source_materialsuite(),
+                            "FITs", success, "fitsRecord", fits_file_path)
         log.debug("Deleting temporary holder file")
         original_holder.delete(final=True)
