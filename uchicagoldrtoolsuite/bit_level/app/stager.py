@@ -176,6 +176,7 @@ class Stager(CLIApp):
         for x in recursive_scandir(args.directory):
             if not x.is_file():
                 continue
+            _filter = False
             for f_patt in filter_patterns:
                 if f_patt.fullmatch(relpath(x.path, root)):
                     log.debug(
@@ -185,7 +186,10 @@ class Stager(CLIApp):
                                   relpath(x.path, root)
                               )
                     )
-                    continue
+                    _filter = True
+                    break
+            if _filter:
+                continue
             if args.resume:
                 log.debug("Determining if the run name and relpath " +
                           "already exist in the stage")
