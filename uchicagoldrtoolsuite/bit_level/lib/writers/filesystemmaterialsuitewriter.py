@@ -117,6 +117,7 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
                     content_cr = cr
 
         if self.premis_event or self.update_content_location:
+            log.debug("Editing PREMIS")
             premis = PremisRecord(frompath=str(target_premis_path))
             if self.update_content_location:
                 self.content_location_update(premis, str(target_premis_path))
