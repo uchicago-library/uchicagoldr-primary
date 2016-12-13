@@ -118,10 +118,11 @@ from .agentlib import api_retrieve_agent, api_search_agent, api_update_agent, \
 
 class APIAgentProxy(AgentProxy):
     def __init__(self, api_root, identifier=None, name=None):
+        # Note at the moment this lacks a minter, until some of the trickier
+        # bits of the agents interface can be worked out.
         super().__init__(
             identifier, name,
             retriever=partial(api_retrieve_agent, api_root),
             searcher=partial(api_search_agent, api_root),
-            updater=partial(api_update_agent, api_root),
-            minter=mint_agent
+            updater=partial(api_update_agent, api_root)
         )

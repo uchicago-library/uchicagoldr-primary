@@ -71,20 +71,30 @@ def mint_agent(identifier=None, name=None):
 
 
 def api_update_agent(api_root, record):
-    data = {}
-    data['type'] = record.get_agentType(),
-    data['identifier'] = record.get_agentIdentifier()[0].get_agentIdentifierValue(),
-    if record.get_agentName()[0]:
-        data['name'] = record.get_agentName()[0],
-    try:
-        data['events'] = [x.get_linkingEventIdentifierValue() for x in
-                          record.get_linkingEventIdentifier()]
-    except KeyError:
-        pass
-    data['fields'] = [x for x in data.keys()]
-    r = requests.post(
-        api_root + "/agents/" +
-        record.get_agentIdentifier()[0].get_agentIdentifierValue(),
-        data=data
+    """
+    minimally functional, can only update linkingEventIdentifiers
+    """
+    gr = requests.get(
+            api_root + "/agents/" +
+            record.get_agentIdentifier()[0].get_agentIdentifierValue() +
+            "/events"
     )
-    okay_response(r)
+    okay_response(gr)
+    okay_json(gr.json())
+    existing_events = gr.json()['data']['agent events']['events']
+    existing_events = set(existing_events)
+    try:
+        events = set([x.get_linkingEventIdentifierValue() for x in
+                      record.get_linkingEventIdentifier()])
+    except KeyError:
+        events = set()
+    diff_events = events - existing_events
+    for x in diff_events:
+        r = requests.post(
+            api_root + "/agents/" +
+            record.get_agentIdentifier()[0].get_agentIdentifierValue() +
+            "/events",
+            json={'event': x}
+        )
+        okay_response(r)
+        okay_json(r.json())
