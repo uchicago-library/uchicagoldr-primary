@@ -20,6 +20,16 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
+def class_or_callable(f, attr_name, *args, **kwargs):
+    if callable(f):
+        return f(*args, **kwargs)
+    elif isinstance(attr_name, str) and hasattr(f, attr_name) and \
+            callable(getattr(f, attr_name)):
+        return getattr(f, attr_name)(*args, **kwargs)
+    else:
+        raise RuntimeError()
+
+
 def makedirs(path):
     """
     A less complain-y version of makedirs
