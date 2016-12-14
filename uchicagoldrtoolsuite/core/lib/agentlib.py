@@ -74,22 +74,12 @@ def api_update_agent(api_root, record):
     """
     minimally functional, can only update linkingEventIdentifiers
     """
-    gr = requests.get(
-            api_root + "/agents/" +
-            record.get_agentIdentifier()[0].get_agentIdentifierValue() +
-            "/events"
-    )
-    okay_response(gr)
-    okay_json(gr.json())
-    existing_events = gr.json()['data']['agent events']['events']
-    existing_events = set(existing_events)
     try:
         events = set([x.get_linkingEventIdentifierValue() for x in
                       record.get_linkingEventIdentifier()])
     except KeyError:
         events = set()
-    diff_events = events - existing_events
-    for x in diff_events:
+    for x in events:
         r = requests.post(
             api_root + "/agents/" +
             record.get_agentIdentifier()[0].get_agentIdentifierValue() +
@@ -98,3 +88,17 @@ def api_update_agent(api_root, record):
         )
         okay_response(r)
         okay_json(r.json())
+
+def api_mint_agent(api_root, name, agentType):
+    data = {
+        'fields': ['name', 'type'],
+        'name': name,
+        'type': agentType
+    }
+    r = requests.post(
+        api_root + "/agents",
+        json=data
+    )
+    okay_response(r)
+    okay_json(r.json())
+    return r.json()['data']['agents']['identifier']
