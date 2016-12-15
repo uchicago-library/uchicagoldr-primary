@@ -60,16 +60,6 @@ def api_search_agent(api_root, name):
     return [agent_from_json(x) for x in matching_agents]
 
 
-def mint_agent(identifier=None, name=None):
-    if identifier is None:
-        identifier = uuid4().hex
-    agentIdentifier = AgentIdentifier("uuid", identifier)
-    agent = Agent(agentIdentifier)
-    if name is not None:
-        agent.add_agentName(str(name))
-    return agent
-
-
 def api_update_agent(api_root, record):
     """
     minimally functional, can only update linkingEventIdentifiers
@@ -89,7 +79,8 @@ def api_update_agent(api_root, record):
         okay_response(r)
         okay_json(r.json())
 
-def api_mint_agent(api_root, name, agentType):
+
+def api_mint_agent(api_root, name, agentType=""):
     data = {
         'fields': ['name', 'type'],
         'name': name,
@@ -101,4 +92,7 @@ def api_mint_agent(api_root, name, agentType):
     )
     okay_response(r)
     okay_json(r.json())
-    return r.json()['data']['agents']['identifier']
+    agentIdentifier = AgentIdentifier("uuid",
+                                      r.json()['data']['agents']['identifier'])
+    agent = Agent(agentIdentifier)
+    return agent

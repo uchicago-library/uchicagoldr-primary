@@ -7,6 +7,7 @@ from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
     log_init_success
+from uchicagoldrtoolsuite.core.lib.apiagentmixin import APIAgentMixin
 from .abc.converter import Converter
 
 __author__ = "Brian Balsamo"
@@ -20,7 +21,7 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
-class VideoConverter(Converter):
+class VideoConverter(Converter, APIAgentMixin):
     """
     A class for converting a variety of video file types to AVI
     """
@@ -66,11 +67,11 @@ class VideoConverter(Converter):
         log_init_attempt(self, log, locals())
         super().__init__(input_materialsuite,
                          working_dir=working_dir, timeout=timeout)
-        self.converter_name = "ffmpeg video converter"
         self.ffmpeg_path = data_transfer_obj.get('ffmpeg_path', None)
         if self.ffmpeg_path is None:
             raise ValueError('No ffmpeg_path specified in the data' +
                              'transfer object!')
+        self.converter_name = self._construct_name()
         log_init_success(self, log)
 
     @log_aware(log)
@@ -83,6 +84,16 @@ class VideoConverter(Converter):
         }
 
         return "<VideoConverter {}>".format(dumps(attrib_dict, sort_keys=True))
+
+    @log_aware(log)
+    def _construct_name(self):
+        ver_com_args = [self.ffmpeg_path, '-version']
+        ver_com = BashCommand(ver_com_args)
+        ver_com.run_command()
+        assert(ver_com.get_data()[0])
+        return "Video Converter ({})".format(
+            ver_com.get_data()[1].stdout.split("\n")[0]
+        )
 
     @log_aware(log)
     def run_converter(self, in_path):
@@ -109,3 +120,6 @@ class VideoConverter(Converter):
         except Exception:
             where_it_is = None
         return {'outpath': where_it_is, 'cmd_output': convert_cmd.get_data()}
+
+    def get_premis_agent_record(self):
+        return super().get_premis_agent_record(name=self.converter_name)

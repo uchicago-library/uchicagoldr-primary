@@ -7,10 +7,14 @@ from logging import getLogger
 
 from pypremis.nodes import *
 from pypremis.lib import PremisRecord
+from pypremis.factories import LinkingEventIdentifierFactory
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
+from uchicagoldrtoolsuite.core.lib.agentlib import api_mint_agent, \
+    api_search_agent
+from uchicagoldrtoolsuite.core.lib.iagent import IAgent
 from ...ldritems.ldrpath import LDRPath
 from ...structures.materialsuite import MaterialSuite
 from ...ldritems.ldritemcopier import LDRItemCopier
@@ -318,17 +322,12 @@ class Converter(metaclass=ABCMeta):
         orig_premis.get_object_list()[0].add_linkingEventIdentifier(
             self._build_linkingEventIdentifier(conv_event)
         )
+        self.get_premis_agent_record().add_linkingEventIdentifier(
+            LinkingEventIdentifierFactory(conv_event).produce_linking_node()
+        )
+        self.write_premis_agent_record()
 
         if conv_premis:
-
-            # TODO: Decide whether or not to set originalNames for presforms
-            # TODONE: I decided not to - because of the weird stuff that would
-            # be required with decoding/re-encoding the hex escaped string
-            # This will break some old serializers - but shouldn't effect
-            # the pairtree serializer in any way
-            # Note: I'm not hex escaping filenames anymore, but I still think
-            # this decision stands owing to the description of the originalName
-            # field as provided by the PREMISv3 guidelines.
 
             conv_premis.get_object_list()[0].add_linkingEventIdentifier(
                 self._build_linkingEventIdentifier(conv_event)
@@ -510,15 +509,10 @@ class Converter(metaclass=ABCMeta):
 
     @log_aware(log)
     def _build_linkingAgentIdentifier(self, agentRole, agent_name):
-        agentID = self.look_up_agent(agent_name)
-        if agentID is None:
-            id_tup = IDBuilder().build('premisID').show()
-            linkingAgentIdentifierType = id_tup[0]
-            linkingAgentIdentifierValue = id_tup[1]
-            agentID = LinkingAgentIdentifier(linkingAgentIdentifierType,
-                                             linkingAgentIdentifierValue)
-        agentID.set_linkingAgentRole(agentRole)
-        return agentID
+        agentID = self.get_premis_agent_record().get_agentIdentifier()[0].get_agentIdentifierValue()
+        linkingAgentIdentifier = LinkingAgentIdentifier("uuid", agentID)
+        linkingAgentIdentifier.set_linkingAgentRole(agentRole)
+        return linkingAgentIdentifier
 
     @log_aware(log)
     def _build_linkingObjectIdentifier(self, premis_to_link, linkRole):
@@ -527,14 +521,6 @@ class Converter(metaclass=ABCMeta):
         x = LinkingObjectIdentifier(linkingObjectIdentifierType, linkingObjectIdentifierValue)
         x.set_linkingObjectRole(linkRole)
         return x
-
-    @log_aware(log)
-    def look_up_agent(self, x):
-        """
-        TODO: Looks up an agent from a centralized source
-        """
-        # TODO
-        return None
 
     @log_aware(log)
     def convert(self):

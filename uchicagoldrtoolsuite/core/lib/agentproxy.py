@@ -11,7 +11,7 @@ log = getLogger(__name__)
 
 class AgentProxy(object):
     @log_aware(log)
-    def __init__(self, identifier=None, name=None,
+    def __init__(self, identifier=None, name=None, agentType=None,
                  retriever=None, searcher=None, updater=None, minter=None):
         log_init_attempt(self, log, locals())
         self._record = None
@@ -54,7 +54,9 @@ class AgentProxy(object):
                     log.info(
                         "No agent existed, minting a new Agent"
                     )
-                    self.record = self.minter(self._identifier, self._name)
+                    self.record = self._mint_new_record(self._name)
+                    self._identifier = \
+                        self.record.get_agentIdentifier()[0].get_agentIdentifierValue()
         return self._record
 
     @log_aware(log)
@@ -103,6 +105,10 @@ class AgentProxy(object):
     def _search_for_record(self, name):
         return class_or_callable(self.searcher, 'search', name)
 
+    @log_aware(log)
+    def _mint_new_record(self, name):
+        return class_or_callable(self.minter, 'mint', name)
+
     record = property(get_record, set_record)
     retriever = property(get_retriever, set_retriever)
     searcher = property(get_searcher, set_searcher)
@@ -113,16 +119,15 @@ class AgentProxy(object):
 from functools import partial
 
 from .agentlib import api_retrieve_agent, api_search_agent, api_update_agent, \
-    mint_agent
+    api_mint_agent
 
 
 class APIAgentProxy(AgentProxy):
     def __init__(self, api_root, identifier=None, name=None):
-        # Note at the moment this lacks a minter, until some of the trickier
-        # bits of the agents interface can be worked out.
         super().__init__(
             identifier, name,
             retriever=partial(api_retrieve_agent, api_root),
             searcher=partial(api_search_agent, api_root),
-            updater=partial(api_update_agent, api_root)
+            updater=partial(api_update_agent, api_root),
+            minter=partial(api_mint_agent, api_root)
         )
