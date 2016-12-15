@@ -10,5 +10,13 @@ class AgentDatabase(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def add_linkingEventIdentifier(self, id, lei):
+    def add_linkingEventIdentifier(self, agentIdentifier, eventIdentifier):
+        pass
+
+    @abstractmethod
+    def agent_exists(self, id):
+        pass
+
+    @abstractmethod
+    def get_record(self, id):
         pass
