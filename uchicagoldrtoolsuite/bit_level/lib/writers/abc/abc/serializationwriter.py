@@ -21,9 +21,18 @@ class SerializationWriter(metaclass=ABCMeta):
 
     assures the .write() method
     """
-
-    _struct = None
-    _implementation = None
+    @abstractmethod
+    @log_aware(log)
+    def __init__(self, struct, root, eq_detect="bytes"):
+        log.debug("Entering the ABC init")
+        self._struct = None
+        self._root = None
+        self._eq_detect = "bytes"
+        self._implementation = None
+        self.set_struct(struct)
+        self.set_root(root)
+        self.set_eq_detect(eq_detect)
+        log.debug("Exiting the ABC init")
 
     @abstractmethod
     @log_aware(log)
@@ -46,5 +55,23 @@ class SerializationWriter(metaclass=ABCMeta):
     def get_implementation(self):
         return self._implementation
 
+    @log_aware(log)
+    def get_root(self):
+        return self._root
+
+    @log_aware(log)
+    def set_root(self, root):
+        self._root = root
+
+    @log_aware(log)
+    def get_eq_detect(self):
+        return self._eq_detect
+
+    @log_aware(log)
+    def set_eq_detect(self, x):
+        self._eq_detect = x
+
     struct = property(get_struct, set_struct)
+    root = property(get_root, set_root)
+    eq_detect = property(get_eq_detect, set_eq_detect)
     implementation = property(get_implementation, set_implementation)

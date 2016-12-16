@@ -59,10 +59,11 @@ class StageToArchiveTransformer(Transformer):
             archive_identifier = Ark(noid_minter_url).value
         self.destination_structure = Archive(archive_identifier)
 
-        log.debug("Adding segments to the Archive")
-        for n_segment in self.origin_structure.segment_list:
-            self.destination_structure.add_segment(
-                n_segment
+        log.debug("Adding materialsuites to the Archive")
+
+        for n_materialsuite in self.origin_structure.materialsuite_list:
+            self.destination_structure.add_materialsuite(
+                n_materialsuite
             )
 
         log.debug("Adding accession records to the Archive")

@@ -15,7 +15,8 @@ from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
     log_init_success
 from ..processors.genericpremiscreator import GenericPREMISCreator
-from ..readers.abc.materialsuitepackager import MaterialSuitePackager
+from ..readers.abc.materialsuiteserializationreader import \
+    MaterialSuiteSerializationReader
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
 
@@ -40,7 +41,7 @@ log = getLogger(__name__)
 # regardless of how they come in, into strings.
 
 
-class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
+class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
     """
     Point at a file - get a MaterialSuite
     It's like magic!
@@ -49,7 +50,7 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
     so really nothing like magic).
     """
     @log_aware(log)
-    def __init__(self, path, root=None):
+    def __init__(self, path, root=None, run_name=None):
         """
         Instantiate a new packager
 
@@ -61,19 +62,22 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
 
         * root (str/bytes): A subpath of the fullpath. The canonical name of
             the file then becomes its path relative to this root.
+        * run_name (str): A human readable/manually created run name to use in
+            the ingestion event which refers to a bulk ingest that this
+            MaterialSuite was created in. If one isn't provided a uuid4().hex
+            will be used instead
         """
         log_init_attempt(self, log, locals())
         self._str_path = None
         self._bytes_path = None
         self._str_root = None
         self._bytes_root = None
-        super().__init__()
+        super().__init__(root, uuid4().hex)
         self.path = path
-        if self.root is not None:
-            self.root = root
         self.working_dir = TemporaryDirectory()
         self.working_path = join(self.working_dir.name, uuid4().hex)
         self.instantiated_premis = join(self.working_dir.name, uuid4().hex)
+        self.run_name = run_name
         log_init_success(self, log)
 
     @log_aware(log)
@@ -160,11 +164,26 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
                 LinkingObjectIdentifierFactory(obj).produce_linking_node()
             )
 
+        def add_eventDetailInformation(event):
+            if not self.run_name:
+                eventDetail = "Run Identifier (Machine Generated): {}".format(
+                    str(uuid4().hex)
+                )
+            else:
+                eventDetail = "Run Identifier (Human Generated): {}".format(
+                    str(self.run_name)
+                )
+            eventDetailInformation = EventDetailInformation(
+                eventDetail=eventDetail
+            )
+            event.add_eventDetailInformation(eventDetailInformation)
+
         def write_minimal_premis(minimal_premis_record):
             minimal_premis_record.write_to_file(self.instantiated_premis)
 
         log.info("Copying external file to tmp location")
         ingestion_event = copy_to_working()
+        add_eventDetailInformation(ingestion_event)
         log.info("Creating ingest PREMIS")
         minimal_premis_record = generate_minimal_premis(ingestion_event)
         link_em_all_up(minimal_premis_record)
@@ -181,12 +200,6 @@ class ExternalFileSystemMaterialSuitePackager(MaterialSuitePackager):
         else:
             x.item_name = self.path
         return x
-
-    def get_techmd_list(self):
-        raise NotImplementedError()
-
-    def get_presform_list(self):
-        raise NotImplementedError()
 
     @log_aware(log)
     def get_bytes_path(self):

@@ -1,12 +1,12 @@
 from sys import stderr
 from codecs import encode
-from urllib.request import urlopen, URLError
-from uuid import uuid1, uuid4
 from tempfile import TemporaryDirectory
 from os.path import join
 from os import scandir
-from functools import wraps
+from os import makedirs as _makedirs
 from logging import getLogger
+from pathlib import Path
+from uuid import uuid4
 
 
 __author__ = "Brian Balsamo, Tyler Danstrom"
@@ -18,6 +18,24 @@ __version__ = "0.0.1dev"
 
 
 log = getLogger(__name__)
+
+
+def makedirs(path):
+    """
+    A less complain-y version of makedirs
+    """
+    p = Path(path)
+    for x in p.parents:
+        if x.exists() and not x.is_dir():
+            raise OSError("not even this version of makedirs will silently " +
+                          "clobber things. Not a dir @ {}".format(str(x)))
+    if p.exists():
+        if not p.is_dir():
+            raise OSError("not even this version of makedirs will silently " +
+                          "clobber things. Not a dir @ {}".format(str(x)))
+        else:
+            return
+    _makedirs(str(p), exist_ok=True)
 
 
 def recursive_scandir(path="."):
@@ -263,7 +281,8 @@ def sane_hash(hash_algo, flo, buf=65536):
 
     if hash_cls is None:
         raise NotImplemented(
-            'Unsupported hashing algo ({}) passed to sane_hash!'.format(hash_algo) +
+            'Unsupported hashing algo ({}) passed to sane_hash!'.format(
+                hash_algo) +
             'Hashing algos supported are: '.format(str(supported_algos.keys()))
         )
 

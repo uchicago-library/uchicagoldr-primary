@@ -21,9 +21,15 @@ class SerializationReader(metaclass=ABCMeta):
 
     Assures implementation of .read()
     """
-
-    _struct = None
-    _implementation = None
+    @abstractmethod
+    @log_aware(log)
+    def __init__(self, root, target_identifier):
+        self._struct = None
+        self._root = None
+        self._target_identifier = None
+        self._implementation = None
+        self.root = root
+        self.target_identifier = target_identifier
 
     @abstractmethod
     def read(self):
@@ -45,5 +51,23 @@ class SerializationReader(metaclass=ABCMeta):
     def get_implementation(self):
         return self._implementation
 
+    @log_aware(log)
+    def get_root(self):
+        return self._root
+
+    @log_aware(log)
+    def set_root(self, x):
+        self._root = x
+
+    @log_aware(log)
+    def get_target_identifier(self):
+        return self._target_identifier
+
+    @log_aware(log)
+    def set_target_identifier(self, x):
+        self._target_identifier = x
+
     struct = property(get_struct, set_struct)
     implementation = property(get_implementation, set_implementation)
+    root = property(get_root, set_root)
+    target_identifier = property(get_target_identifier, set_target_identifier)

@@ -119,18 +119,14 @@ class FITsCreator(TechnicalMetadataCreator):
         cmd_data = cmd.get_data()
 
         if isfile(fits_file_path):
+            success = True
             log.debug("FITS successfully created")
-            self.get_source_materialsuite().add_technicalmetadata(
-                LDRPath(fits_file_path)
-            )
-            self.handle_premis(cmd_data, self.get_source_materialsuite(),
-                               "FITs", True)
         else:
+            success = False
             log.warn("FITS creation failed on {}".format(
                 self.get_source_materialsuite().identifier)
             )
-            self.handle_premis(cmd_data, self.get_source_materialsuite(),
-                               "FITs", False)
-
+        self.handle_premis(cmd_data, self.get_source_materialsuite(),
+                           "FITs", success, "fitsRecord", fits_file_path)
         log.debug("Cleaning up temporary file instantiation")
         original_holder.delete(final=True)

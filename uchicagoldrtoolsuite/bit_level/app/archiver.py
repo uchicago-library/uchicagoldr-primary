@@ -72,6 +72,11 @@ class Archiver(CLIApp):
                                  "the url of the noid minter to use. " +
                                  "Defaults to the config value.",
                                  type=str, action='store')
+        self.parser.add_argument("--lts_identifier", help="Manually specify " +
+                                 "the identifier to use for the Archive " +
+                                 "structure. Overrides noid minter urls.",
+                                 type=str, action='store',
+                                 default=None)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -97,13 +102,13 @@ class Archiver(CLIApp):
         else:
             noid_minter_url = self.conf.get("URLs", "noid_minter")
 
-        stage_path = join(staging_env, args.stage_id)
-        log.info("Stage Path: {}".format(stage_path))
+        log.info("Stage Path: {}".format(join(staging_env, args.stage_id)))
         log.info("Reading Stage...")
-        stage = FileSystemStageReader(stage_path).read()
+        stage = FileSystemStageReader(staging_env, args.stage_id).read()
         log.info("Transforming Stage into Archive")
         archive = StageToArchiveTransformer(stage).transform(
-            noid_minter_url=noid_minter_url
+            noid_minter_url=noid_minter_url,
+            archive_identifier=args.lts_identifier
         )
         log.info("Validating Archive...")
         if not archive.validate():

@@ -86,9 +86,8 @@ class Pruner(CLIApp):
             staging_env = self.conf.get("Paths", "staging_environment_path")
         staging_env = self.expand_path(staging_env)
 
-        stage_fullpath = join(staging_env, args.stage_id)
-        log.info("Stage: {}".format(stage_fullpath))
-        staging_directory_reader = FileSystemStageReader(stage_fullpath)
+        log.info("Stage: {}".format(join(staging_env, args.stage_id)))
+        staging_directory_reader = FileSystemStageReader(staging_env, args.stage_id)
         log.info("Reading...")
         staging_structure = staging_directory_reader.read()
         try:

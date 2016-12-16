@@ -1,12 +1,16 @@
-from os.path import join, dirname
+from os.path import join, dirname, relpath
 from logging import getLogger
+from re import compile as re_compile
+
+from pypremis.lib import PremisRecord
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
-from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir
+from uchicagoldrtoolsuite.core.lib.convenience import recursive_scandir, \
+    TemporaryFilePath
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
-from ..lib.externalpackagers.externalfilesystemmaterialsuitepackager import \
-    ExternalFileSystemMaterialSuitePackager
+from ..lib.externalreaders.externalfilesystemmaterialsuitereader import \
+    ExternalFileSystemMaterialSuiteReader
 from ..lib.writers.filesystemstagewriter import FileSystemMaterialSuiteWriter
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.structures.stage import Stage
@@ -65,35 +69,42 @@ class Stager(CLIApp):
         self.parser.add_argument("staging_id", help="The identifying name " +
                                  "for the new staging directory",
                                  type=str, action='store')
-        self.parser.add_argument("prefix", help="The prefix defining the " +
-                                 "type of run that is being processed",
-                                 type=str, action='store')
         self.parser.add_argument("--staging_env", help="The path to your " +
                                  "staging environment",
                                  type=str,
                                  default=None)
-        self.parser.add_argument("--resume", "-r", help="An integer for a " +
-                                 "run that needs to be resumed.",
-                                 type=str, action='store', default=0)
+        self.parser.add_argument("--resume", "-r", help="Resume a previously " +
+                                 "started run.",
+                                 action='store_true')
         self.parser.add_argument("--source_root", help="The root of the  " +
                                  "directory that needs to be staged.",
                                  type=str, action='store',
                                  default=None)
-        self.parser.add_argument("--filter_pattern", help="A regex to " +
-                                 "use to exclude files whose paths match.",
-                                 type=str, action='store',
-                                 default=None)
+        self.parser.add_argument("--filter_pattern", help="Regexes to " +
+                                 "use to exclude files whose rel paths match.",
+                                 action='append', default=[])
         self.parser.add_argument("--eq_detect", help="The equality " +
                                  "metric to use on writing, check " +
                                  "LDRItemCopier for supported schemes.",
                                  type=str, action='store',
                                  default="bytes")
+        self.parser.add_argument("--run_name", help="An optional name " +
+                                 "for this run to be recorded in PREMIS " +
+                                 "ingestion events for later querying.",
+                                 type=str, action='store',
+                                 default=None)
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         self.process_universal_args(args)
 
         # App code
+        if args.resume and not args.run_name:
+            raise RuntimeError("In order to resume a run you must specify " +
+                               "a run name")
+
+        filter_patterns = [re_compile(x) for x in args.filter_pattern]
+
         if args.staging_env:
             destination_root = args.staging_env
         else:
@@ -113,31 +124,42 @@ class Stager(CLIApp):
         log.info("Source Root: " + root)
 
         log.info("Reading Stage...")
-        stage = FileSystemStageReader(join(destination_root,
-                                           args.staging_id)).read()
+        stage = FileSystemStageReader(destination_root, args.staging_id).read()
 
         log.info("Stage: " + join(destination_root, args.staging_id))
 
+        _exists = []
         if args.resume:
-            seg_num = args.resume
-        else:
-            segment_ids = []
-            for segment in stage.segment_list:
-                segment_ids.append(segment.identifier)
-            segment_ids = [x for x in segment_ids if
-                           x.split("-")[0] == args.prefix]
-            segment_nums = [x.split("-")[1] for x in segment_ids]
-            segment_nums = [int(x) for x in segment_nums]
-            segment_nums.sort()
-            if segment_nums:
-                seg_num = segment_nums[-1]+1
-            else:
-                seg_num = 1
+            for ms in stage.materialsuite_list:
+                try:
+                    with TemporaryFilePath() as tmp_path:
+                        with ms.premis.open() as src:
+                            with open(tmp_path, 'wb') as dst:
+                                dst.write(src.read())
+                        premis = PremisRecord(frompath=tmp_path)
+                        obj = premis.get_object_list()[0]
+                        originalName = obj.get_originalName()
+                        run_id = None
+                        for event in premis.get_event_list():
+                            for eventDetailInformation in \
+                                    event.get_eventDetailInformation():
+                                eventDetail = eventDetailInformation.get_eventDetail()
+                                if eventDetail.startswith("Run Identifier"):
+                                    run_id = eventDetail.split(": ")[1]
+                        if run_id == args.run_name:
+                            _exists.append(originalName)
+                except Exception as e:
+                    log.warn(
+                        "An exception occured in resumption duplicate " +
+                        "detection in MaterialSuite({})".format(
+                            ms.identifier
+                        ) +
+                        "The Exception was: {}".format(str(e))
+                    )
+                    raise e
+            _exists = set(_exists)
 
-        log.info("Segment: " + args.prefix + "-" + str(seg_num))
-
-        log.info("Processing...")
-        log.info("Writing...")
+        log.info("Processing & Writing...")
 
         # We need a stage writer here just for the stage skeleton, we're going
         # to manually handle dealing with the nested writers so we can stage
@@ -148,17 +170,50 @@ class Stager(CLIApp):
         )
         stage_writer._build_skeleton()
         computed_segment_path = join(
-            destination_root, args.staging_id, 'segments',
-            args.prefix + "-" + str(seg_num)
+            destination_root, args.staging_id, 'pairtree_root'
         )
 
         for x in recursive_scandir(args.directory):
             if not x.is_file():
                 continue
-            p = ExternalFileSystemMaterialSuitePackager(x.path, root=root)
-            ms = p.package()
+            _filter = False
+            for f_patt in filter_patterns:
+                if f_patt.fullmatch(relpath(x.path, root)):
+                    log.debug(
+                        "A filter pattern matched a file path, skipping. " +
+                        "Pattern: {}, Path: {}".format(
+                            f_patt.pattern,
+                            relpath(x.path, root)
+                        )
+                    )
+                    _filter = True
+                    break
+            if _filter:
+                continue
+            if args.resume:
+                log.debug("Determining if the run name and relpath " +
+                          "already exist in the stage")
+                if relpath(x.path, root) in _exists:
+                    log.debug(
+                        "{} appears in the existing stage, skipping".format(
+                             relpath(x.path, root)
+                        )
+                    )
+                    continue
+                else:
+                    log.debug(
+                        "{} does not appear in the existing stage, processing".format(
+                            relpath(x.path, root)
+                        )
+                    )
+
+            p = ExternalFileSystemMaterialSuiteReader(
+                x.path, root=root, run_name=args.run_name
+            )
+            ms = p.read()
             w = FileSystemMaterialSuiteWriter(
-                ms, computed_segment_path, eq_detect=args.eq_detect
+                ms, computed_segment_path, eq_detect=args.eq_detect,
+                encapsulation=stage_writer.encapsulation
             )
             w.write()
             del p

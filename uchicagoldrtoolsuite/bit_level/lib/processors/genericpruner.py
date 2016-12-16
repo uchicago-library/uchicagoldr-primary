@@ -55,13 +55,13 @@ def default_callback(premis, patterns, exclude_patterns=None):
 
     matched = False
     for patt in patterns:
-        if patt.match(originalName):
+        if patt.fullmatch(originalName):
             matched = True
             break
     if matched:
         if exclude_patterns:
             for ex_patt in exclude_patterns:
-                if ex_patt.match(originalName):
+                if ex_patt.fullmatch(originalName):
                     matched = False
                     break
     if matched:
@@ -179,25 +179,24 @@ class GenericPruner(object):
             in_place_delete = self.in_place_delete
 
         matched_identifiers = []
-        for seg in self.stage.segment_list:
-            for ms in seg.materialsuite_list:
-                premis = ldritem_to_premisrecord(ms.premis)
-                identifier = premis.get_object_list()[0].\
-                    get_objectIdentifier()[0].get_objectIdentifierValue()
-                if callback(premis, *callback_args, **callback_kwargs) is True:
-                    matched_identifiers.append(identifier)
-                    log.debug(
-                        "Pruning callback returned True for {}".format(
-                            identifier
-                        )
+        for ms in self.stage.materialsuite_list:
+            premis = ldritem_to_premisrecord(ms.premis)
+            identifier = premis.get_object_list()[0].\
+                get_objectIdentifier()[0].get_objectIdentifierValue()
+            if callback(premis, *callback_args, **callback_kwargs) is True:
+                matched_identifiers.append(identifier)
+                log.debug(
+                    "Pruning callback returned True for {}".format(
+                        identifier
                     )
-                    if final is True:
-                        log.debug("Pruning content")
-                        if self.in_place_delete is True:
-                            log.debug("Deleting content in place")
-                            ms.content.delete(final=True)
-                        del ms.content
-                        write_premis_deletion_event(ms)
-                    else:
-                        write_premis_mock_deletion_event(ms)
+                )
+                if final is True:
+                    log.debug("Pruning content")
+                    if self.in_place_delete is True:
+                        log.debug("Deleting content in place")
+                        ms.content.delete(final=True)
+                    del ms.content
+                    write_premis_deletion_event(ms)
+                else:
+                    write_premis_mock_deletion_event(ms)
         return matched_identifiers

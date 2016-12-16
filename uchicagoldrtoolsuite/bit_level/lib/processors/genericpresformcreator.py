@@ -79,51 +79,42 @@ class GenericPresformCreator(object):
             configuration values
         """
         log.debug("Beginning stage level processing")
-        seg_len = len(self.stage.segment_list)
-        seg_num = 0
-        for segment in self.stage.segment_list:
-            seg_num = seg_num + 1
-            log.debug("Processing Segment {}/{}".format(seg_num, seg_len))
-            stuff_to_add_to_segment = []
-            ms_len = len(segment.materialsuite_list)
-            ms_num = 0
-            for materialsuite in segment.materialsuite_list:
-                ms_num = ms_num + 1
-                log.debug(
-                    "Processing MaterialSuite {}/{} ".format(ms_num, ms_len) +
-                    "in Segment {}/{}".format(seg_num, seg_len)
-                )
-                if not isinstance(materialsuite.get_premis(), LDRItem):
-                    raise ValueError("All material suites must have a PREMIS " +
-                                     "record in order to generate presforms.")
-                if is_presform_materialsuite(materialsuite) and not \
-                        presform_presforms:
-                    log.debug("Materialsuite contains a presform and " +
-                              "presform_presforms == False. Skipping.")
+        ms_len = len(self.stage.materialsuite_list)
+        ms_num = 0
+        for materialsuite in self.stage.materialsuite_list:
+            ms_num = ms_num + 1
+            log.debug(
+                "Processing MaterialSuite {}/{} ".format(ms_num, ms_len)
+            )
+            if not isinstance(materialsuite.get_premis(), LDRItem):
+                raise ValueError("All material suites must have a PREMIS " +
+                                 "record in order to generate presforms.")
+            if is_presform_materialsuite(materialsuite) and not \
+                    presform_presforms:
+                log.debug("Materialsuite contains a presform and " +
+                          "presform_presforms == False. Skipping.")
+                continue
+            if skip_existing:
+                has_presforms = False
+                premis = ldritem_to_premisrecord(materialsuite.premis)
+                try:
+                    for relation in premis.get_object_list()[0].get_relationship():
+                        if relation.get_relationshipType() == 'derivation' \
+                                and relation.get_relationshipSubType() == 'is Source of':
+                            has_presforms = True
+                            break
+                except KeyError:
+                    pass
+                if has_presforms:
+                    log.debug("MaterialSuite already has at least one " +
+                              "presform and skip_existing == True. " +
+                              "Skipping.")
                     continue
-                if skip_existing:
-                    has_presforms = False
-                    premis = ldritem_to_premisrecord(materialsuite.premis)
-                    try:
-                        for relation in premis.get_object_list()[0].get_relationship():
-                            if relation.get_relationshipType() == 'derivation' \
-                                    and relation.get_relationshipSubType() == 'is Source of':
-                                has_presforms = True
-                                break
-                    except KeyError:
-                        pass
-                    if has_presforms:
-                        log.debug("MaterialSuite already has at least one " +
-                                  "presform and skip_existing == True. " +
-                                  "Skipping.")
-                        continue
-                for x in self.instantiate_and_make_presforms(materialsuite,
-                                                             self.working_dir_path,
-                                                             self.converters,
-                                                             data_transfer_obj=data_transfer_obj):
-                    stuff_to_add_to_segment.append(x)
-            for x in stuff_to_add_to_segment:
-                segment.add_materialsuite(x)
+            for x in self.instantiate_and_make_presforms(materialsuite,
+                                                         self.working_dir_path,
+                                                         self.converters,
+                                                         data_transfer_obj=data_transfer_obj):
+                self.stage.add_materialsuite(x)
 
     @staticmethod
     @log_aware(log)

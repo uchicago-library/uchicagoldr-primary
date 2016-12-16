@@ -1,7 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
-from uuid import uuid1
+from inspect import getmro
 
+from uchicagoldrtoolsuite import log_aware
+from .materialsuiteserializationreader import MaterialSuiteSerializationReader
 from .abc.serializationreader import SerializationReader
 from ...structures.archive import Archive
 
@@ -24,7 +26,50 @@ class ArchiveSerializationReader(SerializationReader, metaclass=ABCMeta):
     implements a helper init
     """
     @abstractmethod
-    def __init__(self):
+    @log_aware(log)
+    def __init__(self, root, target_identifier, materialsuite_deserializer,
+                 materialsuite_deserializer_kwargs={}):
         log.debug("Entering the ABC init")
-        self.set_struct(Archive(str(uuid1())))
+        super().__init__(root, target_identifier)
+        self.struct = Archive(self.target_identifier)
+        self.materialsuite_deserializer = materialsuite_deserializer
+        self.materialsuite_deserializer_kwargs = \
+            materialsuite_deserializer_kwargs
         log.debug("Exiting the ABC init")
+
+    @log_aware(log)
+    def set_struct(self, struct):
+        if not isinstance(struct, Archive):
+            raise TypeError(
+                "{} is a {}, not an {}".format(
+                    str(struct), str(type(struct)), str(Archive)
+                )
+            )
+        self._struct = struct
+
+    @log_aware(log)
+    def get_materialsuite_deserializer(self):
+        return self._materialsuite_deserializer
+
+    @log_aware(log)
+    def set_materialsuite_deserializer(self, x):
+        if MaterialSuiteSerializationReader not in getmro(x):
+            raise TypeError()
+        self._materialsuite_deserializer = x
+
+    @log_aware(log)
+    def get_materialsuite_deserializer_kwargs(self):
+        return self._materialsuite_deserializer_kwargs
+
+    @log_aware(log)
+    def set_materialsuite_deserializer_kwargs(self, x):
+        if not isinstance(x, dict):
+            raise TypeError()
+        self._materialsuite_deserializer_kwargs = x
+
+    materialsuite_deserializer = property(get_materialsuite_deserializer,
+                                          set_materialsuite_deserializer)
+    materialsuite_deserializer_kwargs = property(
+        get_materialsuite_deserializer_kwargs,
+        set_materialsuite_deserializer_kwargs
+    )

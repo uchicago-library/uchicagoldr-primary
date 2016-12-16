@@ -1,17 +1,14 @@
-from os import makedirs as _makedirs
 from logging import getLogger
 from pathlib import Path
 from uuid import uuid4
 
-from pypairtree.utils import identifier_to_path
-
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
-    log_init_success
+    log_init_success, makedirs
 from .abc.stageserializationwriter import StageSerializationWriter
+from .filesystemmaterialsuitewriter import FileSystemMaterialSuiteWriter
 from ..ldritems.ldrpath import LDRPath
 from ..ldritems.ldritemcopier import LDRItemCopier
-from ..ldritems.ldritemoperations import hash_ldritem
 
 
 __author__ = "Brian Balsamo"
@@ -25,14 +22,6 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
-@log_aware(log)
-def makedirs(x):
-    """
-    wrap makedirs, so it doesn't freak out if the dir is already there
-    """
-    _makedirs(x, exist_ok=True)
-
-
 class FileSystemStageWriter(StageSerializationWriter):
     """
     A writer for the pairtree based file system stage serialization
@@ -41,7 +30,10 @@ class FileSystemStageWriter(StageSerializationWriter):
     on disk
     """
     @log_aware(log)
-    def __init__(self, aStructure, aRoot, eq_detect="bytes"):
+    def __init__(self, aStructure, aRoot,
+                 materialsuite_serializer=FileSystemMaterialSuiteWriter,
+                 eq_detect="bytes", materialsuite_serializer_kwargs={},
+                 encapsulation="srf"):
         """
         Create a new FileSystemStageWriter instance
 
@@ -53,20 +45,32 @@ class FileSystemStageWriter(StageSerializationWriter):
         __KWArgs__
 
         * eq_detect (str): The equality metric to use during serialization
+        * materialsuite_serializer (.abc.MaterialSuiteSerializationWriter):
+            A class to delegate writing the materialsuites to
+        * materialsuite_serializer_kwargs (dict): kwargs to pass to the class
+            which is delegated to
+        * encapsulation (str): A dirname to use to encapsulate the pairtree
+            objects, is inherited by the materialsuite serializer if not
+            explicitly set in the above mentioned kwargs dict
         """
         log_init_attempt(self, log, locals())
-        super().__init__(aStructure)
-        self.stage_env_path = Path(aRoot)
-        self.stage_root = Path(self.stage_env_path, self.struct.identifier)
-        self.set_implementation('pairtree filesystem')
-        self.eq_detect = eq_detect
+        super().__init__(
+            aStructure, aRoot, materialsuite_serializer, eq_detect=eq_detect,
+            materialsuite_serializer_kwargs=materialsuite_serializer_kwargs
+        )
+        self.encapsulation = encapsulation
+        if 'encapsulation' not in self.materialsuite_serializer_kwargs.keys():
+            self.materialsuite_serializer_kwargs['encapsulation'] = \
+                self.encapsulation
+        self.stage_root = Path(self.root, self.struct.identifier)
+        self.set_implementation('filesystem (pairtree)')
         log_init_success(self, log)
 
     @log_aware(log)
     def _build_skeleton(self):
         log.info("Creating required dirs/subdirs for the Stage serialization")
         required_dirs = []
-        for x in ['admin', 'segments']:
+        for x in ['admin', 'pairtree_root']:
             required_dirs.append(Path(self.stage_root, x))
 
         for x in ['accessionrecords', 'adminnotes', 'legalnotes']:
@@ -144,153 +148,19 @@ class FileSystemStageWriter(StageSerializationWriter):
         self._write_adminnotes()
         self._write_legalnotes()
         log.debug("Delegating segment writes to FileSystemSegmentWriter...")
-        for x in self.struct.segment_list:
-            ptfssw = FileSystemSegmentWriter(
-                x, str(Path(self.stage_root, 'segments')),
-                eq_detect=self.eq_detect
-            )
-            ptfssw.write()
+        for x in self.struct.materialsuite_list:
+            materialsuite_serializer = self.materialsuite_serializer(
+                x, str(Path(self.stage_root, 'pairtree_root')),
+                **self.materialsuite_serializer_kwargs)
+            materialsuite_serializer.write()
         log.info("Stage written")
 
-
-class FileSystemSegmentWriter(object):
-    """
-    A writer for the pairtree based file system segment serialization
-
-    Converters the structure and contained bytestreams into files/dirs
-    on disk
-    """
     @log_aware(log)
-    def __init__(self, aStructure, aRoot, eq_detect="bytes"):
-        """
-        Create a new FileSystemSegmentWriter
-
-        __Args__
-
-        1. aStructure (Segment): The structure to serialize
-        2. aRoot (str): The path to the segment root dir
-
-        __KWArgs__
-
-        * eq_detect (str): The equality metric to use during serialization
-        """
-        log_init_attempt(self, log, locals())
-        self.struct = aStructure
-        self.segment_root = Path(aRoot, self.struct.identifier)
-        self.eq_detect = eq_detect
-        log_init_success(self, log)
-
-    @log_aware(log)
-    def _write_skeleton(self):
-        log.info("Writing required dirs/subdirs for segment")
-        materialsuites_root = self.segment_root
-        if materialsuites_root.exists() and not materialsuites_root.is_dir():
-            raise RuntimeError("Segment writer can't clobber a file " +
-                               "where a directory should be! " +
-                               "{}".format(str(materialsuites_root)))
-        makedirs(str(materialsuites_root))
-
-    @log_aware(log)
-    def write(self):
-        """
-        Serialize the segment to the provided location
-        """
-        log.info("Writing segment")
-        self._write_skeleton()
-        log.debug("Delegating MaterialSuite writes to "
-                  "FileSystemMaterialSuite writer...")
-        for x in self.struct.materialsuite_list:
-            ptfsmsw = FileSystemMaterialSuiteWriter(
-                x,
-                str(self.segment_root),
-                eq_detect=self.eq_detect
+    def set_root(self, x):
+        if not isinstance(x, str):
+            raise TypeError(
+                "{} is a {}, not a str!".format(
+                    str(x), str(type(x))
+                )
             )
-            ptfsmsw.write()
-        log.info("Segment written")
-
-
-class FileSystemMaterialSuiteWriter(object):
-    """
-    A writer for the pairtree based file system materialsuite serialization
-
-    Converters the structure and contained bytestreams into files/dirs
-    on disk
-    """
-    @log_aware(log)
-    def __init__(self, aStructure, aRoot, eq_detect="bytes"):
-        """
-        Create a new FileSystemMaterialSuiteWriter
-
-        __Args__
-
-        1. aStructure (MaterialSuite): The structure to serialize
-        2. aRoot (str): The path to the materialsuite root dir
-
-        __KWArgs__
-
-        * eq_detect (str): The equality metric to use during serialization
-        """
-        log_init_attempt(self, log, locals())
-        self.struct = aStructure
-        self.materialsuite_root = Path(
-            identifier_to_path(self.struct.identifier, root=aRoot),
-            "srf"
-        )
-        self.eq_detect = eq_detect
-        log_init_success(self, log)
-
-    @log_aware(log)
-    def _write_skeleton(self):
-        log.info("Writing required dirs/subdirs for a "
-                 "MaterialSuite serialization")
-        if self.materialsuite_root.exists() and \
-                not self.materialsuite_root.is_dir():
-            raise RuntimeError("MaterialSuite writer can't clobber a file " +
-                               "where a directory should be! " +
-                               "{}".format(str(self.materialsuite_root)))
-        makedirs(str(Path(self.materialsuite_root, 'TECHMD')))
-
-    @log_aware(log)
-    def write(self):
-        """
-        Serialize the material suite to the provided location
-        """
-        log.info("Writing MaterialSuite")
-        self._write_skeleton()
-        log.debug("Constructing target paths")
-        target_content_path = Path(self.materialsuite_root, 'content.file')
-        target_content_item = LDRPath(str(target_content_path))
-        target_premis_path = Path(self.materialsuite_root, 'premis.xml')
-        target_premis_item = LDRPath(str(target_premis_path))
-
-        copiers = []
-
-        copiers.append(LDRItemCopier(self.struct.premis, target_premis_item,
-                                     clobber=True))
-
-        if self.struct.content is not None:
-            copiers.append(LDRItemCopier(self.struct.content,
-                                         target_content_item,
-                                         clobber=True))
-
-        log.debug("Computing techmd file names")
-        for x in self.struct.technicalmetadata_list:
-            # Use a quick checksum as the file name, this should prevent
-            # un-needed writing so long as the records don't change in between
-            # reading and writing a stage where the TECHMD already exists.
-            # It also keeps the names equivalent if a stage is moved
-            # from one root to another.
-            # So long as the file sizes stay small the overhead of computing
-            # a quick checksum like adler should be negligible.
-            h = hash_ldritem(x, algo="adler32")
-            target_techmd_path = Path(self.materialsuite_root,
-                                      'TECHMD', h)
-            target_techmd_item = LDRPath(str(target_techmd_path))
-            copiers.append(LDRItemCopier(x, target_techmd_item, clobber=True))
-
-        log.debug("Copying MaterialSuite bytestreams to disk")
-        for x in copiers:
-            cr = x.copy()
-            if not cr['src_eqs_dst']:
-                raise ValueError()
-        log.info("MaterialSuite written")
+        self._root = x
