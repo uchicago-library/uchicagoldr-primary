@@ -12,9 +12,7 @@ from pypremis.factories import LinkingEventIdentifierFactory
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.convenience import iso8601_dt
 from uchicagoldrtoolsuite.core.lib.idbuilder import IDBuilder
-from uchicagoldrtoolsuite.core.lib.agentlib import api_mint_agent, \
-    api_search_agent
-from uchicagoldrtoolsuite.core.lib.iagent import IAgent
+from uchicagoldrtoolsuite.core.lib.agentmixin import AgentMixin
 from ...ldritems.ldrpath import LDRPath
 from ...structures.materialsuite import MaterialSuite
 from ...ldritems.ldritemcopier import LDRItemCopier
@@ -32,7 +30,7 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
-class Converter(metaclass=ABCMeta):
+class Converter(AgentMixin, metaclass=ABCMeta):
     """
     Defines and partially implements a workflow for archive-safe file conversion
 
@@ -63,7 +61,8 @@ class Converter(metaclass=ABCMeta):
     _claimed_list_initd = False
 
     @log_aware(log)
-    def __init__(self, input_materialsuite, working_dir, timeout=None):
+    def __init__(self, input_materialsuite, working_dir, timeout=None,
+                 agent_db=None):
         """
         Superclass init for converters. Handles setting instance variables
         and some basic setup.
@@ -91,6 +90,7 @@ class Converter(metaclass=ABCMeta):
         self.set_source_materialsuite(input_materialsuite)
         self.set_working_dir(working_dir)
         self.set_timeout(timeout)
+        self.agent_db = agent_db
         log.debug("Exiting the ABC init")
 
     @classmethod
@@ -322,10 +322,6 @@ class Converter(metaclass=ABCMeta):
         orig_premis.get_object_list()[0].add_linkingEventIdentifier(
             self._build_linkingEventIdentifier(conv_event)
         )
-        self.get_premis_agent_record().add_linkingEventIdentifier(
-            LinkingEventIdentifierFactory(conv_event).produce_linking_node()
-        )
-        self.write_premis_agent_record()
 
         if conv_premis:
 
@@ -359,6 +355,32 @@ class Converter(metaclass=ABCMeta):
                 )
             )
 
+        # If our instance supports agent record keeping do it
+        if self.agent_db and self.agent_name:
+            # Get/Create an agent identifier in our db
+
+            agents = self.agent_db.search_agents(self.agent_name)
+            if len(agents) > 1:
+                raise ValueError(
+                    "More than one agent has that name! ({})".format(
+                        self.agent_name
+                    )
+                )
+            elif len(agents) < 1:
+                agentIdentifier = self.agent_db.mint_agent(self.agent_name)
+            else:
+                agentIdentifier = agents.pop()
+            # Add linkages to the event records
+            conv_event.add_linkingAgentIdentifier(
+                LinkingAgentIdentifier(
+                    'uuid', agentIdentifier
+                )
+            )
+            self.agent_db.add_linkingEventIdentifier(
+                agentIdentifier,
+                conv_event.get_eventIdentifier().get_eventIdentifierValue()
+            )
+
     @log_aware(log)
     def build_conv_event(self, cmd_output, orig_premis, conv_premis, converter_name):
         log.debug("Building conversion event")
@@ -380,10 +402,6 @@ class Converter(metaclass=ABCMeta):
 
         conv_event.set_eventOutcomeInformation(
             self._build_eventOutcomeInformation(cmd_output, conv_premis)
-        )
-
-        conv_event.set_linkingAgentIdentifier(
-            self._build_linkingAgentIdentifier("converter", converter_name)
         )
 
         conv_event.set_linkingObjectIdentifier(
@@ -417,10 +435,6 @@ class Converter(metaclass=ABCMeta):
 
         crea_event.set_eventOutcomeInformation(
             self._build_eventOutcomeInformation(cmd_output, conv_premis)
-        )
-
-        crea_event.add_linkingAgentIdentifier(
-            self._build_linkingAgentIdentifier("creator", converter_name)
         )
 
         crea_event.add_linkingObjectIdentifier(

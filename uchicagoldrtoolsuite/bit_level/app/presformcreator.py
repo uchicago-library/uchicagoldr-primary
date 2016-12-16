@@ -4,6 +4,7 @@ from configparser import NoOptionError
 
 from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.app.abc.cliapp import CLIApp
+from uchicagoldrtoolsuite.core.lib.apiagentdatabase import APIAgentDatabase
 from ..lib.writers.filesystemstagewriter import FileSystemStageWriter
 from ..lib.readers.filesystemstagereader import FileSystemStageReader
 from ..lib.processors.genericpresformcreator import \
@@ -161,7 +162,10 @@ class PresformCreator(CLIApp):
             from ..lib.converters.audioconverter import AudioConverter
             converters.append(AudioConverter)
 
-        presform_creator = GenericPresformCreator(stage, converters)
+        presform_creator = GenericPresformCreator(
+            stage, converters,
+            agent_db=APIAgentDatabase('https://y2.lib.uchicago.edu/ldragents')
+        )
         presform_creator.process(skip_existing=args.skip_existing,
                                  data_transfer_obj=dto)
 

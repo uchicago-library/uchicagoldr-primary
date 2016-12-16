@@ -8,7 +8,6 @@ from uchicagoldrtoolsuite import log_aware
 from uchicagoldrtoolsuite.core.lib.bash_cmd import BashCommand
 from uchicagoldrtoolsuite.core.lib.convenience import log_init_attempt, \
     log_init_success
-from uchicagoldrtoolsuite.core.lib.apiagentmixin import APIAgentMixin
 from .abc.converter import Converter
 
 
@@ -23,7 +22,7 @@ __version__ = "0.0.1dev"
 log = getLogger(__name__)
 
 
-class OfficeToPDFConverter(Converter, APIAgentMixin):
+class OfficeToPDFConverter(Converter):
     """
     A class for converting a variety of "office" file types to PDF-A
 
@@ -71,7 +70,7 @@ class OfficeToPDFConverter(Converter, APIAgentMixin):
 
     @log_aware(log)
     def __init__(self, input_materialsuite, working_dir,
-                 timeout=None, data_transfer_obj={}):
+                 timeout=None, data_transfer_obj={}, agent_db=None):
         """
         Instantiate a converter
 
@@ -91,7 +90,8 @@ class OfficeToPDFConverter(Converter, APIAgentMixin):
         """
         log_init_attempt(self, log, locals())
         super().__init__(input_materialsuite,
-                         working_dir=working_dir, timeout=timeout)
+                         working_dir=working_dir, timeout=timeout,
+                         agent_db=agent_db)
         self.libre_office_path = data_transfer_obj.get(
             'libre_office_path', None
         )
@@ -99,6 +99,7 @@ class OfficeToPDFConverter(Converter, APIAgentMixin):
             raise ValueError('No libre_office_path specificed in the data' +
                              'transfer object!')
         self.converter_name = self._construct_name()
+        self.agent_name = self.converter_name
         log_init_success(self, log)
 
     @log_aware(log)
@@ -160,6 +161,3 @@ class OfficeToPDFConverter(Converter, APIAgentMixin):
             where_it_is = None
 
         return {'outpath': where_it_is, 'cmd_output': convert_cmd.get_data()}
-
-    def get_premis_agent_record(self):
-        return super().get_premis_agent_record(name=self.converter_name)

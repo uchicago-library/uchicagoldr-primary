@@ -1,4 +1,5 @@
 import requests
+from collections import OrderedDict
 
 from pypremis.nodes import Agent, AgentIdentifier, LinkingEventIdentifier
 
@@ -6,9 +7,12 @@ from .abc.agentdatabase import AgentDatabase
 
 
 class APIAgentDatabase(AgentDatabase):
+
+    CACHE_SIZE=500000
+
     def __init__(self, api_root):
-        self._cached_searches = {}
-        self._cached_agents = {}
+        self._cached_searches = OrderedDict()
+        self._cached_agents = OrderedDict()
         self.api_root = api_root
 
     @staticmethod
@@ -31,18 +35,16 @@ class APIAgentDatabase(AgentDatabase):
             )
 
     def dump_search_cache(self):
-        self._cached_searches = {}
+        self._cached_searches = OrderedDict()
 
     def dump_agent_cache(self):
-        self._cached_agents = {}
+        self._cached_agents = OrderedDict()
 
     def dump_caches(self):
         self.dump_search_cache()
         self.dump_agent_cache()
 
-    def mint_agent(self, agentName, agentType=None):
-        if agentType is None:
-            agentType = ""
+    def mint_agent(self, agentName, agentType="software"):
         data = {
             'fields': ['name', 'type'],
             'name': agentName,
@@ -52,7 +54,10 @@ class APIAgentDatabase(AgentDatabase):
         self._okay_response(r)
         j = r.json()
         self._okay_json(j)
-        return j['data']['agents']['identifier']
+        identifier = j['data']['agents']['identifier']
+        if agentName in self._cached_searches:
+            self._cached_searches[agentName].append(identifier)
+        return identifier
 
     def search_agents(self, query, use_cache=True):
         if query in self._cached_searches and use_cache:
@@ -65,6 +70,8 @@ class APIAgentDatabase(AgentDatabase):
                   j['data']['agents'] if
                   j['data']['agents'][x]['name'] == query}
         self._cached_searches[query] = result
+        if len(self._cached_searches) > self.CACHE_SIZE:
+            self._cached_searches.popitem(last=False)
         return result
 
     def add_linkingEventIdentifier(self, agentIdentifier, eventIdentifier):
@@ -74,6 +81,10 @@ class APIAgentDatabase(AgentDatabase):
         )
         self._okay_response(r)
         self._okay_json(r.json())
+        if agentIdentifier in self._cached_agents:
+            self._cached_agents[agentIdentifier].add_linkingEventIdentifier(
+                'uuid', eventIdentifier
+            )
 
     def agent_exists(self, agentIdentifier):
         r = requests.head(self.api_root + "/agents/" + agentIdentifier)
@@ -102,4 +113,6 @@ class APIAgentDatabase(AgentDatabase):
                     LinkingEventIdentifier('uuid', x)
                 )
         self._cached_agents[agentIdentifier] = agent
+        if len(self._cached_agents) > self.CACHE_SIZE:
+            self._cached_agents.popitem(last=False)
         return agent

@@ -34,7 +34,7 @@ class GenericPresformCreator(object):
     Ingests a stage structure and produces presforms of files therein
     """
     @log_aware(log)
-    def __init__(self, stage, converters):
+    def __init__(self, stage, converters, agent_db=None):
         """
         spawn a presform creator that should work regardless of
         what kind of LDRItems are being used
@@ -52,6 +52,7 @@ class GenericPresformCreator(object):
         self.working_dir = TemporaryDirectory()
         self.working_dir_path = self.working_dir.name
         self.converters = converters
+        self.agent_db = agent_db
         log_init_success(self, log)
 
     @log_aware(log)
@@ -113,13 +114,14 @@ class GenericPresformCreator(object):
             for x in self.instantiate_and_make_presforms(materialsuite,
                                                          self.working_dir_path,
                                                          self.converters,
-                                                         data_transfer_obj=data_transfer_obj):
+                                                         data_transfer_obj=data_transfer_obj,
+                                                         agent_db=self.agent_db):
                 self.stage.add_materialsuite(x)
 
     @staticmethod
     @log_aware(log)
     def instantiate_and_make_presforms(ms, working_dir_path, converters,
-                                       data_transfer_obj={}):
+                                       data_transfer_obj={}, agent_db=None):
         """
         write the file to disk an examine it, update its PREMIS
 
@@ -170,7 +172,8 @@ class GenericPresformCreator(object):
             c_working_dir = join(working_dir_path, str(uuid1()))
             makedirs(c_working_dir, exist_ok=True)
             c = converter(ms, c_working_dir,
-                          data_transfer_obj=data_transfer_obj)
+                          data_transfer_obj=data_transfer_obj,
+                          agent_db=agent_db)
             presform = c.convert()
             if presform is not None:
                 presforms.append(presform)
