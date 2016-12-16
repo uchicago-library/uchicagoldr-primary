@@ -16,15 +16,6 @@ class APIAgentDatabase(AgentDatabase):
         self.api_root = api_root
 
     @staticmethod
-    def _okay_response(resp):
-        if resp.status_code != 200:
-            raise ValueError(
-                "Bad HTTP Status Code (not 200), return code: {}".format(
-                    str(resp.status_code)
-                )
-            )
-
-    @staticmethod
     def _okay_json(resp_json):
         if not (resp_json['errors'] == None and
                 resp_json['status'] == 'success'):
@@ -51,7 +42,7 @@ class APIAgentDatabase(AgentDatabase):
             'type': agentType
         }
         r = requests.post(self.api_root + "/agents", json=data)
-        self._okay_response(r)
+        r.raise_for_status()
         j = r.json()
         self._okay_json(j)
         identifier = j['data']['agents']['identifier']
@@ -63,7 +54,7 @@ class APIAgentDatabase(AgentDatabase):
         if query in self._cached_searches and use_cache:
             return self._cached_searches[query]
         r = requests.get(self.api_root + "/agents")
-        self._okay_response(r)
+        r.raise_for_status()
         j = r.json()
         self._okay_json(j)
         result = {j['data']['agents'][x]['identifier'] for x in
@@ -79,7 +70,7 @@ class APIAgentDatabase(AgentDatabase):
               self.api_root + "/agents/" + agentIdentifier + "/events",
               json={'event': eventIdentifier}
         )
-        self._okay_response(r)
+        r.raise_for_status()
         self._okay_json(r.json())
         if agentIdentifier in self._cached_agents:
             self._cached_agents[agentIdentifier].add_linkingEventIdentifier(
@@ -97,7 +88,7 @@ class APIAgentDatabase(AgentDatabase):
         if agentIdentifier in self._cached_agents and use_cache:
             return self._cached_agents[agentIdentifier]
         r = requests.get(self.api_root + "/agents/" + agentIdentifier)
-        self._okay_response(r)
+        r.raise_for_status()
         j = r.json()
         self._okay_json(j)
         agent_json = j['data']['agent']
