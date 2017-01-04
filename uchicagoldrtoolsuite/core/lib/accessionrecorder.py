@@ -43,7 +43,7 @@ class AccessionRecorder(object):
 
     def _generalize_keys(self, key):
         """
-        Generalize keys with indexes, for comparison against general dotted
+        Generalize keys with indices, for comparison against general dotted
         syntax
 
         __Args__
@@ -79,6 +79,18 @@ class AccessionRecorder(object):
         return result
 
     def _gather_applicable_keys(self, field_name):
+        """
+        Gather all keys associated with a generalized key
+
+        __Args__
+
+        1. field_name (str): the generalized key/field name
+
+        __Returns__
+
+        1. result (list): a list of the specific keys associated with the
+        generalized key
+        """
         result = []
         for x in self.get_record().keys():
             comp = self._generalize_keys(x)
@@ -254,15 +266,29 @@ class AccessionRecorder(object):
 
     def generate_minimal_record(self):
         """
-        attempt to generate the shortest/least verbose valid record structure
+        generate the shortest/least verbose valid record structure
         from the associated conf
         """
         self.generate_record(sparse=True)
 
     def generate_full_record(self):
+        """
+        Generate a valid record from the associated conf which includes
+        every field and additionally duplicates every field with cardinality "n"
+        """
         self.generate_record()
 
     def generate_record(self, sparse=False):
+        """
+        generate a new record given a config
+
+        __KWArgs__
+
+        * sparse (bool): If true generate a minimal record which omits optional
+            fields and never duplicates fields if it doesn't have to. If true
+            generate a record with every field, that duplicates every
+            duplicatable field.
+        """
         if self.get_record() is not None:
             raise AttributeError("There is already a record associated " +
                                  "with this instance!")
