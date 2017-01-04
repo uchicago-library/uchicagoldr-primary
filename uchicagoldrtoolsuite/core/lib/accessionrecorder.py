@@ -78,6 +78,15 @@ class AccessionRecorder(object):
                 result.append(self.get_record()[x])
         return result
 
+    def _gather_applicable_keys(self, field_name):
+        result = []
+        for x in self.get_record().keys():
+            comp = self._generalize_keys(x)
+            if comp == field_name:
+                result.append(x)
+        return result
+
+
     def _gather_applicable_fields(self, field_name):
         """
         Gather all fields associated with a generalized key
@@ -248,6 +257,12 @@ class AccessionRecorder(object):
         attempt to generate the shortest/least verbose valid record structure
         from the associated conf
         """
+        self.generate_record(sparse=True)
+
+    def generate_full_record(self):
+        self.generate_record()
+
+    def generate_record(self, sparse=False):
         if self.get_record() is not None:
             raise AttributeError("There is already a record associated " +
                                  "with this instance!")
@@ -256,9 +271,11 @@ class AccessionRecorder(object):
                                  "with this instance!")
         self.set_record(HierarchicalRecord())
         for x in self.get_conf().get_data():
+            obligation = x['Obligation']
+            if obligation != "r" and sparse:
+                continue
             field_name = x['Field Name']
             value_type = x['Value Type']
-            obligation = x['Obligation']
             cardinality = x['Cardinality']
             nested = False
             if "." in field_name:
@@ -273,66 +290,11 @@ class AccessionRecorder(object):
                 if value_type == x[0]:
                     dummy_value = x[1]
 
-            if obligation != "r":
-                continue
-
-            if cardinality != "n":
-                if not nested:
-                    for y in range(int(cardinality)):
-                        self.get_record()[field_name+str(y)] = dummy_value
-                else:
-                    parent_key = ".".join(field_name.split(".")[:-1])
-                    leaf_key = field_name.split(".")[-1]
-                    num_parents = len(
-                        self._gather_applicable_values(parent_key))
-                    for y in range(num_parents):
-                        for z in range(int(cardinality)):
-                            self.get_record()[parent_key+str(y) + "." +
-                                              leaf_key+str(z)] = dummy_value
-            else:
-                if not nested:
-                    self.get_record()[field_name+"0"] = dummy_value
-                else:
-                    parent_key = ".".join(field_name.split(".")[:-1])
-                    leaf_key = field_name.split(".")[-1]
-                    num_parents = len(
-                        self._gather_applicable_values(parent_key))
-                    for y in range(num_parents):
-                            self.get_record()[parent_key+str(y) + "." +
-                                              leaf_key+"0"] = dummy_value
-
-    def generate_full_record(self):
-        """
-        attempt to generate the most verbose valid record from the associated
-        conf
-        """
-        if self.get_record() is not None:
-            raise AttributeError("There is already a record associated " +
-                                 "with this instance!")
-        if self.get_conf() is None:
-            raise AttributeError("This is no conf associated " +
-                                 "with this instance!")
-        self.set_record(HierarchicalRecord())
-        for x in self.get_conf().get_data():
-            field_name = x['Field Name']
-            value_type = x['Value Type']
-            obligation = x['Obligation']
-            cardinality = x['Cardinality']
-            nested = False
-            if "." in field_name:
-                nested = True
-            allowed_types = [('str', 'default_string'),
-                                ('dict', {}),
-                                ('int', 0),
-                                ('bool', False),
-                                ('float', float(0))]
-            dummy_value = None
-            for x in allowed_types:
-                if value_type == x[0]:
-                    dummy_value = x[1]
-
             if cardinality == 'n':
-                cardinality = '2'
+                if sparse:
+                    cardinality = '1'
+                else:
+                    cardinality = '2'
 
             if not nested:
                 for y in range(int(cardinality)):
@@ -340,10 +302,11 @@ class AccessionRecorder(object):
             else:
                 parent_key = ".".join(field_name.split(".")[:-1])
                 leaf_key = field_name.split(".")[-1]
-                num_parents = len(self._gather_applicable_values(parent_key))
-                for y in range(num_parents):
+                for y in self._gather_applicable_keys(parent_key):
                     for z in range(int(cardinality)):
-                        self.get_record()[parent_key+str(y)+"."+leaf_key+str(z)] = dummy_value
+                        self.get_record()[y+"."+leaf_key+str(z)] = dummy_value
+
+
 
     def populate_from_csv(self, filepath):
         """
