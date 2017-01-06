@@ -39,6 +39,7 @@ setup(
             'ldrcreatepremis = uchicagoldrtoolsuite.bit_level.app.premiscreator:launch',
             'ldrsetrestriction = uchicagoldrtoolsuite.bit_level.app.premisrestrictionsetter:launch',
             'ldrarchive = uchicagoldrtoolsuite.bit_level.app.archiver:launch',
+            'ldrcrazyarchive = uchicagoldrtoolsuite.bit_level.app.crazy_archiver:launch',
             'ldraru = uchicagoldrtoolsuite.core.app.aru:launch',
             'ldrpostinstall = uchicagoldrtoolsuite.core.app.postinstall:launch',
             'ldraddadminnote = uchicagoldrtoolsuite.bit_level.app.adminnoteadder:launch',
