@@ -120,7 +120,7 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
             log.debug("Editing PREMIS")
             premis = PremisRecord(frompath=str(target_premis_path))
             if self.update_content_location:
-                self.content_location_update(premis, str(target_premis_path))
+                self.content_location_update(premis, str(target_content_path))
             if self.premis_event:
                 self.finalize_event(
                     premis, self.premis_event,
