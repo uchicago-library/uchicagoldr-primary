@@ -167,7 +167,7 @@ def activate_job_log_file(job_logdir=None, verbosity="DEBUG"):
     jlog_filepath = join(job_logdir, iso8601_dt() + "_" + uuid4().hex)
     if exists(jlog_filepath):
         raise ValueError('The randomly generated job log file already exists!')
-    h2 = FileHandler(jlog_filepath)
+    h2 = FileHandler(jlog_filepath, encoding="UTF-8")
     h2.setLevel(verbosity)
     h2.setFormatter(_f)
     root_log.addHandler(h2)
