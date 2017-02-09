@@ -150,6 +150,8 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
             record = GenericPREMISCreator.make_record(
                 self.working_path, original_name
             )
+            real_identifier = ObjectIdentifier('uuid4', self.target_identifier)
+            record.get_object_list()[0].get_objectIdentifier()[0] = real_identifier
             record.add_event(ingestion_event)
             return record
 

@@ -46,6 +46,7 @@ setup(
             'ldraddaccessionrecord = uchicagoldrtoolsuite.bit_level.app.accessionrecordadder:launch',
             'ldrcreatetechmd = uchicagoldrtoolsuite.bit_level.app.technicalmetadatacreator:launch',
             'ldrcreatepresforms = uchicagoldrtoolsuite.bit_level.app.presformcreator:launch',
+            'ldrnewcreatepresforms = uchicagoldrtoolsuite.bit_level.app.new_presformcreator:launch',
             'ldrmakeagent = uchicagoldrtoolsuite.core.app.premisagentmaker:launch',
         ]
     },
