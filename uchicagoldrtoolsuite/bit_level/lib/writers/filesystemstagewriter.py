@@ -44,7 +44,9 @@ class FileSystemStageWriter(StageSerializationWriter):
 
         __KWArgs__
 
-        * eq_detect (str): The equality metric to use during serialization
+        * eq_detect (str): The equality metric to use during serialization,
+            is inherited by the materialsuite serializer if not explicitly
+            set in the passed kwargs dict
         * materialsuite_serializer (.abc.MaterialSuiteSerializationWriter):
             A class to delegate writing the materialsuites to
         * materialsuite_serializer_kwargs (dict): kwargs to pass to the class
@@ -62,6 +64,8 @@ class FileSystemStageWriter(StageSerializationWriter):
         if 'encapsulation' not in self.materialsuite_serializer_kwargs.keys():
             self.materialsuite_serializer_kwargs['encapsulation'] = \
                 self.encapsulation
+        if 'eq_detect' not in self.materialsuite_serializer_kwargs.keys():
+            self.materialsuite_serializer_kwargs['eq_detect'] = eq_detect
         self.stage_root = Path(self.root, self.struct.identifier)
         self.set_implementation('filesystem (pairtree)')
         log_init_success(self, log)
