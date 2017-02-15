@@ -74,6 +74,12 @@ class Pruner(CLIApp):
                                  "'save' an item whose item name matches " +
                                  "a deletion pattern from being removed.",
                                  action='append', default=[])
+        self.parser.add_argument("--eq_detect",
+                                 help="The equality detection to use when " +
+                                 "rewriting the stage with potential " +
+                                 "alterations to PREMIS.",
+                                 type=str,
+                                 default="size")
         # Parse arguments into args namespace
         args = self.parser.parse_args()
         self.process_universal_args(args)
@@ -104,7 +110,7 @@ class Pruner(CLIApp):
             print(dumps(r, indent=4))
             log.info("Writing...")
             w = FileSystemStageWriter(staging_structure, staging_env,
-                                      eq_detect="adler32")
+                                      eq_detect=args.eq_detect)
             w.write()
             log.info("Complete")
         except KeyboardInterrupt:
