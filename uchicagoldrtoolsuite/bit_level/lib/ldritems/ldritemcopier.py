@@ -175,6 +175,7 @@ class LDRItemCopier(object):
         # Choosing a metric has a significant effect on the amount of time
         # copies will take, either in aggregate or of large files.
         equality_metrics = {
+            'size': self.ldritem_equal_contents_size,
             'adler32': self.ldritem_equal_contents_adler32,
             'crc32': self.ldritem_equal_contents_crc32,
             'md5': self.ldritem_equal_contents_md5,
