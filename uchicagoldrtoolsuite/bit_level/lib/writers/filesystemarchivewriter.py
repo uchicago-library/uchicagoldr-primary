@@ -63,7 +63,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         __KWArgs__
 
         * eq_detect (str): What equality detection metric to use while
-            serializing
+            serializing, is inherited by the materialsuite serializer if not
+            explicitly set in the passed kwargs dict.
         * materialsuite_serializer (.abc.MaterialsuiteSerializationWriter):
             A class to delegate writing the MaterialSuites to
         * materialsuite_serializer_kwargs (dict): kwargs to pass to the class
@@ -82,6 +83,8 @@ class FileSystemArchiveWriter(ArchiveSerializationWriter):
         if 'encapsulation' not in self.materialsuite_serializer_kwargs.keys():
             self.materialsuite_serializer_kwargs['encapsulation'] = \
                 self.encapsulation
+        if 'eq_detect' not in self.materialsuite_serializer_kwargs.keys():
+            self.materialsuite_serializer_kwargs['eq_detect'] = eq_detect
         self.materialsuite_serializer_kwargs['update_content_location'] = True
         self.materialsuite_serializer_kwargs['clobber'] = False
         log_init_success(self, log)

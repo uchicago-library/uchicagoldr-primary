@@ -99,12 +99,14 @@ class FileSystemMaterialSuiteWriter(MaterialSuiteSerializationWriter):
         target_premis_item = LDRPath(str(target_premis_path))
 
         premis_copier = LDRItemCopier(self.struct.premis, target_premis_item,
-                                      clobber=self.clobber)
+                                      clobber=self.clobber,
+                                      eq_detect=self.eq_detect)
         content_copier = None
         if self.struct.content is not None:
             content_copier = LDRItemCopier(self.struct.content,
                                            target_content_item,
-                                           clobber=self.clobber)
+                                           clobber=self.clobber,
+                                           eq_detect=self.eq_detect)
 
         log.debug("Copying MaterialSuite bytestreams to disk")
         content_cr = None
