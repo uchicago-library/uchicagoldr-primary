@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>#tree.py#</title>
+  <link rel="stylesheet" href="../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>#tree.py#</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">csv</span> <span class="kn">import</span> <span class="n">writer</span><span class="p">,</span> <span class="n">QUOTE_ALL</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">md5</span><span class="p">,</span> <span class="n">sha256</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">_exit</span><span class="p">,</span> <span class="n">chown</span><span class="p">,</span> <span class="n">listdir</span><span class="p">,</span> <span class="n">mkdir</span><span class="p">,</span> <span class="n">stat</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">abspath</span><span class="p">,</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">exists</span><span class="p">,</span> <span class="n">isdir</span><span class="p">,</span> <span class="n">isfile</span><span class="p">,</span> <span class="n">join</span><span class="p">,</span> <span class="n">relpath</span>
+<span class="kn">from</span> <span class="nn">magic</span> <span class="kn">import</span> <span class="n">from_file</span>
+<span class="kn">from</span> <span class="nn">pwd</span> <span class="kn">import</span> <span class="n">getpwnam</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copyfile</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span>
+<span class="kn">from</span> <span class="nn">treelib</span> <span class="kn">import</span> <span class="n">Tree</span><span class="p">,</span> <span class="n">Node</span>
+<span class="kn">from</span> <span class="nn">uchicagoldr.filewalker</span> <span class="kn">import</span> <span class="n">FileWalker</span>
+<span class="kn">from</span> <span class="nn">uchicagoldr.moveableitem</span> <span class="kn">import</span> <span class="n">MoveableItem</span>
+<span class="kn">from</span> <span class="nn">uchicagoldr.walktree</span> <span class="kn">import</span> <span class="n">FileWalkTree</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <h3><span id="classes-for-moving-files-from-one-location-to-another" href="classes-for-moving-files-from-one-location-to-another"> classes for moving files from one location to another </span></h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <ol>
+<li><strong> FileProcessor </strong> is a super class. It shouldn't be used</li>
+<li><strong> Stager </strong>*</li>
+<li><strong> Archiver </strong></li>
+</ol>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <p>Parameters</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">FileProcessor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">source_root</span><span class="p">,</span> <span class="n">irrelevant_part</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filewalker</span> <span class="o">=</span> <span class="n">FileWalker</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="n">FileWalkTree</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filewalker</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">irrelevant_parts</span> <span class="o">=</span> <span class="n">irrelevant_part</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find_all_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_files</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find_directories_in_a_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_node</span><span class="p">):</span>
+        <span class="n">current_level</span> <span class="o">=</span> <span class="n">a_node</span>
+        <span class="n">subdirectories</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">find_matching_node</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">current_level</span><span class="o">.</span><span class="n">fpointer</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_matching_node</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">subdirectories</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">explain_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;node_explained&quot;</span><span class="p">,</span> <span class="s2">&quot;id data&quot;</span><span class="p">)(</span><span class="n">n</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">a_list</span><span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">pattern_matching_files_regex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">regex</span><span class="p">):</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_all_nodes</span><span class="p">()</span> <span class="k">if</span> \
+                   <span class="n">re_compile</span><span class="p">(</span><span class="n">regex</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">matches</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">string_searching_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val_string</span><span class="p">):</span>
+        <span class="n">matches</span> <span class="o">=</span>  <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_files</span><span class="p">()</span> <span class="k">if</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">find_string_in_a_node_tag</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">val_string</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">matches</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">string_searching_subdirectories</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val_string</span><span class="p">):</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_all_nodes</span><span class="p">()</span> <span class="k">if</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">is_it_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+        
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span> \
+                   <span class="n">find_string_in_a_node_tag</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">val_string</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">matches</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val_string</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+        <span class="n">potential_matches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">string_searching_subdirectories</span><span class="p">(</span><span class="n">val_string</span><span class="p">)</span>
+        <span class="n">actual_matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">potential_matches</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">find_depth_of_a_node</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="n">level</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">actual_matches</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find_matching_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val_string</span><span class="p">):</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_all_nodes</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">does_node_match_string</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">val_string</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;too many matches for that identifier&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">get_checksum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="n">blocksize</span> <span class="o">=</span> <span class="mi">65536</span>
+        <span class="n">md5_hash</span> <span class="o">=</span> <span class="n">md5</span><span class="p">()</span>        
+        <span class="n">file_run</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">file_run</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">blocksize</span><span class="p">)</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">md5_hash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="n">file_run</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">blocksize</span><span class="p">)</span>
+        <span class="n">file_run</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">md5_hash</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find_file_in_a_subdirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_node</span><span class="p">,</span> <span class="n">file_name_string</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_matching_node</span><span class="p">(</span><span class="n">a_node</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">fpointer</span> <span class="k">if</span> <span class="n">file_name_string</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find_files_in_a_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a_node</span><span class="o">.</span><span class="n">leaves</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">get_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">validate_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">explain_validation_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">DataTransferObject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filep</span><span class="p">,</span> <span class="n">source_checksum</span><span class="p">,</span> <span class="n">destination_checksum</span><span class="p">,</span> <span class="n">completed</span><span class="p">,</span> <span class="n">uncorrupted</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source_checksum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination</span> <span class="o">=</span> <span class="n">destination_checksum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moved</span> <span class="o">=</span> <span class="n">completed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncorrupted</span> <span class="o">=</span> <span class="n">uncorrupted</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">write_to_manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manifestfile</span><span class="p">):</span>
+        <span class="n">opened</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">manifestfile</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+        <span class="n">opened</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;{}</span><span class="se">\t</span><span class="s2">{}</span><span class="se">\t</span><span class="s2">{}</span><span class="se">\t</span><span class="s2">{}</span><span class="se">\t</span><span class="s2">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">destination</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moved</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">uncorrupted</span><span class="p">))</span>
+        <span class="n">opened</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">Stager</span><span class="p">(</span><span class="n">FileProcessor</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">numfiles</span><span class="p">,</span> <span class="n">stage_identifier</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">source_root</span><span class="p">,</span> <span class="n">archive_directory</span><span class="p">):</span>
+        <span class="n">FileProcessor</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">source_root</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span> <span class="o">=</span> <span class="n">archive_directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_root</span> <span class="o">=</span> <span class="n">source_root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span> <span class="o">=</span> <span class="n">numfiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staging_id</span> <span class="o">=</span> <span class="n">stage_identifier</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">numfilesfound</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_files</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">numfilesfound</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">explain_validation_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_files</span><span class="p">())</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ldrerror&quot;</span><span class="p">,</span><span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span> <span class="s2">&quot;You said there were {} files, but {} files were found. This is a mismatch: please correct and try again.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_files</span><span class="p">()))))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">new_staging_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">stage_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">staging_id</span>
+        <span class="k">return</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="n">stage_id</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">new_staging_data_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stageID</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="n">stageID</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">new_staging_admin_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stageID</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="n">stageID</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">new_staging_data_with_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stageID</span><span class="p">):</span>
+        <span class="n">data_directories</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">listdir</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="n">stageID</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)))</span>
+        <span class="n">last_number</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_directories</span><span class="p">)</span>
+        <span class="n">new_number</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">last_number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="n">stageID</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">+</span><span class="n">new_number</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-31'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-31'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">new_staging_admin_with_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stageID</span><span class="p">):</span>
+        <span class="n">admin_directories</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">listdir</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="n">stageID</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">)))</span>
+        <span class="n">last_number</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">admin_directories</span><span class="p">)</span>
+        <span class="n">new_number</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">last_number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="n">stageID</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">+</span><span class="n">new_number</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-32'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-32'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">make_a_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_string</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">directory_string</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mkdir</span><span class="p">(</span><span class="n">directory_string</span><span class="p">,</span> <span class="mi">0</span><span class="n">o740</span><span class="p">)</span>
+                <span class="k">return</span> <span class="s2">&quot;done&quot;</span>
+            <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;invalid&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;already&quot;</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-33'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-33'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">select_manifest_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">admin_directory</span><span class="p">):</span>
+        <span class="n">manifest_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">admin_directory</span><span class="p">,</span> <span class="s1">&#39;manifest.txt&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">manifest_file</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">opened_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">manifest_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">opened_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;filepath</span><span class="se">\t</span><span class="s2">origin(md5)</span><span class="se">\t</span><span class="s2">staging(md5)</span><span class="se">\t</span><span class="s2">origin==staging</span><span class="se">\t</span><span class="s2">was moved</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">opened_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            
+        <span class="k">return</span> <span class="n">manifest_file</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-34'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-34'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">setup_fresh_staging_environment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">staging_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_staging_directory</span><span class="p">()</span>
+        <span class="n">stageID</span> <span class="o">=</span> <span class="n">staging_directory</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">staging_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_staging_data_directory</span><span class="p">(</span><span class="n">stageID</span><span class="p">)</span>
+        <span class="n">staging_admin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_staging_admin_directory</span><span class="p">(</span><span class="n">stageID</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_a_directory</span><span class="p">(</span><span class="n">staging_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_a_directory</span><span class="p">(</span><span class="n">staging_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_a_directory</span><span class="p">(</span><span class="n">staging_admin</span><span class="p">)</span>
+        <span class="n">current_data_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_staging_data_with_prefix</span><span class="p">(</span><span class="n">stageID</span><span class="p">)</span>
+        <span class="n">current_admin_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_staging_admin_with_prefix</span><span class="p">(</span><span class="n">stageID</span><span class="p">)</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_a_directory</span><span class="p">(</span><span class="n">current_data_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_a_directory</span><span class="p">(</span><span class="n">current_admin_dir</span><span class="p">)</span>
+        <span class="n">manifestwriter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_manifest_file</span><span class="p">(</span><span class="n">current_admin_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">current_data_dir</span><span class="p">,</span> <span class="n">current_admin_dir</span><span class="p">,</span> <span class="n">manifestwriter</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-35'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-35'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">add_to_a_staging_environment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">staging_directory</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">staging_id</span><span class="p">)</span>
+        <span class="n">stageID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">staging_id</span>
+        <span class="n">past_data_dirs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">listdir</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">staging_directory</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)))</span>
+        <span class="n">last_data_dir_number</span> <span class="o">=</span> <span class="n">past_data_dirs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">new_data_dir_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">last_data_dir_number</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">new_data_dir_with_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">new_data_dir_number</span><span class="p">)</span>
+        <span class="n">current_data_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">staging_directory</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">new_data_dir_with_prefix</span><span class="p">)</span>
+        <span class="n">current_admin_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">staging_directory</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="n">new_data_dir_with_prefix</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_a_directory</span><span class="p">(</span><span class="n">current_data_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_a_directory</span><span class="p">(</span><span class="n">current_admin_dir</span><span class="p">)</span>
+        <span class="n">manifestwriter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_manifest_file</span><span class="p">(</span><span class="n">current_admin_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">current_data_dir</span><span class="p">,</span> <span class="n">current_admin_dir</span><span class="p">,</span> <span class="n">manifestwriter</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-36'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-36'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">pickup_half_completed_staging_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">staging_directory</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">staging_id</span><span class="p">)</span>
+        <span class="n">past_data_dirs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">listdir</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">staging_directory</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)))</span>
+        <span class="n">last_data_dir_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">past_data_dirs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">current_data_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">staging_directory</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">last_data_dir_number</span><span class="p">)</span>
+        <span class="n">current_admin_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">staging_directory</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="n">last_data_dir_number</span><span class="p">)</span>
+        <span class="n">manifestwriter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_manifest_file</span><span class="p">(</span><span class="n">current_admin_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">current_data_dir</span><span class="p">,</span> <span class="n">current_admin_dir</span><span class="p">,</span> <span class="n">manifestwriter</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-37'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-37'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">get_files_to_ingest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">admin_dir</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_all_files</span><span class="p">()</span>
+        <span class="n">manifestfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">admin_dir</span><span class="p">,</span> <span class="s1">&#39;manifest.txt&#39;</span><span class="p">),</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">manifestlines</span> <span class="o">=</span> <span class="n">manifestfile</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">manifestfiles</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">manifestlines</span><span class="p">]</span>
+        <span class="n">manifestfiles</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">manifestfiles</span><span class="p">]</span>
+        <span class="n">new_files_to_ingest</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">relpath</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_root</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">manifestfiles</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_files_to_ingest</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-38'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-38'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">compare_source_to_origin</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">):</span>
+        <span class="n">destination_md5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_checksum</span><span class="p">(</span><span class="n">destination_file</span><span class="p">)</span>
+        <span class="n">source_md5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_checksum</span><span class="p">(</span><span class="n">source_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">destination_md5</span> <span class="o">==</span> <span class="n">source_md5</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-39'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-39'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">ingest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ignore_mismatched_checksums</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
+               <span class="n">resume_partially_completed_run</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-40'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-40'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">def</span> <span class="nf">copy_source_directory_tree_to_destination</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+            <span class="n">destination_directories</span> <span class="o">=</span> <span class="n">dirname</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">filepath</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
+                <span class="n">directory_tree</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">directory_tree</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">directory_part</span> <span class="ow">in</span> <span class="n">destination_directories</span><span class="p">:</span>
+                <span class="n">directory_tree</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">,</span> <span class="n">directory_part</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">):</span>
+                    <span class="n">mkdir</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">,</span> <span class="mi">0</span><span class="n">o740</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">staging_id</span><span class="p">)):</span>
+                <span class="n">current_data_directory</span><span class="p">,</span> <span class="n">current_admin_directory</span><span class="p">,</span> <span class="n">manifestwriter</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">setup_fresh_staging_environment</span><span class="p">()</span>
+                <span class="n">files_to_ingest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_files_to_ingest</span><span class="p">(</span><span class="n">current_admin_directory</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">resume_partially_completed_run</span><span class="p">:</span>
+                <span class="n">current_data_directory</span><span class="p">,</span> <span class="n">current_admin_directory</span><span class="p">,</span> <span class="n">manifestwriter</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">pickup_half_completed_staging_run</span><span class="p">()</span>
+                <span class="n">files_to_ingest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_files_to_ingest</span><span class="p">(</span><span class="n">current_admin_directory</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">current_data_directory</span><span class="p">,</span> <span class="n">current_admin_directory</span><span class="p">,</span> <span class="n">manifestwriter</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_to_a_staging_environment</span><span class="p">()</span>
+                <span class="n">files_to_ingest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_files_to_ingest</span><span class="p">(</span><span class="n">current_admin_directory</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_validation_result</span><span class="p">()</span>
+            <span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;{}: {}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
+            <span class="n">_exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">files_to_ingest</span><span class="p">:</span>
+            <span class="n">source_file</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filepath</span>
+            <span class="n">destination_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">current_data_directory</span><span class="p">,</span>
+                                    <span class="n">relpath</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_root</span><span class="p">))</span>
+            
+            <span class="n">copy_source_directory_tree_to_destination</span><span class="p">(</span><span class="n">destination_file</span><span class="p">)</span>
+            <span class="n">copyfile</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">destination_file</span><span class="p">)</span>
+            <span class="n">manifest_filepath</span> <span class="o">=</span> <span class="n">relpath</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_root</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">destination_md5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_checksum</span><span class="p">(</span><span class="n">destination_file</span><span class="p">)</span>
+                <span class="n">source_md5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_checksum</span><span class="p">(</span><span class="n">source_file</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">destination_md5</span> <span class="o">==</span> <span class="n">source_md5</span><span class="p">:</span>
+                    <span class="n">data_object</span> <span class="o">=</span> <span class="n">DataTransferObject</span><span class="p">(</span><span class="n">manifest_filepath</span><span class="p">,</span>
+                                              <span class="n">source_md5</span><span class="p">,</span> <span class="n">destination_md5</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">data_object</span> <span class="o">=</span> <span class="n">DataTransferObject</span><span class="p">(</span><span class="n">manifest_filepath</span><span class="p">,</span>
+                                              <span class="n">source_md5</span><span class="p">,</span> <span class="n">destination_md5</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">ignore_mismatched_checksums</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;{} destination file had checksum {}&quot;</span><span class="o">.</span> \
+                                      <span class="n">format</span><span class="p">(</span><span class="n">destination_file</span><span class="p">,</span> <span class="n">destination_md5</span><span class="p">)</span> <span class="o">+</span> \
+                                      <span class="s2">&quot; and source checksum {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source_md5</span><span class="p">))</span>   
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">data_object</span> <span class="o">=</span> <span class="n">DataTransferObject</span><span class="p">(</span><span class="n">manifest_filepath</span><span class="p">,</span><span class="s2">&quot;null&quot;</span><span class="p">,</span><span class="s2">&quot;null&quot;</span><span class="p">,</span><span class="s2">&quot;null&quot;</span><span class="p">,</span><span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+            <span class="n">data_object</span><span class="o">.</span><span class="n">write_to_manifest</span><span class="p">(</span><span class="n">manifestwriter</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-41'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-41'>#</a>
+      </div>
+      <p>attributes: arkid, accnum, prefix, numfolders, numfiles, source_directory_root, archive_directory</p>
+<p>methods: validate, explain_validation_results, validate_files, ingest</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">Archiver</span><span class="p">(</span><span class="n">FileProcessor</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-42'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-42'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">numfolders</span><span class="p">,</span> <span class="n">numfiles</span><span class="p">,</span>
+                 <span class="n">source_root</span><span class="p">,</span> <span class="n">archive_directory</span><span class="p">,</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+
+        <span class="n">FileProcessor</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">source_root</span><span class="p">,</span> <span class="n">irrelevant_part</span> <span class="o">=</span> <span class="n">source_root</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numfolders</span> <span class="o">=</span> <span class="n">numfolders</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span> <span class="o">=</span> <span class="n">numfiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_root</span> <span class="o">=</span> <span class="n">source_root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span> <span class="o">=</span> <span class="n">archive_directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination_group</span> <span class="o">=</span> <span class="n">group_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination_owner</span> <span class="o">=</span> <span class="n">user_id</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-43'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-43'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">admin_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">data_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">admin_node</span> <span class="ow">and</span> <span class="n">data_node</span><span class="p">:</span>
+            <span class="n">subdirs_in_admin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_directories_in_a_directory</span><span class="p">(</span><span class="n">admin_node</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+            <span class="n">subdirs_in_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_directories_in_a_directory</span><span class="p">(</span><span class="n">data_node</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_admin</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">numfolders</span><span class="p">:</span>
+                <span class="n">validate</span> <span class="o">=</span> <span class="bp">True</span>          
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">subdirs_in_admin</span><span class="p">:</span>
+                    <span class="n">find_fixity_files_in_admin</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">subdirs_in_admin</span> <span class="k">if</span> 
+                        <span class="bp">self</span><span class="o">.</span><span class="n">find_file_in_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;fixityFromMedia.presform&#39;</span><span class="p">)</span> <span class="ow">and</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">find_file_in_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;fixityOnDisk.presform&#39;</span><span class="p">)</span> <span class="ow">and</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">find_file_in_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;rsyncFromMedia.presform&#39;</span><span class="p">)</span>
+                   <span class="p">]</span> 
+                    <span class="k">if</span> <span class="n">find_fixity_files_in_admin</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_admin</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_data</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">numfolders</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_files</span><span class="p">()):</span>
+                                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-44'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-44'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">explain_validation_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">admin_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">data_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">admin_node</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ldrerror&quot;</span><span class="p">,</span><span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span><span class="s2">&quot;missing </span><span class="se">\&quot;</span><span class="s2">admin</span><span class="se">\&quot;</span><span class="s2"> folder in correct position in this directory&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">data_node</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ldrerror&quot;</span><span class="p">,</span><span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span><span class="s2">&quot;missing </span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> folder in correct position in this directory&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">admin_node</span> <span class="ow">and</span> <span class="n">data_node</span><span class="p">:</span>
+            <span class="n">subdirs_in_admin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_directories_in_a_directory</span><span class="p">(</span><span class="n">admin_node</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+            <span class="n">subdirs_in_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_directories_in_a_directory</span><span class="p">(</span><span class="n">data_node</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_data</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_admin</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;lderrror&quot;</span><span class="p">,</span><span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span><span class="s2">&quot;subdirectories of data and admin are not equal in number&quot;</span><span class="p">)</span>
+            <span class="n">find_fixity_files_in_admin</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">subdirs_in_admin</span> <span class="k">if</span>
+                                          <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_file_in_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;fixityOnDisk.presform&#39;</span><span class="p">)</span> <span class="ow">or</span>
+                                          <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_file_in_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;fixityFromMedia.presform&#39;</span><span class="p">)</span> <span class="ow">or</span>
+                                          <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_file_in_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;mediaInfo.presform&#39;</span><span class="p">)</span> <span class="ow">or</span>
+                                          <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_file_in_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;rsyncFromMedia.presform&#39;</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">find_fixity_files_in_admin</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ldererror&quot;</span><span class="p">,</span> <span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span> <span class="s2">&quot;the following foldesr in admin did not have a complete set of fixity files: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">identifier</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">find_fixity_files_in_admin</span><span class="p">])))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_files</span><span class="p">())</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ldrerror&quot;</span><span class="p">,</span> <span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span><span class="s2">&quot;There were {} files found in the directory, but you said there were supposed to be {} files&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tree</span><span class="p">()</span><span class="o">.</span><span class="n">get_files</span><span class="p">())),</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">True</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-45'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-45'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">validate_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fixity_log_data</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">find_matching_files</span><span class="p">(</span><span class="s1">&#39;fixityOnDisk.txt&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span> \
+                          <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_matching_files</span><span class="p">(</span><span class="s1">&#39;fixityOnDisk.txt&#39;</span><span class="p">)</span> \
+                             <span class="k">else</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fixity_log_data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;{} directory does not have a fixityOnDisk.txt file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filewalker</span><span class="o">.</span><span class="n">get_directory</span><span class="p">()))</span>
+        <span class="n">all_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_all_files</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_files</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">fixity_log_data</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">in</span> <span class="n">a</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">fixity_log_checksum</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">fixity_log_checksum</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">md5</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;{} had checksum {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">fixity_log_checksum</span><span class="p">)</span> <span class="o">+</span> \
+                                   <span class="s2">&quot; in fixityOnDisk.txt file and checksum {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">md5</span><span class="p">)</span> <span class="o">+</span> \
+                                  <span class="s2">&quot; in staging directory&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-46'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-46'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">ingest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-47'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-47'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">def</span> <span class="nf">copy_source_directory_tree_to_destination</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+            <span class="n">destination_directories</span> <span class="o">=</span> <span class="n">dirname</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">filepath</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
+                <span class="n">directory_tree</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">directory_tree</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">directory_part</span> <span class="ow">in</span> <span class="n">destination_directories</span><span class="p">:</span>
+                <span class="n">directory_tree</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">,</span> <span class="n">directory_part</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">):</span>
+                    <span class="n">mkdir</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">,</span> <span class="mi">0</span><span class="n">o750</span><span class="p">)</span>
+                    
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">():</span>
+            <span class="n">files_to_ingest</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_all_files</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">files_to_ingest</span><span class="p">:</span>
+                <span class="n">source_file</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filepath</span>
+                <span class="n">md5_checksum</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">checksum_md5</span>
+                <span class="n">sha256_checksum</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">checksum_sha256</span>
+                <span class="n">file_size</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filesize</span>
+                <span class="n">file_mimetype</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filemimetype</span>
+                <span class="n">destination_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span><span class="p">,</span>
+                                        <span class="n">relpath</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_root</span><span class="p">))</span>
+                <span class="n">copy_source_directory_tree_to_destination</span><span class="p">(</span><span class="n">destination_file</span><span class="p">)</span>
+                <span class="n">copyfile</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">destination_file</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">chown</span><span class="p">(</span><span class="n">destination_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">destination_owner</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">destination_group</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+                <span class="n">destination_md5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_checksum</span><span class="p">(</span><span class="n">destination_file</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">destination_md5</span> <span class="o">==</span> <span class="n">md5_checksum</span><span class="p">:</span>
+                    <span class="n">manifestfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">destination_file</span><span class="p">,</span> <span class="s1">&#39;manifest.csv&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">))</span>
+                    <span class="n">manifestwriter</span> <span class="o">=</span> <span class="n">writer</span><span class="p">(</span><span class="n">manifestfile</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="n">quoting</span><span class="o">=</span><span class="n">QUOTE_ALL</span><span class="p">)</span>
+                    <span class="n">manifestwriter</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">destination_file</span><span class="p">,</span> <span class="n">destination_md5</span><span class="p">,</span> <span class="n">source_md5</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">])</span>
+                    <span class="n">manifestfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>                    
+                    <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;{} destination file had checksum {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">destination_file</span><span class="p">,</span> <span class="n">destination_checksum</span><span class="p">)</span> <span class="o">+</span> \
+                                      <span class="s2">&quot; and source checksum {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">md5_checksum</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">manifestfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">destination_file</span><span class="p">,</span> <span class="s1">&#39;manifest.csv&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">))</span>
+                    <span class="n">manifestwriter</span> <span class="o">=</span> <span class="n">writer</span><span class="p">(</span><span class="n">manifestfile</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="n">quoting</span><span class="o">=</span><span class="n">QUOTE_ALL</span><span class="p">)</span>
+                    <span class="n">manifestwriter</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">destination_file</span><span class="p">,</span> <span class="n">destination_md5</span><span class="p">,</span> <span class="n">source_md5</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">])</span>
+                    <span class="n">manifestfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_validation_result</span><span class="p">()</span>
+            <span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;{}: {}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">message</span><span class="p">))</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-48'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-48'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">NewArchiver</span><span class="p">(</span><span class="n">FileProcessor</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-49'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-49'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">numfolders</span><span class="p">,</span> <span class="n">numfiles</span><span class="p">,</span>
+                 <span class="n">source_root</span><span class="p">,</span> <span class="n">archive_directory</span><span class="p">,</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+
+        <span class="n">FileProcessor</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">source_root</span><span class="p">,</span> <span class="n">irrelevant_part</span> <span class="o">=</span> <span class="n">source_root</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numfolders</span> <span class="o">=</span> <span class="n">numfolders</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numfiles</span> <span class="o">=</span> <span class="n">numfiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_root</span> <span class="o">=</span> <span class="n">source_root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination_root</span> <span class="o">=</span> <span class="n">archive_directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination_group</span> <span class="o">=</span> <span class="n">group_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination_owner</span> <span class="o">=</span> <span class="n">user_id</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-50'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-50'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">admin_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">data_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        
+        <span class="n">valid_admin</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">admin_node</span><span class="p">:</span>
+            <span class="n">current</span><span class="o">=</span> <span class="n">admin_node</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">subdirs_in_current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_directories_in_a_directory</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_current</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">numfolders</span><span class="p">:</span>
+                <span class="n">valid_admin</span> <span class="o">=</span> <span class="bp">True</span>
+                
+                <span class="n">premis_records</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">subdirs_in_current</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_files_in_a_subdirectory</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;*.premis.xml&#39;</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">premis_record</span> <span class="ow">in</span> <span class="n">premis_records</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="n">premis_record</span><span class="p">)</span>
+                    
+        <span class="n">valid_data</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">data_node</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">data_node</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">subdirs_in_current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_directories_in_a_directory</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_current</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">numfolders</span><span class="p">:</span>
+                <span class="n">valid_data</span> <span class="o">=</span> <span class="bp">True</span>
+    
+        <span class="k">return</span> <span class="bp">NotImplemented</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-51'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-51'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">explain_validation_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">admin_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">data_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subdirectory_at_particular_level_down</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">admin_node</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ldrerror&quot;</span><span class="p">,</span><span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span><span class="s2">&quot;missing </span><span class="se">\&quot;</span><span class="s2">admin</span><span class="se">\&quot;</span><span class="s2"> folder in correct position in this directory&quot;</span><span class="p">)</span>            
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">data_node</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ldrerror&quot;</span><span class="p">,</span><span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span><span class="s2">&quot;missing </span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> folder in correct position in this directory&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">admin_node</span> <span class="ow">and</span> <span class="n">data_node</span><span class="p">:</span>
+            <span class="n">subdirs_in_admin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_directories_in_a_directory</span><span class="p">(</span><span class="n">admin_node</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+            <span class="n">subdirs_in_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_directories_in_a_directory</span><span class="p">(</span><span class="n">data_node</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_data</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs_in_admin</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;lderrror&quot;</span><span class="p">,</span><span class="s2">&quot;category message&quot;</span><span class="p">)(</span><span class="s2">&quot;fatal&quot;</span><span class="p">,</span><span class="s2">&quot;subdirectories of data and admin are not equal in number&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">NotImplemented</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-52'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-52'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">ingest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;good to ingest&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">explain_validation_results</span><span class="p">()</span>
+            <span class="k">return</span> <span class="s2">&quot;it&#39;s invalid and here&#39;s why&quot;</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

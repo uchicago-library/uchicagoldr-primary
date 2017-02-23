@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>file_system_functions.py</title>
+  <link rel="stylesheet" href="../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>file_system_functions.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">find_destination_path</span><span class="p">(</span><span class="n">source_filepath</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">new_root_directory</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">relpath</span><span class="p">,</span> <span class="n">join</span>
+
+    <span class="n">path_sans_root</span> <span class="o">=</span> <span class="n">relpath</span><span class="p">(</span><span class="n">source_filepath</span><span class="p">,</span> <span class="n">root_path</span><span class="p">)</span>
+    <span class="n">destination_full_path</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">new_root_directory</span><span class="p">,</span> <span class="n">path_sans_root</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">destination_full_path</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">move_into_new_location</span><span class="p">(</span><span class="n">original_location</span><span class="p">,</span> <span class="n">new_location</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">move</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">move</span><span class="p">(</span><span class="n">original_location</span><span class="p">,</span> <span class="n">new_location</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">copy_source_directory_tree_to_destination</span><span class="p">(</span><span class="n">new_path</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">mkdir</span>
+    <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">exists</span><span class="p">,</span> <span class="n">join</span><span class="p">,</span> <span class="n">dirname</span>
+
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">new_path</span><span class="p">)</span>
+    <span class="n">destination_directories</span> <span class="o">=</span> <span class="n">dirname</span><span class="p">(</span><span class="n">new_path</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="n">directory_tree</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">destination_directories</span><span class="p">:</span>
+        <span class="n">directory_tree</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mkdir</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">,</span> <span class="mi">0</span><span class="n">o740</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">clean_out_source_directory_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">walk</span><span class="p">,</span> <span class="n">rmdir</span>
+
+    <span class="n">directory_tree</span> <span class="o">=</span> <span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">src_dir</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">walk</span><span class="p">(</span><span class="n">directory_tree</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rmdir</span><span class="p">(</span><span class="n">src_dir</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">set_destination_ownership</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">group_name</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">pwd</span> <span class="kn">import</span> <span class="n">getpwnam</span><span class="p">,</span> <span class="n">getgrnam</span>
+    <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">chown</span>
+    <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">exists</span>
+
+    <span class="k">assert</span> <span class="n">exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">uid</span> <span class="o">=</span> <span class="n">getpwnam</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span><span class="o">.</span><span class="n">pw_uid</span>
+    <span class="n">gid</span> <span class="o">=</span> <span class="n">getgrnam</span><span class="p">(</span><span class="n">group_name</span><span class="p">)</span><span class="o">.</span><span class="n">gr_gid</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">chown</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">gid</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>
