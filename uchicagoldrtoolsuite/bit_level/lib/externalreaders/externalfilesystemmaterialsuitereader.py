@@ -2,7 +2,7 @@ from logging import getLogger
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 from os import fsencode, fsdecode
-from os.path import join
+from os.path import join, exists
 from pathlib import Path
 from json import dumps
 
@@ -50,7 +50,7 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
     so really nothing like magic).
     """
     @log_aware(log)
-    def __init__(self, path, root=None, run_name=None):
+    def __init__(self, path, root=None, run_name=None, tmp_buffer=True):
         """
         Instantiate a new packager
 
@@ -72,6 +72,7 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
         self._bytes_path = None
         self._str_root = None
         self._bytes_root = None
+        self.tmp_buffer = bool(tmp_buffer)
         super().__init__(root, uuid4().hex)
         self.path = path
         self.working_dir = TemporaryDirectory()
@@ -142,17 +143,23 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
             event = build_ingestion_event(cr)
             return event
 
-        def generate_minimal_premis(ingestion_event):
+        def generate_minimal_premis(ingestion_event=None):
             if self.root:
                 original_name = str(Path(self.path).relative_to(self.root))
             else:
                 original_name = self.path
-            record = GenericPREMISCreator.make_record(
-                self.working_path, original_name
-            )
+            if exists(self.working_path):
+                record = GenericPREMISCreator.make_record(
+                    self.working_path, original_name
+                )
+            else:
+                record = GenericPREMISCreator.make_record(
+                    self.path, original_name
+                )
             real_identifier = ObjectIdentifier('uuid4', self.target_identifier)
             record.get_object_list()[0].get_objectIdentifier()[0] = real_identifier
-            record.add_event(ingestion_event)
+            if ingestion_event:
+                record.add_event(ingestion_event)
             return record
 
         def link_em_all_up(record):
@@ -183,12 +190,15 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
         def write_minimal_premis(minimal_premis_record):
             minimal_premis_record.write_to_file(self.instantiated_premis)
 
-        log.info("Copying external file to tmp location")
-        ingestion_event = copy_to_working()
-        add_eventDetailInformation(ingestion_event)
+        ingestion_event = None
+        if self.tmp_buffer:
+            log.info("Copying external file to tmp location")
+            ingestion_event = copy_to_working()
+            add_eventDetailInformation(ingestion_event)
         log.info("Creating ingest PREMIS")
         minimal_premis_record = generate_minimal_premis(ingestion_event)
-        link_em_all_up(minimal_premis_record)
+        if ingestion_event is not None:
+            link_em_all_up(minimal_premis_record)
         log.info("Writing ingest PREMIS")
         write_minimal_premis(minimal_premis_record)
         return LDRPath(self.instantiated_premis)
@@ -196,7 +206,10 @@ class ExternalFileSystemMaterialSuiteReader(MaterialSuiteSerializationReader):
     @log_aware(log)
     def get_content(self):
         log.info("Packaging original file as an LDRPath")
-        x = LDRPath(self.working_path)
+        if exists(self.working_path):
+            x = LDRPath(self.working_path)
+        else:
+            x = LDRPath(self.path)
         if self.root is not None:
             x.item_name = str(Path(self.path).relative_to(self.root))
         else:

@@ -93,6 +93,9 @@ class Stager(CLIApp):
                                  "ingestion events for later querying.",
                                  type=str, action='store',
                                  default=None)
+        self.parser.add_argument("--no_buffer", help="Do not buffer file " +
+                                 "contents to the tmp directory of the host",
+                                 action='store_false')
 
         # Parse arguments into args namespace
         args = self.parser.parse_args()
@@ -208,7 +211,7 @@ class Stager(CLIApp):
                     )
 
             p = ExternalFileSystemMaterialSuiteReader(
-                x.path, root=root, run_name=args.run_name
+                x.path, root=root, run_name=args.run_name, tmp_buffer=args.no_buffer
             )
             ms = p.read()
             w = FileSystemMaterialSuiteWriter(
